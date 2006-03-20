@@ -9,19 +9,19 @@ require ('inc_page_open.php');
 
 // -- Print a space or the field
 function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  } 
-  return $str;
+    $str = trim ($fld);
+    if (strlen($str) == 0) {
+        $str = "&nbsp;";
+    } 
+    return $str;
 }
 
 //-------------------------------------------------------------
 // Start of main processing for the page
 
 if (!session_is_registered('s_msg')) {
-  session_register('s_msg');
-  $_SESSION['s_msg'] = '';
+    session_register('s_msg');
+    $_SESSION['s_msg'] = '';
 }
 
 require('mysql.php');
@@ -29,49 +29,49 @@ require('mysql.php');
 // connect to the database
 $conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$conn) {
-  $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
-  echo "$msg";
-  exit;
+    $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
+    echo "$msg";
+    exit;
 }
 $cnx = mysql_select_db($mysql_db);
 if (!$cnx) {
-  $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
-  echo "$msg";
-  exit;
+    $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
+    echo "$msg";
+    exit;
 }
 if (isset($in_pid)) {
-  if ($in_pid=='CLEARFORM') {
-    $add_flag = 1;
-    $in_pid = '';
-  }
+    if ($in_pid=='CLEARFORM') {
+        $add_flag = 1;
+        $in_pid = '';
+    }
 } else {
-  $in_pid = '';
+    $in_pid = '';
 }
 
 if (strlen($btn_next)>0) {
-  $sel = "SELECT * ";
-  $sel .= "FROM pictures ";
-  $sel .= "WHERE pid = '$in_pid' ";
-  $result = mysql_query ($sel);
-  if ($result) {
-    $row = mysql_fetch_array($result);
-    if (strlen($row['pid'])>0) {
-      $last_datetime = $row['date_taken'];
+    $sel = "SELECT * ";
+    $sel .= "FROM pictures ";
+    $sel .= "WHERE pid = '$in_pid' ";
+    $result = mysql_query ($sel);
+    if ($result) {
+        $row = mysql_fetch_array($result);
+        if (strlen($row['pid'])>0) {
+            $last_datetime = $row['date_taken'];
+        }
     }
-  }
-  $in_pid++;
+    $in_pid++;
 }
 
 if ((strlen($last_datetime) == 0) 
     && (strlen($_SESSION['sess_date_taken'])>0)) {
-  $last_datetime = $_SESSION['sess_date_taken'];
+    $last_datetime = $_SESSION['sess_date_taken'];
 }
 
 $pat = "/(\d+\-\d+\-\d+)\s+(\d+)\:(\d+)/";
 if (preg_match($pat, $last_datetime, $mat)) {
-  $last_date = $mat[1];
-  $last_hour = $mat[2];
-  $last_minute = $mat[3];
+    $last_date = $mat[1];
+    $last_hour = $mat[2];
+    $last_minute = $mat[3];
 }
 
 $sel = "SELECT * ";
@@ -79,25 +79,25 @@ $sel .= "FROM pictures ";
 $sel .= "WHERE pid = '$in_pid' ";
 $result = mysql_query ($sel);
 if ($result) {
-  $row = mysql_fetch_array($result);
-  $this_type = trim($row["picture_type"]);
-  if (strlen($row['pid'])>0) {
-    foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
-  }
+    $row = mysql_fetch_array($result);
+    $this_type = trim($row["picture_type"]);
+    if (strlen($row['pid'])>0) {
+        foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
+    }
 }
 if ( (strlen($in_pid)>0) && (strlen(trim($row["pid"]))==0) ) {
-  $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
+    $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
 }
 
 // some reasonable defaults
 if ($row["key_words"]=='NEW' && isset($session_key_words)) {
-  $row["key_words"] = $session_key_words;
+    $row["key_words"] = $session_key_words;
 }
 if ($row["date_taken"]=='UNKNOWN' && isset($session_date_taken)) {
-  $row["date_taken"] = $session_date_taken;
+    $row["date_taken"] = $session_date_taken;
 }
 if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
-  $row["taken_by"] = $session_taken_by;
+    $row["taken_by"] = $session_taken_by;
 }
 ?>
 
@@ -316,7 +316,12 @@ if ($result) {
     $a_uid = $person_row["uid"];
     if (isset($found["$a_uid"])) {continue;}
     $uid_list[$a_uid] = $person_row['display_name'];
-    $sort_uid = 'a'.sprintf("%05d", 32767-$_SESSION['s_uid_weight'][$a_uid])
+    $thisWeight = 32767;
+    if ($_SESSION['s_uid_weight'][$a_uid]>0) {
+      $thisWeight = 100 
+                  * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 100);
+    }
+    $sort_uid = 'a'.sprintf("%05d", $thisWeight)
              . $person_row['display_name'];
     $uid_sort[$sort_uid] = $a_uid;
   }
