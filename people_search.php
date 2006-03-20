@@ -9,11 +9,11 @@ require ('inc_page_open.php');
 
 // -- Print a space or the field
 function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  } 
-  return $str;
+    $str = trim ($fld);
+    if (strlen($str) == 0) {
+        $str = "&nbsp;";
+    } 
+    return $str;
 }
 
 //-------------------------------------------------------------
@@ -25,9 +25,9 @@ require ('mysql.php');
 // connect to the db
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
 if (!mysql_select_db($mysql_db, $db_link)) {
-  echo "<font color=\#ff0000\">";
-  echo "Error selecting database $mysql_db";
-  echo "</font><br>\n";
+    echo "<font color=\#ff0000\">";
+    echo "Error selecting database $mysql_db";
+    echo "</font><br>\n";
 }
 ?>
 
@@ -42,101 +42,62 @@ if (!mysql_select_db($mysql_db, $db_link)) {
 $thisTitle = 'People Search';
 require ('page_top.php');
 
-if (!session_is_registered('sear_uid')) {
-  session_register('sear_uid');
-  $_SESSION['sear_uid'] = '';
-}
-if (!session_is_registered('sear_name')) {
-  session_register('sear_name');
-  $_SESSION['sear_name'] = '';
-}
-if (!session_is_registered('sear_dob')) {
-  session_register('sear_dob');
-  $_SESSION['sear_dob'] = '';
-}
-if (!session_is_registered('sear_description')) {
-  session_register('sear_description');
-  $_SESSION['sear_description'] = '';
-}
-if (!session_is_registered('s_list_select')) {
-  session_register('s_list_select');
-  $_SESSION['s_list_select'] = '';
-}
-if (!session_is_registered('s_start_row')) {
-  session_register('s_start_row');
-  $_SESSION['s_start_row'] = 0;
-}
-if (!session_is_registered('s_uid')) {
-  session_register('s_uid');
-  $_SESSION['s_uid'] = '';
-}
-
 // Set up if we have been here before
 if (isset($button_find)) {
-  $word = "WHERE";
-  $condition = '';
-  if (!session_is_registered('sear_uid')) {session_register('sear_uid');}
-  $_SESSION['sear_uid'] = '';
-  if (!session_is_registered('sear_name')) {session_register('sear_name');}
-  $_SESSION['sear_name'] = '';
-  if (!session_is_registered('sear_dob')) {session_register('sear_dob');}
-  $_SESSION['sear_dob'] = '';
-  if (!session_is_registered('sear_description')) {
-    session_register('sear_description');
-  }
-  $_SESSION['sear_description'] = '';
-  if (isset($in_uid)) {
-    $condition .= "$word uid LIKE '%$in_uid%' ";
-    $_SESSION['sear_uid'] = $in_uid;
-    $word = "AND";
-  }
-  if (strlen($in_name)>0) {
-    $condition .= "$word display_name LIKE '%$in_name%' ";
-    $_SESSION['sear_name'] = $in_name;
-    $word = "AND";
-  }
-  if (strlen($in_dob)>0) {
-    $condition .= "$word date_of_birth LIKE '%$in_dob%' ";
-    $_SESSION['sear_dob'] = $in_dob;
-    $word = "AND";
-  }
-  if (strlen($in_description)>0) {
-    $condition .= "$word description LIKE '%$in_description%' ";
-    $_SESSION['sear_description'] = $in_description;
-    $word = "AND";
-  }
-  $_SESSION['s_list_select'] = "SELECT uid, "
-            . "display_name, "
-            . "date_of_birth, "
-            . "description "
-            . "FROM people_or_places "
-            . "$condition "
-            . "ORDER BY uid ";
-  if (!session_is_registered("s_start_row")) {session_register("s_start_row");}
-  $_SESSION['s_start_row'] = 0;
-  // find the number of rows
-  $result = mysql_query ($_SESSION['s_list_select']);
-  if (!session_is_registered("s_num_user_rows")) {
-    session_register("s_num_user_rows");
-  }
-  if ($result) {
-    $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
-  } else {
-    $_SESSION['s_num_user_rows'] = 0;
-  }
-} elseif (isset($button_next)) {
-  $in_uid = $_SESSION['s_uid'];
-  $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + 30;
-} elseif (isset($button_back)) {
-  $in_uid = $_SESSION['s_uid'];
-  $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - 30;
-  if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
+    $word = "WHERE";
+    $condition = '';
+    $_SESSION['sear_uid'] = '';
+    $_SESSION['sear_name'] = '';
+    $_SESSION['sear_dob'] = '';
+    $_SESSION['sear_description'] = '';
+    if (strlen($in_uid)>0) {
+        $condition .= "$word uid LIKE '%$in_uid%' ";
+        $_SESSION['sear_uid'] = $in_uid;
+        $word = "AND";
+    }
+    if (strlen($in_name)>0) {
+        $condition .= "$word display_name LIKE '%$in_name%' ";
+        $_SESSION['sear_name'] = $in_name;
+        $word = "AND";
+    }
+    if (strlen($in_dob)>0) {
+        $condition .= "$word date_of_birth LIKE '%$in_dob%' ";
+        $_SESSION['sear_dob'] = $in_dob;
+        $word = "AND";
+    }
+    if (strlen($in_description)>0) {
+        $condition .= "$word description LIKE '%$in_description%' ";
+        $_SESSION['sear_description'] = $in_description;
+        $word = "AND";
+    }
+    $_SESSION['s_list_select'] = "SELECT uid, "
+        . "display_name, "
+        . "date_of_birth, "
+        . "description "
+        . "FROM people_or_places "
+        . "$condition "
+        . "ORDER BY uid ";
+    $_SESSION['s_start_row'] = 0;
+    // find the number of rows
+    $result = mysql_query ($_SESSION['s_list_select']);
+    if ($result) {
+        $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
+    } else {
+        $_SESSION['s_num_user_rows'] = 0;
+    }
+} elseif (strlen($button_next)>0) {
+    $in_uid = $_SESSION['s_uid'];
+    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + 30;
+} elseif (strlen($button_back)>0) {
+    $in_uid = $_SESSION['s_uid'];
+    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - 30;
+    if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
 }
 
 $sel = $_SESSION['s_list_select']." LIMIT ".$_SESSION['s_start_row'].",30 ";
 $end_row = $_SESSION['s_start_row'] + 30;
 if ($end_row > $_SESSION['s_num_user_rows']) {
-  $end_row = $_SESSION['s_num_user_rows'];
+    $end_row = $_SESSION['s_num_user_rows'];
 }
 ?>
 
@@ -186,11 +147,10 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 
 <?php 
 $start_row_flag = 0;
-if (isset($_SESSION['s_start_row'])) {
-  if ($_SESSION['s_start_row'] > 0) {
+if ($_SESSION['s_start_row'] > 0) {
     $start_row_flag = 1;
-  }
 }
+
 if ($end_row != $_SESSION['s_num_user_rows'] || $start_row_flag>0) {
 ?>
   <tr>
@@ -239,7 +199,7 @@ if ($end_row != $_SESSION['s_num_user_rows'] || $start_row_flag>0) {
     }
     echo "</table>\n";
   } else {
-    if (isset($button_find)) {
+    if (strlen($button_find)>0) {
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";
       echo "$sel\n";

@@ -12,49 +12,49 @@ require ('inc_page_open.php');
 //  $in_type != "n" anything else is a string
 
 function mkin ($a_fld, $a_val, $in_type) {
-
-  global $flds;
-  global $vals;
-
-  if (strlen($a_val) > 0) {
-    $c = "";
-    if (strlen($flds) > 0) {$c = ",";}
-    $flds .= $c . $a_fld;
-    if ( $in_type != "n" ) {
-      $a_val = str_replace("'", "\\'", $a_val);
-      $vals .= $c . "'$a_val'";
-    } else {
-      $vals .= $c . $a_val;
+    
+    global $flds;
+    global $vals;
+    
+    if (strlen($a_val) > 0) {
+        $c = "";
+        if (strlen($flds) > 0) {$c = ",";}
+        $flds .= $c . $a_fld;
+        if ( $in_type != "n" ) {
+            $a_val = str_replace("'", "\\'", $a_val);
+            $vals .= $c . "'$a_val'";
+        } else {
+            $vals .= $c . $a_val;
+        }
     }
-  }
-
-  return;
+    
+    return;
 }
 
 //-------------------------------------------------------------
 // get the next id
 
 function get_next ($link, $id) {
-
-  $cmd = "SELECT next_number FROM next_number WHERE id='$id' ";
-  $result = $link->query($cmd);
-  if ($row = $result->fetch_assoc()) {
-    $return_number = $row["next_number"];
-    if ($return_number > 0) {
-      $nxt = $return_number + 1;
-      $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-      $result = $link->query ($cmd);
-    } else {
-      $nxt = 1;
-      $cmd = "INSERT INTO  next_number (id,next_number) ";
-      $cmd .= "VALUES ('$id',$nxt) ";
-      $result = $link->query ($cmd);
-      if ($result) {
-        $return_number = $nxt;
-      }
+    
+    $cmd = "SELECT next_number FROM next_number WHERE id='$id' ";
+    $result = $link->query($cmd);
+    if ($row = $result->fetch_assoc()) {
+        $return_number = $row["next_number"];
+        if ($return_number > 0) {
+            $nxt = $return_number + 1;
+            $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
+            $result = $link->query ($cmd);
+        } else {
+            $nxt = 1;
+            $cmd = "INSERT INTO  next_number (id,next_number) ";
+            $cmd .= "VALUES ('$id',$nxt) ";
+            $result = $link->query ($cmd);
+            if ($result) {
+                $return_number = $nxt;
+            }
+        }
     }
-  }
-  return $return_number;
+    return $return_number;
 }
 
 ?>
@@ -82,131 +82,134 @@ $_SESSION['upload_slots'] = $in_upload_slots;
 require ('mysql.php');
 
 // connect to the db
-$dbLink = new mysqli($mysql_host,$mysql_user,$mysql_pass,$mysql_db);
-if (mysqli_connect_errno()) {
-  echo "<font color=\#ff0000\">";
-  echo "Error selecting database $mysql_db (".$mysql_connect_errno().")";
-  echo "</font><br>\n";
+$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
+if (!$cnx) {
+    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL host $mysql_host";
 }
+$result = mysql_select_db($mysql_db);
+if (!$result) {
+    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
+}
+
 if (!isset($upload)) {
-
-  // -- Display slots from
-  echo "<form method=\"post\" action=\"$PHP_SELF\">\n";
-  echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
-  echo "   Number of Pictures to upload at once: \n";
-  echo "  <input type=\"text\" size=\"3\"\n";
-  echo "         value=\"$in_upload_slots\"\n";
-  echo "         name=\"in_upload_slots\">\n";
-  echo "  <input type=\"submit\" name=\"Refresh\" value=\"Refresh\">\n";
-  echo "  </font>\n";
-  echo "</form>\n";
-  echo "<p>\n";
-
-  // -- Display the upload form
-
-  echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
-  echo "action=\"$PHP_SELF\">\n";
-  echo "<table border=\"1\">\n";
-  echo "<tr>\n";
-  echo " <th><font face=\"Arial, Helvetica, sans-serif\">\n";
-  echo "     Picture File Name</font></th>\n";
-  echo "</tr>\n";
-  echo "<tr>\n";
-  for ($i=0; $i<$in_upload_slots; $i++) {
-    echo "<tr>\n";
-    echo " <td>\n";
+    
+    // -- Display slots from
+    echo "<form method=\"post\" action=\"$PHP_SELF\">\n";
     echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
-    echo "  <input type=\"file\" size=\"60\" name=\"in_filename_$i\">\n";
+    echo "   Number of Pictures to upload at once: \n";
+    echo "  <input type=\"text\" size=\"3\"\n";
+    echo "         value=\"$in_upload_slots\"\n";
+    echo "         name=\"in_upload_slots\">\n";
+    echo "  <input type=\"submit\" name=\"Refresh\" value=\"Refresh\">\n";
     echo "  </font>\n";
-    echo " </td>\n";
-    echo "</tr>\n"; 
-  }
-  echo "</table>\n";
-  echo "<input type=\"submit\" name=\"upload\" value=\"upload\">\n";
-  echo "<input type=\"hidden\" name=\"in_upload_slots\"\n";
-  echo "                       value=\"$in_upload_slots\">\n";
-  echo "</form>\n";
-
-} else {
-
-  // -- Do the work
-
-  $noinput = true;
-  for ($i=0; $noinput && ($i<$in_upload_slots); $i++) {
-    $a_file = $_FILES["in_filename_" . $i];
-    if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
-      $noinput=false;
-    }
-  }
-  if ($noinput) {
-    echo "No Input files selected.\n";
-  } else {
-    $starting_pid = 0;
-    echo "<h1>Upload results</h1>\n";
+    echo "</form>\n";
     echo "<p>\n";
-    $noinput = true;
-
+    
+    // -- Display the upload form
+    
+    echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
+    echo "action=\"$PHP_SELF\">\n";
+    echo "<table border=\"1\">\n";
+    echo "<tr>\n";
+    echo " <th><font face=\"Arial, Helvetica, sans-serif\">\n";
+    echo "     Picture File Name</font></th>\n";
+    echo "</tr>\n";
+    echo "<tr>\n";
     for ($i=0; $i<$in_upload_slots; $i++) {
-      $fileID = "in_filename_" . $i;
-      $tmp_file = $_FILES[$fileID]['tmp_name'];
-      if ($_FILES[$fileID]['error'] !=0 && $_FILES[$fileID]['error'] !=4) {
-	echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
-      }
-      if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
-        $original_file      = $_FILES[$fileID]["name"];
-        $content_type       = $_FILES[$fileID]["type"];
-        $original_file_size = $_FILES[$fileID]["size"];
-        $a_date  = date("Y-m-d H:i:s");
-        $z = strrpos ($original_file, ".");
-        $tmp = substr ($original_file, 0, $z);
-
-        $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-
-        $pid = get_next($dbLink, "pid");
-
-        $cmd = "INSERT INTO pictures (";
-        $cmd .= "pid,";
-        $cmd .= "file_name,";
-        $cmd .= "picture_type,";
-        $cmd .= "picture, ";
-        $cmd .= "date_last_maint,";
-        $cmd .= "date_added";
-        $cmd .= ") VALUES (";
-        $cmd .= "$pid, ";
-        $cmd .= "'$original_file', ";
-        $cmd .= "'$content_type', ";
-        $cmd .= "'".$dbLink->real_escape_string($the_file_contents)."', ";
-//        $cmd .= "'".$foo.", ";
-        $cmd .= "'$a_date', ";
-        $cmd .= "'$a_date')";
-
-        $dbLink->query($cmd);
-        if ($dbLink->errno) {
-          echo "SQL Error:".$dbLink->error." (".$dbLink->errno."<br>\n";
-        }
-
-        echo "$pid uploaded.  ";
-        echo "<a href=\"picture_maint?in_pid=$pid\" "
-             . "target=\"_blank\">Update Picture Details.</a>";
-        echo "<br>\n";
-//        unlink ($tmp_file);
-echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
-echo "tmp_file:$tmp_file<br>\n";
-//echo "sql:$cmd<br>\n";
-	if ($starting_pid==0) {$starting_pid = $pid;}
-      }
+        echo "<tr>\n";
+        echo " <td>\n";
+        echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
+        echo "  <input type=\"file\" size=\"60\" name=\"in_filename_$i\">\n";
+        echo "  </font>\n";
+        echo " </td>\n";
+        echo "</tr>\n"; 
     }
-    $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
-    $sh_cmd .= " --start=$starting_pid";
-    $sh_cmd .= " --host=$mysql_host";
-    $sh_cmd .= " --user=$mysql_user";
-    $sh_cmd .= " --update";
-    echo "Executing command:$sh_cmd<br>\n";
-    $sh_cmd .= " --pass=$mysql_pass";
-    system($sh_cmd);
-  }
-  echo "<p>\n";
-  echo "<a href=\"picture_load\">Back to Load Files</a>\n";
+    echo "</table>\n";
+    echo "<input type=\"submit\" name=\"upload\" value=\"upload\">\n";
+    echo "<input type=\"hidden\" name=\"in_upload_slots\"\n";
+    echo "                       value=\"$in_upload_slots\">\n";
+    echo "</form>\n";
+    
+} else {
+    
+    // -- Do the work
+    
+    $noinput = true;
+    for ($i=0; $noinput && ($i<$in_upload_slots); $i++) {
+        $a_file = $_FILES["in_filename_" . $i];
+        if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
+            $noinput=false;
+        }
+    }
+    if ($noinput) {
+        echo "No Input files selected.\n";
+    } else {
+        $starting_pid = 0;
+        echo "<h1>Upload results</h1>\n";
+        echo "<p>\n";
+        $noinput = true;
+        
+        for ($i=0; $i<$in_upload_slots; $i++) {
+            $fileID = "in_filename_" . $i;
+            $tmp_file = $_FILES[$fileID]['tmp_name'];
+            if ($_FILES[$fileID]['error'] !=0 && $_FILES[$fileID]['error'] !=4) {
+                echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
+            }
+            if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
+                $original_file      = $_FILES[$fileID]["name"];
+                $content_type       = $_FILES[$fileID]["type"];
+                $original_file_size = $_FILES[$fileID]["size"];
+                $a_date  = date("Y-m-d H:i:s");
+                $z = strrpos ($original_file, ".");
+                $tmp = substr ($original_file, 0, $z);
+                
+                $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
+                
+                $pid = get_next($dbLink, "pid");
+                
+                $cmd = "INSERT INTO pictures (";
+                $cmd .= "pid,";
+                $cmd .= "file_name,";
+                $cmd .= "picture_type,";
+                $cmd .= "picture, ";
+                $cmd .= "date_last_maint,";
+                $cmd .= "date_added";
+                $cmd .= ") VALUES (";
+                $cmd .= "$pid, ";
+                $cmd .= "'$original_file', ";
+                $cmd .= "'$content_type', ";
+                $cmd .= "'".$dbLink->real_escape_string($the_file_contents)."', ";
+                //        $cmd .= "'".$foo.", ";
+                $cmd .= "'$a_date', ";
+                $cmd .= "'$a_date')";
+                
+                $dbLink->query($cmd);
+                if ($dbLink->errno) {
+                    echo "SQL Error:".$dbLink->error." (".$dbLink->errno."<br>\n";
+                }
+                
+                echo "$pid uploaded.  ";
+                echo "<a href=\"picture_maint?in_pid=$pid\" "
+                    . "target=\"_blank\">Update Picture Details.</a>";
+                echo "<br>\n";
+                //        unlink ($tmp_file);
+                echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
+                echo "tmp_file:$tmp_file<br>\n";
+                //echo "sql:$cmd<br>\n";
+                if ($starting_pid==0) {$starting_pid = $pid;}
+            }
+        }
+        $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
+        $sh_cmd .= " --start=$starting_pid";
+        $sh_cmd .= " --host=$mysql_host";
+        $sh_cmd .= " --user=$mysql_user";
+        $sh_cmd .= " --update";
+        echo "Executing command:$sh_cmd<br>\n";
+        $sh_cmd .= " --pass=$mysql_pass";
+        system($sh_cmd);
+    }
+    echo "<p>\n";
+    echo "<a href=\"picture_load\">Back to Load Files</a>\n";
 }
 
 $dbLink->close();

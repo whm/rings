@@ -1,6 +1,6 @@
 <?php
-  $mysql_host = "wp";
-  $mysql_slave_host = "wp";
+  $mysql_host = "db-master.macallister.grass-valley.ca.us";
+  $mysql_slave_host = "db-master.macallister.grass-valley.ca.us";
   $mysql_user = "rings";
   $mysql_pass = "anyoneandeveryone";
   $mysql_db   = "rings";

@@ -135,7 +135,7 @@ if (strlen($button_find)>0) {
         $word = "AND";
     }
     if (strlen($in_taken_by) > 0) {
-        if (preg_match('/%/', $in_date_by)) {
+        if (preg_match("/%/", $in_taken_by)) {
             $condition .= "$word p.taken_by LIKE '$in_taken_by' ";
         } else {
             $condition .= "$word p.taken_by = '$in_taken_by' ";
@@ -225,7 +225,7 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 <form method="post" action="<?php print $PHP_SELF;?>">
 
 <div align="center">
-<table>
+<table border="1">
 <tr><td align="right">Keywords:</td>
     <td> 
     <input type="text" name="in_key" 
@@ -298,6 +298,11 @@ if ($result) {
 
 <?php 
 echo "$sel<br>\n";
+if (strlen($_SESSION['msg']) > 0) {
+    echo $_SESSION['msg'];
+    $_SESSION['msg'] = '';
+}
+
 if ($_SESSION['s_num_user_rows']>0) {
     if (($end_row != $_SESSION['s_num_user_rows']) 
         || ((strlen($_SESSION['s_start_row'])>0) 
