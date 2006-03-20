@@ -131,6 +131,8 @@ function incrementDate() {
 
 </script>
 
+<?php require('inc_select_search.php'); ?>
+
 </head>
 
 <body bgcolor="#eeeeff">
@@ -328,7 +330,14 @@ if ($result) {
 <tr>
  <td align="right">People to Add:</td>
  <td>
-
+    <script language="javascript" type="text/javascript">
+      var in_ppe_values  = new Array();
+      var in_ppe_display = new Array();
+   </script>
+   <input type="text" 
+          name="in_group_search" 
+          onkeyup="find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);">
+   <br>
 <?php
 $add_cnt = 0;
 if (is_array($uid_sort)) {

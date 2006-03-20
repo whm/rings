@@ -124,12 +124,6 @@ if (isset($_SESSION['s_msg'])) {
  </td>
 </tr>
 <tr>
- <td align="right">Date of Birth:</td>
- <td> <input type="text" name="in_date_of_birth" size="16" maxlength="32"
-             value="<?php print $row["date_of_birth"]; ?>"
- </td>
-</tr>
-<tr>
  <td align="right">Description:</td>
  <td>
 <TEXTAREA name="in_description" rows="5" cols="40">
