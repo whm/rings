@@ -102,7 +102,7 @@ if ( strlen($in_group_id) > 0) {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
     echo "<blockquote>\n";
-    echo "<table border=\"0\" cellpadding=\"2\">\n";
+    echo "<table border=\"0\" background=\"notebook.gif\" cellpadding=\"2\">\n";
     if ($in_group_id == "all-groups") {
         $sel = "SELECT det.uid   uid, ";
         $sel .= "min(det.pid)    pid, ";
@@ -138,25 +138,30 @@ if ( strlen($in_group_id) > 0) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_description = $pp_desc["$this_uid"];
         $this_pid         = $pp_pid["$this_uid"];
-        echo "<tr bgcolor=\"#000066\">\n";
-        echo "  <td colspan=\"3\"><img src=\"shim.gif\"></td>\n";
-        echo "</tr>\n";
+
         echo "<tr>\n";
-        echo "<td>\n";
-        echo " <a href=\"picture_select.php?in_ring_uid=$this_uid\">";
-        echo "<img src=\"button_small.php?in_button=First%20Picture\"></a>";
-        echo "<br>\n";
+        echo " <td valign=\"top\">\n";
+        echo "   <a href=\"picture_select.php?in_ring_uid=$this_uid\">";
+        echo "[First]</a>";
+        echo "&nbsp;&nbsp;";
+        echo "<a href=\"picture_select.php"
+            . "?in_ring_uid=$this_uid"
+            . "&in_slide_show=3000\">";
+        echo "[Show]</a>";
+        echo "&nbsp;&nbsp;";
         echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">";
-        echo " <img src=\"button_small.php?in_button=Thumbnails\"></a><br>\n";
-        echo "</td>\n";
-        echo "<td><b>$this_name</b> --- $this_description</td>\n";
+        echo "[Index]</a>\n";
+        echo " </td>\n";
+        echo " <td>\n";
+        echo " <b>$this_name</b> --- $this_description\n";
+        echo " </td>\n";
         echo "</tr>\n";
     }
     echo "</table>\n";
     echo "</blockquote>\n";
     echo "<p>\n";
     if (strlen($_SESSION['prideindustries_directory_user'])>0) {
-        echo "<h5><a href=\"picture_sort\">Picture Sort</a><br>\n";
+        echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
         echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
     } else {
         echo "<h5><a href=\"$PHP_SELF?in_login=2\">Login</a></h5>\n";

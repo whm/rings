@@ -11,7 +11,7 @@ require ('inc_page_open.php');
 //  $in_type == "n" is a number
 //  $in_type != "n" anything else is a string
 
-function mkin ($a_fld, $a_val, $in_type) {
+function mkin ($cnx, $a_fld, $a_val, $in_type) {
     
     global $flds;
     global $vals;
@@ -21,7 +21,7 @@ function mkin ($a_fld, $a_val, $in_type) {
         if (strlen($flds) > 0) {$c = ",";}
         $flds .= $c . $a_fld;
         if ( $in_type != "n" ) {
-            $a_val = str_replace("'", "\\'", $a_val);
+            $a_val = mysql_real_escape_string($a_val, $cnx);
             $vals .= $c . "'$a_val'";
         } else {
             $vals .= $c . $a_val;
@@ -34,27 +34,48 @@ function mkin ($a_fld, $a_val, $in_type) {
 //-------------------------------------------------------------
 // get the next id
 
-function get_next ($link, $id) {
+function get_next ($cnx, $id) {
     
-    $cmd = "SELECT next_number FROM next_number WHERE id='$id' ";
-    $result = $link->query($cmd);
-    if ($row = $result->fetch_assoc()) {
-        $return_number = $row["next_number"];
-        if ($return_number > 0) {
-            $nxt = $return_number + 1;
-            $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-            $result = $link->query ($cmd);
+    global $warn, $em;
+
+    $return_number = 0;
+
+    $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
+    $result = mysql_query ($sel,$cnx);
+    if (mysql_errno()) {
+        $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+        $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
+    } else {
+        if ($result) {
+            $row = mysql_fetch_array ($result);
+            $return_number = $row["next_number"];
+        }
+    }
+    if ($return_number > 0) {
+        $nxt = $return_number + 1;
+        $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
+        $result = mysql_query ($cmd,$cnx);
+        if (mysql_errno()) {
+            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
+        }
+    } else {
+        $nxt = 1;
+        $cmd = "INSERT INTO  next_number (id,next_number) ";
+        $cmd .= "VALUES ('$id',$nxt) ";
+        $result = mysql_query ($cmd,$cnx);
+        if (mysql_errno()) {
+            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
         } else {
-            $nxt = 1;
-            $cmd = "INSERT INTO  next_number (id,next_number) ";
-            $cmd .= "VALUES ('$id',$nxt) ";
-            $result = $link->query ($cmd);
             if ($result) {
                 $return_number = $nxt;
             }
         }
     }
+
     return $return_number;
+
 }
 
 ?>
@@ -69,6 +90,10 @@ function get_next ($link, $id) {
 $thisTitle = 'Load Pictures into the Rings';
 require ('page_top.php');
 
+$ok   = '<font color="green">';
+$warn = '<font color="red">';
+$em   = "</font><br>\n";
+
 // -- main routine
 
 // set default file slots
@@ -81,7 +106,7 @@ $_SESSION['upload_slots'] = $in_upload_slots;
 // database pointers
 require ('mysql.php');
 
-// connect to the db
+// connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {
     $_SESSION['s_msg'] .= "<br>Error connecting to MySQL host $mysql_host";
@@ -152,7 +177,8 @@ if (!isset($upload)) {
         for ($i=0; $i<$in_upload_slots; $i++) {
             $fileID = "in_filename_" . $i;
             $tmp_file = $_FILES[$fileID]['tmp_name'];
-            if ($_FILES[$fileID]['error'] !=0 && $_FILES[$fileID]['error'] !=4) {
+            if ($_FILES[$fileID]['error'] !=0 
+                && $_FILES[$fileID]['error'] !=4) {
                 echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
             }
             if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
@@ -165,37 +191,31 @@ if (!isset($upload)) {
                 
                 $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
                 
-                $pid = get_next($dbLink, "pid");
+                $pid = get_next($cnx, "pid");
                 
-                $cmd = "INSERT INTO pictures (";
-                $cmd .= "pid,";
-                $cmd .= "file_name,";
-                $cmd .= "picture_type,";
-                $cmd .= "picture, ";
-                $cmd .= "date_last_maint,";
-                $cmd .= "date_added";
-                $cmd .= ") VALUES (";
-                $cmd .= "$pid, ";
-                $cmd .= "'$original_file', ";
-                $cmd .= "'$content_type', ";
-                $cmd .= "'".$dbLink->real_escape_string($the_file_contents)."', ";
-                //        $cmd .= "'".$foo.", ";
-                $cmd .= "'$a_date', ";
-                $cmd .= "'$a_date')";
-                
-                $dbLink->query($cmd);
-                if ($dbLink->errno) {
-                    echo "SQL Error:".$dbLink->error." (".$dbLink->errno."<br>\n";
+                $flds = $vals = '';
+
+                mkin ($cnx, 'pid',             $pid,               'n');
+                mkin ($cnx, 'file_name',       $original_file,     's');
+                mkin ($cnx, 'picture_type',    $content_type,      's');
+                mkin ($cnx, 'picture',         $the_file_contents, 's');
+                mkin ($cnx, 'date_last_maint', $a_date,            'd');
+                mkin ($cnx, 'date_added',      $a_date,            'd');
+                $cmd = "INSERT INTO pictures ($flds) VALUES ($vals) ";
+                $result = mysql_query ($cmd, $cnx);
+                if (mysql_errno()) {
+                    $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
                 }
                 
-                echo "$pid uploaded.  ";
+                echo "$pid uploaded. ";
                 echo "<a href=\"picture_maint?in_pid=$pid\" "
                     . "target=\"_blank\">Update Picture Details.</a>";
                 echo "<br>\n";
+
                 //        unlink ($tmp_file);
                 echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
                 echo "tmp_file:$tmp_file<br>\n";
-                //echo "sql:$cmd<br>\n";
+
                 if ($starting_pid==0) {$starting_pid = $pid;}
             }
         }
@@ -212,7 +232,12 @@ if (!isset($upload)) {
     echo "<a href=\"picture_load\">Back to Load Files</a>\n";
 }
 
-$dbLink->close();
+mysql_close($cnx);
+
+if (strlen($_SESSION['msg']) > 0) {
+    echo $_SESSION['msg'];
+    $_SESSION['msg'] = '';
+}
 
 ?>
 
