@@ -85,7 +85,7 @@ if ( strlen($btn_update)>0 ) {
     
     // Try and get the old user record
     $sel = "SELECT * FROM pictures WHERE pid=$in_pid ";
-    $result = mysql_query ($sel,$cnx);
+    $result = mysql_query ($sel, $cnx);
     if ($result) {
         $row = mysql_fetch_array ($result);
         $this_picture = $row['pid'];
