@@ -24,7 +24,7 @@ if (!session_is_registered('s_msg')) {
     $_SESSION['s_msg'] = '';
 }
 
-require('mysql.php');
+require('inc_dbs.php');
 
 // connect to the database
 $conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

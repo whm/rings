@@ -10,7 +10,7 @@ require('pi_php_sessions.inc');
 
 if ($in_logout>0) {session_destroy();}
 
-require('mysql.php');
+require('inc_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

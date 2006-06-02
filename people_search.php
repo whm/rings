@@ -20,7 +20,7 @@ function prt ($fld) {
 // Start of main processing for the page
 
 // database pointers
-require ('mysql.php');
+require ('inc_dbs.php');
 
 // connect to the db
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
@@ -46,58 +46,58 @@ require ('page_top.php');
 if (isset($button_find)) {
     $word = "WHERE";
     $condition = '';
-    $_SESSION['sear_uid'] = '';
-    $_SESSION['sear_name'] = '';
-    $_SESSION['sear_dob'] = '';
-    $_SESSION['sear_description'] = '';
+    $_SESSION['sp_uid'] = '';
+    $_SESSION['sp_name'] = '';
+    $_SESSION['sp_dob'] = '';
+    $_SESSION['sp_description'] = '';
     if (strlen($in_uid)>0) {
         $condition .= "$word uid LIKE '%$in_uid%' ";
-        $_SESSION['sear_uid'] = $in_uid;
+        $_SESSION['sp_uid'] = $in_uid;
         $word = "AND";
     }
     if (strlen($in_name)>0) {
         $condition .= "$word display_name LIKE '%$in_name%' ";
-        $_SESSION['sear_name'] = $in_name;
+        $_SESSION['sp_name'] = $in_name;
         $word = "AND";
     }
     if (strlen($in_dob)>0) {
         $condition .= "$word date_of_birth LIKE '%$in_dob%' ";
-        $_SESSION['sear_dob'] = $in_dob;
+        $_SESSION['sp_dob'] = $in_dob;
         $word = "AND";
     }
     if (strlen($in_description)>0) {
         $condition .= "$word description LIKE '%$in_description%' ";
-        $_SESSION['sear_description'] = $in_description;
+        $_SESSION['sp_description'] = $in_description;
         $word = "AND";
     }
-    $_SESSION['s_list_select'] = "SELECT uid, "
+    $_SESSION['sp_list_select'] = "SELECT uid, "
         . "display_name, "
         . "date_of_birth, "
         . "description "
         . "FROM people_or_places "
         . "$condition "
         . "ORDER BY uid ";
-    $_SESSION['s_start_row'] = 0;
+    $_SESSION['sp_start_row'] = 0;
     // find the number of rows
-    $result = mysql_query ($_SESSION['s_list_select']);
+    $result = mysql_query ($_SESSION['sp_list_select']);
     if ($result) {
-        $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
+        $_SESSION['sp_num_user_rows'] = mysql_num_rows($result); 
     } else {
-        $_SESSION['s_num_user_rows'] = 0;
+        $_SESSION['sp_num_user_rows'] = 0;
     }
 } elseif (strlen($button_next)>0) {
-    $in_uid = $_SESSION['s_uid'];
-    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + 30;
+    $in_uid = $_SESSION['sp_uid'];
+    $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] + 30;
 } elseif (strlen($button_back)>0) {
-    $in_uid = $_SESSION['s_uid'];
-    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - 30;
-    if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
+    $in_uid = $_SESSION['sp_uid'];
+    $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] - 30;
+    if ($_SESSION['sp_start_row'] < 0) {$_SESSION['sp_start_row'] = 0;}
 }
 
-$sel = $_SESSION['s_list_select']." LIMIT ".$_SESSION['s_start_row'].",30 ";
-$end_row = $_SESSION['s_start_row'] + 30;
-if ($end_row > $_SESSION['s_num_user_rows']) {
-    $end_row = $_SESSION['s_num_user_rows'];
+$sel = $_SESSION['sp_list_select']." LIMIT ".$_SESSION['sp_start_row'].",30 ";
+$end_row = $_SESSION['sp_start_row'] + 30;
+if ($end_row > $_SESSION['sp_num_user_rows']) {
+    $end_row = $_SESSION['sp_num_user_rows'];
 }
 ?>
 
@@ -109,28 +109,28 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 <tr><td align="right">UserID:</td>
     <td> 
     <input type="text" name="in_uid" 
-           value="<?php print $_SESSION['sear_uid']; ?>">
+           value="<?php print $_SESSION['sp_uid']; ?>">
     </td>
 </tr>
 <tr>
   <td align="right">Display Name:</td>
   <td>
   <input type="text" name="in_name" 
-         value="<?php print $_SESSION['sear_name']; ?>">
+         value="<?php print $_SESSION['sp_name']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Date of Birth:</td>
   <td>
   <input type="text" name="in_dob" 
-         value="<?php print $_SESSION['sear_dob']; ?>">
+         value="<?php print $_SESSION['sp_dob']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Description:</td>
   <td>
   <input type="text" name="in_description" 
-         value="<?php print $_SESSION['sear_description']; ?>">
+         value="<?php print $_SESSION['sp_description']; ?>">
   </td>
 </tr>
 <tr>
@@ -141,30 +141,30 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 </table>
 
 <?php 
-   if ($_SESSION['s_num_user_rows']>0) {
+   if ($_SESSION['sp_num_user_rows']>0) {
 ?>
 <table border="1">
 
 <?php 
 $start_row_flag = 0;
-if ($_SESSION['s_start_row'] > 0) {
+if ($_SESSION['sp_start_row'] > 0) {
     $start_row_flag = 1;
 }
 
-if ($end_row != $_SESSION['s_num_user_rows'] || $start_row_flag>0) {
+if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
 ?>
   <tr>
     <td colspan="4">
     <table width="100%" border="0">
       <tr>
       <td>
-        <?php if ($_SESSION['s_start_row']+30<$_SESSION['s_num_user_rows']) {?>
+        <?php if ($_SESSION['sp_start_row']+30<$_SESSION['sp_num_user_rows']) {?>
         <input type="submit" name="button_next" value="Next Page">
         <?php } ?>
       </td>
       <td align="center">
-        Records <?php print $_SESSION['s_start_row']; ?> through
-        <?php print $end_row; ?> of <?php print $_SESSION['s_num_user_rows'];?>
+        Records <?php print $_SESSION['sp_start_row']; ?> through
+        <?php print $end_row; ?> of <?php print $_SESSION['sp_num_user_rows'];?>
       </td>
       <td align="right">
         <?php if ($start_row_flag>0) { ?>

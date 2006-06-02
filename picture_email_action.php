@@ -17,7 +17,7 @@ $warn = '<font color="#330000">';
 $mend = "</font><br>\n";
 $msg = '';
 
-require('mysql.php');
+require('inc_dbs.php');
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {

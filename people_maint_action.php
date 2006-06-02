@@ -47,7 +47,7 @@ function sql_quote ($a_val, $in_type) {
 // ----------------------------------------------------
 // Main Routine
 
-require('mysql.php');
+require('inc_dbs.php');
 
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;
@@ -150,7 +150,7 @@ if ( $update_flag ) {
   } else {
     $flds = '';
     $vals = '';
-    $result = mysql_list_fields ($mysql_db ,'people_or_places');
+    $result = mysql_list_fields ($mysql_db,'people_or_places',$cnx);
     $fld_cnt = mysql_num_fields ($result);
     for ($i=0; $i<$fld_cnt; $i++) {
       $db_fld = mysql_field_name ($result, $i);

@@ -7,7 +7,7 @@
 
 require ('inc_page_open.php');
 
-require('mysql.php');
+require('inc_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

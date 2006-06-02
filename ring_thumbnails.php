@@ -19,7 +19,7 @@ function prt ($fld) {
 }
 
 // database pointers
-require ('mysql.php');
+require ('inc_dbs.php');
 
 // connect to the db
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
