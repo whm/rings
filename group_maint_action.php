@@ -32,7 +32,7 @@ function mkin ($a_fld, $a_val, $in_type) {
 // ----------------------------------------------------
 // Main Routine
 
-require('mysql.php');
+require('inc_dbs.php');
 
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;

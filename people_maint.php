@@ -19,7 +19,7 @@ function prt ($fld) {
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-require('mysql.php');
+require('inc_dbs.php');
 
 // connect to the database
 $conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

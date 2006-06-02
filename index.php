@@ -16,7 +16,7 @@ if ($in_login == 2) {
     $_SESSION['prideindustries_directory_user'] = '';
 }
 
-require('mysql.php');
+require('inc_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
@@ -160,14 +160,14 @@ if ( strlen($in_group_id) > 0) {
     echo "</table>\n";
     echo "</blockquote>\n";
     echo "<p>\n";
-    if (strlen($_SESSION['prideindustries_directory_user'])>0) {
-        echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
-        echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
-    } else {
-        echo "<h5><a href=\"$PHP_SELF?in_login=2\">Login</a></h5>\n";
-    }
 }
 
+if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+    echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
+    echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
+} else {
+    echo "<h5><a href=\"$PHP_SELF?in_login=2\">Login</a></h5>\n";
+}
 ?>
 
 <p>
@@ -186,9 +186,9 @@ but that is not always possible.
 
 <dt>Who makes up the descriptions, dates, etc.?</dt>
 <dd>At this point all updates are by 
-<a href="mailto:bill@macallister.grass-valley.ca.us">Billy MacAllister</a>, so 
-send your flames to him.  If you want to update the web site yourself, 
-either to add pictures, update descriptions or whatever contact Billy.
+<?php echo $ring_admin;?>.  If you want to update the web site yourself, 
+either to add pictures, update descriptions or whatever contact 
+<?php echo $ring_admin;?>.
 </dd>
 
 </dl>

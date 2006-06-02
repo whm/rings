@@ -50,7 +50,7 @@ function sql_quote ($a_val, $in_type) {
 // ----------------------------------------------------
 // Main Routine
 
-require('mysql.php');
+require('inc_dbs.php');
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {
@@ -80,7 +80,6 @@ $warn = 'color="#330000"';
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
-
 if ( strlen($btn_update)>0 ) {
     
     // Try and get the old user record

@@ -104,7 +104,7 @@ if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;
 
 // database pointers
-require ('mysql.php');
+require ('inc_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
@@ -223,6 +223,7 @@ if (!isset($upload)) {
         $sh_cmd .= " --start=$starting_pid";
         $sh_cmd .= " --host=$mysql_host";
         $sh_cmd .= " --user=$mysql_user";
+        $sh_cmd .= " --db=$mysql_db";
         $sh_cmd .= " --update";
         echo "Executing command:$sh_cmd<br>\n";
         $sh_cmd .= " --pass=$mysql_pass";
