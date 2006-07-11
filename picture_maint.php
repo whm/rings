@@ -50,7 +50,7 @@ if (isset($in_pid)) {
 
 if (strlen($btn_next)>0) {
     $sel = "SELECT * ";
-    $sel .= "FROM pictures ";
+    $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid = '$in_pid' ";
     $result = mysql_query ($sel);
     if ($result) {
@@ -75,7 +75,7 @@ if (preg_match($pat, $last_datetime, $mat)) {
 }
 
 $sel = "SELECT * ";
-$sel .= "FROM pictures ";
+$sel .= "FROM pictures_information ";
 $sel .= "WHERE pid = '$in_pid' ";
 $result = mysql_query ($sel);
 if ($result) {
@@ -237,7 +237,7 @@ if (isset($_SESSION['s_msg'])) {
 <tr>
  <td align="right">Taken By:</td>
  <td> <input type="text" name="in_taken_by" size="16" maxlength="32"
-             value="<?php print $row["taken_by"]; ?>"
+             value="<?php print $row["taken_by"]; ?>">
  </td>
 </tr>
 <tr>
@@ -404,11 +404,9 @@ if (is_array($uid_sort)) {
 <input type="hidden" name="add_cnt" value="<?php print $add_cnt;?>">
 
  </td>
- <td>
-<?php
-  if (strlen($row["picture"]) > 0) {
-?>
-  <td colspan="2" align="center" valign="top">
+
+<?php if ( $row["pid"] > 0 ) { ?>
+ <td colspan="2" align="center" valign="top">
    <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">
   <br>
   <table border="0">
@@ -426,10 +424,9 @@ if (is_array($uid_sort)) {
   </tr>
   </table
 
-  </td>
-<?php } else { ?>
-  &nbsp;</td>
+ </td>
 <?php } ?>
+
 </tr>
 </table>
 

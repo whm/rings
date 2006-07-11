@@ -11,11 +11,11 @@ require('pi_php_sessions.inc');
 
 // -- Print a space or the field
 function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  } 
-  return $str;
+    $str = trim ($fld);
+    if (strlen($str) == 0) {
+        $str = "&nbsp;";
+    } 
+    return $str;
 }
 
 // database pointers
@@ -24,9 +24,9 @@ require ('inc_dbs.php');
 // connect to the db
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
 if (!mysql_select_db($mysql_db, $db_link)) {
-  echo "<font color=\#ff0000\">";
-  echo "Error selecting database $mysql_db";
-  echo "</font><br>\n";
+    echo "<font color=\#ff0000\">";
+    echo "Error selecting database $mysql_db";
+    echo "</font><br>\n";
 }
 
 if (strlen($in_start) == 0) {$in_start = 0;}
@@ -59,7 +59,7 @@ if ($result) {
 
 $sel = "SELECT count(*) cnt ";
 $sel .= "FROM picture_details d ";
-$sel .= "JOIN pictures p ";
+$sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
 $thisCount = 0;
@@ -72,7 +72,7 @@ if ($result) {
 if (strlen($in_start_date) > 0) {
     $sel = "SELECT count(*) cnt ";
     $sel .= "FROM picture_details d ";
-    $sel .= "JOIN pictures p ";
+    $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.date_taken>'$in_start_date' ";
@@ -126,7 +126,7 @@ if (strlen($in_start_date) > 0) {
 
 $sel = "SELECT p.date_taken, d.pid ";
 $sel .= "FROM picture_details d ";
-$sel .= "JOIN pictures p ";
+$sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
 if (strlen($_SESSION['prideindustries_directory_user']) == 0) {

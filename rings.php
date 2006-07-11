@@ -43,7 +43,7 @@ if (isset($in_ring_pid)) {
   // display picture and links
 
   $sel = "SELECT * ";
-  $sel .= "FROM pictures ";
+  $sel .= "FROM pictures_information ";
   $sel .= "WHERE pid=$in_ring_pid ";
   $result = mysql_query ($sel);
   if ($result) {
@@ -65,7 +65,7 @@ if (isset($in_ring_pid)) {
         $this_uid          = $row["uid"];
         $this_display_name = $row["display_name"];
         $nxt_sel = "SELECT p.pid ";
-        $nxt_sel .= "FROM picture_details det, pictures p ";
+        $nxt_sel .= "FROM picture_details det, pictures_information p ";
         $nxt_sel .= "WHERE det.pid = p.pid ";
         $nxt_sel .= "AND det.uid = '$this_uid' ";
         $nxt_sel .= "AND p.date_taken > '$this_date_taken' "; 
@@ -78,7 +78,7 @@ if (isset($in_ring_pid)) {
             $next_links[$this_display_name] = $new_pid;
           } else {
             $nxt_sel = "SELECT p.pid pid ";
-            $nxt_sel .= "FROM picture_details det, pictures p ";
+            $nxt_sel .= "FROM picture_details det, pictures_information p ";
             $nxt_sel .= "WHERE det.pid = p.pid ";
             $nxt_sel .= "AND det.uid = '$this_uid' ";
             $nxt_sel .= "ORDER BY p.date_taken ";
@@ -122,7 +122,7 @@ if ($display_rings>0) {
       $this_name = $row["display_name"];
       $this_description = $row["description"];
       $nxt_sel = "SELECT p.pid pid ";
-      $nxt_sel .= "FROM picture_details det, pictures p ";
+      $nxt_sel .= "FROM picture_details det, pictures_information p ";
       $nxt_sel .= "WHERE det.pid = p.pid ";
       $nxt_sel .= "AND det.uid = '$this_uid' ";
       $nxt_sel .= "ORDER BY p.date_taken ";

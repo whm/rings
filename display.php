@@ -9,9 +9,9 @@ require ('inc_dbs.php');
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
 
 if (strlen($in_size)>0) {
-    $sel = "SELECT picture_$in_size,picture_type FROM pictures ";
+    $sel = "SELECT picture,picture_type FROM pictures_$in_size ";
 } else {
-    $sel = "SELECT picture,picture_type FROM pictures ";
+    $sel = "SELECT picture,picture_type FROM pictures_raw ";
 }
 $sel .= "WHERE pid=$in_pid ";
 
