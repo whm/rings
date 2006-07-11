@@ -123,6 +123,9 @@ if (isset($in_ring_uid)) {
     if (isset($in_ring_next)) {
         $sel = $base_sel;
         $sel .= "WHERE date_taken>'$in_ring_next' ";
+        if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+            $sel .= "AND public='Y' ";
+        }
         $sel .= $order_sel;
         $result = mysql_query ($sel);
         if ($result) {
@@ -150,6 +153,9 @@ if (isset($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures ";
     $sel .= "WHERE pid=$in_ring_pid ";
+    if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+        $sel .= "AND public='Y' ";
+    }
     $result = mysql_query ($sel);
     if ($result) {
         $row = mysql_fetch_array($result);

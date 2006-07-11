@@ -76,6 +76,9 @@ if (strlen($in_start_date) > 0) {
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.date_taken>'$in_start_date' ";
+    if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+        $sel .= "AND p.public='Y' ";
+    }
     $partCount = 0;
     $result = mysql_query ($sel);
     if ($result) {
@@ -126,6 +129,9 @@ $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
+if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+    $sel .= "AND p.public='Y' ";
+}
 $sel .= "ORDER BY p.date_taken ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = mysql_query ($sel);

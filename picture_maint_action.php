@@ -47,6 +47,137 @@ function sql_quote ($a_val, $in_type) {
     
 }
 
+//-------------------------------------------------------------
+// Fix up dates to mostly correct
+
+function date_fixup($yyyy, $mon, $day) {
+
+    if ( $yyyy<1 || $yyyy>9999 ) {$yyyy = 1900;}
+        
+    if ( $mon < 1 )  {$mon = 1;}
+    if ( $mon > 12 ) {$mon = 12;}
+    
+    if ( $day < 1 )  {$day = 1;}
+    if ( $day > 31 ) {$day = 31;}
+    if ( $mon== 2 && $day > 28) {$day = 27;}
+    if ( ($mon==9 || $mon==4 || $mon==6 || $mon==11) && $day > 30 ) {
+        $day = 30;
+    }
+        
+    return array($yyyy, $mon, $day);
+
+}
+
+//-------------------------------------------------------------
+// create a canonical datetime to order pictures nicely
+
+function verify_date_taken($dt, $pid, $cnx) {
+
+    $dt = trim($dt);
+
+    $hit = 0;
+
+    $df[] = '/^'
+        . '(\d{4,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+'
+        . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})'
+        . '$/';
+    $df[] = '/^'
+        . '(\d{4,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+'
+        . '(\d{1,2})\:(\d{1,2})'
+        . '$/';
+    $df[] = '/^'
+        . '(\d{4,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+'
+        . '(\d{1,2})'
+        . '$/';
+    $df[] = '/^'
+        . '(\d{4,4})[\/\-](\d{1,2})[\/\-](\d{1,2})'
+        . '$/';
+    foreach ($df as $f) {
+        if (preg_match($f,$dt,$mat)) {
+            $yyyy = $mat[1];
+            $mon = $mat[2];
+            $day = $mat[3];
+            $hr = $mat[4];
+            $min = $mat[5];
+            $sec = $mat[6];
+            $hit = 1;
+            last;
+        } 
+    }
+
+    if ($hit == 0) {
+        $df[] = '/^'
+            . '(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4,4})\s+'
+            . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})'
+            . '$/';
+        $df[] = '/^'
+            . '(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4,4})\s+'
+            . '(\d{1,2})\:(\d{1,2})'
+            . '$/';
+        $df[] = '/^'
+            . '(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4,4})\s+'
+            . '(\d{1,2})'
+            . '$/';
+        $df[] = '/^'
+            . '(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4,4})'
+            . '$/';
+        foreach ($df as $f) {
+            if (preg_match($f,$dt,$mat)) {
+                $mon = $mat[1];
+                $day = $mat[2];
+                $yyyy = $mat[3];
+                $hr = $mat[4];
+                $min = $mat[5];
+                $sec = $mat[6];
+                $hit = 1;
+                last;
+            } 
+        }
+    }
+
+    if ( $hit ) {
+        if (strlen($hr) == 0) {$hr = 12;}
+        if (strlen($min) == 0) {$min = 00;}
+        if (strlen($sec) == 0) {$sec = 00;}
+        
+        list ($yyyy, $mon, $day) = date_fixup($yyyy, $mon, $day);
+
+    } else {
+        $thisDate = getdate();
+        $yyyy = $thisDate['year'];
+        $mon = $thisDate['mon'];
+        $day = $thisDate['mday'];
+        $hr = $thisDate['hours'];
+        $min = $thisDate['minutes'];
+        $sec = $thisDate['seconds'];
+    }
+
+    for ($i=0; $i<255; $i++) {
+        $ret = sprintf ('%4.4d-%02.2d-%02.2d %02.2d:%02.2d:%02.2d',
+                        $yyyy, $mon, $day, $hr, $min, $sec);
+        $sel = 'SELECT pid FROM pictures ';
+        $sel .= "WHERE date_taken='$ret' ";
+        $result = mysql_query ($sel, $cnx);
+        if ($result) {
+            $cnt = 0;
+            while ($row = mysql_fetch_array ($result)) {
+                if ($pid != $row['pid']) {$cnt++;}
+            }
+            if ($cnt == 0) {$i=9999;}
+            $sec += 5;
+            if ($sec > 59) {$min++; $sec = 0;}
+            if ($min > 59) {$hr++; $min = 0;}
+            if ($hr > 24)  {$day++; $hr = 0;}
+            list ($yyyy, $mon, $day) = date_fixup($yyyy, $mon, $day);
+        } else {
+            $i=9999;
+        }
+    }
+
+    return $ret;
+
+}
+
 // ----------------------------------------------------
 // Main Routine
 
@@ -111,6 +242,8 @@ if ( $update_flag ) {
     $update_list[] = 'description';
     $update_list[] = 'key_words';
     $update_list[] = 'taken_by'; 
+    $update_list[] = 'grade'; 
+    $update_list[] = 'public'; 
     $update_list[] = 'date_last_maint';
     
     $up_msg = '';
@@ -127,7 +260,11 @@ if ( $update_flag ) {
         // remember the last entered value    
         $sess_fld = "session_$db_fld";
         $_SESSION["$sess_fld"] = $in_val;
-        
+
+        if ($db_fld == 'date_taken') {
+            $in_val = verify_date_taken($in_val, $in_pid, $cnx);
+        }
+
         if (trim($in_val) != trim($row[$db_fld])) {
             $cmd .= "$comma $db_fld=".sql_quote($in_val,'s'). " ";
             $comma = ',';
