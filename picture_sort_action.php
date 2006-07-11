@@ -53,7 +53,7 @@ if ( strlen($btn_update)>0 ) {
 
     // Try and get the old user record
     $sel = "SELECT date_taken, key_words, taken_by ";
-    $sel .= "FROM pictures WHERE pid=$up_pid ";
+    $sel .= "FROM pictures_information WHERE pid=$up_pid ";
     $result = mysql_query ($sel,$cnx);
     if ($result) {
       $row = mysql_fetch_array($result);
@@ -71,7 +71,7 @@ if ( strlen($btn_update)>0 ) {
 
     if ($update_cnt>0) {
       // Make the changes to pride_webrpt_users
-      $sql_cmd = "UPDATE pictures SET $cmd ";
+      $sql_cmd = "UPDATE pictures_pictures SET $cmd ";
       $sql_cmd .= "WHERE pid = $up_pid ";
       $result = mysql_query ($sql_cmd,$cnx);
       $_SESSION['s_msg'] .= "<font $ok>Update complete for $up_pid</font><br>\n";

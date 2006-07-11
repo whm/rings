@@ -197,11 +197,21 @@ if (!isset($upload)) {
 
                 mkin ($cnx, 'pid',             $pid,               'n');
                 mkin ($cnx, 'file_name',       $original_file,     's');
+                mkin ($cnx, 'date_last_maint', $a_date,            'd');
+                mkin ($cnx, 'date_added',      $a_date,            'd');
+                $cmd = "INSERT INTO pictures_information ";
+                $cmd .= "($flds) VALUES ($vals) ";
+                $result = mysql_query ($cmd, $cnx);
+                if (mysql_errno()) {
+                    $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+                }
+                
+                mkin ($cnx, 'pid',             $pid,               'n');
                 mkin ($cnx, 'picture_type',    $content_type,      's');
                 mkin ($cnx, 'picture',         $the_file_contents, 's');
                 mkin ($cnx, 'date_last_maint', $a_date,            'd');
                 mkin ($cnx, 'date_added',      $a_date,            'd');
-                $cmd = "INSERT INTO pictures ($flds) VALUES ($vals) ";
+                $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
                 $result = mysql_query ($cmd, $cnx);
                 if (mysql_errno()) {
                     $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;

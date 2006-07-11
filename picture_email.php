@@ -20,10 +20,10 @@ $sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
 $info = @ldap_get_entries($ds, $sr);
 $ret_cnt = $info["count"];
 if ($ret_cnt == 1) {
-  $from_display = '&lt;'.$info[0]["mail"][0].'&gt; ' . $info[0]["cn"][0];
-  $from_addr = '<'.$info[0]["mail"][0].'> ' . $info[0]["cn"][0];
+    $from_display = '&lt;'.$info[0]["mail"][0].'&gt; ' . $info[0]["cn"][0];
+    $from_addr = '<'.$info[0]["mail"][0].'> ' . $info[0]["cn"][0];
 } else {
-  $from_addr = 'webmaster@macallister.grass-valley.ca.us';
+    $from_addr = 'webmaster@macallister.grass-valley.ca.us';
 }
 
 ?>

@@ -160,13 +160,15 @@ sub save_file {
     }
     debug_output (" Creating elements for picture record $pid");
     
-    my $a_file_quoted = $1;
-    my $a_file_type = $2;
-    $a_file_quoted =~ s/ /\\ /g;
-    $a_file_quoted =~ s/(\')/\\$1/g;
-    $a_file_quoted =~ s/(\&)/\\$1/g;
-    $a_file_quoted =~ s/(\()/\\$1/g;
-    $a_file_quoted =~ s/(\))/\\$1/g;
+    my $a_filename = $a_file;
+    $a_filename =~ s/^[\/]+//;
+    while ($a_filename =~ s/^.*?\///) {}
+
+    my $a_filetype = '';
+    if ($a_filename =~  /^(.*?)\.(.*)/) {
+        $a_filename = $1;
+        $a_filetype = $2;
+    }
     
     $cnt++;
     
@@ -191,11 +193,38 @@ sub save_file {
     
     if ($compression ne 'JPEG') {
         $thisPic->Set(compression=>'JPEG');
+        $compression = 'JPEG';
     }
     my $newSVGA   = $thisPic->Clone();
     my $newVGA    = $thisPic->Clone();
     my $newThumb  = $thisPic->Clone();
+    my $ptype   = "image/$compression";
     
+    # -- Store the raw image
+
+    my @bPic = $thisPic->ImageToBlob();
+    my $cmd = "INSERT INTO pictures_raw (";
+    $cmd .= "pid,";
+    $cmd .= "picture,";
+    $cmd .= "picture_type,";
+    $cmd .= "height,";
+    $cmd .= "width,";
+    $cmd .= "date_last_maint,";
+    $cmd .= "date_added";
+    $cmd .= ") VALUES (";
+    $cmd .= "?,?,?,?,?,?,?) ";
+    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_update) {
+        my $sth_update = $dbh_update->prepare ($cmd);
+        $sth_update->execute($pid,
+                             $bPic[0], 
+                             $ptype,
+                             $height,
+                             $width,
+                             sql_datetime(),
+                             sql_datetime());
+    }
+
     # -- A SVGA sized picture
     
     my $max_x = 800;
@@ -216,6 +245,31 @@ sub save_file {
     debug_output (" Producing svga picture");
     $newSVGA->Resize(width=>$x, height=>$y);
     
+    # -- Store SVGA
+
+    my @bSVGA = $newSVGA->ImageToBlob();
+    my $cmd = "INSERT INTO pictures_larger (";
+    $cmd .= "pid,";
+    $cmd .= "picture,";
+    $cmd .= "picture_type,";
+    $cmd .= "height,";
+    $cmd .= "width,";
+    $cmd .= "date_last_maint,";
+    $cmd .= "date_added";
+    $cmd .= ") VALUES (";
+    $cmd .= "?,?,?,?,?,?,?) ";
+    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_update) {
+        my $sth_update = $dbh_update->prepare ($cmd);
+        $sth_update->execute($pid,
+                             $bSVGA[0], 
+                             $ptype,
+                             $y,
+                             $x,
+                             sql_datetime(),
+                             sql_datetime());
+    }
+
     # -- A VGA sized picture
     
     my $max_x = 600;
@@ -235,7 +289,32 @@ sub save_file {
     }
     debug_output (" Producing vga picture");
     $newVGA->Resize(width=>$x, height=>$y);
-    
+
+    # Store VGA
+
+    my @bVGA = $newVGA->ImageToBlob();
+    my $cmd = "INSERT INTO pictures_large (";
+    $cmd .= "pid,";
+    $cmd .= "picture,";
+    $cmd .= "picture_type,";
+    $cmd .= "height,";
+    $cmd .= "width,";
+    $cmd .= "date_last_maint,";
+    $cmd .= "date_added";
+    $cmd .= ") VALUES (";
+    $cmd .= "?,?,?,?,?,?,?) ";
+    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_update) {
+        my $sth_update = $dbh_update->prepare ($cmd);
+        $sth_update->execute($pid,
+                             $bVGA[0], 
+                             $ptype,
+                             $y,
+                             $x,
+                             sql_datetime(),
+                             sql_datetime());
+    }
+
     # -- Make the thumbnail 
     
     my $max_x = 100;
@@ -257,40 +336,54 @@ sub save_file {
     debug_output (" Producing thumbnail");
     $newThumb->Resize(width=>$x, height=>$y);
     
-    my @bPic    = $thisPic->ImageToBlob();
-    my @bSVGA   = $newSVGA->ImageToBlob();
-    my @bVGA    = $newVGA->ImageToBlob();
-    my @bThumb  = $newThumb->ImageToBlob();
-    my $ptype   = "image/$compression";
-    
-    # -- Create new record
-    
-    $flds = $vals = '';
-    mkin ('pid',              $pid, 'n');
-    mkin ('date_taken',       sql_datetime($timeStamp), 's');
-    mkin ('file_name',        $a_file, 's');
-    mkin ('key_words',        $opt_keyword, 's');
-    mkin ('picture_type',     $ptype, 's');
-    mkin ('taken_by',         $opt_photographer, 's');
-    mkin ('date_last_maint',  sql_datetime(), 'd');
-    mkin ('date_added',       sql_datetime(), 'd');
-    if ($opt_debug) {
-        debug_output("flds: $flds");
-        debug_output("vals: $vals");
-    }
-    
-    mkin ('picture',          $bPic[0], 's');
-    mkin ('picture_large',    $bVGA[0], 's');
-    mkin ('picture_larger',   $bSVGA[0], 's');
-    mkin ('picture_small',    $bThumb[0], 's');
-    
-    my $cmd = "INSERT INTO pictures ($flds) VALUES ($vals)";
-    if ($opt_debug) {debug_output("length of sql command: ".length($cmd));}
+    my @bThumb = $newThumb->ImageToBlob();
+
+    my $cmd = "INSERT INTO pictures_small (";
+    $cmd .= "pid,";
+    $cmd .= "picture,";
+    $cmd .= "picture_type,";
+    $cmd .= "height,";
+    $cmd .= "width,";
+    $cmd .= "date_last_maint,";
+    $cmd .= "date_added";
+    $cmd .= ") VALUES (";
+    $cmd .= "?,?,?,?,?,?,?) ";
+    if ($opt_debug) {debug_output($cmd);}
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute();
+        $sth_update->execute($pid,
+                             $bThumb[0], 
+                             $ptype,
+                             $y,
+                             $x,
+                             sql_datetime(),
+                             sql_datetime());
     }
-    
+
+    # -- Create information record
+
+    my $cmd = "INSERT INTO pictures_information (";
+    $cmd .= "pid,";
+    $cmd .= "date_taken,";
+    $cmd .= "file_name,";
+    $cmd .= "key_words,";
+    $cmd .= "taken_by,";
+    $cmd .= "date_last_maint,";
+    $cmd .= "date_added";
+    $cmd .= ") VALUES (";
+    $cmd .= "?,?,?,?,?,?,?) ";
+    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_update) {
+        my $sth_update = $dbh_update->prepare ($cmd);
+        $sth_update->execute($pid,
+                             sql_datetime($timeStamp),
+                             $a_filename, 
+                             $opt_keyword,
+                             $opt_photographer,
+                             sql_datetime(),
+                             sql_datetime());
+    }
+
     if (length($opt_ppe)>0) {
         debug_output (" Creating picture details $pid $opt_ppe");
         $flds = $vals = '';

@@ -155,7 +155,7 @@ function verify_date_taken($dt, $pid, $cnx) {
     for ($i=0; $i<255; $i++) {
         $ret = sprintf ('%4.4d-%02.2d-%02.2d %02.2d:%02.2d:%02.2d',
                         $yyyy, $mon, $day, $hr, $min, $sec);
-        $sel = 'SELECT pid FROM pictures ';
+        $sel = 'SELECT pid FROM pictures_information ';
         $sel .= "WHERE date_taken='$ret' ";
         $result = mysql_query ($sel, $cnx);
         if ($result) {
@@ -214,7 +214,7 @@ $warn = 'color="#330000"';
 if ( strlen($btn_update)>0 ) {
     
     // Try and get the old user record
-    $sel = "SELECT * FROM pictures WHERE pid=$in_pid ";
+    $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
     $result = mysql_query ($sel, $cnx);
     if ($result) {
         $row = mysql_fetch_array ($result);
@@ -274,8 +274,8 @@ if ( $update_flag ) {
     }
     
     if ($update_cnt>1) {
-        // Make the changes to pride_webrpt_users
-        $sql_cmd = "UPDATE pictures SET $cmd ";
+        // Make the changes 
+        $sql_cmd = "UPDATE pictures_information SET $cmd ";
         $sql_cmd .= "WHERE pid = $in_pid ";
         $result = mysql_query ($sql_cmd,$cnx);
         $_SESSION['s_msg'] .= $up_msg;
@@ -337,22 +337,26 @@ if ( $update_flag ) {
     
     // -- Delete a record -------------------------------
     
-    $sql_cmd = "DELETE FROM pictures WHERE pid=$in_pid ";
-    $result = mysql_query ($sql_cmd,$cnx);
-    if ($result) {
-        $_SESSION['s_msg'] .= "<font $ok>Picture '$in_pid' dropped.</font><br>";
-    } else {
-        $_SESSION['s_msg'] .= "Problem deleting $in_pid<br>";
-        $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
+    $del_tables[] = 'pictures_information';
+    $del_tables[] = 'pictures_raw';
+    $del_tables[] = 'pictures_small';
+    $del_tables[] = 'pictures_large';
+    $del_tables[] = 'pictures_larger';
+    $del_tables[] = 'pictures_details';
+
+    foreach ($del_tables as $thisTable) {
+        $sql_cmd = "DELETE FROM $thisTable WHERE pid=$in_pid ";
+        $result = mysql_query ($sql_cmd,$cnx);
+        if ($result) {
+            $_SESSION['s_msg'] .= "<font $ok>Picture '$in_pid' deleted "
+                . "from $thisTable.</font><br>";
+        } else {
+            $_SESSION['s_msg'] 
+                .= "Problem deleting $in_pid from $thisTable<br>";
+            $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
+        }
     }
-    $sql_cmd = "DELETE FROM picture_details WHERE pid=$in_pid ";
-    $result = mysql_query ($sql_cmd,$cnx);
-    if ($result) {
-        $_SESSION['s_msg'] .= "<font $ok>Picture details for '$in_pid' dropped.</font><br>";
-    } else {
-        $_SESSION['s_msg'] .= "Problem deleting $in_pid<br>";
-        $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
-    }
+
     $next_uid = 'CLEARFORM';
     
 } else {

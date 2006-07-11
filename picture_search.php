@@ -98,7 +98,7 @@ require ('page_top.php');
               . "date_taken, "
               . "taken_by, "
               . "description "
-              . "FROM pictures "
+              . "FROM pictures_information "
               . "$condition "
               . "ORDER BY date_taken, pid ";
     if (!session_is_registered("s_start_row")) {

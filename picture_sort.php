@@ -181,7 +181,7 @@ if (strlen($button_find)>0) {
     $sel .= "p.file_name, ";
     $sel .= "pop.uid, ";
     $sel .= "pop.display_name ";
-    $sel .= "FROM pictures p ";
+    $sel .= "FROM pictures_information p ";
     $sel .= "LEFT OUTER JOIN picture_details d ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "LEFT OUTER JOIN people_or_places pop ";
