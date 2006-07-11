@@ -87,6 +87,11 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 </select>
 <input type="submit" name="btn_group" value="Display Group"<?php echo $s;?>>
 </form>
+
+<p>
+<font color="660000">Okay, the web site will be a bit slow until I restructure the database a bit.  I should be
+done sometime this evening.  </font> Bill
+
 </blockquote>
 
 <?php

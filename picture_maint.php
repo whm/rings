@@ -114,7 +114,7 @@ function incrementDate() {
   var m = 1*f.last_minute.value + 1;
   var h = 1*f.last_hour.value;
   if (m > 59) {
-    m = "00";
+    m = "0";
     h = h + 1;
   }
 
@@ -207,10 +207,6 @@ if (isset($_SESSION['s_msg'])) {
  </td>
 </tr>
 <tr>
- <td align="right">Picture Type:</td>
- <td><?php print $this_type;?></td>
-</tr>
-<tr>
  <td align="right">Keywords:</td>
  <td> <input type="text" name="in_key_words"
              value="<?php print $row["key_words"]; ?>">
@@ -254,13 +250,45 @@ if (isset($_SESSION['s_msg'])) {
 </tr>
 
 <tr>
- <td align="right">Date Last Maint:</td>
- <td> <?php print $row["date_last_maint"]; ?> </td>
+<?php
+$chk_a = 'CHECKED';
+$chk_b = '';
+$chk_c = '';
+if ($row['grade'] == 'B') {
+    $chk_b = 'CHECKED';
+    $chk_a = '';
+} elseif ($row['grade'] == 'C') {
+    $chk_c = 'CHECKED';
+    $chk_a = '';
+} 
+?>
+ <td align="right">Grade:</td>
+ <td> <input type="radio" name="in_grade" 
+             value="A" <?php echo $chk_a;?>>A &nbsp;&nbsp;
+      <input type="radio" name="in_grade" 
+             value="B" <?php echo $chk_b;?>>B &nbsp;&nbsp;
+      <input type="radio" name="in_grade" 
+             value="C" <?php echo $chk_c;?>>C 
+ </td>
 </tr>
+
+<?php
+$chk_y = 'CHECKED';
+$chk_n = '';
+if ($row['public'] == 'N') {
+    $chk_n = 'CHECKED';
+    $chk_y = '';
+} 
+?>
 <tr>
- <td align="right">Date Last Added:</td>
- <td> <?php print $row["date_added"]; ?> </td>
+ <td align="right">Public:</td>
+ <td> <input type="radio" name="in_public" 
+             value="Y" <?php echo $chk_y;?>>Yes &nbsp;&nbsp;
+      <input type="radio" name="in_public" 
+             value="N" <?php echo $chk_n;?>>No
+ </td>
 </tr>
+
 </table>
 <p>
 
@@ -382,6 +410,22 @@ if (is_array($uid_sort)) {
 ?>
   <td colspan="2" align="center" valign="top">
    <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">
+  <br>
+  <table border="0">
+  <tr>
+   <td align="right">Picture Type:</td>
+   <td><?php print $this_type;?></td>
+  </tr>
+  <tr>
+   <td align="right">Date Last Maint:</td>
+   <td> <?php print $row["date_last_maint"]; ?> </td>
+  </tr>
+  <tr>
+   <td align="right">Date Last Added:</td>
+   <td> <?php print $row["date_added"]; ?> </td>
+  </tr>
+  </table
+
   </td>
 <?php } else { ?>
   &nbsp;</td>
