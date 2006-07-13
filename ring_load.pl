@@ -317,8 +317,8 @@ sub save_file {
 
     # -- Make the thumbnail 
     
-    my $max_x = 100;
-    my $max_y = 100;
+    my $max_x = 125;
+    my $max_y = 125;
     my $x = $width;
     my $y = $height;
     my $x1 = $max_x;

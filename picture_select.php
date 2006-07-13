@@ -112,7 +112,7 @@ if (isset($in_ring_uid)) {
     $base_sel = "SELECT ";
     $base_sel .= "p.date_taken date_taken, ";
     $base_sel .= "p.pid        pid ";
-    $base_sel .= "FROM pictures p ";
+    $base_sel .= "FROM pictures_information p ";
     $base_sel .= "JOIN picture_details det ";
     $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     
@@ -148,10 +148,15 @@ if (isset($in_ring_uid)) {
 
 if (isset($in_ring_pid)) {
 
+    $thisSize = $_SESSION['display_size'];
+    if (!($thisSize=='large' || $thisSize=='larger' || $thisSize == 'raw')) {
+        $thisSize = 'larger';
+    }
+
     // Get data
     
     $sel = "SELECT * ";
-    $sel .= "FROM pictures ";
+    $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid=$in_ring_pid ";
     if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
         $sel .= "AND public='Y' ";
@@ -162,10 +167,10 @@ if (isset($in_ring_pid)) {
         $this_type = trim($row["picture_type"]);
         $this_pid = $row["pid"];
         $this_date_taken = $row["date_taken"];
-        $this_fullbytes = sprintf ('%7.7d', strlen($row["picture"])/1024);
+        $this_fullbytes = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
         echo "<img src=\"/rings/display.php";
         echo "?in_pid=$this_pid";
-        echo "&in_size=larger\">\n";
+        echo "&in_size=$thisSize\">\n";
         if (strlen($row['description'])>0) {
             echo "<p>\n";
             echo $row['description']."\n";
@@ -258,13 +263,13 @@ if (isset($in_ring_pid)) {
         
         echo '<a href="'.$PHP_SELF;
         echo '?in_logout=1';
-        echo '&in_ring_uid='.$in_ring_uid.'">';
+        echo '&in_ring_pid='.$in_ring_pid.'">';
         echo 'Logout';
         echo "</a>\n";
     } else {
         echo '<a href="'.$PHP_SELF;
         echo '?in_login=2';
-        echo '&in_ring_uid='.$in_ring_uid.'">';
+        echo '&in_ring_pid='.$in_ring_pid.'">';
         echo 'Login'."</a>\n";
     }
     
@@ -307,6 +312,9 @@ hideEdit();
 
 <?php if ($in_slide_show > 0) { 
 
+    $display_seconds = $_SESSION['display_seconds'];
+    if ($display_seconds<3) {$display_seconds = 3;}
+
     echo "function slideShowNext(aUID, aDate, aMilliSec) {\n";
     echo "    var url;\n";
     echo '    url = "'.$PHP_SELF
@@ -317,7 +325,8 @@ hideEdit();
     echo '    location = url;'."\n";
     echo "}\n";
 
-    echo 'setTimeout ("slideShowNext()",'.$in_slide_show.");\n";
+    $thisMilli = $display_seconds * 1000;
+    echo 'setTimeout ("slideShowNext()",'.$thisMilli.");\n";
 }
 ?>
 </script>
