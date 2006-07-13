@@ -28,11 +28,40 @@ if (!$result) {
     $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
 }
 
+// set the group
 if (strlen($in_group_id)>0) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
     $in_group_id = $_SESSION['group_id'];
 }
+
+// set the display size
+if (strlen($in_size)>0) {
+    $_SESSION['display_size'] = $in_size;
+} else {
+    $in_size = $_SESSION['display_size'];
+}
+if (strlen($in_size)==0) {
+    $in_size = 'large';
+}
+$chk_large = $chk_larger = $chk_raw = '';
+if ($in_size == 'large') {
+    $chk_large = 'CHECKED';
+} elseif ($in_size == 'larger') {
+    $chk_larger = 'CHECKED';
+} elseif ($in_size == 'raw') {
+    $chk_raw = 'CHECKED';
+} else {
+    $chk_larger = 'CHECKED';
+    $in_size = 'larger';
+}
+$_SESSION['display_size'] = $in_size;
+
+if (strlen($in_seconds) == 0) {
+    $in_seconds = $_SESSION['display_seconds'];
+}
+if ($in_seconds < 3) { $in_seconds = 3;}
+$_SESSION['display_seconds'] = $in_seconds;
 
 ?>
 <html>
@@ -62,6 +91,11 @@ function gotoGroup() {
 <blockquote>
 <form name="pick_group" action="<?php echo $PHP_SELF;?>">
 
+<table border="0" cellpadding="2">
+
+<tr>
+<th align="right">Pick a Group:<th>
+<td>
 <select name="in_group_id"
         onChange="gotoGroup()">
  <option value="all-groups">Display Rings From All Groups
@@ -85,12 +119,38 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 }
 ?>
 </select>
-<input type="submit" name="btn_group" value="Display Group"<?php echo $s;?>>
-</form>
+</td>
 
-<p>
-<font color="660000">Okay, the web site will be a bit slow until I restructure the database a bit.  I should be
-done sometime this evening.  </font> Bill
+<td>
+<input type="submit" name="btn_refresh" value="Refresh">
+</td>
+</tr>
+
+<tr>
+<th align="right">Message Size:</th>
+<td colspan="2">
+       <input type="radio" <?php echo $chk_large;?> name="in_size"
+              value="large">Large
+       &nbsp;&nbsp;
+       <input type="radio" <?php echo $chk_larger;?> name="in_size" 
+              value="larger">Larger
+       &nbsp;&nbsp;
+       <input type="radio" <?php echo $chk_raw;?> name="in_size" 
+              value="raw">Gigantic
+</td>
+</tr>
+
+<tr>
+<th align="right">Seconds to Pause During Show:</th>
+<td colspan="2">
+       <input type="text" size="4" name="in_seconds" 
+              value="<?php echo $in_seconds;?>">
+</td>
+</tr>
+</table>
+</form>  
+
+</form>
 
 </blockquote>
 
@@ -176,6 +236,7 @@ if (strlen($_SESSION['prideindustries_directory_user'])>0) {
 ?>
 
 <p>
+<hr>
 <h3>Random Notes</h3>
 <p>
 <blockquote>

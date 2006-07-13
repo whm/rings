@@ -107,6 +107,20 @@ if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
 
 <script language="JavaScript">
 
+var click_update = 0;
+var click_delete = 0;
+
+function setUpdate() {
+  var f = document.picture_data;
+  click_update = 1;
+  click_delete = 0;
+}
+function setDelete() {
+  var f = document.picture_data;
+  click_update = 0;
+  click_delete = 1;
+}
+
 function incrementDate() {
   var f;
   f = document.picture_data;
@@ -123,10 +137,30 @@ function incrementDate() {
 
   f.in_date_taken.value = f.last_date.value + " " + h + ":" + m;
   f.set_date.checked = false;
-  f.in_key_words.value = '';
+  if (f.in_key_words.value == "NEWPICTURE") {
+      f.in_key_words.value = '';
+  }
 
   return false;
 
+}
+
+/* --------------------- */
+/* Verify the input form */
+/* --------------------- */
+
+function verifyInput() {
+
+    var f = document.picture_data;
+
+    if (click_delete != 0) {
+        click_delete = 0;
+        if (!confirm("Really delete this picture?")) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 </script>
@@ -144,7 +178,7 @@ require ('page_top.php');
 
 <div align="center">
 <form name="find_picture" 
-      action="<?php print $PHP_SELF;?>" 
+      action="<?php print $PHP_SELF;?>"
       method="post">
 <table border="1">
 <tr>
@@ -158,19 +192,6 @@ require ('page_top.php');
   <input type="submit" name="btn_next" value="Next">
   </td>
 </tr>
-<?php 
-if (isset($_SESSION['s_msg'])) { 
-  if (strlen($_SESSION['s_msg'])>0) { 
-?>
-<tr><td bgcolor="#ffffff" align="center" colspan="2">
-    <font color="#ff0000"><?php print $s_msg;?></font>
-    </td>
-</tr>
-<?php 
-    $_SESSION['s_msg'] = '';
-  }
-} 
-?>
 </table>
 </form>
 
@@ -188,17 +209,25 @@ if (isset($_SESSION['s_msg'])) {
 <table border="1" cellpadding="2">
 <tr>
  <td colspan="2">
- <table border="0" width="100%">
- <tr>
-   <td> 
-    &nbsp;
-   </td>
-   <td align="right">
-    <a href="picture_maint.php?in_pid=CLEARFORM">Clear Form</a>
-   </td>
-  </tr>
-  </table>
-  </td>
+    <table border="0" width="100%">
+    <tr>
+    <td><input type="submit" 
+               onClick="setUpdate()"
+               name="btn_update" 
+               value="Update">
+    </td>
+    <td align="center">
+        <input type="submit" 
+               onClick="setDelete()"
+               name="btn_del" 
+               value="Delete">
+    </td>
+    <td align="right">
+     <a href="picture_maint.php?in_pid=CLEARFORM">Clear Form</a>
+    </td>
+    </tr>
+    </table>
+ </td>
 </tr>
 <tr>
  <td align="right">Picture ID:</td>
@@ -346,8 +375,8 @@ if ($result) {
     $uid_list[$a_uid] = $person_row['display_name'];
     $thisWeight = 32767;
     if ($_SESSION['s_uid_weight'][$a_uid]>0) {
-      $thisWeight = 100 
-                  * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 100);
+      $thisWeight = 30 
+                  * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
     }
     $sort_uid = 'a'.sprintf("%05d", $thisWeight)
              . $person_row['display_name'];
@@ -391,15 +420,6 @@ if (is_array($uid_sort)) {
 <tr>
 </table>
 
-<p>
-
-<table border="0" width="75%">
-<tr>
-  <td><input type="submit" name="btn_del" value="Delete"></td>
-  <td align="right"><input type="submit" name="btn_update" value="Update"></td>
-</tr>
-</table>
-
 <input type="hidden" name="del_cnt" value="<?php print $people_cnt;?>">
 <input type="hidden" name="add_cnt" value="<?php print $add_cnt;?>">
 
@@ -411,10 +431,6 @@ if (is_array($uid_sort)) {
   <br>
   <table border="0">
   <tr>
-   <td align="right">Picture Type:</td>
-   <td><?php print $this_type;?></td>
-  </tr>
-  <tr>
    <td align="right">Date Last Maint:</td>
    <td> <?php print $row["date_last_maint"]; ?> </td>
   </tr>
@@ -422,6 +438,19 @@ if (is_array($uid_sort)) {
    <td align="right">Date Last Added:</td>
    <td> <?php print $row["date_added"]; ?> </td>
   </tr>
+<?php 
+if (isset($_SESSION['s_msg'])) { 
+  if (strlen($_SESSION['s_msg'])>0) { 
+?>
+<tr><td bgcolor="#ffffff" align="center" colspan="2">
+    <font color="#ff0000"><?php print $s_msg;?></font>
+    </td>
+</tr>
+<?php 
+    $_SESSION['s_msg'] = '';
+  }
+} 
+?>
   </table
 
  </td>

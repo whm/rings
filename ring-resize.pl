@@ -79,11 +79,134 @@ sub unix_seconds {
 }
 
 # ------------------------------------------------
+# store pictures
+
+sub store_picture {
+
+    my ($thisPID, 
+        $thisTable, 
+        $thisPicture,
+        $thisType) = @_;
+    
+    debug_output ("Processing $thisPID $thisTable");
+    
+    my @blob;
+    $blob[0] = $thisPicture;
+    my $thisPic = Image::Magick->New();
+    $thisPic->BlobToImage(@blob);
+    
+    my ($width, $height) = $thisPic->Get('base-width','base-height');
+    
+    if ($width==0 || $height==0) {
+        debug_output ("      width: $width");
+        debug_output ("     height: $height");
+        debug_output (" Skipping image");
+        return;
+    }
+
+    # default to moderate
+    my $max_x = 640;
+    my $max_y = 480;
+
+    if ($thisTable eq 'pictures_large') {
+        $max_x = 640;
+        $max_y = 480;
+    } elsif ($thisTable eq 'pictures_larger') {
+        $max_x = 800;
+        $max_y = 600;
+    } elsif ($thisTable eq 'pictures_small') {
+        $max_x = 125;
+        $max_y = 125;
+    }
+    
+    my $newPic   = $thisPic->Clone();
+    my $x = $width;
+    my $y = $height;
+    my $x1 = $max_x;
+    my $y1 = ($x1/$width) * $height;
+    my $y2 = $max_y;
+    my $x2 = ($y2/$height) * $width;
+    if ($x1 < $x2) {
+        $x = $x1;
+        $y = $y1;
+    } else {
+        $x = $x2;
+        $y = $y2;
+    }
+    debug_output (" Producing picture $x by $y ");
+    $newPic->Resize(width=>$x, height=>$y);
+    my @bPic  = $newPic->ImageToBlob();
+    
+    my $sel = "SELECT pid FROM $thisTable ";
+    $sel .= "WHERE pid=$thisPID ";
+    my $sth = $dbh->prepare ($sel);
+    if ($opt_debug) {debug_output($sel);}
+    $sth->execute();
+    
+    my $row = $sth->fetchrow_hashref;
+
+    if ($row->{pid} != $thisPID && $thisPID > 0) {
+        
+        my $cmd = "INSERT INTO $thisTable (";
+        $cmd .= 'pid,';
+        $cmd .= 'picture_type,';
+        $cmd .= 'width,';
+        $cmd .= 'height,';
+        $cmd .= 'picture,';
+        $cmd .= 'date_last_maint,';
+        $cmd .= 'date_added';
+        $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
+        my $sth_update = $dbh_update->prepare ($cmd);
+        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_update) {
+            $sth_update->execute(
+                                 $thisPID,
+                                 $thisType,
+                                 $width,
+                                 $height,
+                                 $bPic[0],
+                                 sql_datetime(),
+                                 sql_datetime()
+                                 );
+        }
+        
+    } elsif ($thisPID > 0) {
+        
+        my $cmd = "UPDATE $thisTable SET ";
+        $cmd .= 'picture_type = ?,';
+        $cmd .= 'width = ?,';
+        $cmd .= 'height = ?,';
+        $cmd .= 'picture = ?,';
+        $cmd .= 'date_last_maint = ? ';
+        $cmd .= 'WHERE pid = ? ';
+        my $sth_update = $dbh_update->prepare ($cmd);
+        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_update) {
+            $sth_update->execute(
+                                 $thisType,
+                                 $width,
+                                 $height,
+                                 $bPic[0],
+                                 sql_datetime(),
+                                 $thisPID,
+                                 );
+        }
+    }
+    
+}
+
+# ------------------------------------------------
 # process the files
 
 sub read_and_update {
     
-    my $sel = "SELECT pid,file_name,picture_type,picture FROM pictures ";
+    my %pidList;
+    
+    # get a list of pids first
+
+    my $sel = "SELECT pid,";
+    $sel .= "file_name ";
+    $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid >= $opt_start ";
     if ($opt_end > $opt_start) {
         $sel .= "AND pid <= $opt_end ";
@@ -91,130 +214,50 @@ sub read_and_update {
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {debug_output($sel);}
     $sth->execute();
-    
-    my @blob;
-    
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
+        $pidList{$row->{pid}} = $row->{file_name};
+    }
+    debug_output ("$cnt pictures to process");
+    
+    # process the pictures
+
+    foreach my $i (keys %pidList) {
+        debug_output ("Processing $pidList{$i}...");
         
-        debug_output ("Processing $row->{file_name} $row->{picture_type} ($row->{pid})");
+        my $sel = "SELECT ";
+        $sel .= "picture_type,";
+        $sel .= "picture ";
+        $sel .= "FROM pictures_raw ";
+        $sel .= "WHERE pid = $i ";
+        my $sth = $dbh->prepare ($sel);
+        if ($opt_debug) {debug_output($sel);}
+        $sth->execute();
         
-        $blob[0] = $row->{picture};
-        my $thisPic = Image::Magick->New();
-        $thisPic->BlobToImage(@blob);
-        
-        my ($width, $height) = $thisPic->Get('base-width','base-height');
-        
-        if ($width==0 || $height==0) {
-            debug_output ("      width: $width");
-            debug_output ("     height: $height");
-            debug_output (" Skipping image");
-            next;
+        if (my $row = $sth->fetchrow_hashref) {
+            
+            store_picture ($i, 
+                           'pictures_small', 
+                           $row->{picture}, 
+                           $row->{picture_type});
+            store_picture ($i, 
+                           'pictures_large', 
+                           $row->{picture}, 
+                           $row->{picture_type});
+            store_picture ($i, 
+                           'pictures_larger', 
+                           $row->{picture}, 
+                           $row->{picture_type});
+            
         }
-        if ($opt_debug) {
-            debug_output ("      width: $width");
-            debug_output ("     height: $height");
-        }
-        
-        my $newSVGA   = $thisPic->Clone();
-        my $newVGA    = $thisPic->Clone();
-        my $newThumb  = $thisPic->Clone();
-        
-        # -- A SVGA sized picture
-        
-        my $max_x = 800;
-        my $max_y = 600;
-        my $x = $width;
-        my $y = $height;
-        my $x1 = $max_x;
-        my $y1 = ($x1/$width) * $height;
-        my $y2 = $max_y;
-        my $x2 = ($y2/$height) * $width;
-        if ($x1 < $x2) {
-            $x = $x1;
-            $y = $y1;
-        } else {
-            $x = $x2;
-            $y = $y2;
-        }
-        debug_output (" Producing svga picture");
-        $newSVGA->Resize(width=>$x, height=>$y);
-        
-        # -- A VGA sized picture
-        
-        my $max_x = 600;
-        my $max_y = 480;
-        my $x = $width;
-        my $y = $height;
-        my $x1 = $max_x;
-        my $y1 = ($x1/$width) * $height;
-        my $y2 = $max_y;
-        my $x2 = ($y2/$height) * $width;
-        if ($x1 < $x2) {
-            $x = $x1;
-            $y = $y1;
-        } else {
-            $x = $x2;
-            $y = $y2;
-        }
-        debug_output (" Producing vga picture");
-        $newVGA->Resize(width=>$x, height=>$y);
-        
-        # -- Make the thumbnail 
-        
-        my $max_x = 125;
-        my $max_y = 125;
-        my $x = $width;
-        my $y = $height;
-        my $x1 = $max_x;
-        my $y1 = ($x1/$width) * $height;
-        my $y2 = $max_y;
-        my $x2 = ($y2/$height) * $width;
-        if ($x1 < $x2) {
-            $x = $x1;
-            $y = $y1;
-        } else {
-            $x = $x2;
-            $y = $y2;
-        }
-        debug_output (" Producing thumbnail");
-        $newThumb->Resize(width=>$x, height=>$y);
-        
-        my @bPic    = $thisPic->ImageToBlob();
-        my @bSVGA   = $newSVGA->ImageToBlob();
-        my @bVGA    = $newVGA->ImageToBlob();
-        my @bThumb  = $newThumb->ImageToBlob();
-        
-        # -- update the picture record
-        
-        my $cmd = "UPDATE pictures ";
-        $cmd .= "SET date_last_maint='".sql_datetime()."', ";
-        $cmd .= "picture_large  = ".$dbh->quote($bVGA[0]).", ";
-        $cmd .= "picture_larger = ".$dbh->quote($bSVGA[0]).", ";
-        $cmd .= "picture_small  = ".$dbh->quote($bThumb[0])." ";
-        $cmd .= "WHERE pid = $row->{pid} ";
-        if ($opt_debug) {debug_output("length of sql command: ".length($cmd));}
-        if ($opt_update) {
-            my $sth_update = $dbh_update->prepare ($cmd);
-            $sth_update->execute();
-            debug_output(" Update of $row->{pid} complete.");
-        } else {
-            debug_output(" Proposing SQL command ".length($cmd)." bytes long.");
-        }
-        
-        # -- clean up
-        undef $thisPic;
-        undef $newVGA;
-        undef $newSVGA;
-        undef $newThumb;
     }
 }
-
+    
 # -------------
 # Main routine
 # -------------
 
-print ">>> ring-resize.pl                    v: 8-May-2005\n";
+print ">>> ring-resize.pl                    v:11-Jul-2006\n";
 
 # -- get options
 GetOptions(

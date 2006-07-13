@@ -196,6 +196,7 @@ if (!isset($upload)) {
                 $flds = $vals = '';
 
                 mkin ($cnx, 'pid',             $pid,               'n');
+                mkin ($cnx, 'raw_picture_size',strlen($the_file_contents),'n');
                 mkin ($cnx, 'file_name',       $original_file,     's');
                 mkin ($cnx, 'date_last_maint', $a_date,            'd');
                 mkin ($cnx, 'date_added',      $a_date,            'd');
@@ -204,8 +205,10 @@ if (!isset($upload)) {
                 $result = mysql_query ($cmd, $cnx);
                 if (mysql_errno()) {
                     $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+                    $_SESSION['msg'] .= $warn."SQL:$cmd$em";
                 }
                 
+                $flds = $vals = '';
                 mkin ($cnx, 'pid',             $pid,               'n');
                 mkin ($cnx, 'picture_type',    $content_type,      's');
                 mkin ($cnx, 'picture',         $the_file_contents, 's');
