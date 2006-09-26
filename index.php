@@ -102,12 +102,14 @@ function gotoGroup() {
 
 <?php
 
+if (strlen($in_group_id) == 0) {
+    $in_group_id = 'happenings';
+    $_SESSION['group_id'] = $in_group_id;
+}
+
 $sel = "SELECT * FROM groups ORDER BY group_name ";
 if (  $result = mysql_query ($sel,$cnx) ) {
     while ( $row = mysql_fetch_array ($result) ) {
-        if (strlen($in_group_id) == 0) {
-            $in_group_id = $row['group_id'];
-        }
         $s = '';
         if ($_SESSION['group_id'] == $row['group_id']) {
             $s = ' SELECTED';
@@ -120,15 +122,17 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 ?>
 </select>
 </td>
-
-<td>
-<input type="submit" name="btn_refresh" value="Refresh">
-</td>
 </tr>
+</table>
+
+<table border="1" cellpadding="2">
 
 <tr>
+<td rowspan="2">
+<input type="submit" name="btn_refresh" value="Set">
+</td>
 <th align="right">Message Size:</th>
-<td colspan="2">
+<td>
        <input type="radio" <?php echo $chk_large;?> name="in_size"
               value="large">Large
        &nbsp;&nbsp;
@@ -142,13 +146,12 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 
 <tr>
 <th align="right">Seconds to Pause During Show:</th>
-<td colspan="2">
+<td>
        <input type="text" size="4" name="in_seconds" 
               value="<?php echo $in_seconds;?>">
 </td>
 </tr>
 </table>
-</form>  
 
 </form>
 

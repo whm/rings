@@ -259,26 +259,24 @@ sub read_and_write {
     my $sel = "CREATE TEMPORARY TABLE tmp_picture_list ";
     $sel .= "SELECT DISTINCT d.pid ";
     $sel .= "FROM picture_details d ";
-    $sel .= "JOIN pictures p ";
+    $sel .= "JOIN pictures_information p ";
     $sel .= "ON d.pid=p.pid ";
     $sel .= "WHERE ".$props{'selection'}." ";
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {debug_output($sel);}
     $sth->execute();
+    $sth->finish();
 
     # -- Loop through the pictures
 
-    my $sel = "SELECT p.picture, ";
-    $sel .= "p.picture_small, ";
-    $sel .= "p.picture_large, ";
-    $sel .= "p.picture_larger, ";
-    $sel .= "p.date_taken, ";
-    $sel .= "p.description, ";
-    $sel .= "p.pid ";
-    $sel .= "FROM pictures p ";
-    $sel .= "JOIN tmp_picture_list l ";
-    $sel .= "ON (l.pid = p.pid) ";
-    $sel .= "ORDER BY p.date_taken ";
+    my $sel = "SELECT ";
+    $sel .= "pic.date_taken date_taken, ";
+    $sel .= "pic.description description, ";
+    $sel .= "pic.pid pid ";
+    $sel .= "FROM  pictures_information pic ";
+    $sel .= "JOIN tmp_picture_list tmp ";
+    $sel .= "ON (tmp.pid = pic.pid) ";
+    $sel .= "ORDER BY pic.date_taken ";
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {debug_output($sel);}
     $sth->execute();
@@ -321,100 +319,120 @@ sub read_and_write {
 
     while (my $row = $sth->fetchrow_hashref) {
 
-	debug_output ("Processing $row->{pid} $row->{date_taken}");
+        debug_output ("Processing $row->{pid} $row->{date_taken}");
 
-	my $pic_root = 'PIC-'.$row->{date_taken}.'-'.$row->{pid};
-	$pic_root =~ s/\s+//g;
-	$pic_root =~ s/://g;
+        my $img_sel = "SELECT ";
+        $img_sel .= "rw.picture raw, ";
+        $img_sel .= "lgr.picture lgr, ";
+        $img_sel .= "lg.picture lg, ";
+        $img_sel .= "sm.picture sm ";
+        $img_sel .= "FROM pictures_raw rw ";
+        $img_sel .= "JOIN pictures_larger lgr ";
+        $img_sel .= "ON (lgr.pid = rw.pid) ";
+        $img_sel .= "JOIN pictures_large lg ";
+        $img_sel .= "ON (lg.pid = rw.pid) ";
+        $img_sel .= "JOIN pictures_small sm ";
+        $img_sel .= "ON (sm.pid = rw.pid) ";
+        $img_sel .= "WHERE rw.pid = '$row->{pid}' ";
+        my $img_sth = $dbh->prepare ($img_sel);
+        if ($opt_debug) {debug_output($img_sel);}
+        $img_sth->execute();
 
-	# -- html output
-	if (test_boolean($props{'html'})) {
-	    # -- html file names
-	    my $next_hfile        = $pic_root . '-raw.html';
-	    my $next_hfile_large  = $pic_root . '-large.html';
-	    my $next_hfile_larger = $pic_root . '-larger.html';
+        if (my $img_row = $img_sth->fetchrow_hashref) {
 
-	    # -- write the previous html file
-	    if (length($this_hfile) > 0) {
-		write_html ($last_hfile, 
-			    $this_hfile, 
-			    $pfile,
-			    $next_hfile,
-			    $this_hfile_large, 'Large',
-			    $this_hfile_larger, "Larger",
-			    $this_desc,
-			    $this_pid);
-		write_html ($last_hfile_large, 
-			    $this_hfile_large, 
-			    $pfile_large,
-			    $next_hfile_large,
-			    $this_hfile, 'Raw',
-			    $this_hfile_larger, "Larger",
-			    $this_desc,
-			    $this_pid);
-		write_html ($last_hfile_larger, 
-			    $this_hfile_larger, 
-			    $pfile_larger,
-			    $next_hfile_larger,
-			    $this_hfile, 'Raw',
-			    $this_hfile_large, "Large",
-			    $this_desc,
-			    $this_pid);
-	    }
-	    $last_hfile        = $this_hfile;
-	    $last_hfile_large  = $this_hfile_large;
-	    $last_hfile_larger = $this_hfile_larger;
-	    $this_hfile        = $next_hfile;
-	    $this_hfile_large  = $next_hfile_large;
-	    $this_hfile_larger = $next_hfile_larger;
-	    $this_desc = $row->{description};
-	    $this_pid = $row->{pid};
+            my $pic_root = 'PIC-'.$row->{date_taken}.'-'.$row->{pid};
+            $pic_root =~ s/\s+//g;
+            $pic_root =~ s/://g;
+            
+            # -- html output
+            if (test_boolean($props{'html'})) {
+                # -- html file names
+                my $next_hfile        = $pic_root . '-raw.html';
+                my $next_hfile_large  = $pic_root . '-large.html';
+                my $next_hfile_larger = $pic_root . '-larger.html';
 
-	    # -- image file names
-	    $pfile        = $pic_root . '-raw.jpg';
-	    $pfile_small  = $pic_root . '-thumb.jpg';
-	    $pfile_large  = $pic_root . '-large.jpg';
-	    $pfile_larger = $pic_root . '-larger.jpg';
+                # -- write the previous html file
+                if (length($this_hfile) > 0) {
+                    write_html ($last_hfile, 
+                                $this_hfile, 
+                                $pfile,
+                                $next_hfile,
+                                $this_hfile_large, 'Large',
+                                $this_hfile_larger, "Larger",
+                                $this_desc,
+                                $this_pid);
+                    write_html ($last_hfile_large, 
+                                $this_hfile_large, 
+                                $pfile_large,
+                                $next_hfile_large,
+                                $this_hfile, 'Raw',
+                                $this_hfile_larger, "Larger",
+                                $this_desc,
+                                $this_pid);
+                    write_html ($last_hfile_larger, 
+                                $this_hfile_larger, 
+                                $pfile_larger,
+                                $next_hfile_larger,
+                                $this_hfile, 'Raw',
+                                $this_hfile_large, "Large",
+                                $this_desc,
+                                $this_pid);
+                }
+                $last_hfile        = $this_hfile;
+                $last_hfile_large  = $this_hfile_large;
+                $last_hfile_larger = $this_hfile_larger;
+                $this_hfile        = $next_hfile;
+                $this_hfile_large  = $next_hfile_large;
+                $this_hfile_larger = $next_hfile_larger;
+                $this_desc = $row->{description};
+                $this_pid = $row->{pid};
+
+                # -- image file names
+                $pfile        = $pic_root . '-raw.jpg';
+                $pfile_small  = $pic_root . '-thumb.jpg';
+                $pfile_large  = $pic_root . '-large.jpg';
+                $pfile_larger = $pic_root . '-larger.jpg';
 	    
-	    # -- write the image files
-	    write_file ($pfile,        $row->{picture});
-	    write_file ($pfile_small,  $row->{picture_small});
-	    write_file ($pfile_large,  $row->{picture_large});
-	    write_file ($pfile_larger, $row->{picture_larger});
+                # -- write the image files
+                write_file ($pfile,        $img_row->{raw});
+                write_file ($pfile_small,  $img_row->{sm});
+                write_file ($pfile_large,  $img_row->{lg});
+                write_file ($pfile_larger, $img_row->{lgr});
 
-	    # -- generate index html
-	    if ($i_cnt == 0) {
-		$index_html .= "<br>\n";
-		$index_html .= "$row->{date_taken}\n";
-		$index_html .= "<br>\n";
-	    }
-	    $index_html .= "<a href=\"$this_hfile_large\">";
-	    $index_html .= "<img src=\"$pfile_small\" border=\"0\">";
-	    $index_html .= "</a>\n";
-	    $i_cnt++;
-	    if ($i_cnt >= $i_per) {$i_cnt = 0;}
-	} else {
-
-	    # -- image file names
-	    $pfile        = $pic_root . '-raw.jpg';
-	    $pfile_small  = $pic_root . '-thumb.jpg';
-	    $pfile_large  = $pic_root . '-large.jpg';
-	    $pfile_larger = $pic_root . '-larger.jpg';
-	    
-	    # -- write the image files
-	    if (test_boolean($props{'raw'})) {
-		write_file ($pfile, $row->{picture});
-	    }
-	    if (test_boolean($props{'thumb'})) {
-		write_file ($pfile_small,  $row->{picture_small});
-	    }
-	    if (test_boolean($props{'large'})) {
-		write_file ($pfile_large,  $row->{picture_large});
-	    }
-	    if (test_boolean($props{'larger'})) {
-		write_file ($pfile_larger, $row->{picture_larger});
-	    }
-	}
+                # -- generate index html
+                if ($i_cnt == 0) {
+                    $index_html .= "<br>\n";
+                    $index_html .= "$row->{date_taken}\n";
+                    $index_html .= "<br>\n";
+                }
+                $index_html .= "<a href=\"$this_hfile_large\">";
+                $index_html .= "<img src=\"$pfile_small\" border=\"0\">";
+                $index_html .= "</a>\n";
+                $i_cnt++;
+                if ($i_cnt >= $i_per) {$i_cnt = 0;}
+            } else {
+                
+                # -- image file names
+                $pfile        = $pic_root . '-raw.jpg';
+                $pfile_small  = $pic_root . '-thumb.jpg';
+                $pfile_large  = $pic_root . '-large.jpg';
+                $pfile_larger = $pic_root . '-larger.jpg';
+                
+                # -- write the image files
+                if (test_boolean($props{'raw'})) {
+                    write_file ($pfile, $img_row->{raw});
+                }
+                if (test_boolean($props{'thumb'})) {
+                    write_file ($pfile_small,  $img_row->{sm});
+                }
+                if (test_boolean($props{'large'})) {
+                    write_file ($pfile_large,  $img_row->{lg});
+                }
+                if (test_boolean($props{'larger'})) {
+                    write_file ($pfile_larger, $img_row->{lgr});
+                }
+            }
+        }
     }
     
     if (test_boolean($props{'html'})) {
