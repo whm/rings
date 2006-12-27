@@ -19,11 +19,6 @@ function prt ($fld) {
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-if (!session_is_registered('s_msg')) {
-    session_register('s_msg');
-    $_SESSION['s_msg'] = '';
-}
-
 require('inc_dbs.php');
 
 // connect to the database
@@ -145,6 +140,16 @@ function incrementDate() {
 
 }
 
+function clearKeyword() {
+  var f;
+  f = document.picture_data;
+
+  f.in_key_words.value = '';
+
+  return false;
+
+}
+
 /* --------------------- */
 /* Verify the input form */
 /* --------------------- */
@@ -239,13 +244,15 @@ require ('page_top.php');
  <td align="right">Keywords:</td>
  <td> <input type="text" name="in_key_words"
              value="<?php print $row["key_words"]; ?>">
+      <input type="checkbox"
+             name="clear_key"
+             onClick="clearKeyword()">Clear Keywords
  </td>
 </tr>
 <tr>
  <td align="right">Date Taken:</td>
- <td> <input type="text" name="in_date_taken"
+ <td> <input type="text" name="in_date_taken" size="30"
              value="<?php print $row["date_taken"]; ?>">
-      &nbsp;<?php echo $last_datetime."\n";?>
       <input type="hidden" 
              name="last_date" 
              value="<?php echo $last_date;?>"> 
@@ -256,6 +263,8 @@ require ('page_top.php');
              name="last_minute" 
              value="<?php echo $last_minute;?>">
 <?php if (strlen($last_datetime)>0) {?>
+      <br>
+      Last Date: <?php echo $last_datetime."\n";?>
       <br>
       <input type="checkbox"
              name="set_date"
@@ -425,11 +434,15 @@ if (is_array($uid_sort)) {
 
  </td>
 
-<?php if ( $row["pid"] > 0 ) { ?>
  <td colspan="2" align="center" valign="top">
-   <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">
-  <br>
+
+<?php if ( $row["pid"] > 0 ) { ?>
+   <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">  <br>
+<?php } ?>
+
   <table border="0">
+
+<?php if ( $row["pid"] > 0 ) { ?>
   <tr>
    <td align="right">Date Last Maint:</td>
    <td> <?php print $row["date_last_maint"]; ?> </td>
@@ -438,6 +451,8 @@ if (is_array($uid_sort)) {
    <td align="right">Date Last Added:</td>
    <td> <?php print $row["date_added"]; ?> </td>
   </tr>
+<?php } ?>
+
 <?php 
 if (isset($_SESSION['s_msg'])) { 
   if (strlen($_SESSION['s_msg'])>0) { 
@@ -451,10 +466,9 @@ if (isset($_SESSION['s_msg'])) {
   }
 } 
 ?>
-  </table
+  </table>
 
  </td>
-<?php } ?>
 
 </tr>
 </table>

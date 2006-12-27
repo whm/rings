@@ -44,7 +44,11 @@ function make_a_link ($thisUID, $this_date_taken, $thisName) {
     $thisLink .= '?in_ring_uid='.urlencode($thisUID);
     $thisLink .= '&in_ring_next='.urlencode($this_date_taken);
     $thisLink .= '">';
-    $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
+    if ($_SESSION['button_type'] == 'G') {
+        $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
+    } else {
+        $thisLink .= $thisName;
+    }
     $thisLink .= "</a>\n";
 
     return $thisLink;
@@ -162,22 +166,23 @@ if (isset($in_ring_pid)) {
         $sel .= "AND public='Y' ";
     }
     $result = mysql_query ($sel);
+    $image_reference = '';
     if ($result) {
         $row = mysql_fetch_array($result);
         $this_type = trim($row["picture_type"]);
         $this_pid = $row["pid"];
         $this_date_taken = $row["date_taken"];
         $this_fullbytes = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
-        echo "<img src=\"/rings/display.php";
-        echo "?in_pid=$this_pid";
-        echo "&in_size=$thisSize\">\n";
+        $image_reference .= "<img src=\"/rings/display.php";
+        $image_reference .= "?in_pid=$this_pid";
+        $image_reference .= "&in_size=$thisSize\">\n";
         if (strlen($row['description'])>0) {
-            echo "<p>\n";
-            echo $row['description']."\n";
+            $image_reference .= "<p>\n";
+            $image_reference .= $row['description']."\n";
         }
-        echo "<p>\n";
-        echo "Date Taken: ".format_date_time($this_date_taken)."\n";
-        echo "<p>\n";
+        $image_reference .= "<p>\n";
+        $image_reference .= "Date Taken: ".format_date_time($this_date_taken)."\n";
+        $image_reference .= "<p>\n";
         $sel = "SELECT det.uid   uid, ";
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
@@ -195,7 +200,12 @@ if (isset($in_ring_pid)) {
     // ------------------------------------------
     // display the links
     
+    if ($_SESSION['button_position'] == 'B') {
+        echo $image_reference;
+    }
+
     echo '<table border="0" cellpadding="5" width="100%">'."\n";
+
     echo "<tr>\n";
     echo "\n";
     echo '<td valign="top" align="center">'."\n";
@@ -210,20 +220,24 @@ if (isset($in_ring_pid)) {
                              $next_links[$in_ring_uid]);
             echo "<br>\n";
         }
+        echo '<font  color="white">';
+        $c = '';
         foreach ($next_links as $thisUID => $thisName) {
             if ($in_ring_uid == $thisUID) {continue;}
-            $urlName = urlencode($thisName);
-            $thisLink = '<a href="picture_select.php';
-            $thisLink .= '?in_ring_uid='.urlencode($thisUID);
-            $thisLink .= '&in_ring_next='.urlencode($this_date_taken);
-            $thisLink .= '">';
-            $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
-            $thisLink .= "</a>\n";
-            echo $thisLink;
+            echo $c.make_a_link($thisUID, $this_date_taken, $next_links[$thisUID]);
+            $c = ' - ';
         }
+        echo '</font>';
     }
-    echo '</td align="right" width="600">'."\n";
-    echo '</tr>'."\n";
+    echo "</td>\n";
+    echo "</tr>\n";
+    echo "</table>\n";
+
+    if ($_SESSION['button_position'] != 'B') {
+        echo $image_reference;
+    }
+
+    echo '<table border="0" cellpadding="5" width="100%">'."\n";
     echo "\n";
     echo '<tr>'."\n";
     echo '<td valign="top" align="center">'."\n";
