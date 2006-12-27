@@ -9,12 +9,14 @@ use Pod::Usage;
 use Time::Local;
 
 use vars qw (
+             %prefs
              $cnt
              $dbh
              $dbh_update
              $debug
              $debug_time
              $flds
+             $last_datetime
              $opt_datetaken
              $opt_db
              $opt_debug
@@ -175,20 +177,36 @@ sub save_file {
     # -- read the image
     my $thisPic = new Image::Magick;
     $thisPic->Read($a_file);
-    my ($width, $height, $size, $format, $compression) 
+    my ($width, 
+        $height, 
+        $size, 
+        $format, 
+        $compression,
+        $camera,
+        $this_datetime,
+        $this_shutterspeed,
+        $this_fnumber) 
         = $thisPic->Get('width',
                         'height',
                         'filesize',
                         'format',
-                        'compression');
+                        'compression',
+                        '%[EXIF:Model]',
+                        '%[EXIF:DateTime]',
+                        '%[EXIF:ExposureTime]',
+                        '%[EXIF:FNumber]');
     if ($opt_debug) {
-        debug_output ("     format: $format");
-        debug_output ("compression: $compression");
-        debug_output ("      width: $width");
-        debug_output ("     height: $height");
-        debug_output ("       size: $size");
+        debug_output ("      format: $format");
+        debug_output (" compression: $compression");
+        debug_output ("       width: $width");
+        debug_output ("      height: $height");
+        debug_output ("       model: $camera");
+        debug_output ("    datetime: $this_datetime");
+        debug_output ("exposuretime: $this_shutterspeed");
+        debug_output ("     fnumber: $this_fnumber");
     }
-    
+
+
     # -- Make sure it is a jpeg image
     
     if ($compression ne 'JPEG') {
@@ -362,6 +380,16 @@ sub save_file {
 
     # -- Create information record
 
+    if (length($this_datetime) == 0) {
+        $this_datetime = sql_datetime($timeStamp);
+    }
+    my $pic_datetime = $this_datetime;
+    if ($this_datetime == $last_datetime) {
+        $pic_datetime = sprintf("%s.%3.3d", $this_datetime, $cnt);
+        $pic_datetime =~ s/\.\./\./g;
+    }
+    $last_datetime = $this_datetime;
+
     my $cmd = "INSERT INTO pictures_information (";
     $cmd .= "pid,";
     $cmd .= "date_taken,";
@@ -376,7 +404,7 @@ sub save_file {
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
         $sth_update->execute($pid,
-                             sql_datetime($timeStamp),
+                             $pic_datetime,
                              $a_filename, 
                              $opt_keyword,
                              $opt_photographer,
@@ -438,30 +466,38 @@ if ($opt_manual) {
 }
 
 # -- read preferences from ./rings
-if ( -e '~/.rings') {
-    open (pref, '<~/.rings');
+my $pref_file = $ENV{'HOME'}.'/.rings';
+if ( -e $pref_file) {
+    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    open (pref, "<$pref_file");
     while (<pref>) {
+        chomp;
         my $inline = $_;
-        $inline = s/!.*//;
+        $inline =~ s/\#.*//;
+        if ($opt_debug) {debug_output("inline:$inline");}
         if (length($inline) > 0) {
             if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
                 my $attr = lc($1);
                 my $val = $2;
                 $val =~ s/\s+$//;
-                my $name = 'opt_'.$attr;
-                $$name = $val;
+                $prefs{$attr} = $val;
+                if ($opt_debug) {debug_output("attr:$attr val:$val");}
             }
         }
     }
     close pref;
 }
 
-if ($opt_debug) {
-    debug_output ("host=$opt_host");
-    debug_output ("host=$opt_db");
-    debug_output ("user=$opt_user");
-    debug_output ("pass=$opt_pass");
+if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
+if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
+if (length($opt_keyword) == 0) {$opt_keyword = $prefs{'keyword'};}
+if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
+if (length($opt_path) == 0)    {$opt_path = $prefs{'path'};}
+if (length($opt_photographer) == 0) {
+    $opt_photographer = $prefs{'photographer'};
 }
+if (length($opt_ppe) == 0)     {$opt_ppe = $prefs{'ppe'};}
+if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
 
 if (length($opt_host) == 0) {
     $opt_host = 'localhost';

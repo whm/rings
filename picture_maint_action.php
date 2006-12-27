@@ -78,6 +78,10 @@ function verify_date_taken($dt, $pid, $cnx) {
     $hit = 0;
 
     $df[] = '/^'
+        . '(\d{4,4})[\/\-\:](\d{1,2})[\/\-\:](\d{1,2})\s+'
+        . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})\.(\d{1,3})'
+        . '$/';
+    $df[] = '/^'
         . '(\d{4,4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+'
         . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})'
         . '$/';
@@ -95,17 +99,22 @@ function verify_date_taken($dt, $pid, $cnx) {
     foreach ($df as $f) {
         if (preg_match($f,$dt,$mat)) {
             $yyyy = $mat[1];
-            $mon = $mat[2];
-            $day = $mat[3];
-            $hr = $mat[4];
-            $min = $mat[5];
-            $sec = $mat[6];
+            $mon  = $mat[2];
+            $day  = $mat[3];
+            $hr   = $mat[4];
+            $min  = $mat[5];
+            $sec  = $mat[6];
+            $tsec = $mat[6];
             $hit = 1;
             last;
         } 
     }
 
     if ($hit == 0) {
+        $df[] = '/^'
+            . '(\d{1,2})[\/\-\:](\d{1,2})[\/\-\:](\d{4,4})\s+'
+            . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})\.(\d{1,3})'
+            . '$/';
         $df[] = '/^'
             . '(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4,4})\s+'
             . '(\d{1,2})\:(\d{1,2})\:(\d{1,2})'
@@ -123,12 +132,13 @@ function verify_date_taken($dt, $pid, $cnx) {
             . '$/';
         foreach ($df as $f) {
             if (preg_match($f,$dt,$mat)) {
-                $mon = $mat[1];
-                $day = $mat[2];
+                $mon  = $mat[1];
+                $day  = $mat[2];
                 $yyyy = $mat[3];
-                $hr = $mat[4];
-                $min = $mat[5];
-                $sec = $mat[6];
+                $hr   = $mat[4];
+                $min  = $mat[5];
+                $sec  = $mat[6];
+                $tsec = $mat[7];
                 $hit = 1;
                 last;
             } 
@@ -143,18 +153,19 @@ function verify_date_taken($dt, $pid, $cnx) {
         list ($yyyy, $mon, $day) = date_fixup($yyyy, $mon, $day);
 
     } else {
+
         $thisDate = getdate();
-        $yyyy = $thisDate['year'];
-        $mon = $thisDate['mon'];
-        $day = $thisDate['mday'];
-        $hr = $thisDate['hours'];
-        $min = $thisDate['minutes'];
-        $sec = $thisDate['seconds'];
+        $yyyy     = $thisDate['year'];
+        $mon      = $thisDate['mon'];
+        $day      = $thisDate['mday'];
+        $hr       = $thisDate['hours'];
+        $min      = $thisDate['minutes'];
+        $sec      = $thisDate['seconds'];
     }
 
     for ($i=0; $i<255; $i++) {
-        $ret = sprintf ('%4.4d-%02.2d-%02.2d %02.2d:%02.2d:%02.2d',
-                        $yyyy, $mon, $day, $hr, $min, $sec);
+        $ret = sprintf ('%4.4d-%02.2d-%02.2d %02.2d:%02.2d:%02.2d.%03.3d',
+                        $yyyy, $mon, $day, $hr, $min, $sec, $tsec);
         $sel = 'SELECT pid FROM pictures_information ';
         $sel .= "WHERE date_taken='$ret' ";
         $result = mysql_query ($sel, $cnx);
@@ -164,10 +175,11 @@ function verify_date_taken($dt, $pid, $cnx) {
                 if ($pid != $row['pid']) {$cnt++;}
             }
             if ($cnt == 0) {$i=9999;}
-            $sec += 5;
-            if ($sec > 59) {$min++; $sec = 0;}
-            if ($min > 59) {$hr++; $min = 0;}
-            if ($hr > 24)  {$day++; $hr = 0;}
+            $tsec += 5;
+            if ($tsec > 999) {$sec++; $tsec = 0;}
+            if ($sec > 59)   {$min++; $sec = 0;}
+            if ($min > 59)   {$hr++;  $min = 0;}
+            if ($hr > 24)    {$day++; $hr = 0;}
             list ($yyyy, $mon, $day) = date_fixup($yyyy, $mon, $day);
         } else {
             $i=9999;

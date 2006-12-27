@@ -6,8 +6,8 @@
 //
 
 // Open a session
-require('pi_php_auth.inc');
 require('pi_php_sessions.inc');
+require('pi_php_auth.inc');
 
 if ($in_login == 2) {
     pi_auth('user|rings');
@@ -57,12 +57,43 @@ if ($in_size == 'large') {
 }
 $_SESSION['display_size'] = $in_size;
 
+// set host delay
 if (strlen($in_seconds) == 0) {
     $in_seconds = $_SESSION['display_seconds'];
 }
 if ($in_seconds < 3) { $in_seconds = 3;}
 $_SESSION['display_seconds'] = $in_seconds;
 
+// set button postion on picture display pages
+if (strlen($in_pos) == 0) {$in_pos = $_SESSION['button_position'];}
+$chk_pos_top = $chk_pos_bottom = '';
+if ($in_pos == 'T') {
+    $chk_pos_top = 'CHECKED';
+} else {
+    $chk_pos_bottom = 'CHECKED';
+    $in_pos = 'B';
+}
+$_SESSION['button_position'] = $in_pos;
+
+// set button postion on picture display pages
+if (strlen($in_type) == 0) {$in_type = $_SESSION['button_type'];}
+$chk_btext = $chk_bgraphic = '';
+if ($in_type == 'T') {
+    $chk_type_text = 'CHECKED';
+} else {
+    $chk_type_graphic = 'CHECKED';
+    $in_type = 'G';
+}
+$_SESSION['button_type'] = $in_type;
+
+// set preferences display
+$chk_pref_yes = '';
+$chk_pref_no = '';
+if ($in_pref_display == 'Y') {
+    $chk_pref_yes = 'CHECKED';
+} else {
+    $chk_pref_no = 'CHECKED';
+}
 ?>
 <html>
 <head>
@@ -71,15 +102,25 @@ $_SESSION['display_seconds'] = $in_seconds;
 
 <script language="JavaScript">
 function gotoGroup() {
-    
     var f;
     f = document.pick_group;
-    
     var new_group_url = "<?php echo $PHP_SELF;?>?in_group_id="
                       + f.in_group_id.value;
     location = new_group_url;
-
 }
+
+function getDom(objectname){
+  if (document.all) return document.all[objectname];
+  else return document.getElementById(objectname);
+}
+
+function hidePreferences(){
+  getDom("preferencesDisplay").style.display = 'none';
+}
+function showPreferences(){
+  getDom("preferencesDisplay").style.display = '';
+}
+
 </script>
 
 </head>
@@ -94,8 +135,8 @@ function gotoGroup() {
 <table border="0" cellpadding="2">
 
 <tr>
-<th align="right">Pick a Group:<th>
-<td>
+<th align="right">Pick a Group:</th>
+<td align="left">
 <select name="in_group_id"
         onChange="gotoGroup()">
  <option value="all-groups">Display Rings From All Groups
@@ -123,38 +164,79 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 </select>
 </td>
 </tr>
-</table>
-
-<table border="1" cellpadding="2">
 
 <tr>
-<td rowspan="2">
-<input type="submit" name="btn_refresh" value="Set">
-</td>
-<th align="right">Message Size:</th>
-<td>
-       <input type="radio" <?php echo $chk_large;?> name="in_size"
-              value="large">Large
-       &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_larger;?> name="in_size" 
-              value="larger">Larger
-       &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_raw;?> name="in_size" 
-              value="raw">Gigantic
-</td>
-</tr>
+<th align="right" valign="top">Show Preferences:</th>
+<td><input type="radio" name="in_pref_display"  <?php echo $chk_pref_yes;?> onClick="showPreferences()" value="Y">Yes
+    &nbsp;&nbsp;
+    <input type="radio" name="in_pref_display"  <?php echo $chk_pref_no;?> onClick="hidePreferences()" value="N">No
+    <br>
 
-<tr>
-<th align="right">Seconds to Pause During Show:</th>
-<td>
+    <p id="preferencesDisplay">
+
+    <table border="1" cellpadding="2">
+
+    <tr>
+    <td rowspan="4">
+    <input type="submit" name="btn_refresh" value="Set">
+    </td>
+    <th align="right">Message Size:</th>
+    <td><input type="radio" <?php echo $chk_large;?> name="in_size"
+                value="large">Large
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_larger;?> name="in_size" 
+                value="larger">Larger
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_raw;?> name="in_size" 
+                value="raw">Gigantic
+    </td>
+    </tr>
+
+    <tr>
+    <th align="right">Seconds to Pause During Show:</th>
+    <td>
        <input type="text" size="4" name="in_seconds" 
               value="<?php echo $in_seconds;?>">
+    </td>
+    </tr>
+
+    <tr>
+    <th align="right">Button Position:</th>
+    <td>
+       <input type="radio" <?php echo $chk_pos_top;?> name="in_pos"
+              value="T">Top
+       &nbsp;&nbsp;
+       <input type="radio" <?php echo $chk_pos_bottom;?> name="in_pos" 
+              value="B">Bottom
+    </td>
+    </tr>
+
+    <tr>
+    <th align="right">Button Type:</th>
+    <td>
+       <input type="radio" <?php echo $chk_type_text;?> name="in_type"
+              value="T">Text
+       &nbsp;&nbsp;
+       <input type="radio" <?php echo $chk_type_graphic;?> name="in_type" 
+              value="G">Graphic
+    </td>
+    </tr>
+
+    </table>
+    </p>
+
 </td>
 </tr>
 </table>
 
 </form>
 
+<?php
+if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+    echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
+    echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
+}
+?>
 </blockquote>
 
 <?php
@@ -266,3 +348,9 @@ either to add pictures, update descriptions or whatever contact
 </Body>
 </html>
 
+<script language="JavaScript">
+<?php if (strlen($chk_pref_yes) < 1) {
+    echo "getDom(\"preferencesDisplay\").style.display = 'none';\n";
+}
+?>
+</script>
