@@ -63,9 +63,9 @@ function print_row ($n, $r) {
     echo "      <br>\n";
     echo '      '.$r['file_name']."\n";
     echo "  </td>\n";
-    echo '  <td><input name="up_date_taken_'.$n.'"'."\n";
+    echo '  <td><input name="up_picture_date_'.$n.'"'."\n";
     echo '             type="text" size="18"'."\n";
-    echo '             value="'.$r['date_taken'].'">'."\n";
+    echo '             value="'.$r['picture_date'].'">'."\n";
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
@@ -108,10 +108,10 @@ if (strlen($button_find)>0) {
     
     $word = "WHERE";
     $condition = '';
-    if ((strlen($in_key.$in_date_taken.$in_taken_by.$in_description) > 0)
+    if ((strlen($in_key.$in_picture_date.$in_taken_by.$in_description) > 0)
         || count($in_uids)>0) {
         $_SESSION['sear_key'] = '';
-        $_SESSION['sear_date_taken'] = '';
+        $_SESSION['sear_picture_date'] = '';
         $_SESSION['sear_taken_by'] = '';
         $_SESSION['sear_description'] = '';
         $_SESSION['sear_uids'] = '';
@@ -125,13 +125,13 @@ if (strlen($button_find)>0) {
         $_SESSION['sear_key'] = $in_key;
         $word = "AND";
     }
-    if (strlen($in_date_taken) > 0) {
-        if (preg_match('/%/', $in_date_taken)) {
-            $condition .= "$word p.date_taken LIKE '$in_date_taken' ";
+    if (strlen($in_picture_date) > 0) {
+        if (preg_match('/%/', $in_picture_date)) {
+            $condition .= "$word p.picture_date LIKE '$in_picture_date' ";
         } else {
-            $condition .= "$word p.date_taken = '$in_date_taken' ";
+            $condition .= "$word p.picture_date = '$in_picture_date' ";
         }
-        $_SESSION['sear_date_taken'] = $in_date_taken;
+        $_SESSION['sear_picture_date'] = $in_picture_date;
         $word = "AND";
     }
     if (strlen($in_taken_by) > 0) {
@@ -175,7 +175,7 @@ if (strlen($button_find)>0) {
     }
     $sel = "SELECT p.pid, ";
     $sel .= "p.key_words, ";
-    $sel .= "p.date_taken, ";
+    $sel .= "p.picture_date, ";
     $sel .= "p.taken_by, ";
     $sel .= "p.description, ";
     $sel .= "p.file_name, ";
@@ -187,7 +187,7 @@ if (strlen($button_find)>0) {
     $sel .= "LEFT OUTER JOIN people_or_places pop ";
     $sel .= "ON (d.uid = pop.uid) ";
     $sel .= $condition;
-    $sel .= "ORDER BY p.date_taken, p.pid ";
+    $sel .= "ORDER BY p.picture_date, p.pid ";
     $_SESSION['s_list_select'] = $sel;
     $_SESSION['s_start_row'] = 0;
     
@@ -235,8 +235,8 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 <tr>
   <td align="right">Date Taken:</td>
   <td>
-  <input type="text" name="in_date_taken" 
-         value="<?php print $_SESSION['sear_date_taken']; ?>">
+  <input type="text" name="in_picture_date" 
+         value="<?php print $_SESSION['sear_picture_date']; ?>">
   </td>
 </tr>
 <tr>

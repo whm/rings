@@ -20,6 +20,13 @@ if ($in_login == 2) {
 
 require('inc_dbs.php');
 
+if (strlen($_SESSION['display_grade']) == 0) {
+    $_SESSION['display_grade'] = 'A';
+}
+$grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
+$grade_sel .= "OR p.grade = '' ";
+$grade_sel .= "OR p.grade IS NULL) ";
+
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {
@@ -37,12 +44,18 @@ if (!$result) {
 // ---------------------------------------------
 // make a link to another picture
 
-function make_a_link ($thisUID, $this_date_taken, $thisName) {
+function make_a_link ($thisUID, 
+                      $thisPID,
+                      $this_picture_date, 
+                      $this_seq,
+                      $thisName) {
 
     $urlName = urlencode($thisName);
     $thisLink = '<a href="picture_select.php';
     $thisLink .= '?in_ring_uid='.urlencode($thisUID);
-    $thisLink .= '&in_ring_next='.urlencode($this_date_taken);
+    $thisLink .= '&in_ring_pid='.urlencode($thisPID);
+    $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
+    $thisLink .= '&in_ring_next_seq='.urlencode($this_seq);
     $thisLink .= '">';
     if ($_SESSION['button_type'] == 'G') {
         $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
@@ -114,22 +127,27 @@ $next_links = array();
 if (isset($in_ring_uid)) {
     
     $base_sel = "SELECT ";
-    $base_sel .= "p.date_taken date_taken, ";
-    $base_sel .= "p.pid        pid ";
+    $base_sel .= "p.picture_date     picture_date, ";
+    $base_sel .= "p.picture_sequence picture_sequence, ";
+    $base_sel .= "p.pid              pid ";
     $base_sel .= "FROM pictures_information p ";
     $base_sel .= "JOIN picture_details det ";
     $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     
-    $order_sel .= "ORDER BY p.date_taken ";
+    $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
     $order_sel .= "LIMIT 0,1 ";
     
     // look up the next picture 
-    if (isset($in_ring_next)) {
+    if (isset($in_ring_next_date)) {
         $sel = $base_sel;
-        $sel .= "WHERE date_taken>'$in_ring_next' ";
+        $sel .= "WHERE ((picture_date='$in_ring_next_date' ";
+        $sel .= "AND picture_sequence>$in_ring_next_seq) ";
+        $sel .= "OR (picture_date>'$in_ring_next_date')) ";
+        $sel .= "AND p.pid != $in_ring_pid ";
         if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
             $sel .= "AND public='Y' ";
         }
+        $sel .= "AND $grade_sel ";
         $sel .= $order_sel;
         $result = mysql_query ($sel);
         if ($result) {
@@ -153,7 +171,10 @@ if (isset($in_ring_uid)) {
 if (isset($in_ring_pid)) {
 
     $thisSize = $_SESSION['display_size'];
-    if (!($thisSize=='large' || $thisSize=='larger' || $thisSize == 'raw')) {
+    if (!($thisSize=='large' 
+          || $thisSize=='larger' 
+          || $thisSize=='1280_1024' 
+          || $thisSize == 'raw')) {
         $thisSize = 'larger';
     }
 
@@ -171,7 +192,8 @@ if (isset($in_ring_pid)) {
         $row = mysql_fetch_array($result);
         $this_type = trim($row["picture_type"]);
         $this_pid = $row["pid"];
-        $this_date_taken = $row["date_taken"];
+        $this_picture_date = $row["picture_date"];
+        $this_picture_seq = $row["picture_sequence"];
         $this_fullbytes = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
         $image_reference .= "<img src=\"/rings/display.php";
         $image_reference .= "?in_pid=$this_pid";
@@ -181,7 +203,7 @@ if (isset($in_ring_pid)) {
             $image_reference .= $row['description']."\n";
         }
         $image_reference .= "<p>\n";
-        $image_reference .= "Date Taken: ".format_date_time($this_date_taken)."\n";
+        $image_reference .= "Date Taken: ".format_date_time($this_picture_date)."\n";
         $image_reference .= "<p>\n";
         $sel = "SELECT det.uid   uid, ";
         $sel .= "pp.display_name display_name ";
@@ -216,7 +238,9 @@ if (isset($in_ring_pid)) {
             // display the reason we got here first so that it is easy
             // to step through these pictures.
             echo make_a_link($in_ring_uid, 
-                             $this_date_taken,
+                             $this_pid,
+                             $this_picture_date,
+                             $this_picture_seq, 
                              $next_links[$in_ring_uid]);
             echo "<br>\n";
         }
@@ -224,7 +248,11 @@ if (isset($in_ring_pid)) {
         $c = '';
         foreach ($next_links as $thisUID => $thisName) {
             if ($in_ring_uid == $thisUID) {continue;}
-            echo $c.make_a_link($thisUID, $this_date_taken, $next_links[$thisUID]);
+            echo $c.make_a_link($thisUID, 
+                                $this_pid,
+                                $this_picture_date, 
+                                $this_picture_seq,
+                                $next_links[$thisUID]);
             $c = ' - ';
         }
         echo '</font>';
@@ -333,7 +361,9 @@ hideEdit();
     echo "    var url;\n";
     echo '    url = "'.$PHP_SELF
         . '?in_ring_uid='.$in_ring_uid
-        . '&in_ring_next='.urlencode($this_date_taken)
+        . '&in_ring_pid='.urlencode($this_pid)
+        . '&in_ring_next_date='.urlencode($this_picture_date)
+        . '&in_ring_next_seq='.urlencode($this_picture_seq)
         . '&in_slide_show='.$in_slide_show
         . '";'."\n";
     echo '    location = url;'."\n";

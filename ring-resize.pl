@@ -9,7 +9,8 @@ use Pod::Usage;
 use Time::Local;
 
 use vars qw (
-             $cnt
+             %prefs
+             %tableList
              $dbh
              $dbh_update
              $debug
@@ -22,6 +23,7 @@ use vars qw (
              $opt_manual
              $opt_pass
              $opt_start
+             $opt_table
              $opt_user
              $opt_update
              );
@@ -84,24 +86,64 @@ sub unix_seconds {
 sub store_picture {
 
     my ($thisPID, 
+        $thisSeq,
         $thisTable, 
         $thisPicture,
         $thisType) = @_;
     
-    debug_output ("Processing $thisPID $thisTable");
+    debug_output (" Processing $thisPID $thisTable");
     
     my @blob;
     $blob[0] = $thisPicture;
     my $thisPic = Image::Magick->New();
     $thisPic->BlobToImage(@blob);
     
-    my ($width, $height) = $thisPic->Get('base-width','base-height');
+    my ($width, 
+        $height, 
+        $size, 
+        $format, 
+        $compression,
+        $camera,
+        $this_datetime,
+        $this_shutterspeed,
+        $this_fnumber) 
+        = $thisPic->Get('width',
+                        'height',
+                        'filesize',
+                        'format',
+                        'compression',
+                        '%[EXIF:Model]',
+                        '%[EXIF:DateTime]',
+                        '%[EXIF:ExposureTime]',
+                        '%[EXIF:FNumber]');
     
     if ($width==0 || $height==0) {
         debug_output ("      width: $width");
         debug_output ("     height: $height");
         debug_output (" Skipping image");
         return;
+    }
+
+    # update date and time from the camera and the size 
+    # of the raw image
+
+    if ($this_datetime =~ /\d{4,4}.\d{2,2}.\d{2,2}\s/) {
+        my $cmd = 'UPDATE pictures_information SET ';
+        $cmd .= 'picture_date=?,';
+        $cmd .= 'picture_sequence=?, ';
+        $cmd .= 'raw_picture_size=?,';
+        $cmd .= 'date_last_maint=?';
+        $cmd .= 'WHERE pid=? ';
+        my $sth_update = $dbh_update->prepare ($cmd);
+        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_update) {
+            $sth_update->execute($this_datetime,
+                                 $thisSeq, 
+                                 length($thisPicture),
+                                 sql_datetime(),
+                                 $thisPID
+                                 );
+        }
     }
 
     # default to moderate
@@ -114,6 +156,9 @@ sub store_picture {
     } elsif ($thisTable eq 'pictures_larger') {
         $max_x = 800;
         $max_y = 600;
+    } elsif ($thisTable eq 'pictures_1280_1024') {
+        $max_x = 1280;
+        $max_y = 1024;
     } elsif ($thisTable eq 'pictures_small') {
         $max_x = 125;
         $max_y = 125;
@@ -211,9 +256,11 @@ sub read_and_update {
     if ($opt_end > $opt_start) {
         $sel .= "AND pid <= $opt_end ";
     }
+    $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {debug_output($sel);}
     $sth->execute();
+    my $cnt = 0;
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
         $pidList{$row->{pid}} = $row->{file_name};
@@ -222,7 +269,8 @@ sub read_and_update {
     
     # process the pictures
 
-    foreach my $i (keys %pidList) {
+    my $cnt = 0;
+    foreach my $i (sort keys %pidList) {
         debug_output ("Processing $pidList{$i}...");
         
         my $sel = "SELECT ";
@@ -236,18 +284,21 @@ sub read_and_update {
         
         if (my $row = $sth->fetchrow_hashref) {
             
-            store_picture ($i, 
-                           'pictures_small', 
-                           $row->{picture}, 
-                           $row->{picture_type});
-            store_picture ($i, 
-                           'pictures_large', 
-                           $row->{picture}, 
-                           $row->{picture_type});
-            store_picture ($i, 
-                           'pictures_larger', 
-                           $row->{picture}, 
-                           $row->{picture_type});
+            if (length($opt_table) > 0) {
+                store_picture ($i,
+                               $cnt,
+                               $opt_table, 
+                               $row->{picture}, 
+                               $row->{picture_type});
+            } else {
+                foreach my $t (sort keys %tableList) {
+                    store_picture ($i, 
+                                   $cnt,
+                                   $t,
+                                   $row->{picture}, 
+                                   $row->{picture_type});
+                }
+            }
             
         }
     }
@@ -269,6 +320,7 @@ GetOptions(
            'manual'         => \$opt_manual,
            'pass=s'         => \$opt_pass,
            'start=i'        => \$opt_start,
+           'table=s'        => \$opt_table,
            'user=s'         => \$opt_user,
            'update'         => \$opt_update
            );
@@ -281,12 +333,38 @@ if ($opt_manual) {
     pod2usage(-verbose => 1);
 }
 
-if (length($opt_host) == 0) {
-    $opt_host = 'localhost';
+# -- read preferences from ./rings
+my $pref_file = $ENV{'HOME'}.'/.rings';
+if ( -e $pref_file) {
+    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    open (pref, "<$pref_file");
+    while (<pref>) {
+        chomp;
+        my $inline = $_;
+        $inline =~ s/\#.*//;
+        if ($opt_debug) {debug_output("inline:$inline");}
+        if (length($inline) > 0) {
+            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
+                my $attr = lc($1);
+                my $val = $2;
+                $val =~ s/\s+$//;
+                $prefs{$attr} = $val;
+                if ($opt_debug) {debug_output("attr:$attr val:$val");}
+            }
+        }
+    }
+    close pref;
 }
-if (length($opt_db) == 0) {
-    $opt_db = 'rings';
-}
+
+if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
+if (length($opt_host) == 0)    {$opt_host = 'localhost';}
+
+if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
+if (length($opt_db) == 0)      {$opt_db = 'rings';}
+
+if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
+if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
+
 
 if (length($opt_start) == 0) {
     print "%MAC-F-STARTREQ, Starting number required.  Try 1.\n";
@@ -300,6 +378,20 @@ if (length($opt_pass) == 0) {
 }
 if (length($opt_user) == 0) {
     print "%MAC-F-USERREQ, a MySQL username is required\n";
+    pod2usage(-verbose => 0);
+    exit;
+}
+
+%tableList = ('pictures_small' => 1,
+              'pictures_large' => 1,
+              'pictures_larger' => 1,
+              'pictures_1280_1024' =>1);
+
+if (length($opt_table) > 0 && $tableList{$opt_table} == 0) {
+    print "%MAC-F-INVALIDTBL, Invalid table name\n";
+    print "%MAC-I-VALIDTBL, Valid table names: ";
+    foreach my $t (sort keys %tableList) {print "$t ";}
+    print "\n";
     pod2usage(-verbose => 0);
     exit;
 }
