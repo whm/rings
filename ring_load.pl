@@ -10,6 +10,7 @@ use Time::Local;
 
 use vars qw (
              %prefs
+             %tableList
              $cnt
              $dbh
              $dbh_update
@@ -150,6 +151,146 @@ sub mkin {
 }
 
 # ------------------------------------------------
+# store pictures
+
+sub store_picture {
+
+    my ($thisPID, 
+        $thisTable, 
+        $thisPicture,
+        $thisType) = @_;
+    
+    debug_output (" Processing $thisPID $thisTable");
+    
+    my @blob;
+    $blob[0] = $thisPicture;
+    my $thisPic = Image::Magick->New();
+    $thisPic->BlobToImage(@blob);
+    
+    my ($width, 
+        $height, 
+        $size, 
+        $format, 
+        $compression,
+        $camera,
+        $this_datetime,
+        $this_shutterspeed,
+        $this_fnumber) 
+        = $thisPic->Get('width',
+                        'height',
+                        'filesize',
+                        'format',
+                        'compression',
+                        '%[EXIF:Model]',
+                        '%[EXIF:DateTime]',
+                        '%[EXIF:ExposureTime]',
+                        '%[EXIF:FNumber]');
+    if ($opt_debug) {
+        debug_output ("      format: $format");
+        debug_output (" compression: $compression");
+        debug_output ("       width: $width");
+        debug_output ("      height: $height");
+        debug_output ("       model: $camera");
+        debug_output ("    datetime: $this_datetime");
+        debug_output ("exposuretime: $this_shutterspeed");
+        debug_output ("     fnumber: $this_fnumber");
+    }
+
+    # default to moderate
+    my $max_x = 640;
+    my $max_y = 480;
+
+    if ($thisTable eq 'pictures_large') {
+        $max_x = 640;
+        $max_y = 480;
+    } elsif ($thisTable eq 'pictures_larger') {
+        $max_x = 800;
+        $max_y = 600;
+    } elsif ($thisTable eq 'pictures_1280_1024') {
+        $max_x = 1280;
+        $max_y = 1024;
+    } elsif ($thisTable eq 'pictures_small') {
+        $max_x = 125;
+        $max_y = 125;
+    }
+    
+    my $newPic   = $thisPic->Clone();
+    my $x = $width;
+    my $y = $height;
+    my $x1 = $max_x;
+    my $y1 = ($x1/$width) * $height;
+    my $y2 = $max_y;
+    my $x2 = ($y2/$height) * $width;
+    if ($x1 < $x2) {
+        $x = $x1;
+        $y = $y1;
+    } else {
+        $x = $x2;
+        $y = $y2;
+    }
+    debug_output (" Producing picture $x by $y ");
+    $newPic->Resize(width=>$x, height=>$y);
+    my @bPic  = $newPic->ImageToBlob();
+    
+    my $sel = "SELECT pid FROM $thisTable ";
+    $sel .= "WHERE pid=$thisPID ";
+    my $sth = $dbh->prepare ($sel);
+    if ($opt_debug) {debug_output($sel);}
+    $sth->execute();
+    
+    my $row = $sth->fetchrow_hashref;
+
+    if ($row->{pid} != $thisPID && $thisPID > 0) {
+        
+        my $cmd = "INSERT INTO $thisTable (";
+        $cmd .= 'pid,';
+        $cmd .= 'picture_type,';
+        $cmd .= 'width,';
+        $cmd .= 'height,';
+        $cmd .= 'picture,';
+        $cmd .= 'date_last_maint,';
+        $cmd .= 'date_added';
+        $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
+        my $sth_update = $dbh_update->prepare ($cmd);
+        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_update) {
+            $sth_update->execute(
+                                 $thisPID,
+                                 $thisType,
+                                 $width,
+                                 $height,
+                                 $bPic[0],
+                                 sql_datetime(),
+                                 sql_datetime()
+                                 );
+        }
+        
+    } elsif ($thisPID > 0) {
+        
+        my $cmd = "UPDATE $thisTable SET ";
+        $cmd .= 'picture_type = ?,';
+        $cmd .= 'width = ?,';
+        $cmd .= 'height = ?,';
+        $cmd .= 'picture = ?,';
+        $cmd .= 'date_last_maint = ? ';
+        $cmd .= 'WHERE pid = ? ';
+        my $sth_update = $dbh_update->prepare ($cmd);
+        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_update) {
+            $sth_update->execute(
+                                 $thisType,
+                                 $width,
+                                 $height,
+                                 $bPic[0],
+                                 sql_datetime(),
+                                 $thisPID,
+                                 );
+        }
+    }
+    
+}
+
+# ------------------------------------------------
 # process the files
 
 sub save_file {
@@ -213,24 +354,19 @@ sub save_file {
         $thisPic->Set(compression=>'JPEG');
         $compression = 'JPEG';
     }
-    my $newSVGA   = $thisPic->Clone();
-    my $newVGA    = $thisPic->Clone();
-    my $newThumb  = $thisPic->Clone();
     my $ptype   = "image/$compression";
     
     # -- Store the raw image
 
     my @bPic = $thisPic->ImageToBlob();
-    my $cmd = "INSERT INTO pictures_raw (";
-    $cmd .= "pid,";
-    $cmd .= "picture,";
-    $cmd .= "picture_type,";
-    $cmd .= "height,";
-    $cmd .= "width,";
-    $cmd .= "date_last_maint,";
-    $cmd .= "date_added";
-    $cmd .= ") VALUES (";
-    $cmd .= "?,?,?,?,?,?,?) ";
+    my $cmd = "INSERT INTO pictures_raw SET ";
+    $cmd .= "pid = ?,";
+    $cmd .= "picture = ?,";
+    $cmd .= "picture_type = ?,";
+    $cmd .= "height = ?,";
+    $cmd .= "width = ?,";
+    $cmd .= "date_last_maint = ?,";
+    $cmd .= "date_added = ? ";
     if ($opt_debug) {debug_output($cmd);}
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
@@ -243,139 +379,11 @@ sub save_file {
                              sql_datetime());
     }
 
-    # -- A SVGA sized picture
-    
-    my $max_x = 800;
-    my $max_y = 600;
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = ($x1/$width) * $height;
-    my $y2 = $max_y;
-    my $x2 = ($y2/$height) * $width;
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
-    }
-    debug_output (" Producing svga picture");
-    $newSVGA->Resize(width=>$x, height=>$y);
-    
-    # -- Store SVGA
-
-    my @bSVGA = $newSVGA->ImageToBlob();
-    my $cmd = "INSERT INTO pictures_larger (";
-    $cmd .= "pid,";
-    $cmd .= "picture,";
-    $cmd .= "picture_type,";
-    $cmd .= "height,";
-    $cmd .= "width,";
-    $cmd .= "date_last_maint,";
-    $cmd .= "date_added";
-    $cmd .= ") VALUES (";
-    $cmd .= "?,?,?,?,?,?,?) ";
-    if ($opt_debug) {debug_output($cmd);}
-    if ($opt_update) {
-        my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute($pid,
-                             $bSVGA[0], 
-                             $ptype,
-                             $y,
-                             $x,
-                             sql_datetime(),
-                             sql_datetime());
-    }
-
-    # -- A VGA sized picture
-    
-    my $max_x = 600;
-    my $max_y = 480;
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = ($x1/$width) * $height;
-    my $y2 = $max_y;
-    my $x2 = ($y2/$height) * $width;
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
-    }
-    debug_output (" Producing vga picture");
-    $newVGA->Resize(width=>$x, height=>$y);
-
-    # Store VGA
-
-    my @bVGA = $newVGA->ImageToBlob();
-    my $cmd = "INSERT INTO pictures_large (";
-    $cmd .= "pid,";
-    $cmd .= "picture,";
-    $cmd .= "picture_type,";
-    $cmd .= "height,";
-    $cmd .= "width,";
-    $cmd .= "date_last_maint,";
-    $cmd .= "date_added";
-    $cmd .= ") VALUES (";
-    $cmd .= "?,?,?,?,?,?,?) ";
-    if ($opt_debug) {debug_output($cmd);}
-    if ($opt_update) {
-        my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute($pid,
-                             $bVGA[0], 
-                             $ptype,
-                             $y,
-                             $x,
-                             sql_datetime(),
-                             sql_datetime());
-    }
-
-    # -- Make the thumbnail 
-    
-    my $max_x = 125;
-    my $max_y = 125;
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = ($x1/$width) * $height;
-    my $y2 = $max_y;
-    my $x2 = ($y2/$height) * $width;
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
-    }
-    
-    debug_output (" Producing thumbnail");
-    $newThumb->Resize(width=>$x, height=>$y);
-    
-    my @bThumb = $newThumb->ImageToBlob();
-
-    my $cmd = "INSERT INTO pictures_small (";
-    $cmd .= "pid,";
-    $cmd .= "picture,";
-    $cmd .= "picture_type,";
-    $cmd .= "height,";
-    $cmd .= "width,";
-    $cmd .= "date_last_maint,";
-    $cmd .= "date_added";
-    $cmd .= ") VALUES (";
-    $cmd .= "?,?,?,?,?,?,?) ";
-    if ($opt_debug) {debug_output($cmd);}
-    if ($opt_update) {
-        my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute($pid,
-                             $bThumb[0], 
-                             $ptype,
-                             $y,
-                             $x,
-                             sql_datetime(),
-                             sql_datetime());
+    foreach my $t (sort keys %tableList) {
+        store_picture ($pid, 
+                       $t,
+                       $bPic[0], 
+                       $ptype);
     }
 
     # -- Create information record
@@ -390,20 +398,22 @@ sub save_file {
     }
     $last_datetime = $this_datetime;
 
-    my $cmd = "INSERT INTO pictures_information (";
-    $cmd .= "pid,";
-    $cmd .= "date_taken,";
-    $cmd .= "file_name,";
-    $cmd .= "key_words,";
-    $cmd .= "taken_by,";
-    $cmd .= "date_last_maint,";
-    $cmd .= "date_added";
-    $cmd .= ") VALUES (";
-    $cmd .= "?,?,?,?,?,?,?) ";
+    my $cmd = "INSERT INTO pictures_information SET ";
+    $cmd .= "pid = ?,";
+    $cmd .= "picture_date = ?,";
+    $cmd .= "picture_sequence = ?,";
+    $cmd .= "date_taken = ?,";
+    $cmd .= "file_name = ?,";
+    $cmd .= "key_words = ?,";
+    $cmd .= "taken_by = ?,";
+    $cmd .= "date_last_maint = ?,";
+    $cmd .= "date_added = ?";
     if ($opt_debug) {debug_output($cmd);}
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
         $sth_update->execute($pid,
+                             $pic_datetime,
+                             $cnt, 
                              $pic_datetime,
                              $a_filename, 
                              $opt_keyword,
@@ -429,16 +439,13 @@ sub save_file {
     
     # -- clean up
     undef $thisPic;
-    undef $newSVGA;
-    undef $newVGA;
-    undef $newThumb;
 }
 
 # -------------
 # Main routine
 # -------------
 
-print ">>> ring_load.pl                    v:30-Nov-2003\n";
+print ">>> ring_load.pl                    v: 3-Sep-2007\n";
 
 # -- get options
 GetOptions(
@@ -464,6 +471,11 @@ if ($opt_help) {
 if ($opt_manual) {
     pod2usage(-verbose => 1);
 }
+
+%tableList = ('pictures_small' => 1,
+              'pictures_large' => 1,
+              'pictures_larger' => 1,
+              'pictures_1280_1024' => 1);
 
 # -- read preferences from ./rings
 my $pref_file = $ENV{'HOME'}.'/.rings';
@@ -505,6 +517,7 @@ if (length($opt_host) == 0) {
 if (length($opt_db) == 0) {
     $opt_db = 'rings';
 }
+if (length($opt_ppe) == 0)     {$opt_ppe = 'new';}
 
 $timeStamp = unix_seconds($opt_datetaken);
 if ($opt_debug) {debug_output("starting timestamp: $timeStamp");}

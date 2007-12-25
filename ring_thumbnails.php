@@ -21,6 +21,13 @@ function prt ($fld) {
 // database pointers
 require ('inc_dbs.php');
 
+if (strlen($_SESSION['display_grade']) == 0) {
+    $_SESSION['display_grade'] = 'A';
+}
+$grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
+$grade_sel .= "OR p.grade = '' ";
+$grade_sel .= "OR p.grade IS NULL) ";
+
 // connect to the db
 $db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
 if (!mysql_select_db($mysql_db, $db_link)) {
@@ -62,6 +69,8 @@ $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
+$sel .= "AND $grade_sel ";
+
 $thisCount = 0;
 $result = mysql_query ($sel);
 if ($result) {
@@ -75,7 +84,8 @@ if (strlen($in_start_date) > 0) {
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='$in_uid' ";
-    $sel .= "AND p.date_taken>'$in_start_date' ";
+    $sel .= "AND p.picture_date>'$in_start_date' ";
+    $sel .= "AND $grade_sel ";
     if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
         $sel .= "AND p.public='Y' ";
     }
@@ -124,7 +134,7 @@ if (strlen($in_start_date) > 0) {
 
 <?php 
 
-$sel = "SELECT p.date_taken, d.pid ";
+$sel = "SELECT p.picture_date, d.pid ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
@@ -132,7 +142,8 @@ $sel .= "WHERE d.uid='$in_uid' ";
 if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
     $sel .= "AND p.public='Y' ";
 }
-$sel .= "ORDER BY p.date_taken ";
+$sel .= "AND $grade_sel ";
+$sel .= "ORDER BY p.picture_date,p.picture_sequence ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = mysql_query ($sel);
 if (!$result) {
@@ -184,7 +195,7 @@ if (!$result) {
     if ($cnt>6) {
       echo "<br>\n";
       echo $hr;
-      echo $row['date_taken']."\n";
+      echo $row['picture_date']."\n";
       echo "<br>\n";
       $cnt = 0;
       $hr = "<hr>\n";

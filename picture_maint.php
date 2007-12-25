@@ -51,22 +51,23 @@ if (strlen($btn_next)>0) {
     if ($result) {
         $row = mysql_fetch_array($result);
         if (strlen($row['pid'])>0) {
-            $last_datetime = $row['date_taken'];
+            $last_datetime = $row['picture_date'];
         }
     }
     $in_pid++;
 }
 
 if ((strlen($last_datetime) == 0) 
-    && (strlen($_SESSION['sess_date_taken'])>0)) {
-    $last_datetime = $_SESSION['sess_date_taken'];
+    && (strlen($_SESSION['sess_picture_date'])>0)) {
+    $last_datetime = $_SESSION['sess_picture_date'];
 }
 
-$pat = "/(\d+\-\d+\-\d+)\s+(\d+)\:(\d+)/";
+$pat = "/(\d+\-\d+\-\d+)\s+(\d+)\:(\d+)\:(\d+)/";
 if (preg_match($pat, $last_datetime, $mat)) {
     $last_date = $mat[1];
     $last_hour = $mat[2];
     $last_minute = $mat[3];
+    $last_second = $mat[4];
 }
 
 $sel = "SELECT * ";
@@ -76,6 +77,9 @@ $result = mysql_query ($sel);
 if ($result) {
     $row = mysql_fetch_array($result);
     $this_type = trim($row["picture_type"]);
+    if (strlen($row['picture_date']) == 0) {
+        $row['picture_date'] = $row['date_taken'];
+    }
     if (strlen($row['pid'])>0) {
         foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
     }
@@ -88,8 +92,8 @@ if ( (strlen($in_pid)>0) && (strlen(trim($row["pid"]))==0) ) {
 if ($row["key_words"]=='NEW' && isset($session_key_words)) {
     $row["key_words"] = $session_key_words;
 }
-if ($row["date_taken"]=='UNKNOWN' && isset($session_date_taken)) {
-    $row["date_taken"] = $session_date_taken;
+if ($row["picture_date"]=='UNKNOWN' && isset($session_picture_date)) {
+    $row["picture_date"] = $session_picture_date;
 }
 if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
     $row["taken_by"] = $session_taken_by;
@@ -120,22 +124,27 @@ function incrementDate() {
   var f;
   f = document.picture_data;
 
-  var m = 1*f.last_minute.value + 1;
+  var s = 1*f.last_second.value + 1;
+  var m = 1*f.last_minute.value;
   var h = 1*f.last_hour.value;
+  if (s > 59) {
+      s = '0';
+      m = m + 1;
+  }
   if (m > 59) {
     m = "0";
     h = h + 1;
   }
 
+  if (s < 9) {s = "0"+s;}
   if (m < 9) {m = "0"+m;}
   if (h < 9) {h = "0"+h;}
 
-  f.in_date_taken.value = f.last_date.value + " " + h + ":" + m;
+  f.in_picture_date.value = f.last_date.value + " " + h + ":" + m + ":" + s;
   f.set_date.checked = false;
   if (f.in_key_words.value == "NEWPICTURE") {
       f.in_key_words.value = '';
   }
-
   return false;
 
 }
@@ -187,7 +196,7 @@ require ('page_top.php');
       method="post">
 <table border="1">
 <tr>
-  <td align="right">Picture's ID:</td>
+  <td align="right">Picture ID:</td>
   <td><input type="text" name="in_pid" value="<?php print $in_pid;?>">
   </td>
 </tr>
@@ -250,9 +259,13 @@ require ('page_top.php');
  </td>
 </tr>
 <tr>
- <td align="right">Date Taken:</td>
- <td> <input type="text" name="in_date_taken" size="30"
-             value="<?php print $row["date_taken"]; ?>">
+ <td align="right">Old Date Taken:</td>
+ <td><?php print $row["date_taken"]; ?></td>
+</tr>
+<tr>
+ <td align="right">Picture Date:</td>
+ <td> <input type="text" name="in_picture_date" size="30"
+             value="<?php print $row["picture_date"]; ?>">
       <input type="hidden" 
              name="last_date" 
              value="<?php echo $last_date;?>"> 
@@ -262,6 +275,9 @@ require ('page_top.php');
       <input type="hidden" 
              name="last_minute" 
              value="<?php echo $last_minute;?>">
+      <input type="hidden" 
+             name="last_second" 
+             value="<?php echo $last_second;?>">
 <?php if (strlen($last_datetime)>0) {?>
       <br>
       Last Date: <?php echo $last_datetime."\n";?>
@@ -270,6 +286,12 @@ require ('page_top.php');
              name="set_date"
              onClick="incrementDate()">Increment Date
 <?php } ?>
+ </td>
+</tr>
+<tr>
+ <td align="right">Picture Sequence:</td>
+ <td> <input type="text" name="in_picture_sequence" size="4"
+             value="<?php print $row["picture_sequence"]; ?>">
  </td>
 </tr>
 <tr>

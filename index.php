@@ -42,13 +42,15 @@ if (strlen($in_size)>0) {
     $in_size = $_SESSION['display_size'];
 }
 if (strlen($in_size)==0) {
-    $in_size = 'large';
+    $in_size = 'larger';
 }
-$chk_large = $chk_larger = $chk_raw = '';
+$chk_large = $chk_larger = $chk_raw = $chk_1280_1024 = '';
 if ($in_size == 'large') {
     $chk_large = 'CHECKED';
 } elseif ($in_size == 'larger') {
     $chk_larger = 'CHECKED';
+} elseif ($in_size == '1280_1024') {
+    $chk_1280_1024 = 'CHECKED';
 } elseif ($in_size == 'raw') {
     $chk_raw = 'CHECKED';
 } else {
@@ -56,6 +58,26 @@ if ($in_size == 'large') {
     $in_size = 'larger';
 }
 $_SESSION['display_size'] = $in_size;
+
+// set display grade
+if (strlen($in_grade)>0) {
+    $_SESSION['display_grade'] = $in_grade;
+} else {
+    $in_grade = $_SESSION['display_grade'];
+}
+if (strlen($in_grade)==0) {
+    $in_grade = 'A';
+}
+$chk_a = $chk_b = $chk_c = '';
+if ($in_grade == 'C') {
+    $chk_c = 'CHECKED';
+} elseif ($in_grade == 'B') {
+    $chk_b = 'CHECKED';
+} else {
+    $chk_a = 'CHECKED';
+    $in_grade = 'A';
+}
+$_SESSION['display_grade'] = $in_grade;
 
 // set host delay
 if (strlen($in_seconds) == 0) {
@@ -180,15 +202,31 @@ if (  $result = mysql_query ($sel,$cnx) ) {
     <td rowspan="4">
     <input type="submit" name="btn_refresh" value="Set">
     </td>
-    <th align="right">Message Size:</th>
+    <th align="right">Picture Size:</th>
     <td><input type="radio" <?php echo $chk_large;?> name="in_size"
                 value="large">Large
          &nbsp;&nbsp;
          <input type="radio" <?php echo $chk_larger;?> name="in_size" 
                 value="larger">Larger
          &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_1280_1024;?> name="in_size" 
+                value="1280_1024">Larger Still
+         &nbsp;&nbsp;
          <input type="radio" <?php echo $chk_raw;?> name="in_size" 
                 value="raw">Gigantic
+    </td>
+    </tr>
+
+    <tr>
+    <th align="right">Picture Grade to Display:</th>
+    <td><input type="radio" <?php echo $chk_a;?> name="in_grade"
+                value="A">Only A's
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_b;?> name="in_grade" 
+                value="B">A's and B's
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_c;?> name="in_grade" 
+                value="C">A's, B's, and C's
     </td>
     </tr>
 
@@ -316,7 +354,7 @@ if (strlen($_SESSION['prideindustries_directory_user'])>0) {
     echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
     echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
 } else {
-    echo "<h5><a href=\"$PHP_SELF?in_login=2\">Login</a></h5>\n";
+    echo "<h5><a href=\"https://www.macallister.grass-valley.ca.us$PHP_SELF?in_login=2\">Login</a></h5>\n";
 }
 ?>
 

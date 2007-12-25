@@ -54,6 +54,9 @@ if ( isset($in_group_id) && !isset($row["group_id"]) ) {
 <html>
 <head>
 <title>Group Maintenance</title>
+
+<?php require('inc_select_search.php'); ?>
+
 </head>
 
 <body bgcolor="#eeeeff">
@@ -172,6 +175,10 @@ if (strlen($in_group_id) > 0) {
 ?>
 
 <tr><th colspan="2">People to Add to Group</th></tr>
+<script language="javascript" type="text/javascript">
+      var in_ppe_values  = new Array();
+      var in_ppe_display = new Array();
+</script>
 <?php
 $cmd = "SELECT uid,display_name ";
 $cmd .= "FROM people_or_places ";
@@ -187,6 +194,10 @@ if ($result) {
       echo "<tr>\n";
       echo " <td align=\"right\">People to Add:</td>\n";
       echo " <td>\n";
+      echo "  <input type=\"text\"\n"; 
+      echo "         name=\"in_group_search\" \n";
+      echo "         onkeyup=\"find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);\">\n";
+      echo "  <br>\n";
       echo "  <select name=\"in_newuids[]\" multiple>\n";
     }
     $add_cnt++;
