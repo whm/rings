@@ -113,6 +113,20 @@ function showEdit(){
     getDom("editHelpDisplay").style.display = '';
 }
 
+function hideGrade(){
+    getDom("gradeHelpDisplay").style.display = 'none';
+}
+function showGrade(){
+    getDom("gradeHelpDisplay").style.display = '';
+}
+
+function get_vote(idx,username) {
+    var win = window.open("get_vote.php?id="+idx+"&username="+username,
+                          "Give the Picture a Grade",
+                          "width=400,height=150,status=no");
+    return false;
+}
+
 </script>
 
 </head>
@@ -294,7 +308,8 @@ if (isset($in_ring_pid)) {
     
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
-    if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+    $loggedInUser = $_SESSION['prideindustries_directory_user'];
+    if (strlen($loggedInUser)>0) {
         echo '<a href="picture_maint?in_pid='.$this_pid.'" target="_blank">';
         echo '<img src="images/icon-edit.png" border="0" ';
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
@@ -303,6 +318,13 @@ if (isset($in_ring_pid)) {
         
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         
+        echo '<img src="images/icon-grade.png"  border="0" ';
+        echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
+        echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
+        echo 'alt="Give this picture a grade.">';
+        
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
         echo '<a href="'.$PHP_SELF;
         echo '?in_logout=1';
         echo '&in_ring_pid='.$in_ring_pid.'">';
@@ -335,6 +357,10 @@ if (isset($in_ring_pid)) {
     echo "Edit Picture Ring Details\n";
     echo "</p>\n";
     
+    echo '<p id="gradeHelpDisplay">'."\n";
+    echo "Set the Grade for this picture.\n";
+    echo "</p>\n";
+    
     echo "</td>\n";
     echo "</tr>\n";
     echo "</table>\n";
@@ -351,6 +377,7 @@ hideMail();
 hideBig();
 hideSelect();
 hideEdit();
+hideGrade();
 
 <?php if ($in_slide_show > 0) { 
 
