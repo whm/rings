@@ -16,6 +16,7 @@ use vars qw (
              $debug
              $debug_time
              $opt_db
+             $opt_dateupdate
              $opt_debug
              $opt_end
              $opt_host
@@ -126,9 +127,11 @@ sub store_picture {
 
     # update date and time from the camera and the size 
     # of the raw image
-
-    if ($this_datetime =~ /\d{4,4}.\d{2,2}.\d{2,2}\s/) {
+    if ($opt_dateupdate && 
+        $this_datetime =~ /(\d{4,4}).(\d{1,2}).(\d{1,2})\s+(.*)/) {
+        my $pic_datetime = $1.'-'.$2.'-'.$3.' '.$4;
         my $cmd = 'UPDATE pictures_information SET ';
+        $cmd .= "date_taken = ?,";
         $cmd .= 'picture_date=?,';
         $cmd .= 'picture_sequence=?, ';
         $cmd .= 'raw_picture_size=?,';
@@ -138,6 +141,7 @@ sub store_picture {
         if ($opt_debug) {debug_output($cmd);}
         if ($opt_update) {
             $sth_update->execute($this_datetime,
+                                 $pic_datetime,
                                  $thisSeq, 
                                  length($thisPicture),
                                  sql_datetime(),
@@ -253,7 +257,7 @@ sub read_and_update {
     $sel .= "file_name ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid >= $opt_start ";
-    if ($opt_end > $opt_start) {
+    if ($opt_end >= $opt_start) {
         $sel .= "AND pid <= $opt_end ";
     }
     $sel .= "ORDER BY pid ";
@@ -308,12 +312,13 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-resize.pl                    v:11-Jul-2006\n";
+print ">>> ring-resize.pl                    v:26-Dec-2007\n";
 
 # -- get options
 GetOptions(
            'db=s'           => \$opt_db,
            'debug'          => \$opt_debug,
+           'dateupdate'     => \$opt_dateupdate,
            'end=i'          => \$opt_end,
            'help'           => \$opt_help,
            'host=s'         => \$opt_host,
@@ -425,7 +430,7 @@ ring-resize.pl
 
 =head1 SYNOPSIS
 
- ring-resize.pl --start=int [--end=int] [--update] \
+ ring-resize.pl --start=int [--end=int] [--update] [--dateupdate] \
               [--host=mysql-host] [--db=databasename] \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 
@@ -467,6 +472,11 @@ MySQL password.  Required.
 
 Actually load the data into the rings database.
 
+=item --dateupdate
+
+Update the date taken and picture size in the data base if they
+are available in the image.
+
 =item --help
 
 Displays help text.
@@ -483,7 +493,7 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill.macallister@prideindustries.com>
+Bill MacAllister <bill@macallister.grass-valley.ca.us>
 
 =cut
 

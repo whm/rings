@@ -20,6 +20,7 @@
    <!-- nav bar stuff -->
    Pictures<br>
    &nbsp;<a href="picture_load">Load</a><br>
+   &nbsp;<a href="picture_reload">Re-Load</a><br>
    &nbsp;<a href="picture_search">Find</a><br>
    &nbsp;<a href="picture_maint">Maint</a><br>
    &nbsp;<a href="picture_sort">Sort</a><br>

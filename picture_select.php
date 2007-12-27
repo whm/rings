@@ -120,6 +120,13 @@ function showGrade(){
     getDom("gradeHelpDisplay").style.display = '';
 }
 
+function hideReload(){
+    getDom("reloadHelpDisplay").style.display = 'none';
+}
+function showReload(){
+    getDom("reloadHelpDisplay").style.display = '';
+}
+
 function get_vote(idx,username) {
     var win = window.open("get_vote.php?id="+idx+"&username="+username,
                           "Give the Picture a Grade",
@@ -317,6 +324,14 @@ if (isset($in_ring_pid)) {
         echo "</a>\n";
         
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+        echo '<a href="picture_reload?in_pid='.$this_pid.'" target="_blank">';
+        echo '<img src="images/icon-reload.png" border="0" ';
+        echo 'onMouseOver="showReload();" onMouseOut="hideReload();" ';
+        echo 'alt="ReLoad Picture Information">';
+        echo "</a>\n";
+        
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         
         echo '<img src="images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
@@ -361,6 +376,10 @@ if (isset($in_ring_pid)) {
     echo "Set the Grade for this picture.\n";
     echo "</p>\n";
     
+    echo '<p id="reloadHelpDisplay">'."\n";
+    echo "Re-Load a picture from a file.\n";
+    echo "</p>\n";
+    
     echo "</td>\n";
     echo "</tr>\n";
     echo "</table>\n";
@@ -378,6 +397,7 @@ hideBig();
 hideSelect();
 hideEdit();
 hideGrade();
+hideReload();
 
 <?php if ($in_slide_show > 0) { 
 
