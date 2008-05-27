@@ -249,7 +249,7 @@ if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
 # -- read preferences from ./rings
