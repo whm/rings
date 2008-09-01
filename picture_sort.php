@@ -30,6 +30,34 @@ if (!mysql_select_db($mysql_db, $db_link)) {
 $pics_per_page = 100;
 
 // ------------------------------------------------------------
+// format an sql condition clause
+
+function set_search ($fld, $sess_fld, $op, $val, $cond) {
+
+    if (strlen($cond) > 0) {
+        $word = 'AND';
+    } else {
+        $word = 'WHERE';
+    }
+
+    $new = '';
+    if (strlen($val) > 0) {
+        if ($op == '=') {
+            if (preg_match('/%/', $val)) {
+                $new .= "$word p.$fld LIKE '$val' ";
+            } else {
+                $new .= "$word p.$fld = '$val' ";
+            }
+        } else {
+            $new = "$word p.$fld $op '$val' ";
+        }
+    }
+    $_SESSION["sear_$sess_fld"] = $val;
+
+    return $new;
+}
+
+// ------------------------------------------------------------
 // print a row of data
 
 function print_row ($n, $r) {
@@ -106,52 +134,18 @@ require ('page_top.php');
 // Set up if we have been here before
 if (strlen($button_find)>0) {
     
-    $word = "WHERE";
     $condition = '';
-    if ((strlen($in_key.$in_picture_date.$in_taken_by.$in_description) > 0)
-        || count($in_uids)>0) {
-        $_SESSION['sear_key'] = '';
-        $_SESSION['sear_picture_date'] = '';
-        $_SESSION['sear_taken_by'] = '';
-        $_SESSION['sear_description'] = '';
-        $_SESSION['sear_uids'] = '';
-    }
-    if (strlen($in_key) > 0) {
-        if (preg_match('/%/', $in_key)) {
-            $condition .= "$word p.key_words LIKE '$in_key' ";
-        } else {
-            $condition .= "$word p.key_words = '$in_key' ";
-        }
-        $_SESSION['sear_key'] = $in_key;
-        $word = "AND";
-    }
-    if (strlen($in_picture_date) > 0) {
-        if (preg_match('/%/', $in_picture_date)) {
-            $condition .= "$word p.picture_date LIKE '$in_picture_date' ";
-        } else {
-            $condition .= "$word p.picture_date = '$in_picture_date' ";
-        }
-        $_SESSION['sear_picture_date'] = $in_picture_date;
-        $word = "AND";
-    }
-    if (strlen($in_taken_by) > 0) {
-        if (preg_match("/%/", $in_taken_by)) {
-            $condition .= "$word p.taken_by LIKE '$in_taken_by' ";
-        } else {
-            $condition .= "$word p.taken_by = '$in_taken_by' ";
-        }
-        $_SESSION['sear_taken_by'] = $in_taken_by;
-        $word = "AND";
-    }
-    if (strlen($in_description) > 0) {
-        if (preg_match('/%/', $in_description)) {
-            $condition .= "$word p.description LIKE '$in_description' ";
-        } else {
-            $condition .= "$word p.description = '$in_description' ";
-        }
-        $_SESSION['sear_description'] = $in_description;
-        $word = "AND";
-    }
+    $condition .= set_search ('key_words',      'key',        '=',$in_key,        $condition);
+    $condition .= set_search ('picture_date',   'start_date', '>',$in_start_date, $condition);
+    $condition .= set_search ('picture_date',   'end_date',   '<',$in_end_date,   $condition);
+    $condition .= set_search ('taken_by',       'taken_by',   '=',$in_taken_by,   $condition);
+    $condition .= set_search ('description',    'description','=',$in_description,$condition);
+    $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
+    $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
+
+    $word = 'WHERE';
+    if (strlen($cond) > 0) {$word = 'AND';}
+
     $uid_condition = '';  
     if (count($in_uids) > 0) {
         $uid_word .= '(';
@@ -233,17 +227,28 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
     </td>
 </tr>
 <tr>
-  <td align="right">Date Taken:</td>
-  <td>
-  <input type="text" name="in_picture_date" 
-         value="<?php print $_SESSION['sear_picture_date']; ?>">
-  </td>
-</tr>
-<tr>
   <td align="right">Taken By:</td>
   <td>
   <input type="text" name="in_taken_by" 
          value="<?php print $_SESSION['sear_taken_by']; ?>">
+  </td>
+</tr>
+<tr>
+  <td align="right">Picture Date Range:</td>
+  <td>
+  Start:<input type="text" name="in_start_date" 
+               value="<?php print $_SESSION['sear_start_date']; ?>">
+  End:<input type="text" name="in_end_date" 
+               value="<?php print $_SESSION['sear_end_date']; ?>">
+  </td>
+</tr>
+<tr>
+  <td align="right">Date Last Maint Range:</td>
+  <td>
+  Start:<input type="text" name="in_start_maint" 
+         value="<?php print $_SESSION['sear_start_maint']; ?>">
+  End:<input type="text" name="in_end_maint" 
+         value="<?php print $_SESSION['sear_end_maint']; ?>">
   </td>
 </tr>
 <tr>

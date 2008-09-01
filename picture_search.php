@@ -27,6 +27,34 @@ if (!mysql_select_db($mysql_db, $db_link)) {
   echo "</font><br>\n";
 }
 
+// ------------------------------------------------------------
+// format an sql condition clause
+
+function set_search ($fld, $sess_fld, $op, $val, $cond) {
+
+    if (strlen($cond) > 0) {
+        $word = 'AND';
+    } else {
+        $word = 'WHERE';
+    }
+
+    $new = '';
+    if (strlen($val) > 0) {
+        if ($op == '=') {
+            if (preg_match('/%/', $val)) {
+                $new .= "$word p.$fld LIKE '$val' ";
+            } else {
+                $new .= "$word p.$fld = '$val' ";
+            }
+        } else {
+            $new = "$word p.$fld $op '$val' ";
+        }
+    }
+    $_SESSION["sear_$sess_fld"] = $val;
+
+    return $new;
+}
+
 ?>
 
 <html>
@@ -42,7 +70,6 @@ require ('page_top.php');
 
   // how many to display
   if (strlen($in_count) > 0) {
-    if (!session_is_registered('sear_count')) {session_register('sear_count');}
     $_SESSION['sear_count'] = $in_count;
   } else {
     $in_count = $_SESSION['sear_count'];
@@ -51,65 +78,27 @@ require ('page_top.php');
 
   // Set up if we have been here before
   if (strlen($button_find)>0) {
-    $word = "WHERE";
+
     $condition = '';
-    if (!session_is_registered('sear_key')) {
-      session_register('sear_key');
-      $_SESSION['sear_key'] = '';
-    }
-    if (!session_is_registered('sear_date_taken')) {
-      session_register('sear_date_taken');
-      $_SESSION['sear_date_taken'] = '';
-    }
-    if (!session_is_registered('sear_taken_by')) {
-      session_register('sear_taken_by');
-      $_SESSION['sear_taken_by'] = '';
-    }
-    $sear_picture_type = '';
-    $sear_picture_description = '';
-    if (strlen($in_key) > 0) {
-      $condition .= "$word key_words LIKE '%$in_key%' ";
-      $_SESSION['sear_key'] = $in_key;
-      $word = "AND";
-    }
-    if (strlen($in_date_taken) > 0) {
-      $condition .= "$word date_taken LIKE '%$in_date_taken%' ";
-      $_SESSION['sear_date_taken'] = $in_date_taken;
-      $word = "AND";
-    }
-    if (strlen($in_taken_by) > 0) {
-      $condition .= "$word taken_by LIKE '%$in_taken_by%' ";
-      $_SESSION['sear_taken_by'] = $in_taken_by;
-      $word = "AND";
-    }
-    if (strlen($in_description) > 0) {
-      $condition .= "$word description LIKE '%$in_description%' ";
-      if (!session_is_registered('sear_description')) {
-        session_register('sear_description');
-      }
-      $sear_description = $in_description;
-      $word = "AND";
-    }
-    if (!session_is_registered('s_list_select')) {
-      session_register('s_list_select');
-    }
+    $condition .= set_search ('key_words',      'key',        '=',$in_key,        $condition);
+    $condition .= set_search ('picture_date',   'start_date', '>',$in_start_date, $condition);
+    $condition .= set_search ('picture_date',   'end_date',   '<',$in_end_date,   $condition);
+    $condition .= set_search ('taken_by',       'taken_by',   '=',$in_taken_by,   $condition);
+    $condition .= set_search ('description',    'description','=',$in_description,$condition);
+    $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
+    $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
+
     $_SESSION['s_list_select'] = "SELECT pid, "
               . "key_words, "
-              . "date_taken, "
+              . "picture_date, "
               . "taken_by, "
               . "description "
-              . "FROM pictures_information "
+              . "FROM pictures_information p "
               . "$condition "
-              . "ORDER BY date_taken, pid ";
-    if (!session_is_registered("s_start_row")) {
-      session_register("s_start_row");
-    }
+              . "ORDER BY picture_date, pid ";
     $_SESSION['s_start_row'] = 0;
     // find the number of rows
     $result = mysql_query ($_SESSION['s_list_select']);
-    if (!session_is_registered("s_num_user_rows")) {
-      session_register("s_num_user_rows");
-    }
     if ($result) {
       $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
     } else {
@@ -144,13 +133,6 @@ require ('page_top.php');
     </td>
 </tr>
 <tr>
-  <td align="right">Date Taken:</td>
-  <td>
-  <input type="text" name="in_date_taken" 
-         value="<?php print $_SESSION['sear_date_taken']; ?>">
-  </td>
-</tr>
-<tr>
   <td align="right">Taken By:</td>
   <td>
   <input type="text" name="in_taken_by" 
@@ -162,6 +144,24 @@ require ('page_top.php');
   <td>
   <input type="text" name="in_description" 
          value="<?php print $sear_description; ?>">
+  </td>
+</tr>
+<tr>
+  <td align="right">Picture Date Range:</td>
+  <td>
+  Start:<input type="text" name="in_start_date" 
+               value="<?php print $_SESSION['sear_start_date']; ?>">
+  End:<input type="text" name="in_end_date" 
+               value="<?php print $_SESSION['sear_end_date']; ?>">
+  </td>
+</tr>
+<tr>
+  <td align="right">Date Last Maint Range:</td>
+  <td>
+  Start:<input type="text" name="in_start_maint" 
+         value="<?php print $_SESSION['sear_start_maint']; ?>">
+  End:<input type="text" name="in_end_maint" 
+         value="<?php print $_SESSION['sear_end_maint']; ?>">
   </td>
 </tr>
 <tr>
@@ -230,7 +230,7 @@ require ('page_top.php');
         echo " <tr>\n";
         echo "  <td>$thumb</td>\n";
         echo "  <td>".$pic_href.$row["pid"]."</a></td>\n";
-        echo "  <td>".$row["date_taken"]."</td>\n";
+        echo "  <td>".$row["picture_date"]."</td>\n";
         echo "  <td>".$row["taken_by"]."</td>\n";
         echo "  <td>".$row["key_words"]."</td>\n";
         echo "  <td>".$row["description"]."</td>\n";
@@ -257,7 +257,7 @@ require ('page_top.php');
 ?>
 </form>
 </div>
-
+<?php print $sel;?>
 <?php require('page_bottom.php'); ?>
 </body>
 </html>
