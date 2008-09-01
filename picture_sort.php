@@ -143,6 +143,8 @@ if (strlen($button_find)>0) {
     $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
     $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
 
+    $_SESSION['s_order_by'] = $in_order;
+
     $word = 'WHERE';
     if (strlen($cond) > 0) {$word = 'AND';}
 
@@ -181,7 +183,11 @@ if (strlen($button_find)>0) {
     $sel .= "LEFT OUTER JOIN people_or_places pop ";
     $sel .= "ON (d.uid = pop.uid) ";
     $sel .= $condition;
-    $sel .= "ORDER BY p.picture_date, p.pid ";
+    if ($_SESSION['s_order_by'] == 'p.pid') {
+        $sel .= "ORDER BY pid ";
+    } else {
+        $sel .= "ORDER BY picture_date, pid ";
+    }
     $_SESSION['s_list_select'] = $sel;
     $_SESSION['s_start_row'] = 0;
     
@@ -258,6 +264,24 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
          value="<?php print $_SESSION['sear_description']; ?>">
   </td>
 </tr>
+
+<?php
+if ($_SESSION['s_order_by'] == 'p.pid') {
+    $sel_pid = 'CHECKED';
+} else {
+    $sel_date = 'CHECKED';
+}
+?>
+<tr>
+  <td align="right">Order By:</td>
+  <td>
+  Picture Date: <input type="radio" name="in_order" 
+              <?php echo $sel_date;?> value="p.picture_date">
+  Picture ID: <input type="radio" name="in_order" 
+              <?php echo $sel_pid;?> value="p.pid">
+  </td>
+</tr>
+
 <tr>
   <td align="right">Person or Place:</td>
   <td>
