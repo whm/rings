@@ -469,7 +469,7 @@ if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
 %tableList = ('pictures_small' => 1,
@@ -500,16 +500,16 @@ if ( -e $pref_file) {
     close pref;
 }
 
-if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
-if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
+if (length($opt_host) == 0)    {$opt_host    = $prefs{'host'};}
+if (length($opt_db) == 0)      {$opt_db      = $prefs{'db'};}
 if (length($opt_keyword) == 0) {$opt_keyword = $prefs{'keyword'};}
-if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
-if (length($opt_path) == 0)    {$opt_path = $prefs{'path'};}
+if (length($opt_pass) == 0)    {$opt_pass    = $prefs{'pass'};}
+if (length($opt_path) == 0)    {$opt_path    = $prefs{'path'};}
+if (length($opt_ppe) == 0)     {$opt_ppe     = $prefs{'ppe'};}
+if (length($opt_user) == 0)    {$opt_user    = $prefs{'user'};}
 if (length($opt_photographer) == 0) {
     $opt_photographer = $prefs{'photographer'};
 }
-if (length($opt_ppe) == 0)     {$opt_ppe = $prefs{'ppe'};}
-if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
 
 if (length($opt_host) == 0) {
     $opt_host = 'localhost';
@@ -594,9 +594,9 @@ ring_load.pl
 
 =head1 DESCRIPTION
 
-This script reads the files in a directory and creates thumbnails, 
-50X50 pixels max, and vga sized images, 640X480 max images.  All images are
-loaded in the rings database.
+This script reads the jpeg files in a directory and loads the rings
+database.  Most command line options can also be specified in a 
+preferences file, ~/.rings.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -604,7 +604,8 @@ loaded in the rings database.
 
 =item --path=directory-path
 
-An optional parameter.  If no directory path is specified then . is used.
+An optional parameter.  If no directory path is specified then . is
+used.
 
 =item --host=mysql-hostname
 
@@ -628,9 +629,9 @@ A string of keywords.  If not is specified then "NEW" is used.
 
 =item --datetaken=string
 
-A string representing the date and time.  If not is specified the
-current date and time is used as a starting point and incremented by
-1 second for each picture.
+A string representing the starting date and time.  If not is specified
+the current date and time is used as a starting point and incremented
+by 1 second for each picture.
 
 =item --photographer=string
 
