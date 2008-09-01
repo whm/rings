@@ -88,14 +88,21 @@ require ('page_top.php');
     $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
     $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
 
+    $_SESSION['s_order_by'] = $in_order;
+
     $_SESSION['s_list_select'] = "SELECT pid, "
               . "key_words, "
               . "picture_date, "
               . "taken_by, "
               . "description "
               . "FROM pictures_information p "
-              . "$condition "
-              . "ORDER BY picture_date, pid ";
+              . "$condition ";
+    if ($_SESSION['s_order_by'] == 'p.pid') {
+        $_SESSION['s_list_select'] .= "ORDER BY pid ";
+    } else {
+        $_SESSION['s_list_select'] .= "ORDER BY picture_date, pid ";
+    }
+
     $_SESSION['s_start_row'] = 0;
     // find the number of rows
     $result = mysql_query ($_SESSION['s_list_select']);
@@ -171,6 +178,24 @@ require ('page_top.php');
          value="<?php print $in_count; ?>">
   </td>
 </tr>
+
+<?php
+if ($_SESSION['s_order_by'] == 'p.pid') {
+    $sel_pid = 'CHECKED';
+} else {
+    $sel_date = 'CHECKED';
+}
+?>
+<tr>
+  <td align="right">Order By:</td>
+  <td>
+  Picture Date: <input type="radio" name="in_order" 
+              <?php echo $sel_date;?> value="p.picture_date">
+  Picture ID: <input type="radio" name="in_order" 
+              <?php echo $sel_pid;?> value="p.pid">
+  </td>
+</tr>
+
 <tr>
   <td colspan="2" align="center">
   <input type="submit" name="button_find" value="Find">
