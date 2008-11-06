@@ -26,7 +26,7 @@ $em   = "</font><br>\n";
 $ring_doc_root = '/mac/www/rings/';
 
 // database pointers
-require ('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // connect to the database
 $cnx = mysqli_connect ( $mysql_host, $mysql_user, $mysql_pass, $mysql_db );

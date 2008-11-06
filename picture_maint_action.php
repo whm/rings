@@ -85,7 +85,7 @@ function date_dup_check($dt, $pid, $cnx) {
 // ----------------------------------------------------
 // Main Routine
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {

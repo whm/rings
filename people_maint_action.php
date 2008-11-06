@@ -47,7 +47,7 @@ function sql_quote ($a_val, $in_type) {
 // ----------------------------------------------------
 // Main Routine
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;

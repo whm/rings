@@ -342,7 +342,7 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill.macallister@prideindustries.com>
+Bill MacAllister <bill@macallister.grass-valley.ca.us>
 
 =cut
 

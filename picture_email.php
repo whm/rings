@@ -6,16 +6,16 @@
 //
 
 // Open a session
-require('pi_php_auth.inc');
-require('pi_php_sessions.inc');
-pi_auth('user|rings');
+require('whm_php_auth.inc');
+require('whm_php_sessions.inc');
+whm_auth('user|rings');
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // look up the from address
 $ds = ldap_connect($ldap_server);
 $return_attr = array('cn','mail');
-$ldap_filter = '(uid='.$_SESSION['prideindustries_directory_user'].')';
+$ldap_filter = '(uid='.$_SESSION['whm_directory_user'].')';
 $sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
 $info = @ldap_get_entries($ds, $sr);
 $ret_cnt = $info["count"];

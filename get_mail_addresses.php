@@ -4,7 +4,7 @@
 // Author: Bill MacAllister
 
 // Information about where the addresses are
-require ('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // look up the from address
 $ds = ldap_connect($ldap_server);

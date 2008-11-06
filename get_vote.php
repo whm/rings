@@ -52,7 +52,7 @@ if (strlen($in_username) > 0 &&
     $in_pid > 0 )  {
 
     // connect to the database
-    require('inc_dbs.php');
+    require ('/etc/whm/rings_dbs.php');
     $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
     if (!$cnx) {
         $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";

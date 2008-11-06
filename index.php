@@ -6,17 +6,17 @@
 //
 
 // Open a session
-require('pi_php_sessions.inc');
-require('pi_php_auth.inc');
+require('whm_php_sessions.inc');
+require('whm_php_auth.inc');
 
 if ($in_login == 2) {
-    pi_auth('user|rings');
+    whm_auth('user|rings');
 } elseif ($in_logout>0) {
     session_destroy();
-    $_SESSION['prideindustries_directory_user'] = '';
+    $_SESSION['whm_directory_user'] = '';
 }
 
-require('inc_dbs.php');
+require('/etc/whm/rings_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
@@ -270,7 +270,7 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 </form>
 
 <?php
-if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+if (strlen($_SESSION['whm_directory_user'])>0) {
     echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
     echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
 }
@@ -350,7 +350,7 @@ if ( strlen($in_group_id) > 0) {
     echo "<p>\n";
 }
 
-if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+if (strlen($_SESSION['whm_directory_user'])>0) {
     echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
     echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
 } else {
@@ -382,7 +382,6 @@ either to add pictures, update descriptions or whatever contact
 
 </dl>
 </blockquote>
-
 </Body>
 </html>
 
