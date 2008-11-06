@@ -19,7 +19,7 @@ function prt ($fld) {
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // connect to the database
 $conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

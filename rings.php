@@ -6,11 +6,11 @@
 //
 
 // Open a session
-require('pi_php_sessions.inc');
+require('whm_php_sessions.inc');
 
 if ($in_logout>0) {session_destroy();}
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
@@ -173,7 +173,7 @@ if ($display_rings>0) {
   echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
   echo "<a href=\"/rings/display.php?in_pid=$this_pid\" ";
   echo "target=\"_blank\">Image Full Size ($this_fullbytes Kbytes)</a>\n";
-  if (strlen($_SESSION['prideindustries_directory_user'])>0) {
+  if (strlen($_SESSION['whm_directory_user'])>0) {
     echo "<p>\n";
     echo "<h5><a href=\"picture_maint?in_pid=$this_pid\" ";
     echo "target=\"_blank\">$this_pid</a> ";

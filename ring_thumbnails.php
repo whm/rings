@@ -6,8 +6,8 @@
 //
 
 // Open a session
-require('pi_php_auth.inc');
-require('pi_php_sessions.inc');
+require('whm_php_auth.inc');
+require('whm_php_sessions.inc');
 
 // -- Print a space or the field
 function prt ($fld) {
@@ -19,7 +19,7 @@ function prt ($fld) {
 }
 
 // database pointers
-require ('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';
@@ -86,7 +86,7 @@ if (strlen($in_start_date) > 0) {
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.picture_date>'$in_start_date' ";
     $sel .= "AND $grade_sel ";
-    if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+    if (strlen($_SESSION['whm_directory_user']) == 0) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
@@ -139,7 +139,7 @@ $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
-if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+if (strlen($_SESSION['whm_directory_user']) == 0) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";

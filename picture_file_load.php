@@ -164,7 +164,7 @@ if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;
 
 // database pointers
-require ('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );

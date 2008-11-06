@@ -8,17 +8,17 @@
 require('inc_format.php');
 
 // Open a session
-require('pi_php_auth.inc');
-require('pi_php_sessions.inc');
+require('whm_php_auth.inc');
+require('whm_php_sessions.inc');
 
 if ($in_login == 2) {
-    pi_auth('user|rings');
+    whm_auth('user|rings');
 } elseif ($in_logout>0) {
     session_destroy();
-    $_SESSION['prideindustries_directory_user'] = '';
+    $_SESSION['whm_directory_user'] = '';
 }
 
-require('inc_dbs.php');
+require ('/etc/whm/rings_dbs.php');
 
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';
@@ -165,7 +165,7 @@ if (isset($in_ring_uid)) {
         $sel .= "AND picture_sequence>$in_ring_next_seq) ";
         $sel .= "OR (picture_date>'$in_ring_next_date')) ";
         $sel .= "AND p.pid != $in_ring_pid ";
-        if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+        if (strlen($_SESSION['whm_directory_user']) == 0) {
             $sel .= "AND public='Y' ";
         }
         $sel .= "AND $grade_sel ";
@@ -204,7 +204,7 @@ if (isset($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid=$in_ring_pid ";
-    if (strlen($_SESSION['prideindustries_directory_user']) == 0) {
+    if (strlen($_SESSION['whm_directory_user']) == 0) {
         $sel .= "AND public='Y' ";
     }
     $result = mysql_query ($sel);
@@ -315,7 +315,7 @@ if (isset($in_ring_pid)) {
     
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
-    $loggedInUser = $_SESSION['prideindustries_directory_user'];
+    $loggedInUser = $_SESSION['whm_directory_user'];
     if (strlen($loggedInUser)>0) {
         echo '<a href="picture_maint?in_pid='.$this_pid.'" target="_blank">';
         echo '<img src="images/icon-edit.png" border="0" ';
