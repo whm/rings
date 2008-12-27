@@ -238,6 +238,7 @@ if (!isset($upload)) {
         $sh_cmd .= " --user=$mysql_user";
         $sh_cmd .= " --db=$mysql_db";
         $sh_cmd .= " --update";
+        $sh_cmd .= " --dateupdate";
         echo "Executing command:$sh_cmd<br>\n";
         $sh_cmd .= " --pass=$mysql_pass";
         system($sh_cmd);
