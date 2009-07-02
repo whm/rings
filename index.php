@@ -28,6 +28,24 @@ if (!$result) {
     $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
 }
 
+// Cookie to Session map
+$cm['GID'] = 'group_id';
+$cm['SZ']  = 'display_size';
+$cm['GRD'] = 'display_grade';
+$cm['SEC'] = 'display_seconds';
+$cm['BP']  = 'button_position';
+
+// Set sessions variables from cookie if session variable is 
+// empty and there is a cookie value.
+$s = $_COOKIE[$cookie_id].'|';
+foreach ($cm as $cid => $sid) {
+    if (strlen($_SESSION[$sid]) == 0) {
+        if (preg_match("/\|$cid=(.+?)\|/", $s, $vals)) {
+            $_SESSION[$sid] = $vals[1];
+        }
+    }
+}
+
 // set the group
 if (strlen($in_group_id)>0) {
     $_SESSION['group_id'] = $in_group_id;
@@ -89,11 +107,11 @@ $_SESSION['display_seconds'] = $in_seconds;
 // set button postion on picture display pages
 if (strlen($in_pos) == 0) {$in_pos = $_SESSION['button_position'];}
 $chk_pos_top = $chk_pos_bottom = '';
-if ($in_pos == 'T') {
-    $chk_pos_top = 'CHECKED';
-} else {
+if ($in_pos == 'B') {
     $chk_pos_bottom = 'CHECKED';
-    $in_pos = 'B';
+} else {
+    $chk_pos_top = 'CHECKED';
+    $in_pos = 'T';
 }
 $_SESSION['button_position'] = $in_pos;
 
@@ -116,6 +134,15 @@ if ($in_pref_display == 'Y') {
 } else {
     $chk_pref_no = 'CHECKED';
 }
+
+// Set a 10 year cookie
+$cookie_value = '';
+$cookie_life = time()+315360000;
+foreach ($cm as $cid => $sid) {
+     $cookie_value .= "|$cid=".$_SESSION[$sid];
+}
+setcookie($cookie_id, $cookie_value, $cookie_life);
+
 ?>
 <html>
 <head>
@@ -354,7 +381,7 @@ if (strlen($_SESSION['whm_directory_user'])>0) {
     echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
     echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
 } else {
-    echo "<h5><a href=\"https://www.macallister.grass-valley.ca.us$PHP_SELF?in_login=2\">Login</a></h5>\n";
+    echo '<h5><a href="'.$PHP_SELF.'?in_login=2">Login</a></h5>'."\n";
 }
 ?>
 
@@ -382,6 +409,15 @@ either to add pictures, update descriptions or whatever contact
 
 </dl>
 </blockquote>
+
+<!-- Message area -->
+<?php
+if (strlen($_SESSION['s_msg']) > 0) {
+    echo "<br>".$_SESSION['s_msg']."<br>\n";
+    $_SESSION['s_msg'] = '';
+}
+?>
+
 </Body>
 </html>
 

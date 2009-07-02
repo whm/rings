@@ -153,8 +153,14 @@ if (isset($in_ring_uid)) {
     $base_sel .= "p.pid              pid ";
     $base_sel .= "FROM pictures_information p ";
     $base_sel .= "JOIN picture_details det ";
-    $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
-    
+    if ($in_ring_uid == 'next-by-date') {
+        // Just selecting the next picture by date
+        $base_sel .= "ON (p.pid=det.pid) ";
+    } else {
+        // Selecting by a specific ring uid
+        $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
+    }
+
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
     $order_sel .= "LIMIT 0,1 ";
     
@@ -238,6 +244,7 @@ if (isset($in_ring_pid)) {
                 $next_links[$row['uid']] = $row['display_name'];
             }
         }
+        $next_links['next-by-date'] = 'Next by Date';
     }
     
     // ------------------------------------------
