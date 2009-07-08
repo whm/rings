@@ -21,6 +21,30 @@ function prt ($fld) {
 // database pointers
 require ('/etc/whm/rings_dbs.php');
 
+// ----------------------------------------------------------
+// Function to exit without displaying anything and return to 
+// the main index page.
+
+function back_to_index () {
+
+    echo "<html>\n";
+    echo "<head>\n";
+    echo "<meta http-equiv=\"refresh\" ";
+    echo '    content="0; URL=http://'.$_SERVER['SERVER_NAME'].'/rings">'."\n";
+    echo "<title>Rings of Pictures</title>\n";
+    echo "</head>\n";
+    echo "<body>\n";
+    echo '<a href="rings">Rings of Pictures</a>'."\n";
+    echo "</body>\n";
+    echo "</html>\n";
+    $_SESSION['s_msg'] .= "Ring Not Found.\n";
+
+    exit;
+}
+
+// ============
+// Main routine 
+
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';
 }
@@ -53,15 +77,22 @@ if (strlen($in_uid) == 0) {
     $_SESSION['s_uid'] = $in_uid;
 }
 
+$private_sel = " AND pp.public_flag != 'N' ";
+if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+
 $thisPerson = "$in_uid";
 $sel = "SELECT display_name ";
-$sel .= "FROM people_or_places ";
+$sel .= "FROM people_or_places pp ";
 $sel .= "WHERE uid='$in_uid' ";
+$sel .= $private_sel;
 $result = mysql_query ($sel);
 if ($result) {
     if ($row = mysql_fetch_array($result)) {
         $thisPerson = $row['display_name'];
     }
+}
+if (strlen($row['display_name']) < 1) {
+    back_to_index();
 }
 
 $sel = "SELECT count(*) cnt ";
@@ -111,7 +142,7 @@ if (strlen($in_start_date) > 0) {
 
 <body bgcolor="#eeeeff">
 
-<h2><?php echo $thisPerson;?><h2>
+<h2><?php echo $thisPerson;?></h2>
 <form method="post" action="<?php echo $PHPSELF;?>">
 
 <table border="0">
@@ -136,13 +167,13 @@ if (strlen($in_start_date) > 0) {
 
 $sel = "SELECT p.picture_date, d.pid ";
 $sel .= "FROM picture_details d ";
-$sel .= "JOIN pictures_information p ";
-$sel .= "ON (p.pid = d.pid) ";
+$sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
 if (strlen($_SESSION['whm_directory_user']) == 0) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
+$sel .= "GROUP BY d.pid ";
 $sel .= "ORDER BY p.picture_date,p.picture_sequence ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = mysql_query ($sel);
@@ -214,5 +245,13 @@ if (!$result) {
        src="rings.png" 
        alt="Pick a New Ring"
        border="0"></a>
+<?php 
+if (strlen($_SESSION['s_msg']) > 0) {
+    echo "<p>\n";
+    echo $_SESSION['s_msg'];
+    $_SESSION['s_msg'] = '';
+}
+?>
+
 </body>
 </html>

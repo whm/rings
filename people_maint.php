@@ -131,6 +131,20 @@ if (isset($_SESSION['s_msg'])) {
 </TEXTAREA>
  </td>
 </tr>
+<tr>
+ <td align="right">Public:</td>
+ <td>
+  <?php 
+  $chk_pub_yes = 'CHECKED'; $chk_pub_no = '';
+  if ($row["public_flag"] == 'N') {
+    $chk_pub_yes = ''; $chk_pub_no = 'CHECKED';
+  }
+  ?>
+  <input type="radio" name="in_public_flag" value="Y" <?php echo $chk_pub_yes;?>>Yes 
+  &nbsp;&nbsp;&nbsp;
+  <input type="radio" name="in_public_flag" value="N" <?php echo $chk_pub_no;?>>No 
+ </td>
+</tr>
 
 <tr>
  <td align="right">Date Last Maint:</td>

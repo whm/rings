@@ -145,6 +145,9 @@ function get_vote(idx,username) {
 
 $next_links = array();
 
+$private_sel = " AND pp.public_flag != 'N' ";
+if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+
 if (isset($in_ring_uid)) {
     
     $base_sel = "SELECT ";
@@ -160,7 +163,8 @@ if (isset($in_ring_uid)) {
         // Selecting by a specific ring uid
         $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     }
-
+    $base_sel .= "JOIN people_or_places pp ";
+    $base_sel .= "ON (pp.uid='$in_ring_uid' $private_sel) ";
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
     $order_sel .= "LIMIT 0,1 ";
     
@@ -236,7 +240,7 @@ if (isset($in_ring_pid)) {
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid) ";
+        $sel .= "ON (det.uid = pp.uid $private_sel) ";
         $sel .= "WHERE det.pid=$in_ring_pid ";
         $result = mysql_query ($sel);
         if ($result) {
