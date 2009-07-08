@@ -54,6 +54,9 @@ $in_date_last_maint = $now;
 $in_date_added = $now;
 $msg = '';
 
+// Field default
+if (strlen($in_cn) == 0) {$in_cn = $in_display_name;}
+
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {

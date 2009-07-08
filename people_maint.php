@@ -124,6 +124,12 @@ if (isset($_SESSION['s_msg'])) {
  </td>
 </tr>
 <tr>
+ <td align="right">Common Name:</td>
+ <td> <input type="text" name="in_cn"
+             value="<?php print $row["cn"]; ?>"
+ </td>
+</tr>
+<tr>
  <td align="right">Description:</td>
  <td>
 <TEXTAREA name="in_description" rows="5" cols="40">
