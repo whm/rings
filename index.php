@@ -318,6 +318,10 @@ if ( strlen($in_group_id) > 0) {
     }
     echo "<blockquote>\n";
     echo "<table border=\"0\" background=\"notebook.gif\" cellpadding=\"2\">\n";
+    // Hide the private folks
+    $private_sel = " AND public_flag != 'N' ";
+    if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+
     if ($in_group_id == "all-groups") {
         $sel = "SELECT det.uid   uid, ";
         $sel .= "min(det.pid)    pid, ";
@@ -325,7 +329,7 @@ if ( strlen($in_group_id) > 0) {
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid) ";
+        $sel .= "ON (det.uid = pp.uid $private_sel) ";
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
     } else {
@@ -338,7 +342,7 @@ if ( strlen($in_group_id) > 0) {
         $sel .= "ON (g.uid = det.uid ";
         $sel .= "AND g.group_id='$in_group_id') ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid) ";
+        $sel .= "ON (det.uid = pp.uid $private_sel) ";
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
     }

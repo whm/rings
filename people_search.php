@@ -49,6 +49,7 @@ if (isset($button_find)) {
     $_SESSION['sp_uid'] = '';
     $_SESSION['sp_name'] = '';
     $_SESSION['sp_dob'] = '';
+    $_SESSION['sp_public_flag'] = '';
     $_SESSION['sp_description'] = '';
     if (strlen($in_uid)>0) {
         $condition .= "$word uid LIKE '%$in_uid%' ";
@@ -65,6 +66,11 @@ if (isset($button_find)) {
         $_SESSION['sp_dob'] = $in_dob;
         $word = "AND";
     }
+    if (strlen($in_public_flag)>0) {
+        $condition .= "$word date_of_birth = '%$in_public_flag%' ";
+        $_SESSION['sp_public_flag'] = $in_public_flag;
+        $word = "AND";
+    }
     if (strlen($in_description)>0) {
         $condition .= "$word description LIKE '%$in_description%' ";
         $_SESSION['sp_description'] = $in_description;
@@ -73,7 +79,8 @@ if (isset($button_find)) {
     $_SESSION['sp_list_select'] = "SELECT uid, "
         . "display_name, "
         . "date_of_birth, "
-        . "description "
+        . "description, "
+        . "public_flag "
         . "FROM people_or_places "
         . "$condition "
         . "ORDER BY uid ";
@@ -120,17 +127,29 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
   </td>
 </tr>
 <tr>
-  <td align="right">Date of Birth:</td>
-  <td>
-  <input type="text" name="in_dob" 
-         value="<?php print $_SESSION['sp_dob']; ?>">
-  </td>
-</tr>
-<tr>
   <td align="right">Description:</td>
   <td>
   <input type="text" name="in_description" 
          value="<?php print $_SESSION['sp_description']; ?>">
+  </td>
+</tr>
+<tr>
+  <td align="right">Public:</td>
+  <td>
+  <?php 
+  $chk_pub_all = 'CHECKED'; $chk_pub_yes = ''; $chk_pub_no = '';
+  if ($_SESSION["sp_public_flag"] == 'N') {
+    $chk_pub_all = ''; $chk_pub_yes = ''; $chk_pub_no = 'CHECKED';
+  }
+  if ($_SESSION["sp_public_flag"] == 'Y') {
+    $chk_pub_all = ''; $chk_pub_yes = 'CHECKED'; $chk_pub_no = '';
+  }
+  ?>
+  <input type="radio" name="in_public_flag" value="" <?php echo $chk_pub_all;?>>All  
+  &nbsp;&nbsp;&nbsp;
+  <input type="radio" name="in_public_flag" value="Y" <?php echo $chk_pub_yes;?>>Yes 
+  &nbsp;&nbsp;&nbsp;
+  <input type="radio" name="in_public_flag" value="N" <?php echo $chk_pub_no;?>>No 
   </td>
 </tr>
 <tr>
@@ -179,21 +198,24 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
   <tr>
     <th>UID</th>
     <th>Display Name</th>
-    <th>Date of Birth</th>
     <th>Description</th>
+    <th>Public</th>
   </tr>
 <?php
     $result = mysql_query ($sel);
     if ($result) {
       while ($row = mysql_fetch_array($result)) {
         $uid = $row["uid"];
+        $pf = $row['public_flag'];
+        if ($pf == 'Y') { $pf = 'Yes'; }
+        if ($pf == 'N') { $pf = 'No';  }
         $user_href = urlencode("$uid");
         $user_href = "<a href=\"people_maint?in_uid=$user_href\">";
         echo " <tr>\n";
         echo "  <td>".$user_href.$row["uid"]."</a></td>\n";
         echo "  <td>".$row["display_name"]."</td>\n";
-        echo "  <td>".$row["date_of_birth"]."</td>\n";
         echo "  <td>".$row["description"]."</td>\n";
+        echo "  <td align=\"center\">".$pf."</td>\n";
         echo " <tr>\n";
       }
     }
