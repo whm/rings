@@ -4,6 +4,7 @@ use strict;
 use Cwd;
 use DBI;
 use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
 use Image::Magick;
 use Pod::Usage;
 use Time::Local;
@@ -171,29 +172,18 @@ sub store_picture {
         $height, 
         $size, 
         $format, 
-        $compression,
-        $camera,
-        $this_datetime,
-        $this_shutterspeed,
-        $this_fnumber) 
-        = $thisPic->Get('width',
+        $compression) 
+	= $thisPic->Get('width',
                         'height',
                         'filesize',
                         'format',
-                        'compression',
-                        '%[EXIF:Model]',
-                        '%[EXIF:DateTime]',
-                        '%[EXIF:ExposureTime]',
-                        '%[EXIF:FNumber]');
+                        'compression');
+
     if ($opt_debug) {
         debug_output ("      format: $format");
         debug_output (" compression: $compression");
         debug_output ("       width: $width");
         debug_output ("      height: $height");
-        debug_output ("       model: $camera");
-        debug_output ("    datetime: $this_datetime");
-        debug_output ("exposuretime: $this_shutterspeed");
-        debug_output ("     fnumber: $this_fnumber");
     }
 
     # default to moderate
@@ -322,29 +312,18 @@ sub save_file {
         $height, 
         $size, 
         $format, 
-        $compression,
-        $camera,
-        $this_datetime,
-        $this_shutterspeed,
-        $this_fnumber) 
+        $compression) 
         = $thisPic->Get('width',
                         'height',
                         'filesize',
                         'format',
-                        'compression',
-                        '%[EXIF:Model]',
-                        '%[EXIF:DateTime]',
-                        '%[EXIF:ExposureTime]',
-                        '%[EXIF:FNumber]');
+                        'compression');
+
     if ($opt_debug) {
         debug_output ("      format: $format");
         debug_output (" compression: $compression");
         debug_output ("       width: $width");
         debug_output ("      height: $height");
-        debug_output ("       model: $camera");
-        debug_output ("    datetime: $this_datetime");
-        debug_output ("exposuretime: $this_shutterspeed");
-        debug_output ("     fnumber: $this_fnumber");
     }
 
 
@@ -356,9 +335,32 @@ sub save_file {
     }
     my $ptype   = "image/$compression";
     
-    # -- Store the raw image
+    # -- Create the image file to store
 
     my @bPic = $thisPic->ImageToBlob();
+
+    # -- Extract the EXIF data 
+
+    my $info = ImageInfo(\@bPic[0]);
+    my $camera            = ${$info}{'Model'};
+    my $this_datetime     = ${$info}{'CreateDate'};
+    my $this_shutterspeed = ${$info}{'ShutterSpeed'};
+    my $this_fnumber      = ${$info}{'FNumber'};
+    if ($opt_debug) {
+        debug_output ("       model: $camera");
+        debug_output ("    datetime: $this_datetime");
+        debug_output ("exposuretime: $this_shutterspeed");
+        debug_output ("     fnumber: $this_fnumber");
+	debug_output ("EXIF Information ==============================");
+	foreach my $t (keys %{$info}) {
+	    print "$t = ${$info}{$t}\n";
+	}
+	debug_output ("EXIF Information end ==========================");
+    }
+
+
+    # -- Store the raw image
+
     my $cmd = "INSERT INTO pictures_raw SET ";
     $cmd .= "pid = ?,";
     $cmd .= "picture = ?,";
