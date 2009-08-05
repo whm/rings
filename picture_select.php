@@ -163,8 +163,6 @@ if (isset($in_ring_uid)) {
         // Selecting by a specific ring uid
         $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     }
-    $base_sel .= "JOIN people_or_places pp ";
-    $base_sel .= "ON (pp.uid='$in_ring_uid' $private_sel) ";
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
     $order_sel .= "LIMIT 0,1 ";
     
@@ -186,7 +184,7 @@ if (isset($in_ring_uid)) {
             $in_ring_pid = $row['pid'];
         }
     }
-    
+
     // either there was no previous picture or we are wrapping around
     if (strlen($in_ring_pid) == 0) {
         $sel = $base_sel;
@@ -395,6 +393,11 @@ if (isset($in_ring_pid)) {
     echo "</tr>\n";
     echo "</table>\n";
     
+}
+
+if (strlen($_SESSION['s_msg']) > 0) {
+  echo $_SESSION['s_msg'];
+  $_SESSION['s_msg'] = '';
 }
 
 ?>
