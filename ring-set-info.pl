@@ -4,6 +4,7 @@ use strict;
 use Cwd;
 use DBI;
 use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
 use Image::Magick;
 use Pod::Usage;
 use Time::Local;
@@ -143,21 +144,19 @@ sub read_and_update {
                 $height, 
                 $size, 
                 $format, 
-                $compression,
-                $camera,
-                $this_datetime,
-                $this_shutterspeed,
-                $this_fnumber) 
+                $compression)
                 = $thisPic->Get('width',
                                 'height',
                                 'filesize',
                                 'format',
-                                'compression',
-                                '%[EXIF:Model]',
-                                '%[EXIF:DateTime]',
-                                '%[EXIF:ExposureTime]',
-                                '%[EXIF:FNumber]');
-            
+                                'compression');
+
+	    # Get EXIF data using image info
+            my $info = ImageInfo(\$blob[0]);
+	    my $camera            = ${$info}{'Model'};
+	    my $this_datetime     = ${$info}{'CreateDate'};
+	    my $this_shutterspeed = ${$info}{'ShutterSpeed'};
+	    my $this_fnumber      = ${$info}{'FNumber'};
             if ($width==0 || $height==0) {
                 debug_output ("      width: $width");
                 debug_output ("     height: $height");
@@ -176,9 +175,6 @@ sub read_and_update {
             # update date and time from the camera and the size 
             # of the raw image
             
-#            if ($this_datetime =~ /(\d{4,4}).(\d{2,2}).(\d{2,2})\s(.*)/
-#                $this_datetime = "$1-$2-$3 $4";
-
             if ($this_datetime =~ /(\d{4,4})[\:\-](\d{2,2})[\:\-](\d{2,2})[\s\:](\d{2,2})\:(\d{2,2})\:(\d+)/
                 && length($camera) > 0) {
 
@@ -216,7 +212,7 @@ sub read_and_update {
                     print "    Camera: $camera\n";
                     print "    Picture Date: $this_datetime\n";
                     print "    FStop: $this_fnumber\n";
-                    print "    Picture Size:$this_pic_size\n";
+                    print "    Picture Size: $this_pic_size\n";
                     print "    Shutter Speed: $this_shutterspeed\n";
                 }
             }

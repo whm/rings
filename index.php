@@ -50,7 +50,18 @@ foreach ($cm as $cid => $sid) {
 if (strlen($in_group_id)>0) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
-    $in_group_id = $_SESSION['group_id'];
+    // If there is not group_id in the session space then see if there is a 
+    // cookie and use that to set session values.
+    if (strlen($_SESSION['group_id']) > 0) {
+        $in_group_id = $_SESSION['group_id'];
+    } elseif (strlen($_COOKIE[$cookie_id] > 0) {
+        $s = $_COOKIE[$cookie_id].'|';
+        foreach ($cm as $cid => $sid) {
+            if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
+                $_SESSION[$sid] = $vals[1];
+            }
+        }
+    }
 }
 
 // set the display size
@@ -97,7 +108,7 @@ if ($in_grade == 'C') {
 }
 $_SESSION['display_grade'] = $in_grade;
 
-// set host delay
+// set show delay
 if (strlen($in_seconds) == 0) {
     $in_seconds = $_SESSION['display_seconds'];
 }
@@ -227,7 +238,7 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 
     <tr>
     <td rowspan="4">
-    <input type="submit" name="btn_refresh" value="Set">
+    <input type="submit" name="btn_set" value="Set">
     </td>
     <th align="right">Picture Size:</th>
     <td><input type="radio" <?php echo $chk_large;?> name="in_size"
@@ -426,7 +437,8 @@ if (strlen($_SESSION['s_msg']) > 0) {
 </html>
 
 <script language="JavaScript">
-<?php if (strlen($chk_pref_yes) < 1) {
+<?php 
+if (strlen($chk_pref_yes) < 1) {
     echo "getDom(\"preferencesDisplay\").style.display = 'none';\n";
 }
 ?>
