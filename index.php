@@ -54,7 +54,7 @@ if (strlen($in_group_id)>0) {
     // cookie and use that to set session values.
     if (strlen($_SESSION['group_id']) > 0) {
         $in_group_id = $_SESSION['group_id'];
-    } elseif (strlen($_COOKIE[$cookie_id] > 0) {
+    } elseif (strlen($_COOKIE[$cookie_id]) > 0) {
         $s = $_COOKIE[$cookie_id].'|';
         foreach ($cm as $cid => $sid) {
             if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
