@@ -1,6 +1,7 @@
 <?php
-
-// -- main routine
+require('whm_php_sessions.inc');
+require('whm_php_auth.inc');
+require('inc_auth_policy.php');
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');

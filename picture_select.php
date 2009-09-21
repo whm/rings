@@ -10,13 +10,7 @@ require('inc_format.php');
 // Open a session
 require('whm_php_auth.inc');
 require('whm_php_sessions.inc');
-
-if ($in_login == 2) {
-    whm_auth('user|rings');
-} elseif ($in_logout>0) {
-    session_destroy();
-    $_SESSION['whm_directory_user'] = '';
-}
+whm_auth("rings|user");
 
 require ('/etc/whm/rings_dbs.php');
 
