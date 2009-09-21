@@ -8,6 +8,8 @@
 // Open a session
 require('whm_php_auth.inc');
 require('whm_php_sessions.inc');
+require('auth_policy.php');
+
 
 // -- Print a space or the field
 function prt ($fld) {

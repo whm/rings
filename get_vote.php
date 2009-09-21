@@ -44,7 +44,7 @@ function closeWindow() {
 </html>
 
 <?php
-    echo "username:$in_username<br>\n";
+echo "username:$in_username<br>\n";
 echo "grade:$in_grade<br>\n";
 echo "pid:$in_pid\n";
 if (strlen($in_username) > 0 &&

@@ -7,6 +7,8 @@
 
 // Open a session
 require('whm_php_sessions.inc');
+require('whm_php_auth.inc');
+require('inc_auth_policy.php');
 
 if ($in_logout>0) {session_destroy();}
 
