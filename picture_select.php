@@ -133,6 +133,8 @@ if (strlen($_SESSION['whm_directory_user'])>0) { $invisible_sel = ''; }
 
 if (isset($in_ring_uid)) {
 
+    $new_pid = '';
+
     // Build selection for next links
     $base_sel = "SELECT ";
     $base_sel .= "p.picture_date     picture_date, ";
@@ -169,7 +171,7 @@ if (isset($in_ring_uid)) {
         if ($result) {
             while ($row = mysql_fetch_array($result)) {
                 if ( auth_picture_invisible($row['pid']) == 0 ) {
-                    $in_ring_pid = $row['pid'];
+                    $new_pid = $row['pid'];
                     break;
                 }
             }
@@ -177,28 +179,32 @@ if (isset($in_ring_uid)) {
     }
 
     // either there was no previous picture or we are wrapping around
-    if (strlen($in_ring_pid) == 0) {
+    if (strlen($new_pid) == 0) {
         $sel = $base_sel;
         $sel .= $order_sel;
         $result = mysql_query ($sel);
         if ($result) {
             while ($row = mysql_fetch_array($result)) {
                 if ( auth_picture_invisible($row['pid']) == 0 ) {
-                    $in_ring_pid = $row['pid'];
+                    $new_pid = $row['pid'];
                     break;
                 }
             }
         }
+        $_SESSION['s_msg'] .= $sel;
     }
 
-    if (strlen($in_ring_pid) == 0) {
+    if (strlen($new_pid) == 0) {
         auth_redirect();
         exit;
+    } else {
+        $in_ring_pid = $new_pid;
     }
 }
 
 if (isset($in_ring_pid)) {
 
+    $_SESSION['s_msg'] .= "this pid = $in_ring_pid<br>\n";
     // If the picture contains an invisible person return the caller to 
     // the index page.
     if (auth_picture_invisible($in_ring_pid) > 0) {
