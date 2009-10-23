@@ -5,11 +5,9 @@
 // date: 26-Nov-2004
 //
 
-// Open a session
-require('whm_php_auth.inc');
-require('whm_php_sessions.inc');
-require('auth_policy.php');
-
+// Init session, connect to database
+$authNotRequired = 1;
+require('inc_ring_init.php');
 
 // -- Print a space or the field
 function prt ($fld) {
@@ -54,14 +52,6 @@ $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
-if (!mysql_select_db($mysql_db, $db_link)) {
-    echo "<font color=\#ff0000\">";
-    echo "Error selecting database $mysql_db";
-    echo "</font><br>\n";
-}
-
 if (strlen($in_start) == 0) {$in_start = 0;}
 
 if ($in_number == 0) {
@@ -79,14 +69,15 @@ if (strlen($in_uid) == 0) {
     $_SESSION['s_uid'] = $in_uid;
 }
 
-$private_sel = " AND pp.public_flag != 'N' ";
-if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+if (strlen($_SESSION['whm_directory_user'])==0 && 
+    auth_person_hidden($in_uid) > 0) {
+    back_to_index();
+}
 
 $thisPerson = "$in_uid";
 $sel = "SELECT display_name ";
 $sel .= "FROM people_or_places pp ";
 $sel .= "WHERE uid='$in_uid' ";
-$sel .= $private_sel;
 $result = mysql_query ($sel);
 if ($result) {
     if ($row = mysql_fetch_array($result)) {

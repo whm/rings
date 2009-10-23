@@ -8,9 +8,15 @@ require('inc_ring_init.php');
 $display_warning = auth_picture_invisible($in_pid);
 if ($display_warning > 0) {
     // display suppressed.  Give the user a message
-    $t = 'You must login to view this picture.';
-    $width = 256;
-    $inwidth = strlen($t)*8;
+    if ($in_size == 'small') {
+        $t = ' ';
+        $width = 1;
+        $inwidth = 1;
+    } else {
+        $t = 'You must login to view this picture.';
+        $width = 256;
+        $inwidth = strlen($t)*8;
+    }
     if ($inwidth>$width) {$width = $inwidth;}
     header ("Content-type: image/png");
     $im = @imagecreate ($width, 25)
