@@ -141,14 +141,16 @@ if (isset($_SESSION['s_msg'])) {
  <td align="right">Public:</td>
  <td>
   <?php 
-  $chk_pub_yes = 'CHECKED'; $chk_pub_no = '';
-  if ($row["public_flag"] == 'N') {
-    $chk_pub_yes = ''; $chk_pub_no = 'CHECKED';
-  }
+  $chk_show = $chk_hide = $chk_invis = '';
+  if     ($row['visibility'] == 'SHOW')   { $chk_show  = 'CHECKED'; }
+  elseif ($row['visibility'] == 'HIDDEN') { $chk_hide  = 'CHECKED'; }
+  else                                    { $chk_invis = 'CHECKED'; }
   ?>
-  <input type="radio" name="in_public_flag" value="Y" <?php echo $chk_pub_yes;?>>Yes 
+  <input type="radio" name="in_visibility" value="SHOW" <?php echo $chk_show;?>>Show 
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_public_flag" value="N" <?php echo $chk_pub_no;?>>No 
+  <input type="radio" name="in_visibility" value="HIDDEN" <?php echo $chk_hide;?>>Hidden 
+  &nbsp;&nbsp;&nbsp;
+  <input type="radio" name="in_visibility" value="INVISIBLE" <?php echo $chk_invis;?>>Invisibile 
  </td>
 </tr>
 

@@ -7,10 +7,9 @@
 // Formatting help
 require('inc_format.php');
 
-// Open a session
-require('whm_php_auth.inc');
-require('whm_php_sessions.inc');
-whm_auth("rings|user");
+// Init session, connect to database
+$authNotRequired = 1;
+require('inc_ring_init.php');
 
 require ('/etc/whm/rings_dbs.php');
 
@@ -21,20 +20,6 @@ $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
-// connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-    $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
-    echo "$msg";
-    exit;
-}
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-    $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
-    echo "$msg";
-    exit;
-}
-
 // ---------------------------------------------
 // make a link to another picture
 
@@ -44,8 +29,12 @@ function make_a_link ($thisUID,
                       $this_seq,
                       $thisName) {
 
+    $thisLink = '';
+    if (auth_picture_invisible($thisPID)) {return $thisLink;}
+    if (auth_person_hidden($thisUID))    {return $thisLink;}
+            
     $urlName = urlencode($thisName);
-    $thisLink = '<a href="picture_select.php';
+    $thisLink .= '<a href="picture_select.php';
     $thisLink .= '?in_ring_uid='.urlencode($thisUID);
     $thisLink .= '&in_ring_pid='.urlencode($thisPID);
     $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
@@ -139,11 +128,12 @@ function get_vote(idx,username) {
 
 $next_links = array();
 
-$private_sel = " AND pp.public_flag != 'N' ";
-if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+$invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
+if (strlen($_SESSION['whm_directory_user'])>0) { $invisible_sel = ''; }
 
 if (isset($in_ring_uid)) {
-    
+
+    // Build selection for next links
     $base_sel = "SELECT ";
     $base_sel .= "p.picture_date     picture_date, ";
     $base_sel .= "p.picture_sequence picture_sequence, ";
@@ -157,8 +147,11 @@ if (isset($in_ring_uid)) {
         // Selecting by a specific ring uid
         $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     }
+    if (strlen($invisible_sel) > 0) {
+        $base_sel .= "JOIN people_or_places pp ";
+        $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
+    }
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
-    $order_sel .= "LIMIT 0,1 ";
     
     // look up the next picture 
     if (isset($in_ring_next_date)) {
@@ -174,8 +167,12 @@ if (isset($in_ring_uid)) {
         $sel .= $order_sel;
         $result = mysql_query ($sel);
         if ($result) {
-            $row = mysql_fetch_array($result);
-            $in_ring_pid = $row['pid'];
+            while ($row = mysql_fetch_array($result)) {
+                if ( auth_picture_invisible($row['pid']) == 0 ) {
+                    $in_ring_pid = $row['pid'];
+                    break;
+                }
+            }
         }
     }
 
@@ -185,13 +182,29 @@ if (isset($in_ring_uid)) {
         $sel .= $order_sel;
         $result = mysql_query ($sel);
         if ($result) {
-            $row = mysql_fetch_array($result);
-            $in_ring_pid = $row['pid'];
+            while ($row = mysql_fetch_array($result)) {
+                if ( auth_picture_invisible($row['pid']) == 0 ) {
+                    $in_ring_pid = $row['pid'];
+                    break;
+                }
+            }
         }
-    }  
+    }
+
+    if (strlen($in_ring_pid) == 0) {
+        auth_redirect();
+        exit;
+    }
 }
 
 if (isset($in_ring_pid)) {
+
+    // If the picture contains an invisible person return the caller to 
+    // the index page.
+    if (auth_picture_invisible($in_ring_pid) > 0) {
+        auth_redirect();
+        exit;
+    }
 
     $thisSize = $_SESSION['display_size'];
     if (!($thisSize=='large' 
@@ -203,6 +216,7 @@ if (isset($in_ring_pid)) {
 
     // Get data
     
+    $image_reference = '';
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid=$in_ring_pid ";
@@ -210,7 +224,6 @@ if (isset($in_ring_pid)) {
         $sel .= "AND public='Y' ";
     }
     $result = mysql_query ($sel);
-    $image_reference = '';
     if ($result) {
         $row = mysql_fetch_array($result);
         $this_type = trim($row["picture_type"]);
@@ -218,7 +231,7 @@ if (isset($in_ring_pid)) {
         $this_picture_date = $row["picture_date"];
         $this_picture_seq = $row["picture_sequence"];
         $this_fullbytes = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
-        $image_reference .= "<img src=\"/rings/display.php";
+        $image_reference .= "<img src=\"display.php";
         $image_reference .= "?in_pid=$this_pid";
         $image_reference .= "&in_size=$thisSize\">\n";
         if (strlen($row['description'])>0) {
@@ -234,13 +247,16 @@ if (isset($in_ring_pid)) {
         $sel .= "JOIN people_or_places pp ";
         $sel .= "ON (det.uid = pp.uid $private_sel) ";
         $sel .= "WHERE det.pid=$in_ring_pid ";
-        $result = mysql_query ($sel);
+        $result=  mysql_query ($sel);
         if ($result) {
             while ($row = mysql_fetch_array($result)) {
                 $next_links[$row['uid']] = $row['display_name'];
             }
         }
         $next_links['next-by-date'] = 'Next by Date';
+    } else {
+        $_SESSION['s_msg'] .= 'ERROR: '.mysql_error()."<b>\n";
+        $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
     }
     
     // ------------------------------------------
@@ -261,23 +277,26 @@ if (isset($in_ring_pid)) {
         if (strlen($in_ring_uid)>0) {
             // display the reason we got here first so that it is easy
             // to step through these pictures.
-            echo make_a_link($in_ring_uid, 
+            $l = make_a_link($in_ring_uid, 
                              $this_pid,
                              $this_picture_date,
                              $this_picture_seq, 
                              $next_links[$in_ring_uid]);
-            echo "<br>\n";
+            if (strlen($l) > 0) {echo $l."<br>\n";}
         }
         echo '<font  color="white">';
         $c = '';
         foreach ($next_links as $thisUID => $thisName) {
             if ($in_ring_uid == $thisUID) {continue;}
-            echo $c.make_a_link($thisUID, 
-                                $this_pid,
-                                $this_picture_date, 
-                                $this_picture_seq,
-                                $next_links[$thisUID]);
-            $c = ' - ';
+            $l = make_a_link($thisUID, 
+                             $this_pid,
+                             $this_picture_date, 
+                             $this_picture_seq,
+                             $next_links[$thisUID]);
+            if (strlen($l) > 0) {
+                echo $c.$l;
+                $c = ' - ';
+            }
         }
         echo '</font>';
     }
