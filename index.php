@@ -5,22 +5,11 @@
 // date: 26-Nov-2004
 //
 
-// Open a session
-require('whm_php_sessions.inc');
-require('whm_php_auth.inc');
-require('inc_auth_policy.php');
-
-require('/etc/whm/rings_dbs.php');
-
-// connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL host $mysql_host";
+if (strlen($in_login) == 0) {
+    $authNotRequired = 1;
 }
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
-}
+require('inc_ring_init.php');
+
 
 // Cookie to Session map
 $cm['GID'] = 'group_id';
@@ -324,8 +313,10 @@ if ( strlen($in_group_id) > 0) {
     echo "<blockquote>\n";
     echo "<table border=\"0\" background=\"notebook.gif\" cellpadding=\"2\">\n";
     // Hide the private folks
-    $private_sel = " AND public_flag != 'N' ";
-    if (strlen($_SESSION['whm_directory_user'])>0) { $private_sel = ''; }
+    $vis_sel = '';
+    if (strlen($_SESSION['whm_directory_user'])==0) { 
+        $vis_sel = "AND visibility != 'HIDDEN' AND visibility != 'INVISIBLE' "; 
+    }
 
     if ($in_group_id == "all-groups") {
         $sel = "SELECT det.uid   uid, ";
@@ -334,7 +325,8 @@ if ( strlen($in_group_id) > 0) {
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid $private_sel) ";
+        $sel .= "ON (det.uid = pp.uid ";
+        $sel .= "$vis_sel) ";
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
     } else {
@@ -347,7 +339,8 @@ if ( strlen($in_group_id) > 0) {
         $sel .= "ON (g.uid = det.uid ";
         $sel .= "AND g.group_id='$in_group_id') ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid $private_sel) ";
+        $sel .= "ON (det.uid = pp.uid ";
+        $sel .= "$vis_sel) ";
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
     }
