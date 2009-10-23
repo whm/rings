@@ -191,7 +191,6 @@ if (isset($in_ring_uid)) {
                 }
             }
         }
-        $_SESSION['s_msg'] .= $sel;
     }
 
     if (strlen($new_pid) == 0) {
@@ -204,7 +203,6 @@ if (isset($in_ring_uid)) {
 
 if (isset($in_ring_pid)) {
 
-    $_SESSION['s_msg'] .= "this pid = $in_ring_pid<br>\n";
     // If the picture contains an invisible person return the caller to 
     // the index page.
     if (auth_picture_invisible($in_ring_pid) > 0) {
