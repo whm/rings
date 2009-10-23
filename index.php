@@ -394,6 +394,32 @@ if (strlen($_SESSION['whm_directory_user'])>0) {
 <blockquote>
 <dl>
 
+<dt>Some pictures are missing.  What happened?</dt>
+<dd>Initially anyone could see all of the pictures stored in the rings.
+This bothered some people.  And for a short time the site was 
+opened to Google indexing this made people even more uncomfortable.  
+To address these concerns the site policies have changed.  Any person 
+identified in the rings can choose any one of three policies applied 
+to pictures they are identified in:
+<ul>
+<li>Invisible - any picture with the person in it is completely 
+suppressed.
+<li>Hidden - pictures are display but no names or links are created 
+for the person.
+<li>Visible - names and pictures are shown to anyone that cares to 
+look.
+</ul>
+These policies apply only to anyone that has not logged into the server.
+If you would like to see all of the pictures you need to login, and 
+to login you need credentials, and to get credentials send a 
+request to <?php echo $ring_admin;?>.
+<p>
+Additionally, anyone that wants their pictures to be visible to everyone, 
+but does not like the fact that Google, et. al. will index their 
+name, can request that only a nickname be displayed.  If this is the 
+case just let us know and it will be so.
+</dd>
+
 <dt>Where do those crazy dates come from?</dt>
 <dd>Some dates are accurate, some are just a wild guess.  Pictures are ordered
 by date and time, so the really important thing is that the dates be in the
@@ -402,6 +428,7 @@ nice if they are close because correlations across rings will make sense,
 but that is not always possible.
 </dd>
 
+<p>
 <dt>Who makes up the descriptions, dates, etc.?</dt>
 <dd>At this point all updates are by 
 <?php echo $ring_admin;?>.  If you want to update the web site yourself, 
