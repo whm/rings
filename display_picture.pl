@@ -51,41 +51,41 @@ if (my $row = $sth->fetchrow_hashref('NAME_lc') ) {
     $image->BlobToImage($pblob);
 
     if ( length($psize)>0 ) {
-	$image->Resize(width=>"$psize");
+        $image->Resize(width=>"$psize");
     } elsif ( length($pscale)>0 ) {
-	$width = $pscale * $width;
-	$height = $pscale * $height;
-	$image->Resize(width=>$width, height=>$height );
+        $width = $pscale * $width;
+        $height = $pscale * $height;
+        $image->Resize(width=>$width, height=>$height );
     } elsif ( $pmax_x+$pmax_y > 0 ) {
-	my $x = $width;
-	my $y = $height;
-	my $x1 = $width;
-	my $y1 = $height;
-	my $x2 = $width;
-	my $y2 = $height;
-	if (($pmax_x > 0) & ($pmax_x < $width)) {
-	    $x1 = $pmax_x;
-	    $y1 = ($x1/$width) * $height;
-	    $x = $x1;
-	    $y = $y1;
-	}
-	if (($pmax_y > 0) & ($pmax_y < $height)) {
-	    $y2 = $pmax_y;
-	    $x2 = ($y2/$height) * $width;
-	    $x = $x2;
-	    $y = $y2;
-	}
-	if ( (($pmax_x>0) & ($pmax_y>0)) 
-           & (($pmax_x<$width) || ($pmax_y<$height)) ) {
-	    if ($x1 < $x2) {
-		$x = $x1;
-		$y = $y1;
-	    } else {
-		$x = $x2;
-		$y = $y2;
-	    }
-	}
-	$image->Resize(width=>$x, height=>$y);
+        my $x = $width;
+        my $y = $height;
+        my $x1 = $width;
+        my $y1 = $height;
+        my $x2 = $width;
+        my $y2 = $height;
+        if (($pmax_x > 0) & ($pmax_x < $width)) {
+            $x1 = $pmax_x;
+            $y1 = ($x1/$width) * $height;
+            $x = $x1;
+            $y = $y1;
+        }
+        if (($pmax_y > 0) & ($pmax_y < $height)) {
+            $y2 = $pmax_y;
+            $x2 = ($y2/$height) * $width;
+            $x = $x2;
+            $y = $y2;
+        }
+        if ( (($pmax_x>0) & ($pmax_y>0)) 
+             & (($pmax_x<$width) || ($pmax_y<$height)) ) {
+            if ($x1 < $x2) {
+                $x = $x1;
+                $y = $y1;
+            } else {
+                $x = $x2;
+                $y = $y2;
+            }
+        }
+        $image->Resize(width=>$x, height=>$y);
     }
 
     # -- now convert it back to a blob to display it
