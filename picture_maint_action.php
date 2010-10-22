@@ -264,6 +264,34 @@ if ( $update_flag ) {
 
     $next_uid = 'CLEARFORM';
     
+} elseif ( strlen($btn_rotate)>0 ) {
+
+    $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-rotate.pl";
+    $sh_cmd .= " --start=$in_pid";
+    $sh_cmd .= " --end=$in_pid";
+    $sh_cmd .= " --update";
+    $ret = array();
+    $z = exec($sh_cmd, $ret, $ret_status);
+    if ($ret_status) {
+        $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+        foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
+        $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+    }
+
+    $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
+    $sh_cmd .= " --start=$in_pid";
+    $sh_cmd .= " --end=$in_pid";
+    $sh_cmd .= " --update";
+    $ret = array();
+    $z = exec($sh_cmd, $ret, $ret_status);
+    if ($ret_status) {
+        $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+        foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
+        $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+    }
+
+    $next_pid = $in_pid;
+
 } else {
     
     echo "Ooops, this should never happen!<br>\n";
@@ -279,6 +307,6 @@ header ("$next_header?in_pid=$next_pid");
 <title>Picture Mainteance Action</title>
 </head>
 <body>
-<a href="picture_maint?in_pid=$next_pid">Return to Picture Maintenance</a>
+<a href="picture_maint?in_pid=<?php echo $next_pid;?>">Return to Picture Maintenance</a>
 </body>
 </html>
