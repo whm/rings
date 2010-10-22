@@ -156,9 +156,6 @@ $em   = "</font><br>\n";
 
 // -- main routine
 
-// set default file slots
-$ring_doc_root = '/mac/www/rings/';
-
 if ($_SESSION['upload_slots'] < 1) {$_SESSION['upload_slots'] = 5;}
 if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;

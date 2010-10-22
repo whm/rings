@@ -232,6 +232,11 @@ require ('page_top.php');
     </td>
     <td align="center">
         <input type="submit" 
+               name="btn_rotate" 
+               value="Rotate Right">
+    </td>
+    <td align="center">
+        <input type="submit" 
                onClick="setDelete()"
                name="btn_del" 
                value="Delete">
@@ -352,47 +357,6 @@ if ($row['public'] == 'N') {
 </table>
 <p>
 
-<p>
-<table border="1">
-<tr>
-  <th colspan="2">People and Places in Picture</th>
-</tr>
-<tr>
-  <th>Person or Place</th>
-  <th>Delete?</th>
-</tr>
-<?php
-$thisID = $row["pid"];
-$people_cnt = 0;
-if (strlen($thisID) > 0) {
-  $cmd = "SELECT det.uid uid, p.display_name display_name ";
-  $cmd .= "FROM picture_details det, people_or_places p ";
-  $cmd .= "WHERE det.pid=$thisID ";
-  $cmd .= "AND det.uid = p.uid ";
-  $cmd .= "ORDER BY p.display_name ";
-  $result = mysql_query ($cmd);
-  if ($result) {
-    while ($link_row = mysql_fetch_array($result)) {
-      $a_uid = $link_row["uid"];
-      $a_name = $link_row["display_name"];
-      $found["$a_uid"] = 1;
-      echo "<tr>\n";
-      echo " <td>$a_name</td>\n";
-      echo " <td align=\"center\">\n";
-      echo "   <input type=\"checkbox\" name=\"del_$people_cnt\" ";
-      echo           "value=\"delete\">\n";
-      echo "   <input type=\"hidden\" name=\"del_uid_$people_cnt\" ";
-      echo           "value=\"$a_uid\">\n";
-      echo " </td>\n";
-      echo "</tr>\n";
-      $people_cnt++;
-    }
-  }  
-}
-?>
-</table>
-<p>
-
 <?php
 // Get a list of folks to add to the picture
 $cmd = "SELECT uid,display_name ";
@@ -451,9 +415,6 @@ if (is_array($uid_sort)) {
 <tr>
 </table>
 
-<input type="hidden" name="del_cnt" value="<?php print $people_cnt;?>">
-<input type="hidden" name="add_cnt" value="<?php print $add_cnt;?>">
-
  </td>
 
  <td colspan="2" align="center" valign="top">
@@ -490,10 +451,54 @@ if (isset($_SESSION['s_msg'])) {
 ?>
   </table>
 
+<p>
+<table border="1">
+<tr>
+  <th colspan="2">People and Places in Picture</th>
+</tr>
+<tr>
+  <th>Person or Place</th>
+  <th>Delete?</th>
+</tr>
+<?php
+$thisID = $row["pid"];
+$people_cnt = 0;
+if (strlen($thisID) > 0) {
+  $cmd = "SELECT det.uid uid, p.display_name display_name ";
+  $cmd .= "FROM picture_details det, people_or_places p ";
+  $cmd .= "WHERE det.pid=$thisID ";
+  $cmd .= "AND det.uid = p.uid ";
+  $cmd .= "ORDER BY p.display_name ";
+  $result = mysql_query ($cmd);
+  if ($result) {
+    while ($link_row = mysql_fetch_array($result)) {
+      $a_uid = $link_row["uid"];
+      $a_name = $link_row["display_name"];
+      $found["$a_uid"] = 1;
+      echo "<tr>\n";
+      echo " <td>$a_name</td>\n";
+      echo " <td align=\"center\">\n";
+      echo "   <input type=\"checkbox\" name=\"del_$people_cnt\" ";
+      echo           "value=\"delete\">\n";
+      echo "   <input type=\"hidden\" name=\"del_uid_$people_cnt\" ";
+      echo           "value=\"$a_uid\">\n";
+      echo " </td>\n";
+      echo "</tr>\n";
+      $people_cnt++;
+    }
+  }  
+}
+?>
+</table>
+<p>
+
  </td>
 
 </tr>
 </table>
+
+<input type="hidden" name="del_cnt" value="<?php print $people_cnt;?>">
+<input type="hidden" name="add_cnt" value="<?php print $add_cnt;?>">
 
 </form>
 <?php require('page_bottom.php'); ?>

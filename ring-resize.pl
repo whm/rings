@@ -32,7 +32,7 @@ use vars qw (
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -92,7 +92,7 @@ sub store_picture {
         $thisPicture,
         $thisType) = @_;
     
-    debug_output (" Processing $thisPID $thisTable");
+    dbg (" Processing $thisPID $thisTable");
     
     my @blob;
     $blob[0] = $thisPicture;
@@ -119,9 +119,9 @@ sub store_picture {
                         '%[EXIF:FNumber]');
     
     if ($width==0 || $height==0) {
-        debug_output ("      width: $width");
-        debug_output ("     height: $height");
-        debug_output (" Skipping image");
+        dbg ("      width: $width");
+        dbg ("     height: $height");
+        dbg (" Skipping image");
         return;
     }
 
@@ -138,7 +138,7 @@ sub store_picture {
         $cmd .= 'date_last_maint=?';
         $cmd .= 'WHERE pid=? ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute($this_datetime,
                                  $pic_datetime,
@@ -182,14 +182,14 @@ sub store_picture {
         $x = $x2;
         $y = $y2;
     }
-    debug_output (" Producing picture $x by $y ");
+    dbg (" Producing picture $x by $y ");
     $newPic->Resize(width=>$x, height=>$y);
     my @bPic  = $newPic->ImageToBlob();
     
     my $sel = "SELECT pid FROM $thisTable ";
     $sel .= "WHERE pid=$thisPID ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     
     my $row = $sth->fetchrow_hashref;
@@ -206,7 +206,7 @@ sub store_picture {
         $cmd .= 'date_added';
         $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute(
                                  $thisPID,
@@ -229,7 +229,7 @@ sub store_picture {
         $cmd .= 'date_last_maint = ? ';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute(
                                  $thisType,
@@ -262,20 +262,20 @@ sub read_and_update {
     }
     $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     my $cnt = 0;
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
         $pidList{$row->{pid}} = $row->{file_name};
     }
-    debug_output ("$cnt pictures to process");
+    dbg ("$cnt pictures to process");
     
     # process the pictures
 
     my $cnt = 0;
     foreach my $i (sort keys %pidList) {
-        debug_output ("Processing $pidList{$i}...");
+        dbg ("Processing $pidList{$i}...");
         
         my $sel = "SELECT ";
         $sel .= "picture_type,";
@@ -283,7 +283,7 @@ sub read_and_update {
         $sel .= "FROM pictures_raw ";
         $sel .= "WHERE pid = $i ";
         my $sth = $dbh->prepare ($sel);
-        if ($opt_debug) {debug_output($sel);}
+        if ($opt_debug) {dbg($sel);}
         $sth->execute();
         
         if (my $row = $sth->fetchrow_hashref) {
@@ -312,7 +312,7 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-resize.pl                    v:26-Dec-2007\n";
+print ">>> ring-resize.pl     v:21-Oct-2010\n";
 
 # -- get options
 GetOptions(
@@ -339,37 +339,43 @@ if ($opt_manual) {
 }
 
 # -- read preferences from ./rings
-my $pref_file = $ENV{'HOME'}.'/.rings';
+my $pref_file = $ARGV[0];
+
+$pref_file = $ENV{'HOME'}.'/.rings'   unless $pref_file;
+$pref_file = ''                       unless -e $pref_file;
+
+$pref_file = '/etc/whm/rings_db.conf' unless $pref_file;
+$pref_file = ''                       unless -e $pref_file;
+
 if ( -e $pref_file) {
-    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    if ($opt_debug) {dbg("Reading $pref_file file");}
     open (pref, "<$pref_file");
     while (<pref>) {
         chomp;
         my $inline = $_;
         $inline =~ s/\#.*//;
-        if ($opt_debug) {debug_output("inline:$inline");}
+        if ($opt_debug) {dbg("inline:$inline");}
         if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
+            if ($inline =~ /^\s*(host|db|user|pass)\s*=\s*(.*)/i) {
                 my $attr = lc($1);
                 my $val = $2;
                 $val =~ s/\s+$//;
                 $prefs{$attr} = $val;
-                if ($opt_debug) {debug_output("attr:$attr val:$val");}
+                if ($opt_debug) {dbg("attr:$attr val:$val");}
             }
         }
     }
     close pref;
 }
 
-if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
-if (length($opt_host) == 0)    {$opt_host = 'localhost';}
+$opt_host = $prefs{'host'} unless $opt_host;
+$opt_host = 'localhost'    unless $opt_host;
 
-if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
-if (length($opt_db) == 0)      {$opt_db = 'rings';}
+$opt_db = $prefs{'db'} unless $opt_db;
+$opt_db = 'rings'      unless $opt_db;
 
-if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
-if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
-
+$opt_pass = $prefs{'pass'} unless $opt_pass;
+$opt_user = $prefs{'user'} unless $opt_user;
 
 if (length($opt_start) == 0) {
     print "%MAC-F-STARTREQ, Starting number required.  Try 1.\n";
@@ -401,7 +407,7 @@ if (length($opt_table) > 0 && $tableList{$opt_table} == 0) {
     exit;
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
