@@ -118,6 +118,12 @@ if (isset($_SESSION['s_msg'])) {
  </td>
 </tr>
 <tr>
+ <td align="right">Authentication UID:</td>
+ <td> <input type="text" name="in_auth_uid"
+             value="<?php print $row["auth_uid"]; ?>"
+ </td>
+</tr>
+<tr>
  <td align="right">Display Name:</td>
  <td> <input type="text" name="in_display_name"
              value="<?php print $row["display_name"]; ?>"

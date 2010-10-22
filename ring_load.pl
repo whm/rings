@@ -173,7 +173,7 @@ sub store_picture {
         $size, 
         $format, 
         $compression) 
-	= $thisPic->Get('width',
+        = $thisPic->Get('width',
                         'height',
                         'filesize',
                         'format',
@@ -351,11 +351,11 @@ sub save_file {
         debug_output ("    datetime: $this_datetime");
         debug_output ("exposuretime: $this_shutterspeed");
         debug_output ("     fnumber: $this_fnumber");
-	debug_output ("EXIF Information ==============================");
-	foreach my $t (keys %{$info}) {
-	    print "$t = ${$info}{$t}\n";
-	}
-	debug_output ("EXIF Information end ==========================");
+        debug_output ("EXIF Information ==============================");
+        foreach my $t (keys %{$info}) {
+            print "$t = ${$info}{$t}\n";
+        }
+        debug_output ("EXIF Information end ==========================");
     }
 
 
@@ -548,7 +548,7 @@ my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
 $dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
     or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
 $dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 100000;
+$dbh->{LongReadLen} = 20000000;
 $dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
     or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
 

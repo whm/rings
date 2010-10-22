@@ -23,7 +23,7 @@ $em   = "</font><br>\n";
 
 // -- main routine
 
-$ring_doc_root = '/mac/www/rings/';
+$ring_doc_root = '/var/www/rings/';
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');
