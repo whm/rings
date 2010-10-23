@@ -358,6 +358,36 @@ if ($row['public'] == 'N') {
 <p>
 
 <?php
+# Generate table rows of people in the picture already
+$picturePeople = '';
+$thisID = $row["pid"];
+$people_cnt = 0;
+if (strlen($thisID) > 0) {
+  $cmd = "SELECT det.uid uid, p.display_name display_name ";
+  $cmd .= "FROM picture_details det, people_or_places p ";
+  $cmd .= "WHERE det.pid=$thisID ";
+  $cmd .= "AND det.uid = p.uid ";
+  $cmd .= "ORDER BY p.display_name ";
+  $result = mysql_query ($cmd);
+  if ($result) {
+    while ($link_row = mysql_fetch_array($result)) {
+      $a_uid = $link_row["uid"];
+      $a_name = $link_row["display_name"];
+      $found["$a_uid"] = 1;
+      $picturePeople .= "<tr>\n";
+      $picturePeople .= " <td>$a_name</td>\n";
+      $picturePeople .= " <td align=\"center\">\n";
+      $picturePeople .= "   <input type=\"checkbox\" name=\"del_$people_cnt\" ";
+      $picturePeople .=           "value=\"delete\">\n";
+      $picturePeople .= "   <input type=\"hidden\" name=\"del_uid_$people_cnt\" ";
+      $picturePeople .=           "value=\"$a_uid\">\n";
+      $picturePeople .= " </td>\n";
+      $picturePeople .= "</tr>\n";
+      $people_cnt++;
+    }
+  }  
+}
+
 // Get a list of folks to add to the picture
 $cmd = "SELECT uid,display_name ";
 $cmd .= "FROM people_or_places ";
@@ -460,35 +490,7 @@ if (isset($_SESSION['s_msg'])) {
   <th>Person or Place</th>
   <th>Delete?</th>
 </tr>
-<?php
-$thisID = $row["pid"];
-$people_cnt = 0;
-if (strlen($thisID) > 0) {
-  $cmd = "SELECT det.uid uid, p.display_name display_name ";
-  $cmd .= "FROM picture_details det, people_or_places p ";
-  $cmd .= "WHERE det.pid=$thisID ";
-  $cmd .= "AND det.uid = p.uid ";
-  $cmd .= "ORDER BY p.display_name ";
-  $result = mysql_query ($cmd);
-  if ($result) {
-    while ($link_row = mysql_fetch_array($result)) {
-      $a_uid = $link_row["uid"];
-      $a_name = $link_row["display_name"];
-      $found["$a_uid"] = 1;
-      echo "<tr>\n";
-      echo " <td>$a_name</td>\n";
-      echo " <td align=\"center\">\n";
-      echo "   <input type=\"checkbox\" name=\"del_$people_cnt\" ";
-      echo           "value=\"delete\">\n";
-      echo "   <input type=\"hidden\" name=\"del_uid_$people_cnt\" ";
-      echo           "value=\"$a_uid\">\n";
-      echo " </td>\n";
-      echo "</tr>\n";
-      $people_cnt++;
-    }
-  }  
-}
-?>
+<?php echo $picturePeople; ?>
 </table>
 <p>
 
