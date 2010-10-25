@@ -346,7 +346,9 @@ sub save_file {
     my $this_datetime     = ${$info}{'CreateDate'};
     my $this_shutterspeed = ${$info}{'ShutterSpeed'};
     my $this_fnumber      = ${$info}{'FNumber'};
+    my $this_raw_size     = length $bPic[0];
     if ($opt_debug) {
+        debug_output ("        size: $this_raw_size");
         debug_output ("       model: $camera");
         debug_output ("    datetime: $this_datetime");
         debug_output ("exposuretime: $this_shutterspeed");
@@ -357,7 +359,6 @@ sub save_file {
         }
         debug_output ("EXIF Information end ==========================");
     }
-
 
     # -- Store the raw image
 
@@ -408,6 +409,10 @@ sub save_file {
     $cmd .= "file_name = ?,";
     $cmd .= "key_words = ?,";
     $cmd .= "taken_by = ?,";
+    $cmd .= "raw_picture_size = ?,";
+    $cmd .= "camera = ?,";
+    $cmd .= "shutter_speed = ?,";
+    $cmd .= "fstop = ?,";
     $cmd .= "date_last_maint = ?,";
     $cmd .= "date_added = ?";
     if ($opt_debug) {debug_output($cmd);}
@@ -420,6 +425,10 @@ sub save_file {
                              $a_filename, 
                              $opt_keyword,
                              $opt_photographer,
+                             $this_raw_size,
+                             $camera,
+                             $this_shutterspeed,
+                             $this_fnumber,
                              sql_datetime(),
                              sql_datetime());
     }
