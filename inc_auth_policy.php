@@ -50,7 +50,7 @@ function auth_person_hidden ($uid) {
 
 // Redirect the user to the home page
 function http_redirect ($nextURL="index") {
-    header ("REFRESH: 0; URL=$next_url");
+    header ("REFRESH: 0; URL=$nextURL");
     echo "<html>\n";
     echo "<head>\n";
     echo "<title>Rings</title>\n";
@@ -65,7 +65,7 @@ function http_redirect ($nextURL="index") {
 if ($in_logout>0) {
     session_destroy();
     $_SESSION['whm_directory_user'] = '';
-    http_redirect('http://www.stanford.edu');
+    http_redirect('http://rings.ca-zephyr.org/rings');
 }
 
 if (strlen($authNotRequired)==0) {

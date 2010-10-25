@@ -9,6 +9,7 @@ require('inc_format.php');
 
 // Init session, connect to database
 $authNotRequired = 1;
+if ($in_login == 2) {$authNotRequired = '';}
 require('inc_ring_init.php');
 
 require ('/etc/whm/rings_dbs.php');
@@ -325,14 +326,6 @@ if (isset($in_ring_pid)) {
     
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
-    echo '<a href="picture_email?in_pid='.$this_pid.'" target="_blank" >';
-    echo '<img src="images/icon-mail-send.png" border="0" ';
-    echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
-    echo 'alt="Send this picture to someone">';
-    echo "</a>\n";
-    
-    echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-    
     echo '<a href="index.php">';
     echo '<img src="images/rings.png" border="0" ';
     echo 'onMouseOver="showSelect();" onMouseOut="hideSelect();" ';
@@ -343,6 +336,14 @@ if (isset($in_ring_pid)) {
     
     $loggedInUser = $_SESSION['whm_directory_user'];
     if (strlen($loggedInUser)>0) {
+        echo '<a href="picture_email?in_pid='.$this_pid.'" target="_blank" >';
+        echo '<img src="images/icon-mail-send.png" border="0" ';
+        echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
+        echo 'alt="Send this picture to someone">';
+        echo "</a>\n";
+    
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+    
         echo '<a href="picture_maint?in_pid='.$this_pid.'" target="_blank">';
         echo '<img src="images/icon-edit.png" border="0" ';
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
@@ -351,14 +352,6 @@ if (isset($in_ring_pid)) {
         
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-        echo '<a href="picture_reload?in_pid='.$this_pid.'" target="_blank">';
-        echo '<img src="images/icon-reload.png" border="0" ';
-        echo 'onMouseOver="showReload();" onMouseOut="hideReload();" ';
-        echo 'alt="ReLoad Picture Information">';
-        echo "</a>\n";
-        
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-        
         echo '<img src="images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
@@ -369,19 +362,19 @@ if (isset($in_ring_pid)) {
         echo '<a href="'.$PHP_SELF;
         echo '?in_logout=1';
         echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo 'Logout';
+        echo '<img src="button.php?in_button=Logout">';
         echo "</a>\n";
     } else {
         echo '<a href="'.$PHP_SELF;
         echo '?in_login=2';
         echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo 'Login'."</a>\n";
+        echo '<img src="images/login.jpg" border="0">';
+        echo "</a>\n";
     }
     
     echo '<p id="mailHelpDisplay">'."\n";
     echo "Email this Picture\n";
     echo "<br>\n";
-    echo "(Requires a login id)\n";
     echo "</p>\n";
     
     echo '<p id="bigHelpDisplay">'."\n";
