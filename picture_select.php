@@ -362,7 +362,7 @@ if (isset($in_ring_pid)) {
         echo '<a href="'.$PHP_SELF;
         echo '?in_logout=1';
         echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo '<img src="button.php?in_button=Logout">';
+        echo '<img src="images/logout.jpg" border="0">';
         echo "</a>\n";
     } else {
         echo '<a href="'.$PHP_SELF;
