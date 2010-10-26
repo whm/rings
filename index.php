@@ -315,7 +315,7 @@ if ( strlen($in_group_id) > 0) {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
     echo "<blockquote>\n";
-    echo "<table border=\"0\" background=\"notebook.gif\" cellpadding=\"2\">\n";
+    echo "<table border=\"0\" cellpadding=\"2\">\n";
     // Hide the private folks
     $vis_sel = '';
     if (strlen($_SESSION['whm_directory_user'])==0) { 
