@@ -290,17 +290,24 @@ if (isset($in_ring_pid)) {
             if (strlen($l) > 0) {echo $l."<br>\n";}
         }
         echo '<font  color="white">';
-        $c = '';
-        foreach ($next_links as $thisUID => $thisName) {
-            if ($in_ring_uid == $thisUID) {continue;}
-            $l = make_a_link($thisUID, 
-                             $this_pid,
-                             $this_picture_date, 
-                             $this_picture_seq,
-                             $next_links[$thisUID]);
-            if (strlen($l) > 0) {
-                echo $c.$l;
-                $c = ' - ';
+        if ($in_slide_show > 0) {
+            $l = "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
+            $l .= '<img src="button.php?in_button=Stop Show">';
+            $l .= "</a>\n";
+            echo $l;
+        } else {
+            $c = '';
+            foreach ($next_links as $thisUID => $thisName) {
+                if ($in_ring_uid == $thisUID) {continue;}
+                $l = make_a_link($thisUID, 
+                                 $this_pid,
+                                 $this_picture_date, 
+                                 $this_picture_seq,
+                                 $next_links[$thisUID]);
+                if (strlen($l) > 0) {
+                    echo $c.$l;
+                    $c = ' - ';
+                }
             }
         }
         echo '</font>';
