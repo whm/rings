@@ -42,6 +42,7 @@ if (isset($in_group_id)) {
 $sel = "SELECT * ";
 $sel .= "FROM groups ";
 $sel .= "WHERE group_id = '$in_group_id' ";
+$sel .= "ORDER BY group_id ";
 $result = mysql_query ($sel);
 if ($result) {
   $row = mysql_fetch_array($result);
@@ -148,7 +149,7 @@ if (strlen($in_group_id) > 0) {
   $cmd .= "LEFT OUTER JOIN people_or_places p ";
   $cmd .= "ON (g.uid = p.uid) "; 
   $cmd .= "WHERE g.group_id = '$in_group_id' ";
-  $cmd .= "ORDER BY g.uid ";
+  $cmd .= "ORDER BY p.display_name ";
   $result = mysql_query ($cmd);
   if ($result) {
     while ($link_row = mysql_fetch_array($result)) {
