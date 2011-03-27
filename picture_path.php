@@ -115,52 +115,24 @@ function print_row ($n, $r) {
 $thisTitle = 'Picture Sort';
 require ('page_top.php');
 
-if (strlen($button_next)>0) {
-    
-    $in_pid = $_SESSION['s_pid'];
-    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $pics_per_page;
-    
-} elseif (strlen($button_back)>0) {
-    
-    $in_pid = $_SESSION['s_pid'];
-    $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $pics_per_page;
-    if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
-    
-} else {
+if (strlen($start_row) == 0) {$start_row = 0;}
 
-    $sel = "SELECT p.pid, ";
-    $sel .= "p.key_words, ";
-    $sel .= "p.picture_date, ";
-    $sel .= "p.taken_by, ";
-    $sel .= "p.description, ";
-    $sel .= "p.file_name, ";
-    $sel .= "p.group_path, ";
-    $sel .= "pop.uid, ";
-    $sel .= "pop.display_name ";
-    $sel .= "FROM pictures_information p ";
-    $sel .= "LEFT OUTER JOIN picture_details d ";
-    $sel .= "ON (p.pid = d.pid) ";
-    $sel .= "LEFT OUTER JOIN people_or_places pop ";
-    $sel .= "ON (d.uid = pop.uid) ";
-    $sel .= "WHERE p.group_path IS NULL ";
-    $_SESSION['s_list_select'] = $sel;
-    $_SESSION['s_start_row'] = 0;
-    
-    // find the number of rows
-    $result = mysql_query ($_SESSION['s_list_select']);
-    if ($result) {
-        $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
-    } else {
-        $_SESSION['s_num_user_rows'] = 0;
-    }
-    
-    $sel = $_SESSION['s_list_select'] . ' LIMIT ' 
-        . $_SESSION['s_start_row'] . ",$pics_per_page ";
-    $end_row = $_SESSION['s_start_row'] + $pics_per_page;
-    if ($end_row > $_SESSION['s_num_user_rows']) {
-        $end_row = $_SESSION['s_num_user_rows'];
-    }
-}
+$sel = "SELECT p.pid, ";
+$sel .= "p.key_words, ";
+$sel .= "p.picture_date, ";
+$sel .= "p.taken_by, ";
+$sel .= "p.description, ";
+$sel .= "p.file_name, ";
+$sel .= "p.group_path, ";
+$sel .= "pop.uid, ";
+$sel .= "pop.display_name ";
+$sel .= "FROM pictures_information p ";
+$sel .= "LEFT OUTER JOIN picture_details d ";
+$sel .= "ON (p.pid = d.pid) ";
+$sel .= "LEFT OUTER JOIN people_or_places pop ";
+$sel .= "ON (d.uid = pop.uid) ";
+$sel .= "WHERE p.group_path IS NULL ";
+$sel .= "LIMIT $start_row,100 ";
 ?>
 
 <p>
@@ -168,6 +140,7 @@ if (strlen($button_next)>0) {
 
 <p>
 <input type="submit" name="button_refresh" value="Refresh">
+<input type="text" name="start_row" value="<?php print $start_row;?>">
 <p>
 
 <?php 
@@ -177,38 +150,6 @@ if (strlen($_SESSION['msg']) > 0) {
     $_SESSION['msg'] = '';
 }
 
-if ($_SESSION['s_num_user_rows']>0) {
-    if (($end_row != $_SESSION['s_num_user_rows']) 
-        || ((strlen($_SESSION['s_start_row'])>0) 
-            && ($_SESSION['s_start_row'] > 0)) ) {
-?>
-<table border="1">
-<tr><td>
-    <table width="100%" border="0">
-      <tr>
-      <td>
-        <?php if ($_SESSION['s_start_row']
-                  +$pics_per_page<$_SESSION['s_num_user_rows']) { ?>
-        <input type="submit" name="button_next" value="Next Page">
-        <?php } ?>
-      </td>
-      <td align="center">
-        Records <?php print $_SESSION['s_start_row']; ?> through
-        <?php print $end_row; ?> of <?php print $_SESSION['s_num_user_rows'];?>
-      </td>
-      <td align="right">
-        <?php if ((strlen($_SESSION['s_start_row'])>0) 
-                 && ($_SESSION['s_start_row'] > 0)) { ?>
-        <input type="submit" name="button_back" value="Previous Page"> 
-        <?php } ?>
-      </td>
-      </tr>
-    </table>
-</td></tr>
-</table>
-<?php 
-  } 
-} 
 ?>
 
 </form>
