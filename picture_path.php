@@ -103,7 +103,7 @@ function print_row ($n, $r) {
 
 <html>
 <head>
-<title>Picture Sort</title>
+<title>Paths</title>
 
 <?php require('inc_select_search.php'); ?>
 
@@ -112,7 +112,7 @@ function print_row ($n, $r) {
 <body bgcolor="#eeeeff">
 
 <?php
-$thisTitle = 'Picture Sort';
+$thisTitle = 'Paths';
 require ('page_top.php');
 
 if (strlen($start_row) == 0) {$start_row = 0;}
