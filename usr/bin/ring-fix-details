@@ -7,27 +7,25 @@ use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %prefs
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $opt_db
-             $opt_debug
-             $opt_help
-             $opt_manual
-             $opt_update
-             $opt_host
-             $opt_start
-             $opt_user
-             $opt_pass
-             );
+our %prefs;
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $opt_db;
+our $opt_debug;
+our $opt_help;
+our $opt_manual;
+our $opt_update;
+our $opt_host;
+our $opt_start;
+our $opt_user;
+our $opt_pass;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -43,7 +41,7 @@ sub debug_output {
 # Main routine
 # -------------
 
-print ">>> ring-fix-details.pl                    v:10-Jul-2006\n";
+print ">>> ring-fix-details                    v:10-Jul-2006\n";
 
 # -- get options
 GetOptions(
@@ -69,20 +67,20 @@ if ($opt_manual) {
 # -- read preferences from ./rings
 my $pref_file = $ENV{'HOME'}.'/.rings';
 if ( -e $pref_file) {
-    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    if ($opt_debug) {dbg("Reading $pref_file file");}
     open (pref, "<$pref_file");
     while (<pref>) {
         chomp;
         my $inline = $_;
         $inline =~ s/\#.*//;
-        if ($opt_debug) {debug_output("inline:$inline");}
+        if ($opt_debug) {dbg("inline:$inline");}
         if (length($inline) > 0) {
             if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
                 my $attr = lc($1);
                 my $val = $2;
                 $val =~ s/\s+$//;
                 $prefs{$attr} = $val;
-                if ($opt_debug) {debug_output("attr:$attr val:$val");}
+                if ($opt_debug) {dbg("attr:$attr val:$val");}
             }
         }
     }
@@ -101,7 +99,7 @@ if (length($opt_db) == 0) {
     $opt_db = 'rings';
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
@@ -119,7 +117,7 @@ $sel .= "LEFT OUTER JOIN pictures_information i ";
 $sel .= "ON (i.pid = d.pid) ";
 $sel .= "WHERE i.pid IS NULL ";
 my $sth = $dbh->prepare ($sel);
-if ($opt_debug) {debug_output($sel);}
+if ($opt_debug) {dbg($sel);}
 $sth->execute();
 my @pidList;
 while (my $row = $sth->fetchrow_hashref) {
@@ -128,7 +126,7 @@ while (my $row = $sth->fetchrow_hashref) {
 
 my $cmd = "DELETE FROM picture_details ";
 $cmd .= "WHERE pid = ? ";
-if ($opt_debug) {debug_output($cmd);}
+if ($opt_debug) {dbg($cmd);}
 my $sth_update = $dbh_update->prepare ($cmd);
 foreach my $i (@pidList) {
     if ($opt_update) {
@@ -149,11 +147,11 @@ __END__
 
 =head1 NAME
 
-ring-fix-details.pl
+ring-fix-details
 
 =head1 SYNOPSIS
 
- ring-restructure.pl [--update] \
+ ring-fix-details [--update] \
               --host=mysql-host --db=databasename \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 

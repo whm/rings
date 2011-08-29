@@ -477,7 +477,7 @@ sub save_file {
 # Main routine
 # -------------
 
-print ">>> ring_load.pl                    v:27-Aug-2011\n";
+print ">>> ring-load                    v:27-Aug-2011\n";
 
 # -- get options
 GetOptions(
@@ -613,11 +613,11 @@ __END__
 
 =head1 NAME
 
-ring_load.pl
+ring-load
 
 =head1 SYNOPSIS
 
- ring_load.pl [--path=directory-path] [--update] \
+ ring=load [--path=directory-path] [--update] \
               [--host=mysql-host] [--db=dbname] \
               --user=mysql-username --pass=mysql-password \
               [--force] [--keyword=string] [--datetaken=string] \

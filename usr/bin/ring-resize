@@ -8,26 +8,24 @@ use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %prefs
-             %tableList
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $opt_db
-             $opt_dateupdate
-             $opt_debug
-             $opt_end
-             $opt_host
-             $opt_help
-             $opt_manual
-             $opt_pass
-             $opt_start
-             $opt_table
-             $opt_user
-             $opt_update
-             );
+our %prefs;
+our %tableList;
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $opt_db;
+our $opt_dateupdate;
+our $opt_debug;
+our $opt_end;
+our $opt_host;
+our $opt_help;
+our $opt_manual;
+our $opt_pass;
+our $opt_start;
+our $opt_table;
+our $opt_user;
+our $opt_update;
 
 # ------------------------------------------------
 # output debugging information
@@ -312,7 +310,7 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-resize.pl     v:21-Oct-2010\n";
+print ">>> ring-resize     v:21-Oct-2010\n";
 
 # -- get options
 GetOptions(
@@ -432,11 +430,11 @@ __END__
 
 =head1 NAME
 
-ring-resize.pl
+ring-resize
 
 =head1 SYNOPSIS
 
- ring-resize.pl --start=int [--end=int] [--update] [--dateupdate] \
+ ring-resize --start=int [--end=int] [--update] [--dateupdate] \
               [--host=mysql-host] [--db=databasename] \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 

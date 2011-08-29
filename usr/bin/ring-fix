@@ -3,28 +3,27 @@
 use strict;
 use DBI;
 use Getopt::Long;
+use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %prefs
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $opt_db
-             $opt_debug
-             $opt_help
-             $opt_manual
-             $opt_host
-             $opt_user
-             $opt_pass
-             );
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $opt_db;
+our $opt_debug;
+our $opt_help;
+our $opt_manual;
+our $opt_update;
+our $opt_host;
+our $opt_user;
+our $opt_pass;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -73,11 +72,63 @@ sub unix_seconds {
     return $ret;
 }
 
+# ------------------------------------------------
+# process the files
+
+sub read_and_update {
+    
+    # -- get a list of pid's first
+    my $cnt = 0;
+
+    my $sel = "SELECT ";
+    $sel .= "pid ";
+    $sel .= "FROM pictures ";
+    my $sth = $dbh->prepare ($sel);
+    if ($opt_debug) {dbg($sel);}
+    $sth->execute();
+
+    my @pidList;
+    while (my $row = $sth->fetchrow_hashref) {
+        $cnt++;
+        push @pidList, $row->{pid};
+    }
+
+    my $cmd = "UPDATE pictures_information SET ";
+    $cmd .= "raw_picture_size = ? ";
+    $cmd .= "WHERE pid = ? ";
+    if ($opt_debug) {dbg($cmd);}
+    my $sth_update = $dbh_update->prepare ($cmd);
+
+    foreach my $i (@pidList) {
+
+        my $sel = "SELECT ";
+        $sel .= "picture ";
+        $sel .= "FROM pictures_raw ";
+        $sel .= "WHERE pid=$i ";
+        my $sth = $dbh->prepare ($sel);
+        if ($opt_debug) {dbg($sel);}
+        $sth->execute();
+        if (my $row = $sth->fetchrow_hashref) {
+            my $l = length($row->{picture});
+            if ($l > 0) {
+                dbg("pid:$i length:$l");
+                if ($opt_update) {
+                    $sth_update->execute(
+                                         $l,
+                                         $i);
+                }
+            }
+        }
+
+    }
+
+}
+
 # -------------
 # Main routine
 # -------------
 
-print ">>> ring-set-new.pl                    v:30-Oct-2006\n";
+print ">>> ring-fix                    v:10-Jul-2006\n";
 
 # -- get options
 GetOptions(
@@ -87,7 +138,8 @@ GetOptions(
            'host=s'         => \$opt_host,
            'manual'         => \$opt_manual,
            'pass=s'         => \$opt_pass,
-           'user=s'         => \$opt_user
+           'user=s'         => \$opt_user,
+           'update'         => \$opt_update
            );
 
 # -- help the poor souls out
@@ -97,34 +149,6 @@ if ($opt_help) {
 if ($opt_manual) {
     pod2usage(-verbose => 1);
 }
-
-# -- read preferences from ./rings
-my $pref_file = $ENV{'HOME'}.'/.rings';
-if ( -e $pref_file) {
-    if ($opt_debug) {debug_output("Reading $pref_file file");}
-    open (pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {debug_output("inline:$inline");}
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
-                my $attr = lc($1);
-                my $val = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {debug_output("attr:$attr val:$val");}
-            }
-        }
-    }
-    close pref;
-}
-
-if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
-if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
-if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
-if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
 
 if (length($opt_host) == 0) {
     print "%MAC-F-HOSTREQ, a MySQL host is required\n";
@@ -149,7 +173,7 @@ if (length($opt_user) == 0) {
     exit;
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
@@ -161,28 +185,7 @@ $dbh->{LongReadLen} = 10000000;
 $dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
     or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
 
-my $sel = "SELECT i.pid pid ";
-$sel .= "FROM pictures_information i ";
-$sel .= "LEFT OUTER JOIN picture_details d ";
-$sel .= "ON (i.pid = d.pid) ";
-$sel .= "WHERE d.pid IS NULL ";
-my $sth = $dbh->prepare ($sel);
-if ($opt_debug) {debug_output($sel);}
-$sth->execute();
-
-my @pidList;
-while (my $row = $sth->fetchrow_hashref) {
-    push @pidList, $row->{pid};
-}
-
-my $cmd = "INSERT INTO picture_details ";
-$cmd .= "(uid, pid) VALUES (?, ?) ";
-if ($opt_debug) {debug_output($cmd);}
-my $sth_update = $dbh_update->prepare ($cmd);
-
-foreach my $i (@pidList) {
-    $sth_update->execute('new',$i);
-}
+read_and_update();
 
 $dbh->disconnect
     or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
@@ -195,11 +198,11 @@ __END__
 
 =head1 NAME
 
-ring-set-net.pl
+ring-fix
 
 =head1 SYNOPSIS
 
- ring-restructure.pl \
+ ring-fix [--update] \
               --host=mysql-host --db=databasename \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 
@@ -207,7 +210,7 @@ ring-set-net.pl
 
 =head1 DESCRIPTION
 
-Set a UID of new for any picture that does not have at least one UID.
+Move picture data around a bit.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -215,20 +218,23 @@ Set a UID of new for any picture that does not have at least one UID.
 
 =item --host=mysql-hostname
 
-MySQL host name.  Value from ~/.rings will be used if available.
+MySQL host name.  If not specified then localhost is used.
 
 =item --db=databasename
 
-The name of the MySQL database.  Value from ~/.rings will be used if
-available.
+The name of the MySQL database.  If not specified then rings is used.
 
 =item --user=mysql-username
 
-MySQL username.  Value from ~/.rings will be used if available.
+MySQL username.  Required.
 
 =item --host=mysql-password
 
-MySQL password.  Value from ~/.rings will be used if available.
+MySQL password.  Required.
+
+=item --update
+
+Actually load the data into the rings database.
 
 =item --help
 

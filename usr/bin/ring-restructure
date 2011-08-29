@@ -7,26 +7,24 @@ use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %pidList
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $opt_db
-             $opt_debug
-             $opt_help
-             $opt_manual
-             $opt_update
-             $opt_host
-             $opt_user
-             $opt_pass
-             );
+our %pidList;
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $opt_db;
+our $opt_debug;
+our $opt_help;
+our $opt_manual;
+our $opt_update;
+our $opt_host;
+our $opt_user;
+our $opt_pass;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -84,7 +82,7 @@ sub empty_table {
 
     # -- clean out the target tables
     my $cmd = "TRUNCATE TABLE $t";
-    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_debug) {dbg($cmd);}
     my $sth_update = $dbh_update->prepare ($cmd);
     $sth_update->execute();
 
@@ -99,17 +97,17 @@ sub store_picture {
         $thisTable, 
         $thisField) = @_;
 
-    debug_output ("Processing $thisPID $thisField");
+    dbg ("Processing $thisPID $thisField");
 
     my $sel = "SELECT $thisField pict FROM pictures ";
     $sel .= "WHERE pid=$thisPID ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
         
     if (my $row = $sth->fetchrow_hashref) {
             
-        debug_output ();
+        dbg ();
 
         my @blob;
 
@@ -119,7 +117,7 @@ sub store_picture {
         
         my ($width, $height) = $thisPic->Get('base-width','base-height');
         
-        debug_output ("Size:".length($row->{pict}) . 
+        dbg ("Size:".length($row->{pict}) . 
                       " Image geometry: $width by $height");
 
         my $cmd = "INSERT INTO $thisTable (";
@@ -131,7 +129,7 @@ sub store_picture {
         $cmd .= 'date_added';
         $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute(
                                  $thisPID,
@@ -179,7 +177,7 @@ sub read_and_update {
     $sel .= "date_added ";
     $sel .= "FROM pictures ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
 
     my $cmd = "INSERT INTO pictures_information (";
@@ -195,7 +193,7 @@ sub read_and_update {
     $cmd .= "date_added ";
     $cmd .= ") VALUES (";
     $cmd .= "?,?,?,?,?,?,?,?,?,?) ";
-    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_debug) {dbg($cmd);}
     my $sth_update = $dbh_update->prepare ($cmd);
 
     while (my $row = $sth->fetchrow_hashref) {
@@ -219,7 +217,7 @@ sub read_and_update {
         }
 
     }
-    debug_output ("$cnt pictures to process");
+    dbg ("$cnt pictures to process");
 
     foreach my $i (keys %pidList) {
 
@@ -236,7 +234,7 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-restructure.pl                    v:10-Jul-2006\n";
+print ">>> ring-restructure                    v:10-Jul-2006\n";
 
 # -- get options
 GetOptions(
@@ -281,7 +279,7 @@ if (length($opt_user) == 0) {
     exit;
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
@@ -306,11 +304,11 @@ __END__
 
 =head1 NAME
 
-ring-restructure.pl
+ring-restructure
 
 =head1 SYNOPSIS
 
- ring-restructure.pl [--update] \
+ ring-restructure [--update] \
               --host=mysql-host --db=databasename \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 

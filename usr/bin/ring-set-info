@@ -5,32 +5,31 @@ use Cwd;
 use DBI;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
+use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %prefs
-             $cnt
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $opt_db
-             $opt_debug
-             $opt_end
-             $opt_host
-             $opt_help
-             $opt_manual
-             $opt_pass
-             $opt_start
-             $opt_user
-             $opt_update
-             );
+our %prefs;
+our $cnt;
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $opt_db;
+our $opt_debug;
+our $opt_end;
+our $opt_host;
+our $opt_help;
+our $opt_manual;
+our $opt_pass;
+our $opt_start;
+our $opt_user;
+our $opt_update;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -97,7 +96,7 @@ sub read_and_update {
     }
     $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     while (my $row = $sth->fetchrow_hashref) {
         push @pid_list, $row->{pid};
@@ -131,47 +130,90 @@ sub read_and_update {
         $sel .= "ON (p.pid = r.pid) ";
         $sel .= "WHERE p.pid = $thisPID ";
         my $sth = $dbh->prepare ($sel);
-        if ($opt_debug) {debug_output($sel);}
+        if ($opt_debug) {dbg($sel);}
         $sth->execute();
         while (my $row = $sth->fetchrow_hashref) {
+            my @blob;
+            $blob[0] = $row->{picture};
+            my $thisPic = Image::Magick->New();
+            $thisPic->BlobToImage(@blob);
+            
+            my ($width, 
+                $height, 
+                $size, 
+                $format, 
+                $compression)
+                = $thisPic->Get('width',
+                                'height',
+                                'filesize',
+                                'format',
+                                'compression');
 
-            my $thisImage = $row->{picture};
-
-            my $info = ImageInfo(\$thisImage);
-
-            foreach my $t (keys %{$info}) {
-                print "$t = ${$info}{$t}\n";
+            # Get EXIF data using image info
+            my $info = ImageInfo(\$blob[0]);
+            my $camera            = ${$info}{'Model'};
+            my $this_datetime     = ${$info}{'CreateDate'};
+            my $this_shutterspeed = ${$info}{'ShutterSpeed'};
+            my $this_fnumber      = ${$info}{'FNumber'};
+            if ($width==0 || $height==0) {
+                dbg ("      width: $width");
+                dbg ("     height: $height");
+                dbg (" Skipping image for $thisPID");
+                return;
             }
 
-#            my $cmd = 'UPDATE pictures_information SET ';
-#            $cmd .= 'camera=?,';
-#            $cmd .= 'picture_date=?,';
-#            $cmd .= 'fstop=?,';
-#            $cmd .= 'raw_picture_size=?,';
-#            $cmd .= 'shutter_speed=?,';
-#            $cmd .= 'date_last_maint=? ';
-#            $cmd .= 'WHERE pid=? ';
-#            my $sth_update = $dbh_update->prepare ($cmd);
-#            if ($opt_debug) {debug_output($cmd);}
-#            if ($opt_update) {
-#                print "Updating $thisPID, date taken $this_datetime\n";
-#                $sth_update->execute($camera,
-#                                     $this_datetime,
-#                                     $this_fnumber,
-#                                     $this_pic_size,
-#                                     $this_shutterspeed,
-#                                     sql_datetime(),
-#                                         $thisPID
-#                                     );
-#            } else {
-#                print "For pid $thisPID proposing to set:\n";
-#                print "    Camera: $camera\n";
-#                print "    Picture Date: $this_datetime\n";
-#                print "    FStop: $this_fnumber\n";
-#                print "    Picture Size:$this_pic_size\n";
-#                print "    Shutter Speed: $this_shutterspeed\n";
-#            }
+            if ($opt_debug) {
+                dbg("pid: $thisPID");
+                dbg("Camera: $camera");
+                dbg("DateTime: $this_datetime");
+                dbg("FStop: $this_fnumber");
+                dbg("Shutter Speed: $this_shutterspeed");
+            }
 
+            # update date and time from the camera and the size 
+            # of the raw image
+            
+            if ($this_datetime =~ /(\d{4,4})[\:\-](\d{2,2})[\:\-](\d{2,2})[\s\:](\d{2,2})\:(\d{2,2})\:(\d+)/
+                && length($camera) > 0) {
+
+                my $this_year = $1;
+                if ($this_year > 0) {
+                    $this_datetime = "$1\-$2\-$3 $4\:$5\:$6";
+                } else {
+                    $this_datetime = $row->{date_added};
+                }
+                    
+                my $this_pic_size = length($row->{picture}),
+                
+                my $cmd = 'UPDATE pictures_information SET ';
+                $cmd .= 'camera=?,';
+                $cmd .= 'picture_date=?,';
+                $cmd .= 'fstop=?,';
+                $cmd .= 'raw_picture_size=?,';
+                $cmd .= 'shutter_speed=?,';
+                $cmd .= 'date_last_maint=? ';
+                $cmd .= 'WHERE pid=? ';
+                my $sth_update = $dbh_update->prepare ($cmd);
+                if ($opt_debug) {dbg($cmd);}
+                if ($opt_update) {
+                    print "Updating $thisPID, date taken $this_datetime\n";
+                    $sth_update->execute($camera,
+                                         $this_datetime,
+                                         $this_fnumber,
+                                         $this_pic_size,
+                                         $this_shutterspeed,
+                                         sql_datetime(),
+                                         $thisPID
+                                         );
+                } else {
+                    print "For pid $thisPID proposing to set:\n";
+                    print "    Camera: $camera\n";
+                    print "    Picture Date: $this_datetime\n";
+                    print "    FStop: $this_fnumber\n";
+                    print "    Picture Size: $this_pic_size\n";
+                    print "    Shutter Speed: $this_shutterspeed\n";
+                }
+            }
         }
     }
 }
@@ -180,7 +222,7 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-set-info.pl                    v:11-Jul-2006\n";
+print ">>> ring-set-info                    v:11-Jul-2006\n";
 
 # -- get options
 GetOptions(
@@ -201,26 +243,26 @@ if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
 # -- read preferences from ./rings
 my $pref_file = $ENV{'HOME'}.'/.rings';
 if ( -e $pref_file) {
-    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    if ($opt_debug) {dbg("Reading $pref_file file");}
     open (pref, "<$pref_file");
     while (<pref>) {
         chomp;
         my $inline = $_;
         $inline =~ s/\#.*//;
-        if ($opt_debug) {debug_output("inline:$inline");}
+        if ($opt_debug) {dbg("inline:$inline");}
         if (length($inline) > 0) {
             if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
                 my $attr = lc($1);
                 my $val = $2;
                 $val =~ s/\s+$//;
                 $prefs{$attr} = $val;
-                if ($opt_debug) {debug_output("attr:$attr val:$val");}
+                if ($opt_debug) {dbg("attr:$attr val:$val");}
             }
         }
     }
@@ -255,7 +297,7 @@ if (length($opt_user) == 0) {
     exit;
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
@@ -280,11 +322,11 @@ __END__
 
 =head1 NAME
 
-ring-set-info.pl
+ring-set-info
 
 =head1 SYNOPSIS
 
- ring-set-info.pl --start=int [--end=int] [--update] \
+ ring-set-info --start=int [--end=int] [--update] \
               [--host=mysql-host] [--db=databasename] \
               --user=mysql-username --pass=mysql-password 
               [--debug] [--help] [--manual] 

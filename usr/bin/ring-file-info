@@ -8,19 +8,17 @@ use Image::ExifTool 'ImageInfo';
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             $debug
-             $debug_time
-             $opt_debug
-             $opt_file
-             $opt_help
-             $opt_manual
-             );
+our $debug;
+our $debug_time;
+our $opt_debug;
+our $opt_file;
+our $opt_help;
+our $opt_manual;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dpg {
     
     (my $tmp) = @_;
     
@@ -36,7 +34,7 @@ sub debug_output {
 # Main routine
 # -------------
 
-print ">>> ring-file-info.pl                    v: 5-Sep-2007\n";
+print ">>> ring-file-info                    v: 5-Sep-2007\n";
 
 # -- get options
 GetOptions(
@@ -66,11 +64,11 @@ __END__
 
 =head1 NAME
 
-ring-file-info.pl
+ring-file-info
 
 =head1 SYNOPSIS
 
- ring-file-info.pl --file=string [--debug] [--help] [--manual] 
+ ring-file-info --file=string [--debug] [--help] [--manual] 
 
 
 =head1 DESCRIPTION
