@@ -1,0 +1,19 @@
+Source: picture-rings
+Section: web
+Priority: optional
+Maintainer: Bill MacAllister <bill@ca-zephyr.org>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.1
+
+Package: picture-rings
+Architecture: all
+Depends: ${perl:Depends}, libdbi-perl, libdbd-mysql, imagemagick,
+ apache2, apache2-mpm-prefork, libapache2-mod-php5
+Description: Rings Picture Gallery Web Application
+ This web application organizations pictures and displays them via a 
+ web server.  The images are loaded into a mysql database in serveral 
+ resultions for fast display.  The raw images are stored and not 
+ modified.
+
+ The application supports a fine grained access model.  Access control 
+ and password information are stored in an LDAP database.
