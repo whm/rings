@@ -7,21 +7,19 @@ use Getopt::Long;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-	     %props
-	     $dbh
-	     $debug
-	     $debug_time
-	     $opt_debug
-	     $opt_help
-	     $opt_manual
-	     $opt_properties
-	     );
+our %props;
+our $dbh;
+our $debug;
+our $debug_time;
+our $opt_debug;
+our $opt_help;
+our $opt_manual;
+our $opt_properties;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
 
     (my $tmp) = @_;
 
@@ -61,11 +59,11 @@ sub test_boolean {
     my $result = 0;
 
     if ($in =~ /^(\d+)$/) {
-	if ($1 != 0) {$result = 1;}
+        if ($1 != 0) {$result = 1;}
     } elsif ($in =~ /^true$/) {
-	$result = 1;
+        $result = 1;
     } elsif ($in =~ /^yes$/) {
-	$result = 1;
+        $result = 1;
     }
 
     return $result;
@@ -99,7 +97,7 @@ sub unix_seconds {
 sub write_file {
 
     my ($f, $c) = @_;
-    if ($opt_debug) {debug_output ("writing file:$f");}
+    if ($opt_debug) {dbg ("writing file:$f");}
     open (outfile, ">$f");
     print outfile $c;
     close outfile;
@@ -111,8 +109,8 @@ sub write_file {
 sub write_html {
 
     my ($last_f, $this_f, $this_i, $next_f,
-	$lfile, $ltitle, $rfile, $rtitle,
-	$desc, $pid) = @_;
+        $lfile, $ltitle, $rfile, $rtitle,
+        $desc, $pid) = @_;
     
     # -- get list of people, places
     my $sel = "SELECT ";
@@ -124,13 +122,13 @@ sub write_html {
     $sel .= "AND p.display_name NOT LIKE 'ZID%' ";
     $sel .= "ORDER BY p.display_name ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     my @names;
     my $name_cnt = 0;
     while (my $row = $sth->fetchrow_hashref) {
-	push @names, $row->{display_name};
-	$name_cnt++;
+        push @names, $row->{display_name};
+        $name_cnt++;
     }
 
     # -- Create HTML
@@ -149,27 +147,27 @@ sub write_html {
     print f "<tr>\n";
     print f " <td>";
     if (length($last_f) == 0) {
-	print f "&nbsp;";
+        print f "&nbsp;";
     } else {
-	print f "<a href=\"$last_f\">";
-	print f "<font color=\"#ffffff\" ";
-	print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
-	print f "Previous Image";
-	print f "</b></font>";
-	print f "</a>";
+        print f "<a href=\"$last_f\">";
+        print f "<font color=\"#ffffff\" ";
+        print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
+        print f "Previous Image";
+        print f "</b></font>";
+        print f "</a>";
     }
     print f " </td>\n";
 
     print f " <td align=\"right\">";
     if (length($next_f) == 0) {
-	print f "&nbsp;";
+        print f "&nbsp;";
     } else {
-	print f "  <a href=\"$next_f\">";
-	print f "<font color=\"#ffffff\" ";
-	print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
-	print f "Next Image";
-	print f "</b></font>";
-	print f "</a>";
+        print f "  <a href=\"$next_f\">";
+        print f "<font color=\"#ffffff\" ";
+        print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
+        print f "Next Image";
+        print f "</b></font>";
+        print f "</a>";
     }
     print f " </td>\n";
     print f "</tr>\n";
@@ -181,28 +179,28 @@ sub write_html {
 
     # -- the description
     if (length($desc) > 0) {
-	print f "<tr>\n";
-	print f " <td colspan=\"2\" align=\"center\" width=\"600\">";
-	print f "<font color=\"#ffffff\" ";
-	print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
-	print f $desc;
-	print f "</b></font>";
-	print f "</td>\n";
-	print f "</tr>\n";
+        print f "<tr>\n";
+        print f " <td colspan=\"2\" align=\"center\" width=\"600\">";
+        print f "<font color=\"#ffffff\" ";
+        print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
+        print f $desc;
+        print f "</b></font>";
+        print f "</td>\n";
+        print f "</tr>\n";
     }
 
     # -- the names
     if ($name_cnt > 0) {
-	print f "<tr>\n";
-	print f " <td colspan=\"2\" align=\"center\" width=\"600\">";
-	print f "<font color=\"#ffffff\" ";
-	print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
-	foreach my $n (@names) {
-	    print f "$n&nbsp;&nbsp;";
-	}
-	print f "</b></font>";
-	print f "</td>\n";
-	print f "</tr>\n";
+        print f "<tr>\n";
+        print f " <td colspan=\"2\" align=\"center\" width=\"600\">";
+        print f "<font color=\"#ffffff\" ";
+        print f "\"face=\"Arial, Helvetica, sans-serif\"><b>";
+        foreach my $n (@names) {
+            print f "$n&nbsp;&nbsp;";
+        }
+        print f "</b></font>";
+        print f "</td>\n";
+        print f "</tr>\n";
     }
 
     # -- image size stuff
@@ -263,7 +261,7 @@ sub read_and_write {
     $sel .= "ON d.pid=p.pid ";
     $sel .= "WHERE ".$props{'selection'}." ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     $sth->finish();
 
@@ -278,7 +276,7 @@ sub read_and_write {
     $sel .= "ON (tmp.pid = pic.pid) ";
     $sel .= "ORDER BY pic.date_taken ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
 
     my $hfile_index = 'index.html';
@@ -298,7 +296,7 @@ sub read_and_write {
     $index_html .= "\n";
     my $i_per = 6;
     my $i_cnt = 0;
-	
+
     my $last_hfile = '';
     my $last_hfile_large = '';
     my $last_hfile_larger = '';
@@ -319,7 +317,7 @@ sub read_and_write {
 
     while (my $row = $sth->fetchrow_hashref) {
 
-        debug_output ("Processing $row->{pid} $row->{date_taken}");
+        dbg ("Processing $row->{pid} $row->{date_taken}");
 
         my $img_sel = "SELECT ";
         $img_sel .= "rw.picture raw, ";
@@ -335,7 +333,7 @@ sub read_and_write {
         $img_sel .= "ON (sm.pid = rw.pid) ";
         $img_sel .= "WHERE rw.pid = '$row->{pid}' ";
         my $img_sth = $dbh->prepare ($img_sel);
-        if ($opt_debug) {debug_output($img_sel);}
+        if ($opt_debug) {dbg($img_sel);}
         $img_sth->execute();
 
         if (my $img_row = $img_sth->fetchrow_hashref) {
@@ -392,7 +390,7 @@ sub read_and_write {
                 $pfile_small  = $pic_root . '-thumb.jpg';
                 $pfile_large  = $pic_root . '-large.jpg';
                 $pfile_larger = $pic_root . '-larger.jpg';
-	    
+    
                 # -- write the image files
                 write_file ($pfile,        $img_row->{raw});
                 write_file ($pfile_small,  $img_row->{sm});
@@ -436,37 +434,37 @@ sub read_and_write {
     }
     
     if (test_boolean($props{'html'})) {
-	# -- write last html file
-	if (length($this_hfile) > 0) {
-	    write_html ($last_hfile, 
-			$this_hfile, 
-			$pfile,
-			'',
-			$this_hfile_large, 'Large',
-			$this_hfile_larger, "Larger");
-	    write_html ($last_hfile_large, 
-			$this_hfile_large, 
-			$pfile_large,
-			'',
-			$this_hfile, 'Raw',
-			$this_hfile_larger, "Larger");
-	    write_html ($last_hfile_larger, 
-			$this_hfile_larger, 
-			$pfile_larger,
-			'',
-			$this_hfile, 'Raw',
-			$this_hfile_large, "Large");
-	}
+        # -- write last html file
+        if (length($this_hfile) > 0) {
+            write_html ($last_hfile, 
+                        $this_hfile, 
+                        $pfile,
+                        '',
+                        $this_hfile_large, 'Large',
+                        $this_hfile_larger, "Larger");
+            write_html ($last_hfile_large, 
+                        $this_hfile_large, 
+                        $pfile_large,
+                        '',
+                        $this_hfile, 'Raw',
+                        $this_hfile_larger, "Larger");
+            write_html ($last_hfile_larger, 
+                        $this_hfile_larger, 
+                        $pfile_larger,
+                        '',
+                        $this_hfile, 'Raw',
+                        $this_hfile_large, "Large");
+        }
 
-	# -- finish off the index
-	$index_html .= "\n";
-	$index_html .= "</td></tr></table>\n";
-	$index_html .= "</div>\n";
-	$index_html .= "\n";
-	$index_html .= "</body>\n";
-	$index_html .= "</html>\n";
-	write_file ($hfile_index, $index_html);
-	write_file ('aaa'.$hfile_index, $index_html);
+        # -- finish off the index
+        $index_html .= "\n";
+        $index_html .= "</td></tr></table>\n";
+        $index_html .= "</div>\n";
+        $index_html .= "\n";
+        $index_html .= "</body>\n";
+        $index_html .= "</html>\n";
+        write_file ($hfile_index, $index_html);
+        write_file ('aaa'.$hfile_index, $index_html);
     }
 }
 
@@ -474,7 +472,7 @@ sub read_and_write {
 # Main routine
 # -------------
 
-print ">>> ring-export.pl                    v: 8-Jul-2005\n";
+print ">>> ring-export                    v: 8-Jul-2005\n";
 
 # -- get options
 GetOptions(
@@ -482,7 +480,7 @@ GetOptions(
            'help'           => \$opt_help,
            'manual'         => \$opt_manual,
            'properties=s'   => \$opt_properties
-	   );
+    );
 
 # -- help the poor souls out
 if ($opt_help) {
@@ -497,29 +495,29 @@ if (length($opt_properties) == 0) {
     pod2usage(-verbose => 0);
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- read the properties
 
 open (f, "<$opt_properties");
 while (<f>) {
     if (!/^\#/) {
-	if (/^\s*(.*?)\=(.*)$/) {
-	    my $attr = $1;
-	    my $val = $2;
-	    $attr =~ s/^\s+//;
-	    $attr =~ s/\s+$//;
-	    $val =~ s/^\s+//;
-	    $val =~ s/\s+$//;
-	    $props{$attr} = $val;
-	}
+        if (/^\s*(.*?)\=(.*)$/) {
+            my $attr = $1;
+            my $val = $2;
+            $attr =~ s/^\s+//;
+            $attr =~ s/\s+$//;
+            $val =~ s/^\s+//;
+            $val =~ s/\s+$//;
+            $props{$attr} = $val;
+        }
     }
 }
 close f;
 
 if ($opt_debug) {
     foreach my $a (sort keys %props) {
-	print "property $a = $props{$a}\n";
+        print "property $a = $props{$a}\n";
     }
 }
 
@@ -542,11 +540,11 @@ __END__
 
 =head1 NAME
 
-ring_export.pl
+ring-export
 
 =head1 SYNOPSIS
 
- ring_export.pl --properties=filename \
+ ring-export --properties=filename \
               [--debug] [--help] [--manual] 
 
 
