@@ -9,37 +9,36 @@ use Image::Magick;
 use Pod::Usage;
 use Time::Local;
 
-use vars qw (
-             %prefs
-             %tableList
-             $cnt
-             $dbh
-             $dbh_update
-             $debug
-             $debug_time
-             $flds
-             $last_datetime
-             $opt_datetaken
-             $opt_db
-             $opt_debug
-             $opt_host
-             $opt_help
-             $opt_keyword
-             $opt_manual
-             $opt_pass
-             $opt_path
-             $opt_photographer
-             $opt_ppe
-             $opt_user
-             $opt_update
-             $timeStamp
-             $vals
-             );
+our %prefs = ();
+our %tableList = ();
+our $cnt;
+our $dbh;
+our $dbh_update;
+our $debug;
+our $debug_time;
+our $flds;
+our $last_datetime;
+our $opt_datetaken;
+our $opt_db;
+our $opt_debug;
+our $opt_force;
+our $opt_host;
+our $opt_help;
+our $opt_keyword;
+our $opt_manual;
+our $opt_pass;
+our $opt_path;
+our $opt_photographer;
+our $opt_ppe;
+our $opt_user;
+our $opt_update;
+our $timeStamp;
+our $vals;
 
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
     
     (my $tmp) = @_;
     
@@ -61,7 +60,7 @@ sub get_next {
     my $return_number = "NEXT-NUMBER-FAILED";
     
     my $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
-    if ($debug) {debug_output ($sel);}
+    if ($debug) {dbg ($sel);}
     my $sth = $dbh->prepare ("$sel");
     $sth->execute();
     
@@ -71,7 +70,7 @@ sub get_next {
             my $nxt = $return_number + 1;
             my $cmd = "UPDATE next_number SET next_number=$nxt ";
             $cmd .= "WHERE id='$id' ";
-            if ($debug) {debug_output ($cmd);}
+            if ($debug) {dbg ($cmd);}
             my $sth_update = $dbh_update->prepare ("$cmd");
             $sth_update->execute();
         } else {
@@ -79,7 +78,7 @@ sub get_next {
             my $cmd = "INSERT INTO  next_number (id,next_number) ";
             $cmd .= "VALUES ('$id',$nxt) ";
             $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-            if ($debug) {debug_output ($cmd);}
+            if ($debug) {dbg ($cmd);}
             if ($opt_update) {
                 my $sth_update = $dbh_update->prepare ("$cmd");
                 $sth_update->execute();
@@ -130,7 +129,7 @@ sub unix_seconds {
 }
 
 # -------------------------------------------------------------
-#  construct an flds and values for an insert
+#  construct flds and values for an insert
 # 
 #   $in_type == "n" is a number
 #   $in_type != "n" anything else is a string
@@ -161,7 +160,7 @@ sub store_picture {
         $thisPicture,
         $thisType) = @_;
     
-    debug_output (" Processing $thisPID $thisTable");
+    dbg (" Processing $thisPID $thisTable");
     
     my @blob;
     $blob[0] = $thisPicture;
@@ -180,10 +179,10 @@ sub store_picture {
                         'compression');
 
     if ($opt_debug) {
-        debug_output ("      format: $format");
-        debug_output (" compression: $compression");
-        debug_output ("       width: $width");
-        debug_output ("      height: $height");
+        dbg ("      format: $format");
+        dbg (" compression: $compression");
+        dbg ("       width: $width");
+        dbg ("      height: $height");
     }
 
     # default to moderate
@@ -218,14 +217,14 @@ sub store_picture {
         $x = $x2;
         $y = $y2;
     }
-    debug_output (" Producing picture $x by $y ");
+    dbg (" Producing picture $x by $y ");
     $newPic->Resize(width=>$x, height=>$y);
     my @bPic  = $newPic->ImageToBlob();
     
     my $sel = "SELECT pid FROM $thisTable ";
     $sel .= "WHERE pid=$thisPID ";
     my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     
     my $row = $sth->fetchrow_hashref;
@@ -242,7 +241,7 @@ sub store_picture {
         $cmd .= 'date_added';
         $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute(
                                  $thisPID,
@@ -265,7 +264,7 @@ sub store_picture {
         $cmd .= 'date_last_maint = ? ';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {debug_output($cmd);}
+        if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
             $sth_update->execute(
                                  $thisType,
@@ -286,12 +285,6 @@ sub store_picture {
 sub save_file {
     
     (my $a_file) = @_;
-    
-    my $pid = 1;
-    if ($opt_update) {
-        $pid = get_next("pid");
-    }
-    debug_output (" Creating elements for picture record $pid");
     
     my $a_filename = $a_file;
     $a_filename =~ s/^[\/]+//;
@@ -320,10 +313,10 @@ sub save_file {
                         'compression');
 
     if ($opt_debug) {
-        debug_output ("      format: $format");
-        debug_output (" compression: $compression");
-        debug_output ("       width: $width");
-        debug_output ("      height: $height");
+        dbg ("      format: $format");
+        dbg (" compression: $compression");
+        dbg ("       width: $width");
+        dbg ("      height: $height");
     }
 
 
@@ -348,20 +341,48 @@ sub save_file {
     my $this_fnumber      = ${$info}{'FNumber'};
     my $this_raw_size     = length $bPic[0];
     if ($opt_debug) {
-        debug_output ("        size: $this_raw_size");
-        debug_output ("       model: $camera");
-        debug_output ("    datetime: $this_datetime");
-        debug_output ("exposuretime: $this_shutterspeed");
-        debug_output ("     fnumber: $this_fnumber");
-        debug_output ("EXIF Information ==============================");
+        dbg ("        size: $this_raw_size");
+        dbg ("       model: $camera");
+        dbg ("    datetime: $this_datetime");
+        dbg ("exposuretime: $this_shutterspeed");
+        dbg ("     fnumber: $this_fnumber");
+        dbg ("EXIF Information ==============================");
         foreach my $t (keys %{$info}) {
             print "$t = ${$info}{$t}\n";
         }
-        debug_output ("EXIF Information end ==========================");
+        dbg ("EXIF Information end ==========================");
+    }
+
+    # -- Check for duplicate picture 
+    my $sql = "SELECT pid FROM pictures_information ";
+    $sql .= "WHERE raw_picture_size = ? ";
+    $sql .= "AND camera = ? ";
+    $sql .= "AND shutter_speed = ? ";
+    $sql .= "AND fstop = ?";
+    if ($opt_debug) {dbg($sql);}
+    my $sth = $dbh_update->prepare ($sql);
+    $sth->execute($this_raw_size,
+                  $camera, 
+                  $this_shutterspeed,
+                  $this_fnumber);
+    my $dup_cnt = 0;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+        $dup_cnt++;
+        print "File $a_file duplicates $row->{pid}\n";
+    }
+    if ($dup_cnt and !$opt_force) {
+        print "SKIPPING: $a_file\n";
+        return
     }
 
     # -- Store the raw image
 
+    my $pid = 1;
+    if ($opt_update) {
+        $pid = get_next("pid");
+    }
+    dbg (" Creating elements for picture record $pid");
+    
     my $cmd = "INSERT INTO pictures_raw SET ";
     $cmd .= "pid = ?,";
     $cmd .= "picture = ?,";
@@ -370,7 +391,7 @@ sub save_file {
     $cmd .= "width = ?,";
     $cmd .= "date_last_maint = ?,";
     $cmd .= "date_added = ? ";
-    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_debug) {dbg($cmd);}
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
         $sth_update->execute($pid,
@@ -415,7 +436,7 @@ sub save_file {
     $cmd .= "fstop = ?,";
     $cmd .= "date_last_maint = ?,";
     $cmd .= "date_added = ?";
-    if ($opt_debug) {debug_output($cmd);}
+    if ($opt_debug) {dbg($cmd);}
     if ($opt_update) {
         my $sth_update = $dbh_update->prepare ($cmd);
         $sth_update->execute($pid,
@@ -434,12 +455,12 @@ sub save_file {
     }
 
     if (length($opt_ppe)>0) {
-        debug_output (" Creating picture details $pid $opt_ppe");
+        dbg (" Creating picture details $pid $opt_ppe");
         $flds = $vals = '';
         mkin ('pid', $pid,     'n');
         mkin ('uid', $opt_ppe, 's');
         my $cmd = "INSERT INTO picture_details ($flds) VALUES ($vals)";
-        if ($opt_debug) {debug_output("length of sql command: ".length($cmd));}
+        if ($opt_debug) {dbg("length of sql command: ".length($cmd));}
         if ($opt_update) {
             my $sth_update = $dbh_update->prepare ($cmd);
             $sth_update->execute();
@@ -456,7 +477,7 @@ sub save_file {
 # Main routine
 # -------------
 
-print ">>> ring_load.pl                    v: 3-Sep-2007\n";
+print ">>> ring_load.pl                    v:27-Aug-2011\n";
 
 # -- get options
 GetOptions(
@@ -464,6 +485,7 @@ GetOptions(
            'db=s'           => \$opt_db,
            'debug'          => \$opt_debug,
            'help'           => \$opt_help,
+           'force'          => \$opt_force,
            'host=s'         => \$opt_host,
            'keyword=s'      => \$opt_keyword,
            'manual'         => \$opt_manual,
@@ -491,20 +513,20 @@ if ($opt_manual) {
 # -- read preferences from ./rings
 my $pref_file = $ENV{'HOME'}.'/.rings';
 if ( -e $pref_file) {
-    if ($opt_debug) {debug_output("Reading $pref_file file");}
+    if ($opt_debug) {dbg("Reading $pref_file file");}
     open (pref, "<$pref_file");
     while (<pref>) {
         chomp;
         my $inline = $_;
         $inline =~ s/\#.*//;
-        if ($opt_debug) {debug_output("inline:$inline");}
+        if ($opt_debug) {dbg("inline:$inline");}
         if (length($inline) > 0) {
             if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
                 my $attr = lc($1);
                 my $val = $2;
                 $val =~ s/\s+$//;
                 $prefs{$attr} = $val;
-                if ($opt_debug) {debug_output("attr:$attr val:$val");}
+                if ($opt_debug) {dbg("attr:$attr val:$val");}
             }
         }
     }
@@ -531,7 +553,7 @@ if (length($opt_db) == 0) {
 if (length($opt_ppe) == 0)     {$opt_ppe = 'new';}
 
 $timeStamp = unix_seconds($opt_datetaken);
-if ($opt_debug) {debug_output("starting timestamp: $timeStamp");}
+if ($opt_debug) {dbg("starting timestamp: $timeStamp");}
 
 if (length($opt_keyword) == 0) {
     $opt_keyword = 'NEWPICTURE';
@@ -549,7 +571,7 @@ if (length($opt_user) == 0) {
     exit;
 }
 
-if ($opt_debug) {debug_output ("Initialize timer.");}
+if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
 
@@ -573,7 +595,7 @@ $cnt = 0;
 my @fileList = glob ($thisDir.'*');
 foreach my $f (@fileList) {
     if ( $f =~ /(.*?)\.$typeList$/i ) {
-        if ($opt_debug) {debug_output ("    Saving file: $f");}
+        if ($opt_debug) {dbg ("    Saving file: $f");}
         save_file($f);
     }
 }
@@ -598,7 +620,7 @@ ring_load.pl
  ring_load.pl [--path=directory-path] [--update] \
               [--host=mysql-host] [--db=dbname] \
               --user=mysql-username --pass=mysql-password \
-              [--keyword=string] [--datetaken=string] \
+              [--force] [--keyword=string] [--datetaken=string] \
               [--ppe=string] [--photographer=string] \
               [--debug] [--help] [--manual] 
 
@@ -633,6 +655,10 @@ MySQL username.  Required.
 =item --host=mysql-password
 
 MySQL password.  Required.
+
+=item --force
+
+Override duplicate detection and sort the pictures anyway.
 
 =item --keyword=string
 

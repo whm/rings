@@ -249,6 +249,8 @@ if ( -e $pref_file) {
     close pref;
 }
 
+foreach my $a (sort keys %prefs) {print "$a -> $prefs{$a}\n";}
+
 $opt_host = $prefs{'host'} unless $opt_host;
 $opt_host = 'localhost'    unless $opt_host;
 
@@ -282,6 +284,11 @@ if (length($opt_user) == 0) {
 if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
+
+print "$opt_host\n";
+print "$opt_db\n";
+print "$opt_user\n";
+print "$opt_pass\n";
 
 my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
 $dbh = DBI->connect ($dbi, $opt_user, $opt_pass)

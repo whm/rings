@@ -158,9 +158,10 @@ if (!isset($upload)) {
     
     $noinput = true;
     for ($i=0; $noinput && ($i<$in_upload_slots); $i++) {
-        $a_file = $_FILES["in_filename_" . $i];
+        $a_file = $_FILES["in_filename_$i"] . '';
         if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
             $noinput=false;
+            $_SESSION['msg'] .= "$a_file ";
         }
     }
     if ($noinput) {

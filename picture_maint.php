@@ -250,7 +250,7 @@ require ('page_top.php');
 </tr>
 <tr>
  <td align="right">Picture ID:</td>
- <td><?php print $row["pid"].'&nbsp;'.$row['file_name']; ?>
+ <td><?php print $row["pid"].'&nbsp;'.$row['file_name'].'&nbsp;'.$row['group_path']; ?>
     <input type="hidden" name="in_pid" value="<?php print $in_pid;?>">
  </td>
 </tr>
