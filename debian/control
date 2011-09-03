@@ -14,6 +14,6 @@ Description: Rings Picture Gallery Web Application
  web server.  The images are loaded into a mysql database in serveral 
  resultions for fast display.  The raw images are stored and not 
  modified.
-
+ .
  The application supports a fine grained access model.  Access control 
  and password information are stored in an LDAP database.
