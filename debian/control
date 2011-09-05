@@ -8,7 +8,8 @@ Standards-Version: 3.9.1
 Package: picture-rings
 Architecture: all
 Depends: ${perl:Depends}, libdbi-perl, libdbd-mysql, imagemagick,
- apache2, apache2-mpm-prefork, libapache2-mod-php5
+ apache2, apache2-mpm-prefork, libapache2-mod-php5, exif,
+ libimage-exif-perl, libimage-exiftool-perl
 Description: Rings Picture Gallery Web Application
  This web application organizations pictures and displays them via a 
  web server.  The images are loaded into a mysql database in serveral 
