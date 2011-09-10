@@ -7,7 +7,7 @@ Standards-Version: 3.9.1
 
 Package: picture-rings
 Architecture: all
-Depends: ${perl:Depends}, libdbi-perl, libdbd-mysql, imagemagick,
+Depends: ${perl:Depends}, libdbi-perl, libdbd-mysql-perl, imagemagick,
  apache2, apache2-mpm-prefork, libapache2-mod-php5, exif,
  libimage-exif-perl, libimage-exiftool-perl
 Description: Rings Picture Gallery Web Application
