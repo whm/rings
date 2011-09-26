@@ -15,6 +15,8 @@ require ('inc_page_open.php');
 <html>
 <head>
 <title>Maintenance Menu</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body bgcolor="#eeeeff">

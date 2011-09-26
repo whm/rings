@@ -33,6 +33,8 @@ if (!$result) {
 <head>
 <title>Rings</title>
 <?php include('ring_style.css');?>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body bgcolor="#eeeeff">

@@ -83,6 +83,8 @@ function get_next ($cnx, $id) {
 <html>
 <head>
 <title>Load a Picture</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 <body bgcolor="#eeeeff">
 
