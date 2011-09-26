@@ -56,9 +56,8 @@ function make_a_link ($thisUID,
 <html>
 <head>
 <title>Rings</title>
-
+<?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
-
 <script language="JavaScript">
 
 function getDom(objectname){

@@ -21,6 +21,8 @@ $ret_cnt = $info["count"];
 <html>
 <head>
 <title>Pick Some Addresses</title>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_head.php'); ?>
 
 <script language="JavaScript">
 

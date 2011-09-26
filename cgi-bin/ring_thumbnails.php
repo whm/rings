@@ -131,6 +131,8 @@ if (strlen($in_start_date) > 0) {
 <html>
 <head>
 <title>Picture Thumbnails</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body bgcolor="#eeeeff">

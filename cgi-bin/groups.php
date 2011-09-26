@@ -27,6 +27,8 @@ if (!$result) {
 <html>
 <head>
 <title>Group List</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body bgcolor="#eeeeff">

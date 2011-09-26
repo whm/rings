@@ -103,6 +103,8 @@ if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
 <html>
 <head>
 <title>Picture Maintenance</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 
 <script language="JavaScript">
 

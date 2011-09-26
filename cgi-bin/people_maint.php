@@ -54,6 +54,8 @@ if ( isset($in_uid) && !isset($row["uid"]) ) {
 <html>
 <head>
 <title>People Maintenance</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body bgcolor="#eeeeff">
