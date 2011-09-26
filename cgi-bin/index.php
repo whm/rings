@@ -141,7 +141,7 @@ setcookie($cookie_id, $cookie_value, $cookie_life);
 <html>
 <head>
 <title>Ring Select</title>
-<?php include('ring_style.css');?>
+<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
 
 <script language="JavaScript">
 function gotoGroup() {

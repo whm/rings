@@ -57,10 +57,7 @@ function make_a_link ($thisUID,
 <head>
 <title>Rings</title>
 
-<style type="text/css">
- <?php include('styles/pictures.css');?>
-</style>
-
+<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
 
 <script language="JavaScript">
 
@@ -326,7 +323,7 @@ if (isset($in_ring_pid)) {
     echo '<td valign="top" align="center">'."\n";
     
     echo '<a href="display.php?in_pid='.$this_pid.'" target="_blank">';
-    echo '<img src="images/icon-view-details.png"  border="0" ';
+    echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
     echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
     echo 'alt="Display full size image in a new window.">';
     echo "</a>\n";
@@ -334,7 +331,7 @@ if (isset($in_ring_pid)) {
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
     echo '<a href="index.php">';
-    echo '<img src="images/rings.png" border="0" ';
+    echo '<img src="/rings-images/rings.png" border="0" ';
     echo 'onMouseOver="showSelect();" onMouseOut="hideSelect();" ';
     echo 'alt="Pick a new Picture Ring">';
     echo "</a>\n";
@@ -344,7 +341,7 @@ if (isset($in_ring_pid)) {
     $loggedInUser = $_SESSION['whm_directory_user'];
     if (strlen($loggedInUser)>0) {
         echo '<a href="picture_email?in_pid='.$this_pid.'" target="_blank" >';
-        echo '<img src="images/icon-mail-send.png" border="0" ';
+        echo '<img src="/rings-images/icon-mail-send.png" border="0" ';
         echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
         echo 'alt="Send this picture to someone">';
         echo "</a>\n";
@@ -352,14 +349,14 @@ if (isset($in_ring_pid)) {
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
         echo '<a href="picture_maint?in_pid='.$this_pid.'" target="_blank">';
-        echo '<img src="images/icon-edit.png" border="0" ';
+        echo '<img src="/rings-images/icon-edit.png" border="0" ';
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
         echo 'alt="Edit Picture Information">';
         echo "</a>\n";
         
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-        echo '<img src="images/icon-grade.png"  border="0" ';
+        echo '<img src="/rings-images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
         echo 'alt="Give this picture a grade.">';
@@ -369,13 +366,13 @@ if (isset($in_ring_pid)) {
         echo '<a href="'.$PHP_SELF;
         echo '?in_logout=1';
         echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo '<img src="images/logout.jpg" border="0">';
+        echo '<img src="/rings-images/logout.jpg" border="0">';
         echo "</a>\n";
     } else {
         echo '<a href="'.$PHP_SELF;
         echo '?in_login=2';
         echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo '<img src="images/login.jpg" border="0">';
+        echo '<img src="/rings-images/login.jpg" border="0">';
         echo "</a>\n";
     }
     
