@@ -30,7 +30,7 @@ if ($ret_cnt == 1) {
 <html>
 <head>
 <title>Email a Picture</title>
-<?php include('ring_style.css');?>
+<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
 
 <script language="JavaScript">
 

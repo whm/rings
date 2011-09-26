@@ -135,7 +135,7 @@ if ($display_rings>0) {
         $new_pid = $nxt_row["pid"];
         if (strlen($new_pid) > 0) {
           echo "<tr bgcolor=\"#000066\">\n";
-          echo "  <td colspan=\"2\"><img src=\"shim.gif\"></td>\n";
+          echo "  <td colspan=\"2\"><img src=\"/rings-images/shim.gif\"></td>\n";
           echo "</tr>\n";
           echo "<tr>\n";
           echo "  <td><b><a href=\"rings.php?in_ring_pid=$new_pid\">";
