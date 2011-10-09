@@ -1,3 +1,9 @@
+picture-rings (2.1) unstable; urgency=low
+
+  * Make it simple to select new pictures.
+
+ -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Sun, 09 Oct 2011 00:58:27 -0700
+
 picture-rings (2.0) unstable; urgency=low
 
   * Initial packaging of the Picture Rings gallery web software.
