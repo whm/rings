@@ -460,10 +460,10 @@ if (is_array($uid_sort)) {
 if (isset($_SESSION['s_msg'])) { 
   if (strlen($_SESSION['s_msg'])>0) { 
 ?>
-<tr><td bgcolor="#ffffff" align="center" colspan="2">
+<span bgcolor="#ffffff" align="center">
     <font color="#ff0000"><?php print $s_msg;?></font>
-    </td>
-</tr>
+    </span>
+
 <?php 
     $_SESSION['s_msg'] = '';
   }
