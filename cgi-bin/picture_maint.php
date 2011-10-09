@@ -234,7 +234,12 @@ require ('page_top.php');
     </td>
     <td align="center">
         <input type="submit" 
-               name="btn_rotate" 
+               name="btn_rotate_left" 
+               value="Rotate Left">
+    </td>
+    <td align="center">
+        <input type="submit" 
+               name="btn_rotate_right" 
                value="Rotate Right">
     </td>
     <td align="center">
@@ -451,23 +456,6 @@ if (is_array($uid_sort)) {
 
  <td colspan="2" align="center" valign="top">
 
-<?php if ( $row["pid"] > 0 ) { ?>
-   <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">  <br>
-<?php } ?>
-
-  <table border="0">
-
-<?php if ( $row["pid"] > 0 ) { ?>
-  <tr>
-   <td align="right">Date Last Maint:</td>
-   <td> <?php print $row["date_last_maint"]; ?> </td>
-  </tr>
-  <tr>
-   <td align="right">Date Last Added:</td>
-   <td> <?php print $row["date_added"]; ?> </td>
-  </tr>
-<?php } ?>
-
 <?php 
 if (isset($_SESSION['s_msg'])) { 
   if (strlen($_SESSION['s_msg'])>0) { 
@@ -481,8 +469,6 @@ if (isset($_SESSION['s_msg'])) {
   }
 } 
 ?>
-  </table>
-
 <p>
 <table border="1">
 <tr>
@@ -494,7 +480,13 @@ if (isset($_SESSION['s_msg'])) {
 </tr>
 <?php echo $picturePeople; ?>
 </table>
+
 <p>
+
+<?php if ( $row["pid"] > 0 ) { ?>
+   <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">  <br>
+<?php } ?>
+
 
  </td>
 

@@ -232,7 +232,7 @@ if (!isset($upload)) {
                 if ($starting_pid==0) {$starting_pid = $pid;}
             }
         }
-        $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
+        $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
         $sh_cmd .= " --start=$starting_pid";
         $sh_cmd .= " --host=$mysql_host";
         $sh_cmd .= " --user=$mysql_user";

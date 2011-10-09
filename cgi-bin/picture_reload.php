@@ -161,7 +161,7 @@ if (isset($upload)) {
             unlink ($tmp_file);
 
         }
-        $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
+        $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
         $sh_cmd .= " --start=$in_pid";
         $sh_cmd .= " --end=$in_pid";
         $sh_cmd .= " --host=$mysql_host";

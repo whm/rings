@@ -264,12 +264,17 @@ if ( $update_flag ) {
 
     $next_uid = 'CLEARFORM';
     
-} elseif ( strlen($btn_rotate)>0 ) {
+} elseif ( strlen($btn_rotate_right)+strlen($btn_rotate_left)>0 ) {
 
-    $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-rotate.pl";
+    $sh_cmd = "/usr/bin/perl /usr/bin/ring-rotate.pl";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
+    if (strlen($btn_rotate_right)>0) {
+        $sh_cmd .= " --right";
+    } else {
+        $sh_cmf .= " --left";
+    }
     $ret = array();
     $z = exec($sh_cmd, $ret, $ret_status);
     if ($ret_status) {
@@ -278,7 +283,7 @@ if ( $update_flag ) {
         $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
     }
 
-    $sh_cmd = "/usr/bin/perl $ring_doc_root/ring-resize.pl";
+    $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
