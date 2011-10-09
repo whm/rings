@@ -19,8 +19,10 @@ our $opt_debug;
 our $opt_end;
 our $opt_host;
 our $opt_help;
+our $opt_left;
 our $opt_manual;
 our $opt_pass;
+our $opt_right;
 our $opt_start;
 our $opt_user;
 our $opt_update;
@@ -113,7 +115,11 @@ sub rotate_picture {
                         '%[EXIF:FNumber]');
     
     # Rotate the image and create the blob to store
-    $thisPic->Rotate(degrees => 90);
+    if ($opt_right) {
+        $thisPic->Rotate(degrees => 90);
+    } else {
+        $thisPic->Rotate(degrees => -90);
+    }
     my @bPic  = $thisPic->ImageToBlob();
     
     my $cmd = "UPDATE pictures_raw SET ";
@@ -193,20 +199,22 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-rotate    v:22-Oct-2010\n";
+print ">>> ring-rotate    v:08-Oct-2011\n";
 
 # -- get options
 GetOptions(
-           'db=s'           => \$opt_db,
-           'debug'          => \$opt_debug,
-           'end=i'          => \$opt_end,
-           'help'           => \$opt_help,
-           'host=s'         => \$opt_host,
-           'manual'         => \$opt_manual,
-           'pass=s'         => \$opt_pass,
-           'start=i'        => \$opt_start,
-           'user=s'         => \$opt_user,
-           'update'         => \$opt_update
+           'db=s'    => \$opt_db,
+           'debug'   => \$opt_debug,
+           'end=i'   => \$opt_end,
+           'help'    => \$opt_help,
+           'host=s'  => \$opt_host,
+           'left'    => \$opt_left,
+           'manual'  => \$opt_manual,
+           'pass=s'  => \$opt_pass,
+           'right'   => \$opt_right,
+           'start=i' => \$opt_start,
+           'user=s'  => \$opt_user,
+           'update'  => \$opt_update
            );
 
 # -- help the poor souls out
@@ -313,10 +321,9 @@ ring-rotate
 
 =head1 SYNOPSIS
 
- ring-rotate --start=int [--end=int] [--update] [--dateupdate] \
-              [--host=mysql-host] [--db=databasename] \
-              --user=mysql-username --pass=mysql-password 
-              [--debug] [--help] [--manual] 
+ring-rotate [--right] [--left] [--update] [--host=mysql-host]
+[--db=databasename] --user=mysql-username --pass=mysql-password
+[--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
@@ -327,13 +334,13 @@ Rotate pictures in the rings database.
 
 =over 4
 
-=item --start=int
+=item --right
 
-The picture id to start at.  Required.
+Rotate the picture 90 degrees.
 
-=item --send=int
+=item --left
 
-The picture id to end at.
+Rotate the picture -90 degrees
 
 =item --host=mysql-hostname
 
