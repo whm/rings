@@ -266,7 +266,7 @@ if ( $update_flag ) {
     
 } elseif ( strlen($btn_rotate_right)+strlen($btn_rotate_left)>0 ) {
 
-    $sh_cmd = "/usr/bin/perl /usr/bin/ring-rotate.pl";
+    $sh_cmd = "/usr/bin/ring-rotate";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
@@ -283,7 +283,7 @@ if ( $update_flag ) {
         $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
     }
 
-    $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
+    $sh_cmd = "/usr/bin/ring-resize";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
