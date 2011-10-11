@@ -31,7 +31,7 @@ if ($ret_cnt == 1) {
 <head>
 <title>Email a Picture</title>
 <?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
+<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 
 <script language="JavaScript">
 
