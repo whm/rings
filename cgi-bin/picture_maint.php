@@ -144,19 +144,6 @@ function incrementDate() {
 
   f.in_picture_date.value = f.last_date.value + " " + h + ":" + m + ":" + s;
   f.set_date.checked = false;
-  if (f.in_key_words.value == "NEWPICTURE") {
-      f.in_key_words.value = '';
-  }
-  return false;
-
-}
-
-function clearKeyword() {
-  var f;
-  f = document.picture_data;
-
-  f.in_key_words.value = '';
-
   return false;
 
 }
@@ -259,15 +246,6 @@ require ('page_top.php');
  <td align="right">Picture ID:</td>
  <td><?php print $row["pid"].'&nbsp;'.$row['file_name'].'&nbsp;'.$row['group_path']; ?>
     <input type="hidden" name="in_pid" value="<?php print $in_pid;?>">
- </td>
-</tr>
-<tr>
- <td align="right">Keywords:</td>
- <td> <input type="text" name="in_key_words"
-             value="<?php print $row["key_words"]; ?>">
-      <input type="checkbox"
-             name="clear_key"
-             onClick="clearKeyword()">Clear Keywords
  </td>
 </tr>
 <tr>
@@ -438,7 +416,7 @@ if (is_array($uid_sort)) {
   foreach ($uid_sort as $sort_key => $a_uid) {
     $a_name = $uid_list[$a_uid];
     if ($add_cnt == 0) {
-      echo "  <select name=\"in_newuids[]\" multiple>\n";
+      echo "  <select name=\"in_newuids[]\" size=\"10\" multiple>\n";
     }
     echo "   <option value=\"$a_uid\">$a_name\n";
     $add_cnt++;
