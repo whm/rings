@@ -132,7 +132,7 @@ $thisTitle = 'Picture Sort';
 require ('page_top.php');
 
 // Set up if we have been here before
-if (strlen($button_find)>0) {
+if (strlen($button_find)+strlen($in_new) > 0) {
     
     $condition = '';
     $condition .= set_search ('key_words',      'key',        '=',$in_key,        $condition);
@@ -148,7 +148,13 @@ if (strlen($button_find)>0) {
     $word = 'WHERE';
     if (strlen($cond) > 0) {$word = 'AND';}
 
+    # override selections if the special group 'new' is selected
     $uid_condition = '';  
+    if (strlen($in_new)>0) {
+        $condition = '';
+        $in_uids = array('new');
+    }
+
     if (count($in_uids) > 0) {
         $uid_word .= '(';
         $uid_select = array();
