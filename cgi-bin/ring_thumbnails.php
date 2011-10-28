@@ -237,7 +237,7 @@ if (!$result) {
 ?>
 <br>
 <a href="/rings/index.php"><img 
-       src="rings.png" 
+       src="/rings-images/rings.png" 
        alt="Pick a New Ring"
        border="0"></a>
 <?php 
