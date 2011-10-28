@@ -1,6 +1,7 @@
-picture-rings (2.2) UNRELEASED; urgency=low
+picture-rings (2.2) unstable; urgency=low
 
   * Correct style reference in picture_email.
+  * Remove keyword input in picture maintenance.
 
  -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Mon, 10 Oct 2011 23:12:34 -0700
 
