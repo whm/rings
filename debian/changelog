@@ -2,6 +2,7 @@ picture-rings (2.3) UNRELEASED; urgency=low
 
   * Update picture_sort.  Remove keyword updates.  Add rotation processing.
   * Minor navigation change for New picture selection.
+  * Remove depreciated use of mysql_db_query.
 
  -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Sat, 29 Oct 2011 01:04:02 -0700
 

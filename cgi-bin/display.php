@@ -35,7 +35,7 @@ if ($display_warning > 0) {
         $sel = "SELECT picture,picture_type FROM pictures_raw ";
     }
     $sel .= "WHERE pid=$in_pid ";
-    $status = mysql_db_query ($mysql_db, $sel, $cnx);
+    $status = mysql_query ($sel, $cnx);
     $ret = mysql_fetch_array($status);
     $picture = $ret[0];
     $type    = $ret[1];
@@ -45,7 +45,7 @@ if ($display_warning > 0) {
         // was not found.
         $sel = "SELECT picture,picture_type FROM pictures_raw ";
         $sel .= "WHERE pid=$in_pid ";
-        $status = mysql_db_query ($mysql_db, $sel, $cnx);
+        $status = mysql_query ($sel, $cnx);
         $ret = mysql_fetch_array($status);
         $picture = $ret[0];
         $type    = $ret[1];
