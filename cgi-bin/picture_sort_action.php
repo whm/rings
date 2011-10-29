@@ -1,4 +1,4 @@
-<?php
+<?php
 
 // File: picture_sort_action.php
 // Author: Bill MacAllister
