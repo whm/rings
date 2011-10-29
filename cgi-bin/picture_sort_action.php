@@ -1,4 +1,4 @@
-<?php
+<?php
 
 // File: picture_sort_action.php
 // Author: Bill MacAllister
@@ -40,7 +40,6 @@ if ( strlen($btn_update)>0 ) {
 
   $flds['description'] = 's';
   $flds['date_taken']  = 's';
-  $flds['taken_by']    = 's';
 
   for ($i=0; $i<$up_picture_cnt; $i++) {
 
@@ -50,7 +49,7 @@ if ( strlen($btn_update)>0 ) {
     $up_name = "up_pid_$i"; $up_pid = $$up_name;
 
     // Try and get the old user record
-    $sel = "SELECT date_taken, taken_by ";
+    $sel = "SELECT date_taken, description ";
     $sel .= "FROM pictures_information WHERE pid=$up_pid ";
     $result = mysql_query ($sel,$cnx);
     if ($result) {
@@ -62,7 +61,7 @@ if ( strlen($btn_update)>0 ) {
         if ("$up_val" != "$db_val") {
           $cmd .= ", $fld='$up_val' ";
           $update_cnt++;
-          $_SESSION['s_msg'] .= "<font $ok>$fld updated.</font><br>";
+          $_SESSION['s_msg'] .= "<font $ok>$up_pid/$fld $db_val -> $up_val</font><br>";
         }
       }
     }
@@ -72,7 +71,6 @@ if ( strlen($btn_update)>0 ) {
       $sql_cmd = "UPDATE pictures_pictures SET $cmd ";
       $sql_cmd .= "WHERE pid = $up_pid ";
       $result = mysql_query ($sql_cmd,$cnx);
-      $_SESSION['s_msg'] .= "<font $ok>Meta data update complete for $up_pid</font><br>\n";
     }
 
     // check for a rotation request
@@ -111,7 +109,7 @@ if ( strlen($btn_update)>0 ) {
         }
     }
     if ($update_cnt>0) {
-      $_SESSION['s_msg'] .= "<font $ok>Rotation complete for $up_pid</font><br>\n";
+      $_SESSION['s_msg'] .= "<font $ok>$up_id rotated $rotation</font><br>\n";
     }
 
   }
