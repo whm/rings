@@ -38,8 +38,8 @@ $warn = 'color="#330000"';
 
 if ( strlen($btn_update)>0 ) {
 
-  $flds['description'] = 's';
-  $flds['date_taken']  = 's';
+  $flds['description']  = 's';
+  $flds['picture_date'] = 's';
 
   for ($i=0; $i<$up_picture_cnt; $i++) {
 
@@ -49,7 +49,7 @@ if ( strlen($btn_update)>0 ) {
     $up_name = "up_pid_$i"; $up_pid = $$up_name;
 
     // Try and get the old user record
-    $sel = "SELECT date_taken, description ";
+    $sel = "SELECT * ";
     $sel .= "FROM pictures_information WHERE pid=$up_pid ";
     $result = mysql_query ($sel,$cnx);
     if ($result) {

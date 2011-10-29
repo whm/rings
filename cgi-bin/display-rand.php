@@ -15,7 +15,7 @@ $thisGroup = 'rrpics';
 // Pick a specific ppe from our group
 $sel = "SELECT count(*) FROM picture_groups ";
 $sel .= "WHERE group_id='$thisGroup' ";
-$status = mysql_db_query ($mysql_db, $sel, $db_link);
+$status = mysql_query ($sel, $db_link);
 $ret = mysql_fetch_array($status);
 $group_count = $ret[0];
 
@@ -23,14 +23,14 @@ $offset = rand(0,$group_count-1);
 $sel = "SELECT uid FROM picture_groups ";
 $sel .= "WHERE group_id='$thisGroup' ";
 $sel .= "LIMIT $offset, 1 ";
-$status = mysql_db_query ($mysql_db, $sel, $db_link);
+$status = mysql_query ($sel, $db_link);
 $ret = mysql_fetch_array($status);
 $uid = $ret[0];
 
 // Pick a picture at random
 $sel = "SELECT count(*) FROM picture_details ";
 $sel .= "WHERE uid='$uid' ";
-$status = mysql_db_query ($mysql_db, $sel, $db_link);
+$status = mysql_query ($sel, $db_link);
 $ret = mysql_fetch_array($status);
 $picture_count = $ret[0];
 
@@ -38,14 +38,14 @@ $offset = rand(0,$picture_count-1);
 $sel = "SELECT pid FROM picture_details ";
 $sel .= "WHERE uid='$uid' ";
 $sel .= "LIMIT $offset, 1 ";
-$status = mysql_db_query ($mysql_db, $sel, $db_link);
+$status = mysql_query ($sel, $db_link);
 $ret = mysql_fetch_array($status);
 $pid = $ret[0];
 
 // Finally get the picture
 $sel = "SELECT picture_large,picture_type FROM pictures ";
 $sel .= "WHERE pid=$pid ";
-$status = mysql_db_query ($mysql_db, $sel, $db_link);
+$status = mysql_query ($sel, $db_link);
 $ret = mysql_fetch_array($status);
 $picture = $ret[0];
 $type    = $ret[1];
