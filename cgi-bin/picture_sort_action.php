@@ -77,7 +77,7 @@ if ( strlen($btn_update)>0 ) {
 
     // check for a rotation request
     $up_name = "up_rotate_${i}"; $rotation = $$up_name;
-    $update_cnt = 0
+    $update_cnt = 0;
     if ($rotation == 'LEFT' || $rotation == 'RIGHT') {
         $update_cnt++;
         // request the rotation
