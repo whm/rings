@@ -97,11 +97,11 @@ function print_row ($n, $r) {
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
-    echo "  <td> <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "  <td> <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
     echo "              value=\"LEFT\" >Left &nbsp;&nbsp;\n";
-    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
     echo "              value=\"RIGHT\">Right &nbsp;&nbsp;\n";
-    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
     echo "              value=\"NONE\" CHECKED>None\n"; 
     echo "  </td>\n";
     echo "</tr>\n";
