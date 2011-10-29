@@ -23,7 +23,7 @@
    &nbsp;<a href="picture_reload">Re-Load</a><br>
    &nbsp;<a href="picture_maint">Maint</a><br>
    &nbsp;<a href="picture_sort">Sort</a><br>
-   &nbsp;<a href="picture_sort?in_new=1">New Pictures</a><br>
+   &nbsp;<a href="picture_sort?in_new=1">New</a><br>
    <br>
    &nbsp;<a href="picture_path">Path</a><br>
    &nbsp;<a href="picture_search">Find</a><br>

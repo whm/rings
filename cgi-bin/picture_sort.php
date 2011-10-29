@@ -83,7 +83,7 @@ function print_row ($n, $r) {
     $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
     $up_pid = "up_pid_$n";
     echo " <tr>\n";
-    echo "  <td>$thumb</td>\n";
+    echo "  <td>$pic_href$thumb<a/></td>\n";
     echo '  <td align="center">'.$pic_href.$r['pid']."</a>\n";
     echo '      <input type="hidden"'."\n";
     echo '             name="'.$up_pid.'"'."\n";
@@ -101,9 +101,12 @@ function print_row ($n, $r) {
     echo "             type=\"text\" size=\"10\"\n";
     echo '             value="'.$r['taken_by'].'"'.">\n";
     echo "  </td>\n";
-    echo "  <td><input name=\"up_key_words_$n\"\n";
-    echo "             type=\"text\" size=\"10\"\n";
-    echo '             value="'.$r['key_words'].'">'."\n";
+    echo "  <td> <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "              value=\"RIGHT\">Right &nbsp;&nbsp;\n";
+    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "              value=\"LEFT\" >Left &nbsp;&nbsp;\n";
+    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "              value=\"NONE\">None\n"; 
     echo "  </td>\n";
     echo "</tr>\n";
     echo "<tr>\n";
@@ -135,7 +138,6 @@ require ('page_top.php');
 if (strlen($button_find)+strlen($in_new) > 0) {
     
     $condition = '';
-    $condition .= set_search ('key_words',      'key',        '=',$in_key,        $condition);
     $condition .= set_search ('picture_date',   'start_date', '>',$in_start_date, $condition);
     $condition .= set_search ('picture_date',   'end_date',   '<',$in_end_date,   $condition);
     $condition .= set_search ('taken_by',       'taken_by',   '=',$in_taken_by,   $condition);
@@ -176,7 +178,6 @@ if (strlen($button_find)+strlen($in_new) > 0) {
         }
     }
     $sel = "SELECT p.pid, ";
-    $sel .= "p.key_words, ";
     $sel .= "p.picture_date, ";
     $sel .= "p.taken_by, ";
     $sel .= "p.description, ";
@@ -232,12 +233,6 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 
 <div align="center">
 <table border="1">
-<tr><td align="right">Keywords:</td>
-    <td> 
-    <input type="text" name="in_key" 
-           value="<?php print $_SESSION['sear_key']; ?>">
-    </td>
-</tr>
 <tr>
   <td align="right">Taken By:</td>
   <td>
@@ -383,7 +378,7 @@ if ($_SESSION['s_num_user_rows']>0) {
     <th>Date Taken</th>
     <th>Picture Details</th>
     <th>Taken By</th>
-    <th>Keywords</th>
+    <th>Rotation</th>
   </tr>
 <?php
 $cnt = 0;
