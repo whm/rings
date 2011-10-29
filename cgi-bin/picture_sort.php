@@ -97,16 +97,12 @@ function print_row ($n, $r) {
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
-    echo "  <td><input name=\"up_taken_by_$n\"\n";
-    echo "             type=\"text\" size=\"10\"\n";
-    echo '             value="'.$r['taken_by'].'"'.">\n";
-    echo "  </td>\n";
     echo "  <td> <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
-    echo "              value=\"RIGHT\">Right &nbsp;&nbsp;\n";
-    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
     echo "              value=\"LEFT\" >Left &nbsp;&nbsp;\n";
     echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
-    echo "              value=\"NONE\">None\n"; 
+    echo "              value=\"RIGHT\">Right &nbsp;&nbsp;\n";
+    echo "       <input type=\"radio\" name=\"in_rotate_$n\"\n"; 
+    echo "              value=\"NONE\" CHECKED>None\n"; 
     echo "  </td>\n";
     echo "</tr>\n";
     echo "<tr>\n";
@@ -140,7 +136,6 @@ if (strlen($button_find)+strlen($in_new) > 0) {
     $condition = '';
     $condition .= set_search ('picture_date',   'start_date', '>',$in_start_date, $condition);
     $condition .= set_search ('picture_date',   'end_date',   '<',$in_end_date,   $condition);
-    $condition .= set_search ('taken_by',       'taken_by',   '=',$in_taken_by,   $condition);
     $condition .= set_search ('description',    'description','=',$in_description,$condition);
     $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
     $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
@@ -179,7 +174,6 @@ if (strlen($button_find)+strlen($in_new) > 0) {
     }
     $sel = "SELECT p.pid, ";
     $sel .= "p.picture_date, ";
-    $sel .= "p.taken_by, ";
     $sel .= "p.description, ";
     $sel .= "p.file_name, ";
     $sel .= "pop.uid, ";
@@ -233,13 +227,6 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 
 <div align="center">
 <table border="1">
-<tr>
-  <td align="right">Taken By:</td>
-  <td>
-  <input type="text" name="in_taken_by" 
-         value="<?php print $_SESSION['sear_taken_by']; ?>">
-  </td>
-</tr>
 <tr>
   <td align="right">Picture Date Range:</td>
   <td>
@@ -377,7 +364,6 @@ if ($_SESSION['s_num_user_rows']>0) {
     <th>Picture ID</th>
     <th>Date Taken</th>
     <th>Picture Details</th>
-    <th>Taken By</th>
     <th>Rotation</th>
   </tr>
 <?php
