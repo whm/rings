@@ -109,7 +109,7 @@ if ( strlen($btn_update)>0 ) {
         }
     }
     if ($update_cnt>0) {
-      $_SESSION['s_msg'] .= "<font $ok>$up_id rotated $rotation</font><br>\n";
+      $_SESSION['s_msg'] .= "<font $ok>$up_pid rotated $rotation</font><br>\n";
     }
 
   }
