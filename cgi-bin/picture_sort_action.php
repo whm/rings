@@ -39,6 +39,7 @@ $warn = 'color="#330000"';
 if ( strlen($btn_update)>0 ) {
 
   $flds['description']  = 's';
+  $flds['grade']        = 's';
   $flds['picture_date'] = 's';
 
   for ($i=0; $i<$up_picture_cnt; $i++) {
