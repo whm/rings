@@ -122,7 +122,7 @@ function print_row ($n, $r) {
     echo "</tr>\n";
     echo "<tr>\n";
     echo '  <td colspan="2" align="right">Description:</td>'."\n";
-    echo '  <td colspan="4"><textarea name="up_description_'.$n.'" ';
+    echo '  <td colspan="5"><textarea name="up_description_'.$n.'" ';
     echo 'rows="2" ';
     echo 'cols="60">'.$r['description']."</textarea>\n";
     echo "  </td>\n";
@@ -381,6 +381,7 @@ if ($_SESSION['s_num_user_rows']>0) {
     <th>Date Taken</th>
     <th>Picture Details</th>
     <th>Rotation</th>
+    <th>Grade</th>
   </tr>
 <?php
 $cnt = 0;
