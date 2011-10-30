@@ -82,6 +82,14 @@ function print_row ($n, $r) {
     $pic_href = '<a href="picture_maint?in_pid='.$r['pid'].'" target="_blank">';
     $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
     $up_pid = "up_pid_$n";
+    $chk_grade_b = 'CHECKED';
+    if ($r['grade'] == 'A') {
+        $chk_grade_b = '';
+        $chk_grade_a = 'CHECKED';
+    } elseif ($r['grade'] == 'C') {
+        $chk_grade_b = '';
+        $chk_grade_c = 'CHECKED';
+    }
     echo " <tr>\n";
     echo "  <td>$pic_href$thumb<a/></td>\n";
     echo '  <td align="center">'.$pic_href.$r['pid']."</a>\n";
@@ -98,11 +106,18 @@ function print_row ($n, $r) {
     echo "  <td>$plist\n";
     echo "  </td>\n";
     echo "  <td> <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
-    echo "              value=\"LEFT\" >Left &nbsp;&nbsp;\n";
+    echo "              value=\"LEFT\" >Left &nbsp;\n";
     echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
-    echo "              value=\"RIGHT\">Right &nbsp;&nbsp;\n";
+    echo "              value=\"RIGHT\">Right &nbsp;\n";
     echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
     echo "              value=\"NONE\" CHECKED>None\n"; 
+    echo "  </td>\n";
+    echo "  <td> <input type=\"radio\" name=\"up_grade_$n\"\n"; 
+    echo "              value=\"A\" $chk_grade_a>A &nbsp;\n";
+    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n"; 
+    echo "              value=\"B\" $chk_grade_b>B &nbsp;\n";
+    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n"; 
+    echo "              value=\"C\" $chk_grade_c>C\n"; 
     echo "  </td>\n";
     echo "</tr>\n";
     echo "<tr>\n";
