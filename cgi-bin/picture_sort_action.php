@@ -62,16 +62,23 @@ if ( strlen($btn_update)>0 ) {
         if ("$up_val" != "$db_val") {
           $cmd .= ", $fld='$up_val' ";
           $update_cnt++;
-          $_SESSION['s_msg'] .= "<font $ok>$up_pid/$fld $db_val -> $up_val</font><br>";
+          $_SESSION['s_msg'] .= 
+              "<font $ok>$up_pid/$fld $db_val -> $up_val</font><br>";
         }
       }
     }
 
     if ($update_cnt>0) {
       // Update the meta data
-      $sql_cmd = "UPDATE pictures_pictures SET $cmd ";
+      $sql_cmd = "UPDATE pictures_information SET $cmd ";
       $sql_cmd .= "WHERE pid = $up_pid ";
       $result = mysql_query ($sql_cmd,$cnx);
+      if (!$result) {
+          $_SESSION['s_msg'] .= 
+              "<font $warn>ERROR:".mysql_error($cnx)."</font><br>\n";
+          $_SESSION['s_msg'] .= 
+              "<font $warn>Problem SQL:$sql_cmd</font><br>\n";
+      }
     }
 
     // check for a rotation request
