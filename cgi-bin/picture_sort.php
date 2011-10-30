@@ -191,6 +191,7 @@ if (strlen($button_find)+strlen($in_new) > 0) {
     $sel .= "p.picture_date, ";
     $sel .= "p.description, ";
     $sel .= "p.file_name, ";
+    $sel .= "p.grade, ";
     $sel .= "pop.uid, ";
     $sel .= "pop.display_name ";
     $sel .= "FROM pictures_information p ";
