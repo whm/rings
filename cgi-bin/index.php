@@ -315,12 +315,11 @@ if ( strlen($in_group_id) > 0) {
     } else {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
-    echo "<blockquote>\n";
-    echo "<table border=\"0\" cellpadding=\"2\">\n";
     // Hide the private folks
     $vis_sel = '';
     if (strlen($_SESSION['whm_directory_user'])==0) { 
-        $vis_sel = "AND visibility != 'HIDDEN' AND visibility != 'INVISIBLE' "; 
+        $vis_sel = "AND visibility != 'HIDDEN'";
+        $vis_sel = "AND visibility != 'INVISIBLE' "; 
     }
 
     if ($in_group_id == "all-groups") {
@@ -357,30 +356,25 @@ if ( strlen($in_group_id) > 0) {
         $pp_pid[$row["uid"]]  = $row["pid"];
     }
     asort($pp_list);
+    echo '<dl class="table-display">'."\n";
     foreach ($pp_list as $this_uid => $this_name) {
         $this_description = $pp_desc["$this_uid"];
         $this_pid         = $pp_pid["$this_uid"];
 
-        echo "<tr>\n";
-        echo " <td valign=\"top\">\n";
-        echo "   <a href=\"picture_select.php?in_ring_uid=$this_uid\">";
-        echo "[First]</a>";
+        echo " <dt>\n";
+        echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid\">"
+            . "[First]</a>";
         echo "&nbsp;&nbsp;";
-        echo "<a href=\"picture_select.php"
-            . "?in_ring_uid=$this_uid"
-            . "&in_slide_show=3000\">";
-        echo "[Show]</a>";
+        echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid"
+            . "&in_slide_show=3000\">"
+            . "[Show]</a>";
         echo "&nbsp;&nbsp;";
-        echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">";
-        echo "[Index]</a>\n";
-        echo " </td>\n";
-        echo " <td>\n";
-        echo " <b>$this_name</b> --- $this_description\n";
-        echo " </td>\n";
-        echo "</tr>\n";
+        echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">"
+            . "[Index]</a>\n";
+        echo " </dt>\n";
+        echo " <dd><b>$this_name</b> --- $this_description</dd>\n";
     }
-    echo "</table>\n";
-    echo "</blockquote>\n";
+    echo "</dl>\n";
     echo "<p>\n";
 }
 
