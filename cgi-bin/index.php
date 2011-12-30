@@ -359,27 +359,32 @@ if ( strlen($in_group_id) > 0) {
         $pp_pid[$row["uid"]]  = $row["pid"];
     }
     asort($pp_list);
-    echo '<dl class="table-display">'."\n";
     foreach ($pp_list as $this_uid => $this_name) {
         $this_description = $pp_desc["$this_uid"];
         $this_pid         = $pp_pid["$this_uid"];
 
-        echo " <dt>\n";
-        echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid\">"
-            . "$this_name</a>";
-        echo " </dt>\n";
-        echo " <dd>\n";
-        echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid"
-            . "&in_slide_show=3000\">"
-            . "[Show]</a>";
-        echo "&nbsp;&nbsp;";
-        echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">"
-            . "[Index]</a>\n";
-        echo "&nbsp;&nbsp;";
-        echo " --- $this_description";
-        echo " </dd>\n";
+        echo ' <p class="hang">'."\n";
+
+        echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
+        echo '    <img src="/rings-images/rings_first.png" border="0" '
+            . 'alt="First Picture of '.$this_name.'">'."\n";
+        echo '  </a>'."\n";
+
+        echo '  <a href="picture_select.php?in_ring_uid='.$this_uid
+            . '&in_slide_show=3000">'."\n";
+        echo '    <img src="/rings-images/rings_start.png" border="0" '
+            . 'alt="Start slide show of '.$this_name.' pictures">'."\n";
+        echo '  </a>'."\n";
+
+        echo '  <a href="ring_thumbnails.php?in_uid='.$this_uid.'">'."\n";
+        echo '    <img src="/rings-images/rings_index.png" border="0" '
+            . 'alt="Index of all pictures of '.$this_name.'">'."\n";
+        echo '  </a>'."\n";
+
+        echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
+        echo '    <strong>'.$this_name.'</strong></a>'.$this_description."\n";
+        echo " </p>\n";
     }   
-    echo "</dl>\n";
     echo "<p>\n";
 }
 
