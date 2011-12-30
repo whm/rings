@@ -1,3 +1,10 @@
+picture-rings (2.4) unstable; urgency=low
+
+  * Allow for the selection of multiple pictures to send in an email
+    message.
+
+ -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Fri, 30 Dec 2011 06:51:48 -0800
+
 picture-rings (2.3) UNRELEASED; urgency=low
 
   * Update picture_sort.  Remove keyword updates.  Add rotation processing.
