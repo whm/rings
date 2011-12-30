@@ -75,8 +75,12 @@ if (strlen($btn_send)>0) {
     // Add mailer header
     $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
     $mailMsg->setHeader('X-Mailer', $xhdr);
-    
-    foreach ($_SESSION['s_email_list'] as $email_pid) {
+
+    $email_list = explode(" ", $_SESSION['s_email_list']);
+    foreach ($email_list as $email_pid) {
+
+        // Skip empty entries.
+        if ($email_list < 1) { continue; }
 
         // get the picture information
         $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
