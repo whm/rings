@@ -34,7 +34,7 @@ function closeWindow() {
 <?php
 if (strlen($in_pid) > 0 && $in_pid > 0 )  {
 
-    $_SESSION['email_list'] .= $in_pid.' ';
+    $_SESSION['s_email_list'] .= $in_pid.' ';
     echo "<script language=\"JavaScript\">\n";
     echo " window.close();\n";
     echo "</script>\n";

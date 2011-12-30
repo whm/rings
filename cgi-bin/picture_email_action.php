@@ -76,7 +76,7 @@ if (strlen($btn_send)>0) {
     $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
     $mailMsg->setHeader('X-Mailer', $xhdr);
     
-    foreach ($_SESSION['email_list'] as $email_pid) {
+    foreach ($_SESSION['s_email_list'] as $email_pid) {
 
         // get the picture information
         $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
@@ -146,7 +146,7 @@ if ( strlen($err_msg)>0 ) {
     echo $mend;
 } elseif ($btn_cancel) {
     echo '<h3>No mail sent.  List cleared.</h3>';
-    $_SESSION['email_list'] = '';
+    $_SESSION['s_email_list'] = '';
 } else {
     echo '<h3>Mail sent!</h3>';
     echo "<blockquote>\n";
