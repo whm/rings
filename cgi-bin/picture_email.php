@@ -133,7 +133,7 @@ function get_mail_addresses(addrType) {
   </td>
   <td align="center">
     <?php
-    $email_list = explode(" ", $_SESSION['email_list']);
+    $email_list = explode(" ", $_SESSION['s_email_list']);
     foreach ($email_list as $email_pid) { 
       if ($email_pid > 0) {
         echo "<img src=\"display.php?in_pid=$email_pid&in_size=small\">\n";
