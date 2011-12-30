@@ -156,10 +156,7 @@ if ( strlen($err_msg)>0 ) {
 }
 ?>
 
-<table border="0" cellpadding="10">
-
-<tr>
-<td>
+<?php if (strlen($btn_cancel) == 0) { ?>
 <form name="emailMessageAction"
       method="post"
       action="picture_email.php">
@@ -170,18 +167,7 @@ if ( strlen($err_msg)>0 ) {
 <input type="hidden" name="in_message" value="<?php echo $in_message;?>">
 <input type="submit" name="btn_email" value="Back to Email">
 </form>
-</td>
-
-<td>
-<form name="selectPicture"
-      method="post"
-      action="picture_select.php">
-<input type="hidden" name="in_pid" value="<?php echo $in_pid;?>">
-</form>
-</td>
-</tr>
-
-</table>
+<?php } ?>
 
 <a href="index.php">
 <img src="/rings-images/rings.png" border="0"
