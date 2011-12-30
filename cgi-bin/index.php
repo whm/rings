@@ -392,7 +392,6 @@ if ( strlen($in_group_id) > 0) {
         echo '   <strong>'.$this_name.'</strong></a> &mdash; '.$this_desc."\n";
         echo " </p>\n";
     }   
-    echo "<p>\n";
 }
 
 ?>
