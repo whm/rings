@@ -145,7 +145,7 @@ if ( strlen($err_msg)>0 ) {
     print_r($mailMsg->errors);
     echo "</pre>\n";
     echo $mend;
-} elseif ($btn_cancel) {
+} elseif (strlen($btn_cancel)>0) {
     echo '<h3>No mail sent.  List cleared.</h3>';
     $_SESSION['s_email_list'] = '';
 } else {
