@@ -376,7 +376,7 @@ if ( strlen($in_group_id) > 0) {
         echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">"
             . "[Index]</a>\n";
         echo "&nbsp;&nbsp;";
-        echo " --- $this_description"
+        echo " --- $this_description";
         echo " </dd>\n";
     }   
     echo "</dl>\n";
