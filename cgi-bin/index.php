@@ -360,8 +360,8 @@ if ( strlen($in_group_id) > 0) {
     }
     asort($pp_list);
     foreach ($pp_list as $this_uid => $this_name) {
-        $this_description = $pp_desc["$this_uid"];
-        $this_pid         = $pp_pid["$this_uid"];
+        $this_desc = $pp_desc["$this_uid"];
+        $this_pid  = $pp_pid["$this_uid"];
 
         echo ' <p class="hang">'."\n";
 
@@ -382,7 +382,7 @@ if ( strlen($in_group_id) > 0) {
         echo '  </a>'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
-        echo '    <strong>'.$this_name.'</strong></a>'.$this_description."\n";
+        echo '    <strong>'.$this_name.'</strong></a>&mdash;'.$this_desc."\n";
         echo " </p>\n";
     }   
     echo "<p>\n";
