@@ -366,17 +366,19 @@ if ( strlen($in_group_id) > 0) {
 
         echo " <dt>\n";
         echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid\">"
-            . "[First]</a>";
-        echo "&nbsp;&nbsp;";
+            . "$this_name</a>";
+        echo " </dt>\n";
+        echo " <dd>\n";
         echo "  <a href=\"picture_select.php?in_ring_uid=$this_uid"
             . "&in_slide_show=3000\">"
             . "[Show]</a>";
         echo "&nbsp;&nbsp;";
         echo "<a href=\"ring_thumbnails.php?in_uid=$this_uid\">"
             . "[Index]</a>\n";
-        echo " </dt>\n";
-        echo " <dd><b>$this_name</b> --- $this_description</dd>\n";
-    }
+        echo "&nbsp;&nbsp;";
+        echo " --- $this_description"
+        echo " </dd>\n";
+    }   
     echo "</dl>\n";
     echo "<p>\n";
 }

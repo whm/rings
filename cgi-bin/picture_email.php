@@ -114,7 +114,7 @@ function get_mail_addresses(addrType) {
 </tr>
 <tr>
   <td align="right">Message:</td>
-      <textarea cols="70" 
+  <td><textarea cols="70" 
                 rows="20" 
                 wrap="physical"
                 name="in_message"><?php echo $in_message;?></textarea>
@@ -136,7 +136,7 @@ function get_mail_addresses(addrType) {
     $email_list = explode(" ", $_SESSION['email_list']);
     foreach ($email_list as $email_pid) { 
       if ($email_pid > 0) {
-        echo "<img src=\"display.php?in_pid=$email_pid;?>&in_size=small\">\n";
+        echo "<img src=\"display.php?in_pid=$email_pid&in_size=small\">\n";
       }
     }
     ?>
@@ -146,6 +146,11 @@ function get_mail_addresses(addrType) {
 </table>
 
 </form
+
+<a href="index.php">
+<img src="/rings-images/rings.png" border="0"
+     alt="Pick a new Picture Ring">
+</a>
 
 </Body>
 </html>
