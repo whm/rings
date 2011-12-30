@@ -362,27 +362,34 @@ if ( strlen($in_group_id) > 0) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
+        if (strlen($_SESSION['whm_directory_user'])==0 && 
+            auth_person_hidden($in_uid) > 0) {
+            continue;
+        }
 
-        echo ' <p class="hang">'."\n";
+        echo ' <p class="hang-big">'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
         echo '    <img src="/rings-images/icon-first.png" border="0" '
+            . 'width="32" height="32" '
             . 'alt="First Picture of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid
             . '&in_slide_show=3000">'."\n";
         echo '    <img src="/rings-images/icon-start.png" border="0" '
+            . 'width="32" height="32" '
             . 'alt="Start slide show of '.$this_name.' pictures">'."\n";
         echo '  </a>'."\n";
 
         echo '  <a href="ring_thumbnails.php?in_uid='.$this_uid.'">'."\n";
         echo '    <img src="/rings-images/icon-index.png" border="0" '
+            . 'width="32" height="32" '
             . 'alt="Index of all pictures of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
-        echo '    <strong>'.$this_name.'</strong></a>&mdash;'.$this_desc."\n";
+        echo '   <strong>'.$this_name.'</strong></a> &mdash; '.$this_desc."\n";
         echo " </p>\n";
     }   
     echo "<p>\n";
