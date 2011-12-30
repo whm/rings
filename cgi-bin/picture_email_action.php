@@ -28,9 +28,6 @@ if (!$result) {
     $err_msg .= "$warn Error connecting to MySQL db $mysql_db$mend";
 }
 
-// No spaces allowed in the identifier
-$in_pid = ereg_replace (" ","",$in_pid);
-
 // get the picture information
 if (strlen($btn_send)>0) {
     
@@ -83,7 +80,7 @@ if (strlen($btn_send)>0) {
         if ($email_list < 1) { continue; }
 
         // get the picture information
-        $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
+        $sel = "SELECT * FROM pictures_information WHERE pid=$email_pid ";
         $result = mysql_query ($sel,$cnx);
         if (!$result) {
             $err_msg .= "$warn Problem finding picture information.$mend";
@@ -169,7 +166,6 @@ if ( strlen($err_msg)>0 ) {
 <input type="hidden" name="in_to_addr" value="<?php echo $in_to_addr;?>">
 <input type="hidden" name="in_cc_addr" value="<?php echo $in_cc_addr;?>">
 <input type="hidden" name="in_from_addr" value="<?php echo $in_from_addr;?>">
-<input type="hidden" name="in_pid" value="<?php echo $in_pid;?>">
 <input type="hidden" name="in_subject" value="<?php echo $in_subject;?>">
 <input type="hidden" name="in_message" value="<?php echo $in_message;?>">
 <input type="submit" name="btn_email" value="Back to Email">
@@ -181,12 +177,16 @@ if ( strlen($err_msg)>0 ) {
       method="post"
       action="picture_select.php">
 <input type="hidden" name="in_pid" value="<?php echo $in_pid;?>">
-<input type="submit" name="btn_email" value="Back to Rings">
 </form>
 </td>
 </tr>
 
 </table>
+
+<a href="index.php">
+<img src="/rings-images/rings.png" border="0"
+     alt="Pick a new Picture Ring">
+</a>
 
 </body>
 </html>
