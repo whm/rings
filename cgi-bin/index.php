@@ -366,18 +366,18 @@ if ( strlen($in_group_id) > 0) {
         echo ' <p class="hang">'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
-        echo '    <img src="/rings-images/rings_first.png" border="0" '
+        echo '    <img src="/rings-images/icon-first.png" border="0" '
             . 'alt="First Picture of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid
             . '&in_slide_show=3000">'."\n";
-        echo '    <img src="/rings-images/rings_start.png" border="0" '
+        echo '    <img src="/rings-images/icon-start.png" border="0" '
             . 'alt="Start slide show of '.$this_name.' pictures">'."\n";
         echo '  </a>'."\n";
 
         echo '  <a href="ring_thumbnails.php?in_uid='.$this_uid.'">'."\n";
-        echo '    <img src="/rings-images/rings_index.png" border="0" '
+        echo '    <img src="/rings-images/icon-index.png" border="0" '
             . 'alt="Index of all pictures of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
