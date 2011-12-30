@@ -363,7 +363,7 @@ if ( strlen($in_group_id) > 0) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
         if (strlen($_SESSION['whm_directory_user'])==0 && 
-            auth_person_hidden($in_uid) > 0) {
+            auth_person_hidden($this_uid) > 0) {
             continue;
         }
 
