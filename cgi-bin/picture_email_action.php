@@ -77,7 +77,7 @@ if (strlen($btn_send)>0) {
     foreach ($email_list as $email_pid) {
 
         // Skip empty entries.
-        if ($email_list < 1) { continue; }
+        if (strlen($email_pid)==0 || $email_pid<1) { continue; }
 
         // get the picture information
         $sel = "SELECT * FROM pictures_information WHERE pid=$email_pid ";
