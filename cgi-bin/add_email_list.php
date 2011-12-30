@@ -24,7 +24,7 @@ function closeWindow() {
 
 <h3>Add Picture to Email List</h3>
 <form name="addEmailList" action="add_email_list.php">
-<input type="submit" name="btn_submit" value="Set Grade">
+<input type="submit" name="btn_submit" value="Select Picture">
 <input type="hidden" name="in_pid" value="<?php echo $id;?>">
 </form>
 
