@@ -388,8 +388,6 @@ if ( strlen($in_group_id) > 0) {
 <p>
 <hr>
 <h3>Random Notes</h3>
-<p>
-<blockquote>
 <dl>
 
 <dt>Some pictures are missing.  What happened?</dt>
@@ -435,7 +433,6 @@ either to add pictures, update descriptions or whatever contact
 </dd>
 
 </dl>
-</blockquote>
 
 <!-- Message area -->
 <?php
