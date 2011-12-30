@@ -139,15 +139,15 @@ if ( strlen($err_msg)>0 ) {
     echo $err_msg;
     echo "<p>\n";
     echo "$warn Mail not sent.$mend";
+} elseif (strlen($btn_cancel)>0) {
+    echo '<h3>No mail sent.  List cleared.</h3>';
+    $_SESSION['s_email_list'] = '';
 } elseif (!$mailResult) {
     echo "$warn\n";
     echo "<pre>\n";
     print_r($mailMsg->errors);
     echo "</pre>\n";
     echo $mend;
-} elseif (strlen($btn_cancel)>0) {
-    echo '<h3>No mail sent.  List cleared.</h3>';
-    $_SESSION['s_email_list'] = '';
 } else {
     echo '<h3>Mail sent!</h3>';
     echo "<blockquote>\n";
