@@ -9,8 +9,6 @@
 <?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 
-<!-- ?php require('inc_vs.css');? -->
-
 <script language="JavaScript">
 function closeWindow() {
     window.close();
@@ -35,20 +33,18 @@ function closeWindow() {
 </tr>
 <tr><td align="center"><input type="submit" name="btn_submit" 
                               value="Set Grade">
-    <input type="hidden" name="in_pid" value="<?php echo $id;?>">
-    <input type="hidden" name="in_username" value="<?php echo $username;?>">
 </td>
 </tr>
 </table>
+
+<input type="hidden" name="in_pid" value="<?php echo $id;?>">
+<input type="hidden" name="in_username" value="<?php echo $username;?>">
 </form>
 
 </body>
 </html>
 
 <?php
-echo "username:$in_username<br>\n";
-echo "grade:$in_grade<br>\n";
-echo "pid:$in_pid\n";
 if (strlen($in_username) > 0 &&
     preg_match("/[ABC]/",$in_grade) &&
     $in_pid > 0 )  {
@@ -100,3 +96,4 @@ if (strlen($in_username) > 0 &&
     echo "</script>\n";
 
 }
+?>
