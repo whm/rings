@@ -113,7 +113,7 @@ function get_mail_addresses(addrType) {
   <td>&nbsp;</td>
 </tr>
 <tr>
-  <td colspan="2">
+  <td align="right">Message:</td>
       <textarea cols="70" 
                 rows="20" 
                 wrap="physical"
@@ -126,9 +126,20 @@ function get_mail_addresses(addrType) {
     <input type="submit"
          name="btn_send"
          value="send">
+    <br>
+    <input type="submit"
+         name="btn_cancel"
+         value="cancel">
   </td>
   <td align="center">
-    <img src="display.php?in_pid=<?php echo $in_pid;?>&in_size=large">
+    <?php
+    $email_list = explode(" ", $_SESSION['email_list']);
+    foreach ($email_list as $email_pid) { 
+      if ($email_pid > 0) {
+        echo "<img src=\"display.php?in_pid=$email_pid;?>&in_size=small\">\n";
+      }
+    }
+    ?>
   </td>
   <td>&nbsp;</td>
 </tr>

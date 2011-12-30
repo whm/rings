@@ -114,6 +114,13 @@ function get_vote(idx,username) {
     return false;
 }
 
+function add_email_list(idx) {
+    var win = window.open("add_email_list.php?id="+idx,
+                          "Add this picture to the email list",
+                          "width=400,height=150,status=no");
+    return false;
+}
+
 </script>
 
 </head>
@@ -339,11 +346,17 @@ if (isset($in_ring_pid)) {
     
     $loggedInUser = $_SESSION['whm_directory_user'];
     if (strlen($loggedInUser)>0) {
-        echo '<a href="picture_email?in_pid='.$this_pid.'" target="_blank" >';
+        echo '<img src="/rings-images/icon-grade.png"  border="0" ';
+        echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
+        echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
+        echo 'alt="Give this picture a grade.">';
+
+        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
         echo '<img src="/rings-images/icon-mail-send.png" border="0" ';
+        echo "onClick=\"add_email_list($this_pid);\" ";
         echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
-        echo 'alt="Send this picture to someone">';
-        echo "</a>\n";
+        echo 'alt="Add this picture to the email list">';
     
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
@@ -376,7 +389,7 @@ if (isset($in_ring_pid)) {
     }
     
     echo '<p id="mailHelpDisplay">'."\n";
-    echo "Email this Picture\n";
+    echo "Select this picture to email\n";
     echo "<br>\n";
     echo "</p>\n";
     

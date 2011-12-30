@@ -32,75 +32,88 @@ if (!$result) {
 $in_pid = ereg_replace (" ","",$in_pid);
 
 // get the picture information
-$sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
-$result = mysql_query ($sel,$cnx);
-if (!$result) {
-    $err_msg .= "$warn Problem finding picture information.$mend";
-    $err_msg .= "$warn Problem SQL:$sel$mend";
-} else {
+if (strlen($btn_send)>0) {
     
-    $row = mysql_fetch_array ($result);
-    $thisFilename = $row['file_name'];
-    
-    // get the picture
-    $sel = "SELECT * FROM pictures_large WHERE pid=$in_pid ";
-    $result = mysql_query ($sel,$cnx);
-    if (!$result) {
-        $err_msg .= "$warn Problem finding image.$mend";
-        $err_msg .= "$warn Problem SQL:$sel$mend";
-    } else {
+    // get to: distribution list
+    $to_addrs = array();
+    $a_to = trim(strtok($in_to_addr, ','));
+    while (strlen($a_to)>0) {
+        $msg .= $ok.'To:'.htmlentities($a_to).$mend;
+        $to_addrs[] = $a_to;
+        $a_to = trim(strtok(','));
+    }
         
+    // make a mail message
+    $mailMsg = new htmlMimeMail();
+    if ( strlen(trim($in_message)) == 0 ) {
+        $in_message = 'A picture for you\n';
+    }
+    $mailMsg->setText($in_message);
+    $msg .= $ok.'Message text size:'.strlen($in_message).$mend;
+        
+    // CC address
+    $in_cc_addr = trim($in_cc_addr);
+    if ( strlen($in_cc_addr) > 0 ) {
+        $msg .= $ok.'CC:'.htmlentities($in_cc_addr).$mend;
+        $mailMsg->setCc($in_cc_addr);
+    }
+        
+    // From address
+    $env_from = $in_from_addr;
+    if ( preg_match ('/<(.*?)>/', $in_from_addr, $matches) ) {
+        $env_from = $matches[1];
+    }
+    $msg .= $ok.'Envelope From:'.htmlentities($env_from).$mend;
+    $mailMsg->setFrom($env_from);
+    //  $msg .= "$ok Header From:". htmlentities($in_from_addr) . $mend;
+    //  $mailMsg->setHeader('From', $in_from_addr); 
+    
+    // Add subject header
+    $msg .= $ok.'Subject:'.htmlentities($in_subject).$mend;
+    $mailMsg->setSubject($in_subject);
+        
+    // Add mailer header
+    $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
+    $mailMsg->setHeader('X-Mailer', $xhdr);
+    
+    foreach ($_SESSION['email_list'] as $email_pid) {
+
+        // get the picture information
+        $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
+        $result = mysql_query ($sel,$cnx);
+        if (!$result) {
+            $err_msg .= "$warn Problem finding picture information.$mend";
+            $err_msg .= "$warn Problem SQL:$sel$mend";
+            break;
+        } 
+    
         $row = mysql_fetch_array ($result);
-        $thisPicture = $row['picture'];
-        $thisFiletype = $row['picture_type'];
+        $thisFilename = $row['file_name'];
+    
+        // get the picture
+        $sel = "SELECT * FROM pictures_large WHERE pid=$email_pid ";
+        $result = mysql_query ($sel,$cnx);
+        if (!$result) {
+            $err_msg .= "$warn Problem finding image.$mend";
+            $err_msg .= "$warn Problem SQL:$sel$mend";
+            break;
+        } else {
         
-        $msg .= "$ok Picture size ".strlen($thisPicture)."$mend";
+            $row = mysql_fetch_array ($result);
+            $thisPicture = $row['picture'];
+            $thisFiletype = $row['picture_type'];
+            
+            $msg .= "$ok Picture size ".strlen($thisPicture)."$mend";
         
-        // get to: distribution list
-        $to_addrs = array();
-        $a_to = trim(strtok($in_to_addr, ','));
-        while (strlen($a_to)>0) {
-            $msg .= $ok.'To:'.htmlentities($a_to).$mend;
-            $to_addrs[] = $a_to;
-            $a_to = trim(strtok(','));
+            // Add the picture
+            $mailMsg->addAttachment($thisPicture, 
+                                    $thisFilename, 
+                                    $thisFiletype);
         }
-        
-        // make a mail message
-        $mailMsg = new htmlMimeMail();
-        if ( strlen(trim($in_message)) == 0 ) {
-            $in_message = 'A picture for your\n';
-        }
-        $mailMsg->setText($in_message);
-        $msg .= $ok.'Message text size:'.strlen($in_message).$mend;
-        
-        // CC address
-        $in_cc_addr = trim($in_cc_addr);
-        if ( strlen($in_cc_addr) > 0 ) {
-            $msg .= $ok.'CC:'.htmlentities($in_cc_addr).$mend;
-            $mailMsg->setCc($in_cc_addr);
-        }
-        
-        // From address
-        $env_from = $in_from_addr;
-        if ( preg_match ('/<(.*?)>/', $in_from_addr, $matches) ) {
-            $env_from = $matches[1];
-        }
-        $msg .= $ok.'Envelope From:'.htmlentities($env_from).$mend;
-        $mailMsg->setFrom($env_from);
-        //  $msg .= "$ok Header From:". htmlentities($in_from_addr) . $mend;
-        //  $mailMsg->setHeader('From', $in_from_addr); 
-        
-        // Add subject header
-        $msg .= $ok.'Subject:'.htmlentities($in_subject).$mend;
-        $mailMsg->setSubject($in_subject);
-        
-        // Add mailer header
-        $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
-        $mailMsg->setHeader('X-Mailer', $xhdr);
-        
-        // Add the picture
-        $mailMsg->addAttachment($thisPicture, $thisFilename, $thisFiletype);
-        
+    }
+    if (strlen($err_msg) > 0) {
+        $msg .= "$warn Message not sent $mend";
+    } else {
         $mailResult = $mailMsg->send($to_addrs);
     }
 }
@@ -125,12 +138,15 @@ if ( strlen($err_msg)>0 ) {
     echo $err_msg;
     echo "<p>\n";
     echo "$warn Mail not sent.$mend";
-} else if (!$mailResult) {
+} elseif (!$mailResult) {
     echo "$warn\n";
     echo "<pre>\n";
     print_r($mailMsg->errors);
     echo "</pre>\n";
     echo $mend;
+} elseif ($btn_cancel) {
+    echo '<h3>No mail sent.  List cleared.</h3>';
+    $_SESSION['email_list'] = '';
 } else {
     echo '<h3>Mail sent!</h3>';
     echo "<blockquote>\n";
