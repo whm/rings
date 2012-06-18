@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+#
+# ring-load - load pictures into a ring database
+#
 
 use strict;
 use Cwd;
