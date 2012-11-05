@@ -62,6 +62,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 
 function print_row ($n, $r) {
     
+    // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
     $sel .= 'p.display_name ';
     $sel .= "FROM picture_details d ";
@@ -79,6 +80,34 @@ function print_row ($n, $r) {
         }
     }
     
+    // check to see if the picture is possibly a duplicate
+    $duplicate_list = '';
+    $sel = 'SELECT pid ';
+    $sel .= "FROM pictures_information ";
+    $sel .= "WHERE pid != ".$r['pid'].' ';
+    $sel .= "AND raw_picture_size = ".$r['raw_picture_size']." ";
+    $sel .= "AND file_name = '".$r['file_name']."' ";
+    $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
+    foreach ($dup_fld_list as $fld) {
+      if (isset($r[$fld])) {
+          $sel .= "AND $fld = '".$r[$fld]."' ";
+      } else {
+          $sel .= "AND $fld IS NULL ";
+      }
+    }
+    $sel .= "ORDER BY pid ";
+    //$duplicate_list .= $sel;
+    $result = mysql_query ($sel);
+    $plist = '';
+    $br = '';
+    if ($result) {
+        $comma = '';
+        while ($row = mysql_fetch_array($result)) {
+            $duplicate_list .= $comma . $row['pid'];
+            $br = ', ';
+        }
+    }
+
     $pic_href = '<a href="picture_maint?in_pid='.$r['pid'].'" target="_blank">';
     $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
     $up_pid = "up_pid_$n";
@@ -98,6 +127,9 @@ function print_row ($n, $r) {
     echo '             value="'.$r['pid'].'"'.">\n";
     echo "      <br>\n";
     echo '      '.$r['file_name']."\n";
+    if (strlen($duplicate_list) > 0) {
+        echo "      <br>Duplicates: $duplicate_list\n";
+    }
     echo "  </td>\n";
     echo '  <td><input name="up_picture_date_'.$n.'"'."\n";
     echo '             type="text" size="18"'."\n";
@@ -192,6 +224,10 @@ if (strlen($button_find)+strlen($in_new) > 0) {
     $sel .= "p.description, ";
     $sel .= "p.file_name, ";
     $sel .= "p.grade, ";
+    $sel .= "p.raw_picture_size, ";
+    $sel .= "p.camera, ";
+    $sel .= "p.shutter_speed, ";
+    $sel .= "p.fstop, ";
     $sel .= "pop.uid, ";
     $sel .= "pop.display_name ";
     $sel .= "FROM pictures_information p ";
