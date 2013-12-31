@@ -1,4 +1,12 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_upload_slots  = $_REQUEST['in_upload_slots'];
+$in_type  = $_REQUEST['in_type'];
+// ----------------------------------------------------------
+//
 
 // File: picture_file_load.php
 // Author: Bill MacAllister

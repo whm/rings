@@ -1,4 +1,11 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_button  = $_REQUEST['in_button'];
+// ----------------------------------------------------------
+//
 $width = 144;
 $inwidth = strlen($in_button)*8;
 if ($inwidth>$width) {$width = $inwidth;}

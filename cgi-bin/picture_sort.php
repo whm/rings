@@ -1,4 +1,19 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_uids  = $_REQUEST['in_uids'];
+$in_start_date  = $_REQUEST['in_start_date'];
+$in_end_maint  = $_REQUEST['in_end_maint'];
+$in_end_date  = $_REQUEST['in_end_date'];
+$in_start_maint  = $_REQUEST['in_start_maint'];
+$in_pid  = $_REQUEST['in_pid'];
+$in_description  = $_REQUEST['in_description'];
+$in_order  = $_REQUEST['in_order'];
+$in_new  = $_REQUEST['in_new'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // picture_sort.php
 // author: Bill MacAllister

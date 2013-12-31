@@ -1,4 +1,15 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_displayname  = $_REQUEST['in_displayname'];
+$in_description  = $_REQUEST['in_description'];
+$in_uid  = $_REQUEST['in_uid'];
+$in_visibility  = $_REQUEST['in_visibility'];
+$in_cn  = $_REQUEST['in_cn'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // people_search.php
 // author: Bill MacAllister

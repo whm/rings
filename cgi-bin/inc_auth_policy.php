@@ -1,4 +1,11 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_logout  = $_REQUEST['in_logout'];
+// ----------------------------------------------------------
+//
 
 // Look up people and see if any are invisible.
 function auth_picture_invisible ($pid) {

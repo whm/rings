@@ -1,4 +1,11 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_pid  = $_REQUEST['in_pid'];
+// ----------------------------------------------------------
+//
 // File: add_email_list.php
 // Author: Bill MacAllister
 

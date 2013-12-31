@@ -1,4 +1,11 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_type  = $_REQUEST['in_type'];
+// ----------------------------------------------------------
+//
 // File: get_mail_addresses.php
 // Fate: 23-Nov-2004
 // Author: Bill MacAllister

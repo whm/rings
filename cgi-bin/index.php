@@ -1,4 +1,18 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_size  = $_REQUEST['in_size'];
+$in_seconds  = $_REQUEST['in_seconds'];
+$in_group_id  = $_REQUEST['in_group_id'];
+$in_login  = $_REQUEST['in_login'];
+$in_pos  = $_REQUEST['in_pos'];
+$in_grade  = $_REQUEST['in_grade'];
+$in_type  = $_REQUEST['in_type'];
+$in_pref_display  = $_REQUEST['in_pref_display'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // ring_select.php
 // author: Bill MacAllister

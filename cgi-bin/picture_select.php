@@ -1,4 +1,16 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_slide_show  = $_REQUEST['in_slide_show'];
+$in_login  = $_REQUEST['in_login'];
+$in_ring_uid  = $_REQUEST['in_ring_uid'];
+$in_ring_next_seq  = $_REQUEST['in_ring_next_seq'];
+$in_ring_pid  = $_REQUEST['in_ring_pid'];
+$in_ring_next_date  = $_REQUEST['in_ring_next_date'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // picture_select.php
 // author: Bill MacAllister
