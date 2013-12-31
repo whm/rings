@@ -1,4 +1,12 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_pid  = $_REQUEST['in_pid'];
+$in_size  = $_REQUEST['in_size'];
+// ----------------------------------------------------------
+//
 // Display a picture
 
 // Init session, connect to database

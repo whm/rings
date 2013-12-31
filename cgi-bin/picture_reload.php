@@ -1,4 +1,12 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_pid  = $_REQUEST['in_pid'];
+$in_setdate  = $_REQUEST['in_setdate'];
+// ----------------------------------------------------------
+//
 
 // File: picture_load.php
 // Author: Bill MacAllister

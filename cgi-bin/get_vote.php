@@ -1,4 +1,13 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_pid  = $_REQUEST['in_pid'];
+$in_grade  = $_REQUEST['in_grade'];
+$in_username  = $_REQUEST['in_username'];
+// ----------------------------------------------------------
+//
 // File: get_VOTE.php
 // Author: Bill MacAllister
 

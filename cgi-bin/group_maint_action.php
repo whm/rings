@@ -1,4 +1,20 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_fld  = $_REQUEST['in_fld'];
+$in_val  = $_REQUEST['in_val'];
+$in_group_id  = $_REQUEST['in_group_id'];
+$in_date_added  = $_REQUEST['in_date_added'];
+$in_type  = $_REQUEST['in_type'];
+$in_date_last_maint  = $_REQUEST['in_date_last_maint'];
+$in_group_uid  = $_REQUEST['in_group_uid'];
+$in_deluids  = $_REQUEST['in_deluids'];
+$in_uid  = $_REQUEST['in_uid'];
+$in_newuids  = $_REQUEST['in_newuids'];
+// ----------------------------------------------------------
+//
 
 // File: people_maint_action.php
 // Author: Bill MacAllister

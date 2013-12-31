@@ -1,4 +1,20 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_start_date  = $_REQUEST['in_start_date'];
+$in_end_maint  = $_REQUEST['in_end_maint'];
+$in_key  = $_REQUEST['in_key'];
+$in_end_date  = $_REQUEST['in_end_date'];
+$in_count  = $_REQUEST['in_count'];
+$in_start_maint  = $_REQUEST['in_start_maint'];
+$in_pid  = $_REQUEST['in_pid'];
+$in_order  = $_REQUEST['in_order'];
+$in_taken_by  = $_REQUEST['in_taken_by'];
+$in_description  = $_REQUEST['in_description'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // people_search.php
 // author: Bill MacAllister

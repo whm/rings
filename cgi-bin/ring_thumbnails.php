@@ -1,4 +1,17 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_number  = $_REQUEST['in_number'];
+$in_start_date  = $_REQUEST['in_start_date'];
+$in_last  = $_REQUEST['in_last'];
+$in_start  = $_REQUEST['in_start'];
+$in_next  = $_REQUEST['in_next'];
+$in_prev  = $_REQUEST['in_prev'];
+$in_uid  = $_REQUEST['in_uid'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // ring_thumbnails.php
 // author: Bill MacAllister

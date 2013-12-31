@@ -1,4 +1,19 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_fld  = $_REQUEST['in_fld'];
+$in_val  = $_REQUEST['in_val'];
+$in_picture_date  = $_REQUEST['in_picture_date'];
+$in_date_added  = $_REQUEST['in_date_added'];
+$in_pid  = $_REQUEST['in_pid'];
+$in_type  = $_REQUEST['in_type'];
+$in_date_last_maint  = $_REQUEST['in_date_last_maint'];
+$in_picture_sequence  = $_REQUEST['in_picture_sequence'];
+$in_newuids  = $_REQUEST['in_newuids'];
+// ----------------------------------------------------------
+//
 
 // File: picture_maint_action.php
 // Author: Bill MacAllister

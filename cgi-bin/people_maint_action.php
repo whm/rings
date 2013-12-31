@@ -1,4 +1,17 @@
 <?php
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_fld  = $_REQUEST['in_fld'];
+$in_date_added  = $_REQUEST['in_date_added'];
+$in_val  = $_REQUEST['in_val'];
+$in_date_last_maint  = $_REQUEST['in_date_last_maint'];
+$in_type  = $_REQUEST['in_type'];
+$in_uid  = $_REQUEST['in_uid'];
+$in_cn  = $_REQUEST['in_cn'];
+// ----------------------------------------------------------
+//
 
 // File: people_maint_action.php
 // Author: Bill MacAllister

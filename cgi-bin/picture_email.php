@@ -1,4 +1,15 @@
 <?PHP
+//
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_message  = $_REQUEST['in_message'];
+$in_subject  = $_REQUEST['in_subject'];
+$in_pid  = $_REQUEST['in_pid'];
+$in_cc_addr  = $_REQUEST['in_cc_addr'];
+$in_to_addr  = $_REQUEST['in_to_addr'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // picture_email.php
 // author: Bill MacAllister
