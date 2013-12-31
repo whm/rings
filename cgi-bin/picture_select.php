@@ -321,7 +321,7 @@ if (isset($in_ring_pid)) {
                                  $next_links[$thisUID]);
                 if (strlen($l) > 0) {
                     echo $c.$l;
-                    $c = ' - ';
+                    $c = ' <font color="#000000">.</font> ';
                 }
             }
         }

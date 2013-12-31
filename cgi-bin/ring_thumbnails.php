@@ -240,7 +240,7 @@ if (!$result) {
       $hr = "<hr>\n";
     }
     $pid = $row["pid"];
-    $pic_href = "<a href=\"picture_select?in_ring_pid=$pid\" target=\"_blank\">";
+    $pic_href = "<a href=\"picture_select.php?in_ring_pid=$pid\" target=\"_blank\">";
     $thumb = "<img src=\"display.php?in_pid=$pid&in_size=small\" border=\"0\">";
     echo $pic_href . $thumb . "</a>\n";
     $cnt++;
