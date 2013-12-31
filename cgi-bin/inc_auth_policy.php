@@ -56,7 +56,7 @@ function auth_person_hidden ($uid) {
 }
 
 // Redirect the user to the home page
-function http_redirect ($nextURL="index") {
+function http_redirect ($nextURL="index.php") {
     header ("REFRESH: 0; URL=$nextURL");
     echo "<html>\n";
     echo "<head>\n";

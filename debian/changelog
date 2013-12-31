@@ -2,6 +2,7 @@ picture-rings (2.5) unstable; urgency=low
 
   * Remove dependency on register_globals to support newer versions of
     php.
+  * Fix problem with href's created in the thumbnail display.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 30 Dec 2013 23:35:55 -0800
 
