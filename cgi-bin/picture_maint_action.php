@@ -127,7 +127,6 @@ $next_url = "picture_maint.php";
 $next_header = "REFRESH: 0; URL=$next_url";
 
 // set update message area
-if (!session_is_registered('s_msg')) {session_register('s_msg');}
 $_SESSION['s_msg'] = '';
 $ok = 'color="#009900"';
 $warn = 'color="#330000"';
