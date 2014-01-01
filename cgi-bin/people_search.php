@@ -232,7 +232,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
       while ($row = mysql_fetch_array($result)) {
         $uid = $row["uid"];
         $user_href = urlencode("$uid");
-        $user_href = "<a href=\"people_maint?in_uid=$user_href\">";
+        $user_href = "<a href=\"people_maint.php?in_uid=$user_href\">";
         echo " <tr>\n";
         echo "  <td>".$user_href.$row["uid"]."</a></td>\n";
         echo "  <td>".$row["cn"]."</td>\n";

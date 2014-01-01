@@ -126,7 +126,7 @@ if (!$result) {
 if (!isset($upload)) {
     
     // -- Display slots from
-    echo '<form method="post" action=" . $_SERVER['PHP_SELF'] . '">' . "\n";
+    echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
     echo "   Number of Pictures to upload at once: \n";
     echo "  <input type=\"text\" size=\"3\"\n";
