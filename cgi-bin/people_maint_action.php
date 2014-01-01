@@ -86,7 +86,7 @@ if (!$result) {
 }
 
 // No spaces allowed in the identifier
-$in_uid = ereg_replace (" ","",$in_uid);
+$in_uid = preg_replace ('/\s+/','',$in_uid);
 
 // how to get back
 $next_url = "people_maint.php";
