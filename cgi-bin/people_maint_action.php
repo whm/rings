@@ -133,8 +133,7 @@ if ( $update_flag ) {
     $db_fld = mysql_field_name ($result, $i);
     if ($db_fld == "date_of_birth") {continue;}
     if ($db_fld == "date_added")    {continue;}
-    $in_fld = "in_$db_fld";
-    $in_val = trim($$in_fld);
+    $in_val = trim($_REQUEST["in_$db_fld"]);
     if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
     if (trim($in_val) != trim($row[$db_fld])) {
       $in_val = str_replace ("'", '\'', $in_val);
@@ -174,8 +173,7 @@ if ( $update_flag ) {
     $fld_cnt = mysql_num_fields ($result);
     for ($i=0; $i<$fld_cnt; $i++) {
       $db_fld = mysql_field_name ($result, $i);
-      $form_fld = "in_$db_fld";
-      $in_val = trim($$form_fld);
+      $in_val = trim($_REQUEST["in_$db_fld"]);
       if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
       mkin ($db_fld, $in_val, 's');
     }
