@@ -109,7 +109,7 @@ if (isset($_SESSION['s_msg'])) {
 <p>
 
 <form name="person_data"
-      action="people_maint_action"
+      action="people_maint_action.php"
       method="post">
 <table border="1">
 <tr>
