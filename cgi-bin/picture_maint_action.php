@@ -329,6 +329,7 @@ header ("$next_header?in_pid=$next_pid");
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-<a href="picture_maint?in_pid=<?php echo $next_pid;?>">Return to Picture Maintenance</a>
+<a href="picture_maint.php?in_pid=<?php echo $next_pid;?>">
+  Return to Picture Maintenance</a>
 </body>
 </html>
