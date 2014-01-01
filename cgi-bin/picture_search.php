@@ -278,7 +278,8 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
     if ($result) {
       while ($row = mysql_fetch_array($result)) {
         $pid = $row["pid"];
-        $pic_href = "<a href=\"picture_maint?in_pid=$pid\" target=\"_blank\">";
+        $pic_href = '<a href="picture_maint.php?in_pid=$pid" '
+            . 'target="_blank">';
         $thumb = "<img src=\"display.php?in_pid=$pid&in_size=small\">";
         echo " <tr>\n";
         echo "  <td>$thumb</td>\n";

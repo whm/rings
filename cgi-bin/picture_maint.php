@@ -97,7 +97,7 @@ if ($result) {
         foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
     }
 }
-if ( isset($in_pid) && !isset($row["pid"] ) {
+if ( isset($in_pid) && !isset($row["pid"]) ) {
     $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
 }
 
@@ -214,7 +214,7 @@ require ('page_top.php');
 <p> 
 
 <form name="picture_data" 
-      action="picture_maint_action" 
+      action="picture_maint_action.php" 
       onsubmit="return verifyInput()"
       method="post">
 <table border="0">

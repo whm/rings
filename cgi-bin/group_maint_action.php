@@ -79,10 +79,7 @@ $next_header = "REFRESH: 0; URL=$next_url";
 $next_group_id = $in_group_id;
 
 // set update message area
-if (!session_is_registered('s_msg')) {
-  session_register('s_msg');
-  $_SESSION['s_msg'] = '';
-}
+$_SESSION['s_msg'] = '';
 $ok = 'color="#009900"';
 $warn = 'color="#330000"';
 
