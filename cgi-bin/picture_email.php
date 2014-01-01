@@ -8,6 +8,11 @@ $in_subject  = $_REQUEST['in_subject'];
 $in_pid  = $_REQUEST['in_pid'];
 $in_cc_addr  = $_REQUEST['in_cc_addr'];
 $in_to_addr  = $_REQUEST['in_to_addr'];
+$in_button_to  = $_REQUEST['in_button_to'];
+$in_button_cc  = $_REQUEST['in_button_cc'];
+$in_button_send  = $_REQUEST['in_button_send'];
+$in_button_cancel  = $_REQUEST['in_button_cancel'];
+$in_button_email  = $_REQUEST['in_button_email'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -94,7 +99,7 @@ function get_mail_addresses(addrType) {
                 name="in_to_addr"><?php echo $in_to_addr;?></textarea>
   </td>
   <td><input type="button"
-             name="btn_to"
+             name="in_button_to"
              value="Lookup To Addresses"
              onClick="get_mail_addresses('to')">
   </td>
@@ -107,7 +112,7 @@ function get_mail_addresses(addrType) {
                 name="in_cc_addr"><?php echo $in_cc_addr;?></textarea>
   </td>
   <td><input type="button"
-             name="btn_cc"
+             name="in_button_cc"
              value="Lookup CC Addresses"
              onClick="get_mail_addresses('cc')">
   </td>
@@ -133,11 +138,11 @@ function get_mail_addresses(addrType) {
 <tr>
   <td align="center" valign="top" align="right">
     <input type="submit"
-         name="btn_send"
+         name="in_button_send"
          value="send">
     <br>
     <input type="submit"
-         name="btn_cancel"
+         name="in_button_cancel"
          value="cancel">
   </td>
   <td align="center">

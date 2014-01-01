@@ -8,6 +8,11 @@ $in_message  = $_REQUEST['in_message'];
 $in_from_addr  = $_REQUEST['in_from_addr'];
 $in_cc_addr  = $_REQUEST['in_cc_addr'];
 $in_to_addr  = $_REQUEST['in_to_addr'];
+$in_button_to  = $_REQUEST['in_button_to'];
+$in_button_cc  = $_REQUEST['in_button_cc'];
+$in_button_send  = $_REQUEST['in_button_send'];
+$in_button_cancel  = $_REQUEST['in_button_cancel'];
+$in_button_email  = $_REQUEST['in_button_email'];
 // ----------------------------------------------------------
 //
 
@@ -40,7 +45,7 @@ if (!$result) {
 }
 
 // get the picture information
-if (strlen($btn_send)>0) {
+if (isset($in_button_send)) {
     
     // get to: distribution list
     $to_addrs = array();
@@ -150,7 +155,7 @@ if ( strlen($err_msg)>0 ) {
     echo $err_msg;
     echo "<p>\n";
     echo "$warn Mail not sent.$mend";
-} elseif (strlen($btn_cancel)>0) {
+} elseif (isset($in_button_cancel)) {
     echo '<h3>No mail sent.  List cleared.</h3>';
     $_SESSION['s_email_list'] = '';
 } elseif (!$mailResult) {
@@ -167,7 +172,7 @@ if ( strlen($err_msg)>0 ) {
 }
 ?>
 
-<?php if (strlen($btn_cancel) == 0) { ?>
+<?php if (isset($in_button_cancel)) { ?>
 <form name="emailMessageAction"
       method="post"
       action="picture_email.php">
@@ -176,7 +181,7 @@ if ( strlen($err_msg)>0 ) {
 <input type="hidden" name="in_from_addr" value="<?php echo $in_from_addr;?>">
 <input type="hidden" name="in_subject" value="<?php echo $in_subject;?>">
 <input type="hidden" name="in_message" value="<?php echo $in_message;?>">
-<input type="submit" name="btn_email" value="Back to Email">
+<input type="submit" name="in_button_email" value="Back to Email">
 </form>
 <?php } ?>
 

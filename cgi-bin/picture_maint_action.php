@@ -12,6 +12,10 @@ $in_type  = $_REQUEST['in_type'];
 $in_date_last_maint  = $_REQUEST['in_date_last_maint'];
 $in_picture_sequence  = $_REQUEST['in_picture_sequence'];
 $in_newuids  = $_REQUEST['in_newuids'];
+$in_button_update  = $_REQUEST['in_button_update'];
+$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
+$in_button_rotate_right  = $_REQUEST['in_button_rotate_right'];
+$in_button_del  = $_REQUEST['in_button_del'];
 // ----------------------------------------------------------
 //
 
@@ -130,7 +134,7 @@ $warn = 'color="#330000"';
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
-if ( strlen($btn_update)>0 ) {
+if ( isset($in_button_update) ) {
     
     // Try and get the old user record
     $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
@@ -253,7 +257,7 @@ if ( $update_flag ) {
         $_SESSION['s_msg'] .= "No changes found.<br>";
     }
     
-} elseif ( strlen($btn_del)>0 ) {
+} elseif ( isset($in_button_del) ) {
     
     // -- Delete a record -------------------------------
     
@@ -279,13 +283,13 @@ if ( $update_flag ) {
 
     $next_uid = 'CLEARFORM';
     
-} elseif ( strlen($btn_rotate_right)+strlen($btn_rotate_left)>0 ) {
+} elseif ( isset($in_button_rotate_right) || isset($in_button_rotate_left) ) {
 
     $sh_cmd = "/usr/bin/ring-rotate";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
-    if (strlen($btn_rotate_right)>0) {
+    if (isset($in_button_rotate_right)) {
         $sh_cmd .= " --right";
     } else {
         $sh_cmf .= " --left";

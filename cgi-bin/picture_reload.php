@@ -5,6 +5,7 @@
 //
 $in_pid  = $_REQUEST['in_pid'];
 $in_setdate  = $_REQUEST['in_setdate'];
+$in_button_find  = $_REQUEST['in_button_find'];
 // ----------------------------------------------------------
 //
 
@@ -52,7 +53,7 @@ if (!$cnx) {
     </td>
 </tr>
 <tr><td colspan="2" align="center">
-    <input type="submit" name="btn_find" value="Find Picture">
+    <input type="submit" name="in_button_find" value="Find Picture">
     </td>
 </tr>
 </table>
@@ -94,7 +95,7 @@ if (isset($upload)) {
     
     $noinput = true;
     $a_file = $_FILES["in_filename"];
-    if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
+    if ( ($a_file != 'none') && isset($a_file) ) {
         $noinput=false;
     }
     if ($noinput) {
@@ -108,7 +109,7 @@ if (isset($upload)) {
             && $_FILES[$fileID]['error'] !=4) {
             echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
         }
-        if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
+        if (isset($tmp_file) && ($tmp_file != "none")) {
             $original_file      = $_FILES[$fileID]["name"];
             $content_type       = $_FILES[$fileID]["type"];
             $original_file_size = $_FILES[$fileID]["size"];

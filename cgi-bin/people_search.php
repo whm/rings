@@ -8,6 +8,9 @@ $in_description  = $_REQUEST['in_description'];
 $in_uid  = $_REQUEST['in_uid'];
 $in_visibility  = $_REQUEST['in_visibility'];
 $in_cn  = $_REQUEST['in_cn'];
+$in_button_find  = $_REQUEST['in_button_find'];
+$in_button_next  = $_REQUEST['in_button_next'];
+$in_button_back  = $_REQUEST['in_button_back'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -56,7 +59,7 @@ $thisTitle = 'People Search';
 require ('page_top.php');
 
 // Set up if we have been here before
-if (isset($button_find)) {
+if (isset($in_button_find)) {
     $word = "WHERE";
     $condition = '';
     $_SESSION['sp_uid']         = '';
@@ -106,10 +109,10 @@ if (isset($button_find)) {
     } else {
         $_SESSION['sp_num_user_rows'] = 0;
     }
-} elseif (strlen($button_next)>0) {
+} elseif (isset($in_button_next)) {
     $in_uid = $_SESSION['sp_uid'];
     $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] + 30;
-} elseif (strlen($button_back)>0) {
+} elseif (isset($in_button_back)) {
     $in_uid = $_SESSION['sp_uid'];
     $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] - 30;
     if ($_SESSION['sp_start_row'] < 0) {$_SESSION['sp_start_row'] = 0;}
@@ -175,7 +178,7 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 </tr>
 <tr>
   <td colspan="2" align="center">
-  <input type="submit" name="button_find" value="Find">
+  <input type="submit" name="in_button_find" value="Find">
   </td>
 </tr>
 </table>
@@ -199,7 +202,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
       <tr>
       <td>
         <?php if ($_SESSION['sp_start_row']+30<$_SESSION['sp_num_user_rows']) {?>
-        <input type="submit" name="button_next" value="Next Page">
+        <input type="submit" name="in_button_next" value="Next Page">
         <?php } ?>
       </td>
       <td align="center">
@@ -208,7 +211,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
       </td>
       <td align="right">
         <?php if ($start_row_flag>0) { ?>
-        <input type="submit" name="button_back" value="Previous Page"> 
+        <input type="submit" name="in_button_back" value="Previous Page"> 
         <?php } ?>
       </td>
       </tr>
@@ -241,7 +244,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
     }
     echo "</table>\n";
   } else {
-    if (strlen($button_find)>0) {
+    if (isset($in_button_find)) {
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";
       echo "$sel\n";

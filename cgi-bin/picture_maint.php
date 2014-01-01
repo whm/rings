@@ -4,6 +4,12 @@
 // Register Global Fix
 //
 $in_pid  = $_REQUEST['in_pid'];
+$in_button_next  = $_REQUEST['in_button_next'];
+$in_button_find  = $_REQUEST['in_button_find'];
+$in_button_update  = $_REQUEST['in_button_update'];
+$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
+$in_button_rotate_right  = $_REQUEST['in_button_rotate_right'];
+$in_button_del  = $_REQUEST['in_button_del'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -50,7 +56,7 @@ if (isset($in_pid)) {
     $in_pid = '';
 }
 
-if (strlen($btn_next)>0) {
+if (isset($in_button_next)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid = '$in_pid' ";
@@ -64,8 +70,8 @@ if (strlen($btn_next)>0) {
     $in_pid++;
 }
 
-if ((strlen($last_datetime) == 0) 
-    && (strlen($_SESSION['sess_picture_date'])>0)) {
+if ((!isset($last_datetime)) 
+    && (isset($_SESSION['sess_picture_date']))) {
     $last_datetime = $_SESSION['sess_picture_date'];
 }
 
@@ -91,7 +97,7 @@ if ($result) {
         foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
     }
 }
-if ( (strlen($in_pid)>0) && (strlen(trim($row["pid"]))==0) ) {
+if ( isset($in_pid) && !isset($row["pid"] ) {
     $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
 }
 
@@ -198,8 +204,8 @@ require ('page_top.php');
 </tr>
 <tr>
   <td align="center" colspan="2">
-  <input type="submit" name="btn_find" value="Find">
-  <input type="submit" name="btn_next" value="Next">
+  <input type="submit" name="in_button_find" value="Find">
+  <input type="submit" name="in_button_next" value="Next">
   </td>
 </tr>
 </table>
@@ -223,23 +229,23 @@ require ('page_top.php');
     <tr>
     <td><input type="submit" 
                onClick="setUpdate()"
-               name="btn_update" 
+               name="in_button_update" 
                value="Update">
     </td>
     <td align="center">
         <input type="submit" 
-               name="btn_rotate_left" 
+               name="in_button_rotate_left" 
                value="Rotate Left">
     </td>
     <td align="center">
         <input type="submit" 
-               name="btn_rotate_right" 
+               name="in_button_rotate_right" 
                value="Rotate Right">
     </td>
     <td align="center">
         <input type="submit" 
                onClick="setDelete()"
-               name="btn_del" 
+               name="in_button_del" 
                value="Delete">
     </td>
     <td align="right">

@@ -4,6 +4,7 @@
 // Register Global Fix
 //
 $in_pid  = $_REQUEST['in_pid'];
+$in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //
 // File: add_email_list.php
@@ -31,7 +32,7 @@ function closeWindow() {
 
 <h3>Add Picture to Email List</h3>
 <form name="addEmailList" action="add_email_list.php">
-<input type="submit" name="btn_submit" value="Select Picture">
+<input type="submit" name="in_button_submit" value="Select Picture">
 <input type="hidden" name="in_pid" value="<?php echo $id;?>">
 </form>
 
@@ -39,7 +40,7 @@ function closeWindow() {
 </html>
 
 <?php
-if (strlen($in_pid) > 0 && $in_pid > 0 )  {
+if ( isset($in_pid) )  {
 
     $_SESSION['s_email_list'] .= $in_pid.' ';
     echo "<script language=\"JavaScript\">\n";

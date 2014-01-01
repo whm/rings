@@ -13,6 +13,9 @@ $in_group_uid  = $_REQUEST['in_group_uid'];
 $in_deluids  = $_REQUEST['in_deluids'];
 $in_uid  = $_REQUEST['in_uid'];
 $in_newuids  = $_REQUEST['in_newuids'];
+$in_button_add = $_REQUEST['in_button_add'];
+$in_button_update = $_REQUEST['in_button_update'];
+$in_button_delete = $_REQUEST['in_button_delete'];
 // ----------------------------------------------------------
 //
 
@@ -88,7 +91,7 @@ $warn = 'color="#330000"';
 
 $update_flag = $add_flag = 0;
 
-if ( isset($btn_update) ) {
+if ( isset($in_button_update) ) {
 
   // Try and get the old user record
   $sel = "SELECT * FROM groups WHERE group_id='$in_group_id'";
@@ -167,7 +170,7 @@ if ( $update_flag ) {
     }
   }
 
-} elseif ( $add_flag || (isset($btn_add)) ) {
+} elseif ( $add_flag || (isset($in_button_add)) ) {
 
   // -- Add a new record -------------------------------
 
@@ -215,7 +218,7 @@ if ( $update_flag ) {
   }
   $next_uid = $in_uid;
 
-} elseif ( isset($btn_delete) ) {
+} elseif ( isset($in_button_delete) ) {
 
   // -- Delete a record -------------------------------
 
