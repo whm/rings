@@ -71,7 +71,7 @@ if (!$result) {
 }
 
 // No spaces allowed in the identifier
-$in_uid = pref_replace ('/\s+/', '', $in_uid);
+$in_uid = preg_replace ('/\s+/', '', $in_uid);
 
 // how to get back
 $next_url = "group_maint.php";
@@ -120,8 +120,7 @@ if ( $update_flag ) {
   for ($i=0; $i<$fld_cnt; $i++) {
     $db_fld = mysql_field_name ($result, $i);
     if ($db_fld == "date_added") {continue;}
-    $in_fld = "in_$db_fld";
-    $in_val = trim($$in_fld);
+    $in_val = trim($_REQUEST["in_$db_fld"]);
     if (trim($in_val) != trim($row[$db_fld])) {
       $in_val = str_replace ("'", "\\'", $in_val);
       $cmd .= "$comma $db_fld='$in_val' ";
@@ -189,8 +188,7 @@ if ( $update_flag ) {
     $fld_cnt = mysql_num_fields ($result);
     for ($i=0; $i<$fld_cnt; $i++) {
       $db_fld = mysql_field_name ($result, $i);
-      $form_fld = "in_$db_fld";
-      $in_val = trim($$form_fld);
+      $in_val = trim($_REQUEST["in_$db_fld"]);
       mkin ($db_fld, $in_val, 's');
     }
     $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";

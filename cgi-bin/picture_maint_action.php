@@ -120,7 +120,7 @@ $in_date_last_maint = $now;
 $in_date_added = $now;
 
 // No spaces allowed in the identifier
-$in_pid = pref_replace ('/\s+/', '', $in_pid);
+$in_pid = preg_replace ('/\s+/', '', $in_pid);
 
 // how to get back
 $next_url = "picture_maint.php";
