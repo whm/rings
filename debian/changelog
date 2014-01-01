@@ -5,8 +5,9 @@ picture-rings (2.5) unstable; urgency=low
   * Fix problem with href's created in the thumbnail display.
   * Use package location for ldap authentication and authorization 
     routines from the new whm-ldapauth-php package.
+  * Replace $PHP_SELF with $_SERVER['PHP_SELF'].
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 30 Dec 2013 23:35:55 -0800
+ -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Tue, 31 Dec 2013 20:44:06 -0800
 
 picture-rings (2.4) unstable; urgency=low
 

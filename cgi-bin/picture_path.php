@@ -136,7 +136,7 @@ $sel .= "LIMIT $start_row,100 ";
 ?>
 
 <p>
-<form method="post" action="<?php print $PHP_SELF;?>">
+<form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
 <p>
 <input type="submit" name="button_refresh" value="Refresh">

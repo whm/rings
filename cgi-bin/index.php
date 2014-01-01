@@ -162,7 +162,7 @@ setcookie($cookie_id, $cookie_value, $cookie_life);
 function gotoGroup() {
     var f;
     f = document.pick_group;
-    var new_group_url = "<?php echo $PHP_SELF;?>?in_group_id="
+    var new_group_url = "<?php echo $_SERVER['PHP_SELF'];?>?in_group_id="
                       + f.in_group_id.value;
     location = new_group_url;
 }
@@ -188,7 +188,7 @@ function showPreferences(){
 <h1>Pick a Picture Group</h1>
 
 <blockquote>
-<form name="pick_group" action="<?php echo $PHP_SELF;?>">
+<form name="pick_group" action="<?php echo $_SERVER['PHP_SELF'];?>">
 
 <table border="0" cellpadding="2">
 
@@ -311,10 +311,11 @@ if (strlen($_SESSION['whm_directory_user'])>0) {
     if (strlen($_SESSION['s_email_list']) > 0) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
-    echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
+    echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_logout=2">Logout</a>';
+    echo "</h5>\n";
 } else {
-    echo '<a href="'.$PHP_SELF.'?in_login=2">Login</a>'."\n";
-    echo '&nbsp;-&nbsp;To see all of the pictures you need to login.'."\n";
+    echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_login=2">Login</a>' . "\n";
+    echo '&nbsp;-&nbsp;To see all of the pictures you need to login' . "\n";
     echo "</h5>\n";
 }
 ?>

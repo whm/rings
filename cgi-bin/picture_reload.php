@@ -44,7 +44,7 @@ if (!$cnx) {
 
 ?>
 
-<form method="post" action="<?php echo $PHP_SELF;?>">
+<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
 <table border="0">
 <tr><td>Picture ID:</td>
     <td>
@@ -68,7 +68,7 @@ if (!$cnx) {
 // -- Display the upload form
     
 echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
-echo "action=\"$PHP_SELF\">\n";
+echo 'action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
 echo '<input type="hidden" name="in_pid" value="'.$in_pid.'">'."\n";
 echo "<table border=\"1\">\n";
 echo "<tr>\n";

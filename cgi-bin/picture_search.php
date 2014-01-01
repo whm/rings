@@ -147,7 +147,7 @@ require ('page_top.php');
 ?>
 
 <p>
-<form method="post" action="<?php print $PHP_SELF;?>">
+<form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
 <div align="center">
 <table>
