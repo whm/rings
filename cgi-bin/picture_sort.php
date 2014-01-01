@@ -291,7 +291,7 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 ?>
 
 <p>
-<form method="post" action="<?php print $PHP_SELF;?>">
+<form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
 <div align="center">
 <table border="1">

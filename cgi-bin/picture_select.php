@@ -387,13 +387,13 @@ if (isset($in_ring_pid)) {
         
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-        echo '<a href="'.$PHP_SELF;
+        echo '<a href="' . $_SERVER['PHP_SELF'];
         echo '?in_logout=1';
         echo '&in_ring_pid='.$in_ring_pid.'">';
         echo '<img src="/rings-images/logout.jpg" border="0">';
         echo "</a>\n";
     } else {
-        echo '<a href="'.$PHP_SELF;
+        echo '<a href="' . $_SERVER['PHP_SELF'];
         echo '?in_login=2';
         echo '&in_ring_pid='.$in_ring_pid.'">';
         echo '<img src="/rings-images/login.jpg" border="0">';
@@ -458,7 +458,7 @@ hideReload();
 
     echo "function slideShowNext(aUID, aDate, aMilliSec) {\n";
     echo "    var url;\n";
-    echo '    url = "'.$PHP_SELF
+    echo '    url = "'.$_SERVER['PHP_SELF']
         . '?in_ring_uid='.$in_ring_uid
         . '&in_ring_pid='.urlencode($this_pid)
         . '&in_ring_next_date='.urlencode($this_picture_date)

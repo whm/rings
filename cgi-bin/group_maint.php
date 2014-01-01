@@ -75,11 +75,15 @@ require ('page_top.php');
 ?>
 
 <div align="center">
-<form name="find_group" action="<?php print $PHP_SELF;?>" method="post">
+<form name="find_group"
+      action="<?php print $_SERVER['PHP_SELF'];?>"
+      method="post">
 <table border="1">
 <tr>
   <td align="right">Group ID:</td>
-  <td><input type="text" name="in_group_id" value="<?php print $in_group_id;?>">
+  <td><input type="text"
+             name="in_group_id"
+             value="<?php print $in_group_id;?>">
   </td>
 </tr>
 <tr>

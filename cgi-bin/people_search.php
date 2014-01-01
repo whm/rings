@@ -123,7 +123,7 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 ?>
 
 <p>
-<form method="post" action="<?php print $PHP_SELF;?>">
+<form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
 <div align="center">
 <table>

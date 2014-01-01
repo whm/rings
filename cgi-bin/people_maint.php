@@ -19,7 +19,7 @@ function prt ($fld) {
   $str = trim ($fld);
   if (strlen($str) == 0) {
     $str = "&nbsp;";
-  } 
+  }
   return $str;
 }
 
@@ -73,7 +73,9 @@ require ('page_top.php');
 ?>
 
 <div align="center">
-<form name="find_person" action="<?php print $PHP_SELF;?>" method="post">
+<form name="find_person"
+      action="<?php print $_SERVER['PHP_SELF'];?>"
+      method="post">
 <table border="1">
 <tr>
   <td align="right">Person's UID:</td>
@@ -85,32 +87,32 @@ require ('page_top.php');
   <input type="submit" name="btn_find" value="Find">
   </td>
 </tr>
-<?php 
-if (isset($_SESSION['s_msg'])) { 
-  if (strlen($_SESSION['s_msg'])>0) { 
+<?php
+if (isset($_SESSION['s_msg'])) {
+  if (strlen($_SESSION['s_msg'])>0) {
 ?>
 <tr><td bgcolor="#ffffff" align="center" colspan="2">
     <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
     </td>
 </tr>
-<?php 
-  } 
+<?php
+  }
   $_SESSION['s_msg'] = '';
 }?>
 </table>
 </form>
 
-<p> 
+<p>
 
-<form name="person_data" 
-      action="people_maint_action" 
+<form name="person_data"
+      action="people_maint_action"
       method="post">
 <table border="1">
 <tr>
  <td colspan="2">
  <table border="0" width="100%">
  <tr>
-   <td> 
+   <td>
     &nbsp;
    </td>
    <td align="right">
@@ -155,17 +157,17 @@ if (isset($_SESSION['s_msg'])) {
 <tr>
  <td align="right">Public:</td>
  <td>
-  <?php 
+  <?php
   $chk_show = $chk_hide = $chk_invis = '';
   if     ($row['visibility'] == 'SHOW')   { $chk_show  = 'CHECKED'; }
   elseif ($row['visibility'] == 'HIDDEN') { $chk_hide  = 'CHECKED'; }
   else                                    { $chk_invis = 'CHECKED'; }
   ?>
-  <input type="radio" name="in_visibility" value="SHOW" <?php echo $chk_show;?>>Show 
+  <input type="radio" name="in_visibility" value="SHOW" <?php echo $chk_show;?>>Show
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_visibility" value="HIDDEN" <?php echo $chk_hide;?>>Hidden 
+  <input type="radio" name="in_visibility" value="HIDDEN" <?php echo $chk_hide;?>>Hidden
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_visibility" value="INVISIBLE" <?php echo $chk_invis;?>>Invisibile 
+  <input type="radio" name="in_visibility" value="INVISIBLE" <?php echo $chk_invis;?>>Invisibile
  </td>
 </tr>
 
