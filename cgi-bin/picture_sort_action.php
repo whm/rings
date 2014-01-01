@@ -1,4 +1,9 @@
 <?php
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_button_update = $_REQUEST['in_button_update'];
+// ----------------------------------------------------------
 
 // File: picture_sort_action.php
 // Author: Bill MacAllister
@@ -42,12 +47,12 @@ if ( strlen($btn_update)>0 ) {
   $flds['grade']        = 's';
   $flds['picture_date'] = 's';
 
-  for ($i=0; $i<$up_picture_cnt; $i++) {
+  for ($i=0; $i<$_REQUEST['up_picture_cnt']; $i++) {
 
     $cmd = "date_last_maint='$up_date_last_maint'";
     $update_cnt = 0;
 
-    $up_name = "up_pid_$i"; $up_pid = $$up_name;
+    $up_pid = $_REQUEST["up_pid_$i"];
 
     // Try and get the old user record
     $sel = "SELECT * ";
@@ -56,8 +61,7 @@ if ( strlen($btn_update)>0 ) {
     if ($result) {
       $row = mysql_fetch_array($result);
       foreach ($flds as $fld => $type) {
-        $up_name = "up_${fld}_${i}"; 
-        $up_val = trim($$up_name);
+        $up_val = trim($_REQUEST["up_${fld}_${i}"]);
         $db_val = trim($row[$fld]);
         if ("$up_val" != "$db_val") {
           $cmd .= ", $fld='$up_val' ";
@@ -82,7 +86,7 @@ if ( strlen($btn_update)>0 ) {
     }
 
     // check for a rotation request
-    $up_name = "up_rotate_${i}"; $rotation = $$up_name;
+    $rotation = $_REQUEST["up_rotate_${i}"];
     $update_cnt = 0;
     if ($rotation == 'LEFT' || $rotation == 'RIGHT') {
         $update_cnt++;
