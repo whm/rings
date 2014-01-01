@@ -60,7 +60,7 @@ if ($result) {
     $this_description = trim($row["group_description"]);
     $this_date_maint  = $row["date_last_maint"];
     $this_date_added  = $row["date_added"];
-    $maint = "<a href=\"group_maint?in_group_id=$this_id\">";
+    $maint = "<a href=\"group_maint.php?in_group_id=$this_id\">";
     echo " <tr>\n";
     echo "  <td>$maint$this_id</a></td>\n";
     echo "  <td>$this_name</td>\n";
