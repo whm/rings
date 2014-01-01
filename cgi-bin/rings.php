@@ -12,10 +12,8 @@ $in_ring_pid  = $_REQUEST['in_ring_pid'];
 // author: Bill MacAllister
 // date: December 31, 2001
 //
-
-// Open a session
-require('whm_php_sessions.inc');
-require('whm_php_auth.inc');
+// Open a session, perform authorization check, and include authorization 
+// routines unique to the rings.
 require('inc_auth_policy.php');
 
 if ($in_logout>0) {session_destroy();}

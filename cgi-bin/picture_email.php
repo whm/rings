@@ -15,10 +15,8 @@ $in_to_addr  = $_REQUEST['in_to_addr'];
 // author: Bill MacAllister
 // date: 22-Nov-2004
 //
-
-// Open a session
-require('whm_php_auth.inc');
-require('whm_php_sessions.inc');
+// Open a session, perform authorization check, and include authorization 
+// routines unique to the rings.
 require('inc_auth_policy.php');
 
 require ('/etc/whm/rings_dbs.php');
