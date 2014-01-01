@@ -71,7 +71,7 @@ if (!$result) {
 }
 
 // No spaces allowed in the identifier
-$in_uid = ereg_replace (" ","",$in_uid);
+$in_uid = pref_replace ('/\s+/', '', $in_uid);
 
 // how to get back
 $next_url = "group_maint.php";
