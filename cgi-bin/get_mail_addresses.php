@@ -4,6 +4,7 @@
 // Register Global Fix
 //
 $in_type  = $_REQUEST['in_type'];
+$in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //
 // File: get_mail_addresses.php
@@ -71,7 +72,7 @@ for ($i=0; $i<$ret_cnt;$i++) {
 }
 ?>
 </select>
-<input type="submit" name="btn_submit" value="Set Address">
+<input type="submit" name="in_button_submit" value="Set Address">
 <input type="hidden" name="fld_count" value="<?php echo $cnt;?>">
 </form>
 

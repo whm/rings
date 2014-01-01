@@ -4,6 +4,10 @@
 // Register Global Fix
 //
 $in_group_id  = $_REQUEST['in_group_id'];
+$in_button_find = $_REQUEST['in_button_find'];
+$in_button_add = $_REQUEST['in_button_add'];
+$in_button_update = $_REQUEST['in_button_update'];
+$in_button_delete = $_REQUEST['in_button_delete'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -88,7 +92,7 @@ require ('page_top.php');
 </tr>
 <tr>
   <td align="center" colspan="2">
-  <input type="submit" name="btn_find" value="Find">
+  <input type="submit" name="in_button_find" value="Find">
   </td>
 </tr>
 <?php 
@@ -235,13 +239,13 @@ if ($result) {
   <table border="0" width="100%">
   <tr>
    <td>
-      <input type="submit" name="btn_add" value="Add">
+      <input type="submit" name="in_button_add" value="Add">
    </td>
    <td align="center">
-      <input type="submit" name="btn_update" value="Update">
+      <input type="submit" name="in_button_update" value="Update">
    </td>
    <td align="right">
-      <input type="submit" name="btn_delete" value="Delete">
+      <input type="submit" name="in_button_delete" value="Delete">
    </td>
   </tr>
   </table>

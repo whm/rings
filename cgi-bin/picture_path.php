@@ -1,4 +1,11 @@
 <?PHP
+// ----------------------------------------------------------
+// Register Global Fix
+//
+$in_button_refresh  = $_REQUEST['in_button_refresh'];
+$in_start_row  = $_REQUEST['in_start_row'];
+// ----------------------------------------------------------
+//
 // -------------------------------------------------------------
 // picture_sort.php
 // author: Bill MacAllister
@@ -115,7 +122,9 @@ function print_row ($n, $r) {
 $thisTitle = 'Paths';
 require ('page_top.php');
 
-if (strlen($start_row) == 0) {$start_row = 0;}
+if (!isset($in_start_row)) {
+    $start_row = 0;
+}
 
 $sel = "SELECT p.pid, ";
 $sel .= "p.key_words, ";
@@ -132,15 +141,15 @@ $sel .= "ON (p.pid = d.pid) ";
 $sel .= "LEFT OUTER JOIN people_or_places pop ";
 $sel .= "ON (d.uid = pop.uid) ";
 $sel .= "WHERE p.group_path IS NULL ";
-$sel .= "LIMIT $start_row,100 ";
+$sel .= "LIMIT $in_start_row,100 ";
 ?>
 
 <p>
 <form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
 <p>
-<input type="submit" name="button_refresh" value="Refresh">
-<input type="text" name="start_row" value="<?php print $start_row;?>">
+<input type="submit" name="in_button_refresh" value="Refresh">
+<input type="text" name="in_start_row" value="<?php print $in_start_row;?>">
 <p>
 
 <?php 
@@ -187,7 +196,7 @@ if ($result) {
     }
     
 } else {
-    if (strlen($button_find)>0) {
+    if (isset($in_button_refresh)) {
         echo "<font color=\"#ff0000\">Nothing found!</font>\n";
     }
 }

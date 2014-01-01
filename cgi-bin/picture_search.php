@@ -13,6 +13,9 @@ $in_pid  = $_REQUEST['in_pid'];
 $in_order  = $_REQUEST['in_order'];
 $in_taken_by  = $_REQUEST['in_taken_by'];
 $in_description  = $_REQUEST['in_description'];
+$in_button_find  = $_REQUEST['in_button_find'];
+$in_button_next  = $_REQUEST['in_button_next'];
+$in_button_back  = $_REQUEST['in_button_back'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -95,16 +98,23 @@ require ('page_top.php');
   if ($in_count == 0) {$in_count = 30;}
 
   // Set up if we have been here before
-  if (strlen($button_find)>0) {
+  if (isset($in_button_find)) {
 
     $condition = '';
-    $condition .= set_search ('key_words',      'key',        '=',$in_key,        $condition);
-    $condition .= set_search ('picture_date',   'start_date', '>',$in_start_date, $condition);
-    $condition .= set_search ('picture_date',   'end_date',   '<',$in_end_date,   $condition);
-    $condition .= set_search ('taken_by',       'taken_by',   '=',$in_taken_by,   $condition);
-    $condition .= set_search ('description',    'description','=',$in_description,$condition);
-    $condition .= set_search ('date_last_maint','start_maint','>',$in_start_maint,$condition);
-    $condition .= set_search ('date_last_maint','end_maint',  '<',$in_end_maint,  $condition);
+    $condition .= set_search ('key_words',
+                              'key', '=', $in_key, $condition);
+    $condition .= set_search ('picture_date',
+                              'start_date', '>', $in_start_date, $condition);
+    $condition .= set_search ('picture_date',
+                              'end_date', '<', $in_end_date, $condition);
+    $condition .= set_search ('taken_by',
+                              'taken_by', '=', $in_taken_by, $condition);
+    $condition .= set_search ('description',
+                              'description', '=', $in_description, $condition);
+    $condition .= set_search ('date_last_maint',
+                              'start_maint', '>', $in_start_maint, $condition);
+    $condition .= set_search ('date_last_maint',
+                              'end_maint', '<', $in_end_maint, $condition);
 
     $_SESSION['s_order_by'] = $in_order;
 
@@ -129,10 +139,10 @@ require ('page_top.php');
     } else {
       $_SESSION['s_num_user_rows'] = 0;
     }
-  } elseif (strlen($button_next)>0) {
+  } elseif (isset($in_button_next)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $in_count;
-  } elseif (strlen($button_back)>0) {
+  } elseif (isset($in_button_back)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $in_count;
     if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
@@ -216,7 +226,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
 
 <tr>
   <td colspan="2" align="center">
-  <input type="submit" name="button_find" value="Find">
+  <input type="submit" name="in_button_find" value="Find">
   </td>
 </tr>
 </table>
@@ -237,7 +247,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
       <td>
         <?php if ($_SESSION['s_start_row']
                   +$in_count<$_SESSION['s_num_user_rows']) { ?>
-        <input type="submit" name="button_next" value="Next Page">
+        <input type="submit" name="in_button_next" value="Next Page">
         <?php } ?>
       </td>
       <td align="center">
@@ -247,7 +257,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
       <td align="right">
         <?php if ((strlen($_SESSION['s_start_row'])>0) 
                   && ($_SESSION['s_start_row'] > 0)) { ?>
-        <input type="submit" name="button_back" value="Previous Page"> 
+        <input type="submit" name="in_button_back" value="Previous Page"> 
         <?php } ?>
       </td>
       </tr>
@@ -282,7 +292,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
     }
     echo "</table>\n";
   } else {
-    if (strlen($button_find) > 0) {
+    if (isset($in_button_find)) {
       echo "$sel<br>\n";
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";

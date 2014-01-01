@@ -3,9 +3,10 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_pid  = $_REQUEST['in_pid'];
-$in_grade  = $_REQUEST['in_grade'];
-$in_username  = $_REQUEST['in_username'];
+$in_pid = $_REQUEST['in_pid'];
+$in_grade = $_REQUEST['in_grade'];
+$in_username = $_REQUEST['in_username'];
+$in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //
 // File: get_VOTE.php
@@ -40,7 +41,7 @@ function closeWindow() {
 </tr>
 <tr><td align="center"><input type="radio" name="in_grade" value="C">C</td>
 </tr>
-<tr><td align="center"><input type="submit" name="btn_submit" 
+<tr><td align="center"><input type="submit" name="in_button_submit" 
                               value="Set Grade">
 </td>
 </tr>

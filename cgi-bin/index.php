@@ -11,6 +11,7 @@ $in_pos  = $_REQUEST['in_pos'];
 $in_grade  = $_REQUEST['in_grade'];
 $in_type  = $_REQUEST['in_type'];
 $in_pref_display  = $_REQUEST['in_pref_display'];
+$in_button_set = $_REQUEST['in_button_set'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -236,7 +237,7 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 
     <tr>
     <td rowspan="4">
-    <input type="submit" name="btn_set" value="Set">
+    <input type="submit" name="in_button_set" value="Set">
     </td>
     <th align="right">Picture Size:</th>
     <td><input type="radio" <?php echo $chk_large;?> name="in_size"
@@ -377,7 +378,7 @@ if ( strlen($in_group_id) > 0) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (strlen($_SESSION['whm_directory_user'])==0 && 
+        if (!isset($_SESSION['whm_directory_user']) && 
             auth_person_hidden($this_uid) > 0) {
             continue;
         }
