@@ -197,7 +197,7 @@ $thisTitle = 'Picture Sort';
 require ('page_top.php');
 
 // Set up if we have been here before
-if (isset($in_button_find) && isset($in_new)) {
+if (isset($in_button_find) || isset($in_new)) {
     
     $condition = '';
     $condition .= set_search ('picture_date',
@@ -354,9 +354,9 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
         var in_group_display = new Array();
      </script>
      <input type="text" 
-              name="in_group_search" 
-              onkeyup="find_select_items(this, this.form.elements['in_uids[]'], in_group_values, in_group_display);">
-        <br>
+            name="in_group_search" 
+            onkeyup="find_select_items(this, this.form.elements['in_uids[]'], in_group_values, in_group_display);">
+     <br>
      <select name="in_uids[]" size="4" multiple>
      <option value="None">None
 <?php
@@ -467,7 +467,7 @@ if ($result) {
     }
     
     echo "</table>\n";
-    echo "<input type=\"submit\" name=\"btn_update\" value=\"Update\">\n";
+    echo '<input type="submit" name="in_button_update" value="Update">' . "\n";
     echo "<input type=\"hidden\"\n";
     echo "       name=\"up_picture_cnt\"\n";
     echo "       value=\"$cnt\">\n";

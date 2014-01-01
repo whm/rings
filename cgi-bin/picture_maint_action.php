@@ -145,7 +145,7 @@ if ( isset($in_button_update) ) {
     }
     $update_flag = 1;
     $add_flag = 0;
-    if (strlen($this_picture)==0) {
+    if (!isset($this_picture)) {
         // no old record, they must want a new one for this id
         $add_flag = 1;
         $update_flag = 0;
@@ -181,8 +181,7 @@ if ( $update_flag ) {
             if ($thisName == $db_fld) {$fld_update_flag = 1;}
         }
         if ($fld_update_flag == 0) {continue;}
-        $in_fld = "in_$db_fld";
-        $in_val = trim(stripslashes($$in_fld));
+        $in_val = trim(stripslashes($_REQUEST["in_$db_fld"]));
         
         // remember the last entered value    
         $sess_fld = "session_$db_fld";
@@ -206,10 +205,10 @@ if ( $update_flag ) {
     $next_pid = $in_pid;
     
     // delete picture details
-    for ($i=0; $i<$del_cnt; $i++) {
-        $name = "del_$i"; $a_flag = $$name;
-        if (strlen ($a_flag) > 0) {
-            $name = "del_uid_$i"; $a_uid = $$name;
+    for ($i=0; $i<$_REQUEST['in_del_cnt']; $i++) {
+        $a_flag = $_REQUEST["in_del_$i"];
+        if (isset($a_flag)) {
+            $a_uid = $_REQUEST["in_del_uid_$i"];
             $cmd = "DELETE FROM picture_details ";
             $cmd .= "WHERE uid = '$a_uid' ";
             $cmd .= "AND pid = $in_pid ";
@@ -229,7 +228,7 @@ if ( $update_flag ) {
     }
     
     // add picture details
-    for ($i=0; $i<$add_cnt; $i++) {
+    for ($i=0; $i<$_REQUEST['in_add_cnt']; $i++) {
         $a_uid = '';
         if (isset($in_newuids[$i])) {$a_uid = $in_newuids[$i];}
         if (strlen($a_uid) > 0) {

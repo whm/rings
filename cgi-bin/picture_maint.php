@@ -3,13 +3,17 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_pid  = $_REQUEST['in_pid'];
-$in_button_next  = $_REQUEST['in_button_next'];
-$in_button_find  = $_REQUEST['in_button_find'];
-$in_button_update  = $_REQUEST['in_button_update'];
-$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
-$in_button_rotate_right  = $_REQUEST['in_button_rotate_right'];
-$in_button_del  = $_REQUEST['in_button_del'];
+$in_pid = $_REQUEST['in_pid'];
+$in_button_next = $_REQUEST['in_button_next'];
+$in_button_find = $_REQUEST['in_button_find'];
+$in_button_update = $_REQUEST['in_button_update'];
+$in_button_rotate_left = $_REQUEST['in_button_rotate_left'];
+$in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
+$in_button_del = $_REQUEST['in_button_del'];
+$in_last_date = $_REQUEST['in_last_date'];
+$in_last_hour = $_REQUEST['in_last_hour'];
+$in_last_minute = $_REQUEST['in_last_minute'];
+$in_last_second = $_REQUEST['in_last_second'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -270,17 +274,17 @@ require ('page_top.php');
  <td> <input type="text" name="in_picture_date" size="30"
              value="<?php print $row["picture_date"]; ?>">
       <input type="hidden" 
-             name="last_date" 
-             value="<?php echo $last_date;?>"> 
+             name="in_last_date" 
+             value="<?php echo $in_last_date;?>"> 
       <input type="hidden" 
-             name="last_hour" 
-             value="<?php echo $last_hour;?>"> 
+             name="in_last_hour" 
+             value="<?php echo $in_last_hour;?>"> 
       <input type="hidden" 
-             name="last_minute" 
-             value="<?php echo $last_minute;?>">
+             name="in_last_minute" 
+             value="<?php echo $in_last_minute;?>">
       <input type="hidden" 
-             name="last_second" 
-             value="<?php echo $last_second;?>">
+             name="in_last_second" 
+             value="<?php echo $in_last_second;?>">
 <?php if (strlen($last_datetime)>0) {?>
       <br>
       Last Date: <?php echo $last_datetime."\n";?>
@@ -375,10 +379,12 @@ if (strlen($thisID) > 0) {
       $picturePeople .= "<tr>\n";
       $picturePeople .= " <td>$a_name</td>\n";
       $picturePeople .= " <td align=\"center\">\n";
-      $picturePeople .= "   <input type=\"checkbox\" name=\"del_$people_cnt\" ";
-      $picturePeople .=           "value=\"delete\">\n";
-      $picturePeople .= "   <input type=\"hidden\" name=\"del_uid_$people_cnt\" ";
-      $picturePeople .=           "value=\"$a_uid\">\n";
+      $picturePeople .= '   <input type="checkbox'
+          . 'name="in_del_' . $people_cnt . '" '
+          . 'value="delete">' . "\n";
+      $picturePeople .= '   <input type="hidden" '
+          . 'name="in_del_uid_' . $people_cnt . ' '
+          . 'value="' . $a_uid . '">' . "\n";
       $picturePeople .= " </td>\n";
       $picturePeople .= "</tr>\n";
       $people_cnt++;
@@ -484,8 +490,8 @@ if (isset($_SESSION['s_msg'])) {
 </tr>
 </table>
 
-<input type="hidden" name="del_cnt" value="<?php print $people_cnt;?>">
-<input type="hidden" name="add_cnt" value="<?php print $add_cnt;?>">
+<input type="hidden" name="in_del_cnt" value="<?php print $people_cnt;?>">
+<input type="hidden" name="in_add_cnt" value="<?php print $add_cnt;?>">
 
 </form>
 <?php require('page_bottom.php'); ?>
