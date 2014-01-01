@@ -3,7 +3,9 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_group_id  = $_REQUEST['in_group_id'];
+$in_group_id = $_REQUEST['in_group_id'];
+$in_group_name = $_REQUEST['in_group_name'];
+$in_group_description = $_REQUEST['in_group_description'];
 $in_button_find = $_REQUEST['in_button_find'];
 $in_button_add = $_REQUEST['in_button_add'];
 $in_button_update = $_REQUEST['in_button_update'];
