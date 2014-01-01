@@ -229,7 +229,7 @@ if (!isset($upload)) {
                 }
                 
                 echo "$pid uploaded. ";
-                echo "<a href=\"picture_maint?in_pid=$pid\" "
+                echo "<a href=\"picture_maint.php?in_pid=$pid\" "
                     . "target=\"_blank\">Update Picture Details.</a>";
                 echo "<br>\n";
 
@@ -252,7 +252,7 @@ if (!isset($upload)) {
         system($sh_cmd);
     }
     echo "<p>\n";
-    echo "<a href=\"picture_load\">Back to Load Files</a>\n";
+    echo "<a href=\"picture_load.php\">Back to Load Files</a>\n";
 }
 
 mysql_close($cnx);

@@ -89,7 +89,7 @@ function unzip_and_load ($zipfile) {
             }
             
             echo "$pid uploaded. ";
-            echo "<a href=\"picture_maint?in_pid=$pid\" "
+            echo "<a href=\"picture_maint.php?in_pid=$pid\" "
                 . "target=\"_blank\">Update Picture Details.</a>";
             echo "<br>\n";
             
@@ -292,7 +292,7 @@ if (!isset($upload)) {
                     }
                     
                     echo "$pid uploaded. ";
-                    echo "<a href=\"picture_maint?in_pid=$pid\" "
+                    echo "<a href=\"picture_maint.php?in_pid=$pid\" "
                         . "target=\"_blank\">Update Picture Details.</a>";
                     echo "<br>\n";
                     
@@ -301,7 +301,7 @@ if (!isset($upload)) {
         }
     }
     echo "<p>\n";
-    echo "<a href=\"picture_load\">Back to Load Files</a>\n";
+    echo "<a href=\"picture_load.php\">Back to Load Files</a>\n";
 }
 
 if (strlen($_SESSION['msg']) > 0) {

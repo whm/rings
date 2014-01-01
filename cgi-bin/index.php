@@ -307,9 +307,9 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 
 <?php
 if (strlen($_SESSION['whm_directory_user'])>0) {
-    echo "<h5><a href=\"index_maint\">Maintenance Menu</a><br>\n";
+    echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     if (strlen($_SESSION['s_email_list']) > 0) {
-        echo "<a href=\"picture_email\">Email Selected Pictures</a><br>\n";
+        echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
     echo "<a href=\"$PHP_SELF?in_logout=2\">Logout</a></h5>\n";
 } else {
