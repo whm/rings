@@ -379,7 +379,7 @@ if (strlen($thisID) > 0) {
       $picturePeople .= "<tr>\n";
       $picturePeople .= " <td>$a_name</td>\n";
       $picturePeople .= " <td align=\"center\">\n";
-      $picturePeople .= '   <input type="checkbox'
+      $picturePeople .= '   <input type="checkbox" '
           . 'name="in_del_' . $people_cnt . '" '
           . 'value="delete">' . "\n";
       $picturePeople .= '   <input type="hidden" '
