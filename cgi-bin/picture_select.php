@@ -120,14 +120,14 @@ function showReload(){
 }
 
 function get_vote(idx,username) {
-    var win = window.open("get_vote.php?id="+idx+"&username="+username,
+    var win = window.open("get_vote.php?in_id="+idx+"&username="+username,
                           "Give the Picture a Grade",
                           "width=400,height=150,status=no");
     return false;
 }
 
 function add_email_list(idx) {
-    var win = window.open("add_email_list.php?id="+idx,
+    var win = window.open("add_email_list.php?in_id="+idx,
                           "Add this picture to the email list",
                           "width=400,height=150,status=no");
     return false;

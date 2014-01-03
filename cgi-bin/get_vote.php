@@ -3,6 +3,7 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
+$in_id = $_REQUEST['in_id'];
 $in_pid = $_REQUEST['in_pid'];
 $in_grade = $_REQUEST['in_grade'];
 $in_username = $_REQUEST['in_username'];
@@ -35,7 +36,7 @@ function closeWindow() {
 <table border="0">
 
 <tr><td align="center"><input type="radio" name="in_grade" value="A">A</td>
-    <td rowspan="4"><?php echo $id.$username;?></td>
+    <td rowspan="4"><?php echo "$in_id $username";?></td>
 </tr>
 <tr><td align="center"><input type="radio" name="in_grade" value="B">B</td>
 </tr>
@@ -47,17 +48,15 @@ function closeWindow() {
 </tr>
 </table>
 
-<input type="hidden" name="in_pid" value="<?php echo $id;?>">
-<input type="hidden" name="in_username" value="<?php echo $username;?>">
+<input type="hidden" name="in_pid" value="<?php echo $in_id;?>">
+<input type="hidden" name="in_username" value="<?php echo $in_username;?>">
 </form>
 
 </body>
 </html>
 
 <?php
-if (strlen($in_username) > 0 &&
-    preg_match("/[ABC]/",$in_grade) &&
-    $in_pid > 0 )  {
+if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
 
     // connect to the database
     require ('/etc/whm/rings_dbs.php');
