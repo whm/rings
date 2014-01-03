@@ -372,7 +372,8 @@ if (isset($in_ring_pid)) {
     
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     
-        echo '<a href="picture_maint?in_pid='.$this_pid.'" target="_blank">';
+        echo '<a href="picture_maint.php'
+            . '?in_pid='.$this_pid.'" target="_blank">';
         echo '<img src="/rings-images/icon-edit.png" border="0" ';
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
         echo 'alt="Edit Picture Information">';
