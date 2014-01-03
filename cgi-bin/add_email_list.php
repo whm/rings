@@ -3,6 +3,7 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
+$in_id  = $_REQUEST['in_id'];
 $in_pid  = $_REQUEST['in_pid'];
 $in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
@@ -32,8 +33,9 @@ function closeWindow() {
 
 <h3>Add Picture to Email List</h3>
 <form name="addEmailList" action="add_email_list.php">
+Picture ID: <?php echo $in_id;?>
 <input type="submit" name="in_button_submit" value="Select Picture">
-<input type="hidden" name="in_pid" value="<?php echo $id;?>">
+<input type="hidden" name="in_pid" value="<?php echo $in_id;?>">
 </form>
 
 </body>

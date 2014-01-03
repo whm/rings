@@ -159,7 +159,7 @@ function get_mail_addresses(addrType) {
 </tr>
 </table>
 
-</form
+</form>
 
 <a href="index.php">
 <img src="/rings-images/rings.png" border="0"

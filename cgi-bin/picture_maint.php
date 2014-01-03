@@ -383,7 +383,7 @@ if (strlen($thisID) > 0) {
           . 'name="in_del_' . $people_cnt . '" '
           . 'value="delete">' . "\n";
       $picturePeople .= '   <input type="hidden" '
-          . 'name="in_del_uid_' . $people_cnt . ' '
+          . 'name="in_del_uid_' . $people_cnt . '" '
           . 'value="' . $a_uid . '">' . "\n";
       $picturePeople .= " </td>\n";
       $picturePeople .= "</tr>\n";
