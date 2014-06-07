@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+#
+# Export files from the rings into a format that is suitable for display
+# as a static website.
 
 use strict;
 use Cwd;
