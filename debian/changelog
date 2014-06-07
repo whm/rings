@@ -1,3 +1,15 @@
+picture-rings (2.7) unstable; urgency=low
+
+  * Add --example to ring-export to document the configuration variables
+    supported.
+  * Change ring-export to read the ~/.rings file before reading the 
+    configuration presented on the command line.
+  * Fix up problems with setting datetime from previous update in 
+    picture_maint.
+  * Add a back puppet to picture_maint.
+
+ -- Bill MacAllister <mac@spowl.ca-zephyr.org>  Sat, 07 Jun 2014 13:27:13 -0700
+
 picture-rings (2.6) unstable; urgency=low
 
   * Bug fixes.  Full file name in href.  HTML syntax.
