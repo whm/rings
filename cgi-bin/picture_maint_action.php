@@ -171,7 +171,7 @@ if ( $update_flag ) {
     
     # check for duplicate date, sequence
     $seq = date_dup_check($in_picture_date, $in_pid, $cnx);
-    if ($seq > 0) {$in_picture_sequence = $seq;}
+    $_SESSION['maint_last_datetime'] = $in_picture_date;
 
     $up_msg = '';
     for ($i=0; $i<$fld_cnt; $i++) {

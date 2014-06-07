@@ -4,18 +4,19 @@
 // Register Global Fix
 //
 $in_pid = $_REQUEST['in_pid'];
-$in_button_next = $_REQUEST['in_button_next'];
 $in_button_find = $_REQUEST['in_button_find'];
+$in_button_next = $_REQUEST['in_button_next'];
+$in_button_prev = $_REQUEST['in_button_prev'];
 $in_button_update = $_REQUEST['in_button_update'];
 $in_button_rotate_left = $_REQUEST['in_button_rotate_left'];
 $in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
 $in_button_del = $_REQUEST['in_button_del'];
-$in_last_date = $_REQUEST['in_last_date'];
-$in_last_hour = $_REQUEST['in_last_hour'];
-$in_last_minute = $_REQUEST['in_last_minute'];
-$in_last_second = $_REQUEST['in_last_second'];
-// ----------------------------------------------------------
 //
+// ----------------------------------------------------------
+// Globals
+//
+$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)[\s-:](\d+)[-:](\d+)[-:](\d+)/';
+$DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
 // -------------------------------------------------------------
 // picture_maint.php
 // author: Bill MacAllister
@@ -32,6 +33,44 @@ function prt ($fld) {
     } 
     return $str;
 }
+
+// -- Increment the time part of a datetime.  Don't do anything if we 
+//    need to goto the next day.
+function increment_time ($a_datetime) {
+
+    global $DATE_FORMAT;
+    global $DATE_PATTERN;
+
+    if (preg_match($DATE_PATTERN, $a_datetime, $matches)) {
+        $a_year   = $matches[1];
+        $a_month  = $matches[2];
+        $a_day    = $matches[3];
+        $a_hour   = $matches[4];
+        $a_minute = $matches[5];
+        $a_second = $matches[6];
+        $a_second++;
+        if ($a_second > 59) {
+            $a_second = 0;
+            $a_minute++;
+        }
+        if ($a_minute > 59) {
+            $a_minute = 0;
+            $a_hour++;
+        }
+        if ($a_hour < 24) {
+            $return_datetime = sprintf($DATE_FORMAT,
+                                       $a_year,
+                                       $a_month,
+                                       $a_day,
+                                       $a_hour,
+                                       $a_minute,
+                                       $a_second);
+        }
+        return $return_datetime;
+    }
+    return;
+}
+
 
 //-------------------------------------------------------------
 // Start of main processing for the page
@@ -60,31 +99,31 @@ if (isset($in_pid)) {
     $in_pid = '';
 }
 
-if (isset($in_button_next)) {
-    $sel = "SELECT * ";
-    $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid = '$in_pid' ";
-    $result = mysql_query ($sel);
-    if ($result) {
-        $row = mysql_fetch_array($result);
-        if (strlen($row['pid'])>0) {
-            $last_datetime = $row['picture_date'];
+// Find the next or the previous picture.  Don't look too far.
+$loop_limit = 30;
+$loop_incre = 1;
+if (isset($in_button_next) || isset($in_button_prev)) {
+    if (isset($in_button_prev)) {
+        $loop_incre = -1;
+    }
+    $loop_cnt = 0;
+    for ($i=0; $i<$loop_limit; $i++) {
+        $in_pid = $in_pid + $loop_incre;
+        $sel = "SELECT pid ";
+        $sel .= "FROM pictures_information ";
+        $sel .= "WHERE pid = '$in_pid' ";
+        $result = mysql_query ($sel);
+        if ($result) {
+            if ($row = mysql_fetch_array($result)) {
+                if (isset($row['pid'])) {
+                    break;
+                }
+            }
         }
     }
-    $in_pid++;
 }
-
-if ((!isset($last_datetime)) 
-    && (isset($_SESSION['sess_picture_date']))) {
-    $last_datetime = $_SESSION['sess_picture_date'];
-}
-
-$pat = "/(\d+\-\d+\-\d+)\s+(\d+)\:(\d+)\:(\d+)/";
-if (preg_match($pat, $last_datetime, $mat)) {
-    $last_date = $mat[1];
-    $last_hour = $mat[2];
-    $last_minute = $mat[3];
-    $last_second = $mat[4];
+if (isset($_SESSION['maint_last_datetime'])) {
+    $next_datetime = increment_time($_SESSION['maint_last_datetime']);
 }
 
 $sel = "SELECT * ";
@@ -116,8 +155,8 @@ if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
     $row["taken_by"] = $session_taken_by;
 }
 ?>
-
 <html>
+<!-- Version 2.7 -->
 <head>
 <title>Picture Maintenance</title>
 <?php require('inc_page_head.php'); ?>
@@ -139,27 +178,11 @@ function setDelete() {
   click_delete = 1;
 }
 
-function incrementDate() {
+function setDatetime() {
   var f;
   f = document.picture_data;
 
-  var s = 1*f.last_second.value + 1;
-  var m = 1*f.last_minute.value;
-  var h = 1*f.last_hour.value;
-  if (s > 59) {
-      s = '0';
-      m = m + 1;
-  }
-  if (m > 59) {
-    m = "0";
-    h = h + 1;
-  }
-
-  if (s < 9) {s = "0"+s;}
-  if (m < 9) {m = "0"+m;}
-  if (h < 9) {h = "0"+h;}
-
-  f.in_picture_date.value = f.last_date.value + " " + h + ":" + m + ":" + s;
+  f.in_picture_date.value = f.next_datetime.value;
   f.set_date.checked = false;
   return false;
 
@@ -208,6 +231,7 @@ require ('page_top.php');
 </tr>
 <tr>
   <td align="center" colspan="2">
+  <input type="submit" name="in_button_prev" value="Back">
   <input type="submit" name="in_button_find" value="Find">
   <input type="submit" name="in_button_next" value="Next">
   </td>
@@ -273,26 +297,18 @@ require ('page_top.php');
  <td align="right">Picture Date:</td>
  <td> <input type="text" name="in_picture_date" size="30"
              value="<?php print $row["picture_date"]; ?>">
+
+      <?php if (isset($next_datetime)) { ?>
       <input type="hidden" 
-             name="in_last_date" 
-             value="<?php echo $in_last_date;?>"> 
-      <input type="hidden" 
-             name="in_last_hour" 
-             value="<?php echo $in_last_hour;?>"> 
-      <input type="hidden" 
-             name="in_last_minute" 
-             value="<?php echo $in_last_minute;?>">
-      <input type="hidden" 
-             name="in_last_second" 
-             value="<?php echo $in_last_second;?>">
-<?php if (strlen($last_datetime)>0) {?>
-      <br>
-      Last Date: <?php echo $last_datetime."\n";?>
+             name="next_datetime" 
+             value="<?php echo $next_datetime;?>"> 
       <br>
       <input type="checkbox"
              name="set_date"
-             onClick="incrementDate()">Increment Date
-<?php } ?>
+             onClick="setDatetime()">
+                Set Date to <?php echo $next_datetime; ?>
+      <?php } ?>
+
  </td>
 </tr>
 <tr>
@@ -452,13 +468,12 @@ if (is_array($uid_sort)) {
  </td>
 
  <td colspan="2" align="center" valign="top">
-
 <?php 
 if (isset($_SESSION['s_msg'])) { 
   if (strlen($_SESSION['s_msg'])>0) { 
 ?>
 <span bgcolor="#ffffff" align="center">
-    <font color="#ff0000"><?php print $s_msg;?></font>
+    <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
     </span>
 
 <?php 
