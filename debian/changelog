@@ -1,3 +1,10 @@
+picture-rings (2.8) unstable; urgency=low
+
+  * Handle case where the raw image is missing.  This is not handled well, but 
+    at least the situration is alerted correctly.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 27 Nov 2014 13:14:42 -0800
+
 picture-rings (2.7) unstable; urgency=low
 
   * Add --example to ring-export to document the configuration variables
