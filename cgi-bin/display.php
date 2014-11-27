@@ -59,9 +59,23 @@ if ($display_warning > 0) {
         $type    = $ret[1];
     }
     
-    header("Content-type: $type");
-    echo $picture;
-    flush();
+    if (strlen($picture) == 0) {
+        echo "<html>\n";
+        echo "<head>\n";
+        echo "<title>Ring Select</title>\n";
+        require('inc_page_head.php');
+        echo '<LINK href="/rings-styles/ring_style.css '
+            . 'rel="stylesheet" '
+            . 'type="text/css">' . "\n";
+        echo "<h1>Picture size not available</h1>\n";
+        echo "</head>\n";
+        echo "</html>\n";
+
+    } else {
+        header("Content-type: $type");
+        echo $picture;
+        flush();
+    }
     
 }
 mysql_close ($cnx);

@@ -217,7 +217,7 @@ sub write_file {
 
     my ($f, $c) = @_;
     if ($opt_debug) {dbg ("writing file:$f");}
-    open (outfile, ">$PROPS{'path'}$f");
+    open (outfile, '>', $PROPS{'path'} . $f);
     print outfile $c;
     close outfile;
 }
