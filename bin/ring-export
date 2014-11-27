@@ -21,7 +21,7 @@ my $opt_properties;
 # ------------------------------------------------
 # output debugging information
 
-sub debug_output {
+sub dbg {
 
     (my $tmp) = @_;
 
@@ -178,6 +178,17 @@ sub unix_seconds {
 
 sub read_properties {
     my ($pfile) = @_;
+    if (!-e $pfile) {
+        if ($opt_debug) {
+            dbg("Properties file not found: $pfile");
+        }
+        return;
+    }
+
+    if ($opt_debug) {
+        dbg("Reading properties file: $pfile");
+    }
+
     open (f, '<', $pfile);
     while (<f>) {
         if (!/^\#/) {
@@ -202,7 +213,7 @@ sub read_properties {
 sub write_file {
 
     my ($f, $c) = @_;
-    if ($opt_debug) {debug_output ("writing file:$f");}
+    if ($opt_debug) {dbg ("writing file:$f");}
     open (outfile, ">$PROPS{'path'}$f");
     print outfile $c;
     close outfile;
@@ -236,7 +247,7 @@ sub write_html {
     $sel .= "AND p.display_name NOT LIKE 'ZID%' ";
     $sel .= "ORDER BY p.display_name ";
     my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     my @names;
     my $name_cnt = 0;
@@ -385,7 +396,7 @@ sub read_and_write {
     $sel .= "ON d.pid=p.pid ";
     $sel .= "WHERE ".$PROPS{'selection'}." ";
     my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
     $sth->finish();
 
@@ -400,7 +411,7 @@ sub read_and_write {
     $sel .= "ON (tmp.pid = pic.pid) ";
     $sel .= "ORDER BY pic.picture_date ";
     my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {debug_output($sel);}
+    if ($opt_debug) {dbg($sel);}
     $sth->execute();
 
     my $hfile_index = 'index.html';
@@ -445,7 +456,7 @@ sub read_and_write {
 
     while (my $row = $sth->fetchrow_hashref) {
 
-        debug_output ("Processing $row->{pid} $row->{picture_date}");
+        dbg ("Processing $row->{pid} $row->{picture_date}");
 
         my $img_sel = "SELECT ";
         $img_sel .= "rw.picture raw, ";
@@ -464,7 +475,7 @@ sub read_and_write {
         $img_sel .= "ON (sm.pid = rw.pid) ";
         $img_sel .= "WHERE rw.pid = '$row->{pid}' ";
         my $img_sth = $DBH->prepare ($img_sel);
-        if ($opt_debug) {debug_output($img_sel);}
+        if ($opt_debug) {dbg($img_sel);}
         $img_sth->execute();
 
         if (my $img_row = $img_sth->fetchrow_hashref) {
@@ -644,7 +655,7 @@ sub read_and_write {
 # Main routine
 # -------------
 
-print ">>> ring-export.pl                    v: 28-Dec-2008\n";
+print ">>> ring-export\n";
 
 # -- get options
 GetOptions(
@@ -676,10 +687,8 @@ if ($opt_debug) {debug_output ("Initialize timer.");}
 
 # -- read the properties
 
-my $rfile = File::HomeDir->my_home . '.rings';
-if (-e $rfile) {
-    read_properties($rfile);
-}
+my $rfile = File::HomeDir->my_home . '/.rings';
+read_properties($rfile);
 read_properties($opt_properties);
 
 if ($opt_debug) {
@@ -711,9 +720,7 @@ ring_export.pl
 
 =head1 SYNOPSIS
 
- ring_export.pl --properties=filename \
-              [--debug] [--help] [--manual]
-
+ring-export --properties=filename [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
