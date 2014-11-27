@@ -144,6 +144,20 @@ if ( isset($in_pid) && !isset($row["pid"]) ) {
     $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
 }
 
+// Check to see if the raw image exists
+if (isset($in_pid)) {
+    $sel = "SELECT pid ";
+    $sel .= "FROM pictures_raw ";
+    $sel .= "WHERE pid = '$in_pid' ";
+    $result = mysql_query ($sel);
+    if ($result) {
+        $raw_row = mysql_fetch_array($result);
+        if (!isset($raw_row['pid'])) {
+            $_SESSION['s_msg'] .= "Raw image is missing for '$in_pid'.\n";
+        }
+    }
+}
+
 // some reasonable defaults
 if ($row["key_words"]=='NEW' && isset($session_key_words)) {
     $row["key_words"] = $session_key_words;
