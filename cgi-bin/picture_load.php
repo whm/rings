@@ -152,7 +152,7 @@ if (!isset($in_upload)) {
         echo "<tr>\n";
         echo " <td>\n";
         echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
-        echo "  <input type=\"file\" size=\"60\" name=\"$in_filename_$i\">\n";
+        echo "  <input type=\"file\" size=\"60\" name=\"in_filename_$i\">\n";
         echo "  </font>\n";
         echo " </td>\n";
         echo "</tr>\n";
