@@ -3,8 +3,9 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
+$in_upload        = $_REQUEST['in_upload'];
 $in_upload_slots  = $_REQUEST['in_upload_slots'];
-$in_type  = $_REQUEST['in_type'];
+$in_type          = $_REQUEST['in_type'];
 // ----------------------------------------------------------
 //
 
@@ -116,14 +117,14 @@ require ('/etc/whm/rings_dbs.php');
 // connect to the database
 $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
 if (!$cnx) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL host $mysql_host";
+    $_SESSION['msg'] .= "<br>Error connecting to MySQL host $mysql_host";
 }
 $result = mysql_select_db($mysql_db);
 if (!$result) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
+    $_SESSION['msg'] .= "<br>Error connecting to MySQL db $mysql_db";
 }
 
-if (!isset($upload)) {
+if (!isset($in_upload)) {
     
     // -- Display slots from
     echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
@@ -148,16 +149,17 @@ if (!isset($upload)) {
     echo "</tr>\n";
     echo "<tr>\n";
     for ($i=0; $i<$in_upload_slots; $i++) {
+        $a_file = $_REQUEST["in_filename_$i"];
         echo "<tr>\n";
         echo " <td>\n";
         echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
-        echo "  <input type=\"file\" size=\"60\" name=\"in_filename_$i\">\n";
+        echo "  <input type=\"file\" size=\"60\" name=\"$a_file\">\n";
         echo "  </font>\n";
         echo " </td>\n";
         echo "</tr>\n"; 
     }
     echo "</table>\n";
-    echo "<input type=\"submit\" name=\"upload\" value=\"upload\">\n";
+    echo "<input type=\"submit\" name=\"in_upload\" value=\"in_upload\">\n";
     echo "<input type=\"hidden\" name=\"in_upload_slots\"\n";
     echo "                       value=\"$in_upload_slots\">\n";
     echo "</form>\n";
