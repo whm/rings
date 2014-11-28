@@ -181,7 +181,7 @@ if (!isset($in_upload)) {
             echo "Error uploading ".$_FILES[$file_id]["name"]."<br>\n";
         }
         if (!isset($tmp_file) || strlen($tmp_file) == 0) {
-            continue; 
+            continue;
         }
         $original_file      = $_FILES[$file_id]["name"];
         $content_type       = $_FILES[$file_id]["type"];
@@ -189,13 +189,13 @@ if (!isset($in_upload)) {
         $a_date  = date("Y-m-d H:i:s");
         $z = strrpos ($original_file, ".");
         $tmp = substr ($original_file, 0, $z);
-            
+
         $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-            
+
         $pid = get_next($cnx, "pid");
-            
+
         $flds = $vals = '';
-            
+
         mkin ($cnx, 'pid',             $pid,               'n');
         mkin ($cnx, 'raw_picture_size',strlen($the_file_contents),'n');
         mkin ($cnx, 'file_name',       $original_file,     's');
@@ -220,16 +220,14 @@ if (!isset($in_upload)) {
         if (mysql_errno()) {
             $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
         }
-            
+
         echo "$pid uploaded. ";
         echo "<a href=\"picture_maint.php?in_pid=$pid\" "
             . "target=\"_blank\">Update Picture Details.</a>";
         echo "<br>\n";
-            
-        //        unlink ($tmp_file);
-        echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
-        echo "tmp_file:$tmp_file<br>\n";
-            
+
+        unlink ($tmp_file);
+
         if ($starting_pid==0) {$starting_pid = $pid;}
     }
     if ($starting_pid > 0) {
