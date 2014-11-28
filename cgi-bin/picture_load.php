@@ -169,80 +169,70 @@ if (!isset($in_upload)) {
     // -- Do the work
 
     $noinput = true;
-    for ($i=0; $noinput && ($i<$in_upload_slots); $i++) {
-        $a_file = $_REQUEST["in_filename_$i"] . '';
-        $_SESSION['msg'] .= "examining: $a_file ";
-        if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
-            $noinput=false;
-            $_SESSION['msg'] .= "$a_file ";
+    $starting_pid = 0;
+    echo "<h1>Upload results</h1>\n";
+    echo "<p>\n";
+
+    for ($i=0; $i<$in_upload_slots; $i++) {
+        $file_id = "in_filename_" . $i;
+        $tmp_file = $_FILES[$file_id]['tmp_name'];
+        if ($_FILES[$file_id]['error'] !=0
+            && $_FILES[$file_id]['error'] !=4) {
+            echo "Error uploading ".$_FILES[$file_id]["name"]."<br>\n";
         }
+        if (!isset($tmp_file) || strlen($tmp_file) == 0) {
+            continue; 
+        }
+        $original_file      = $_FILES[$file_id]["name"];
+        $content_type       = $_FILES[$file_id]["type"];
+        $original_file_size = $_FILES[$file_id]["size"];
+        $a_date  = date("Y-m-d H:i:s");
+        $z = strrpos ($original_file, ".");
+        $tmp = substr ($original_file, 0, $z);
+            
+        $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
+            
+        $pid = get_next($cnx, "pid");
+            
+        $flds = $vals = '';
+            
+        mkin ($cnx, 'pid',             $pid,               'n');
+        mkin ($cnx, 'raw_picture_size',strlen($the_file_contents),'n');
+        mkin ($cnx, 'file_name',       $original_file,     's');
+        mkin ($cnx, 'date_last_maint', $a_date,            'd');
+        mkin ($cnx, 'date_added',      $a_date,            'd');
+        $cmd = "INSERT INTO pictures_information ";
+        $cmd .= "($flds) VALUES ($vals) ";
+        $result = mysql_query ($cmd, $cnx);
+        if (mysql_errno()) {
+            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+            $_SESSION['msg'] .= $warn."SQL:$cmd$em";
+        }
+
+        $flds = $vals = '';
+        mkin ($cnx, 'pid',             $pid,               'n');
+        mkin ($cnx, 'picture_type',    $content_type,      's');
+        mkin ($cnx, 'picture',         $the_file_contents, 's');
+        mkin ($cnx, 'date_last_maint', $a_date,            'd');
+        mkin ($cnx, 'date_added',      $a_date,            'd');
+        $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
+        $result = mysql_query ($cmd, $cnx);
+        if (mysql_errno()) {
+            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+        }
+            
+        echo "$pid uploaded. ";
+        echo "<a href=\"picture_maint.php?in_pid=$pid\" "
+            . "target=\"_blank\">Update Picture Details.</a>";
+        echo "<br>\n";
+            
+        //        unlink ($tmp_file);
+        echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
+        echo "tmp_file:$tmp_file<br>\n";
+            
+        if ($starting_pid==0) {$starting_pid = $pid;}
     }
-    if ($noinput) {
-        echo "No Input files selected.\n";
-    } else {
-        $starting_pid = 0;
-        echo "<h1>Upload results</h1>\n";
-        echo "<p>\n";
-        $noinput = true;
-
-        for ($i=0; $i<$in_upload_slots; $i++) {
-            $fileID = "in_filename_" . $i;
-            $tmp_file = $_FILES[$fileID]['tmp_name'];
-            if ($_FILES[$fileID]['error'] !=0
-                && $_FILES[$fileID]['error'] !=4) {
-                echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n";
-            }
-            if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
-                $original_file      = $_FILES[$fileID]["name"];
-                $content_type       = $_FILES[$fileID]["type"];
-                $original_file_size = $_FILES[$fileID]["size"];
-                $a_date  = date("Y-m-d H:i:s");
-                $z = strrpos ($original_file, ".");
-                $tmp = substr ($original_file, 0, $z);
-
-                $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-
-                $pid = get_next($cnx, "pid");
-
-                $flds = $vals = '';
-
-                mkin ($cnx, 'pid',             $pid,               'n');
-                mkin ($cnx, 'raw_picture_size',strlen($the_file_contents),'n');
-                mkin ($cnx, 'file_name',       $original_file,     's');
-                mkin ($cnx, 'date_last_maint', $a_date,            'd');
-                mkin ($cnx, 'date_added',      $a_date,            'd');
-                $cmd = "INSERT INTO pictures_information ";
-                $cmd .= "($flds) VALUES ($vals) ";
-                $result = mysql_query ($cmd, $cnx);
-                if (mysql_errno()) {
-                    $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
-                    $_SESSION['msg'] .= $warn."SQL:$cmd$em";
-                }
-
-                $flds = $vals = '';
-                mkin ($cnx, 'pid',             $pid,               'n');
-                mkin ($cnx, 'picture_type',    $content_type,      's');
-                mkin ($cnx, 'picture',         $the_file_contents, 's');
-                mkin ($cnx, 'date_last_maint', $a_date,            'd');
-                mkin ($cnx, 'date_added',      $a_date,            'd');
-                $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
-                $result = mysql_query ($cmd, $cnx);
-                if (mysql_errno()) {
-                    $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
-                }
-
-                echo "$pid uploaded. ";
-                echo "<a href=\"picture_maint.php?in_pid=$pid\" "
-                    . "target=\"_blank\">Update Picture Details.</a>";
-                echo "<br>\n";
-
-                //        unlink ($tmp_file);
-                echo "the_file_contents:".strlen($the_file_contents)."<br>\n";
-                echo "tmp_file:$tmp_file<br>\n";
-
-                if ($starting_pid==0) {$starting_pid = $pid;}
-            }
-        }
+    if ($starting_pid > 0) {
         $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
         $sh_cmd .= " --start=$starting_pid";
         $sh_cmd .= " --host=$mysql_host";
