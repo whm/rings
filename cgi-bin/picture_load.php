@@ -107,6 +107,8 @@ $em   = "</font><br>\n";
 
 // -- main routine
 
+openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
+
 if ($_SESSION['upload_slots'] < 1) {$_SESSION['upload_slots'] = 5;}
 if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;
@@ -238,7 +240,7 @@ if (!isset($in_upload)) {
         $sh_cmd .= " --db=$mysql_db";
         $sh_cmd .= " --update";
         $sh_cmd .= " --dateupdate";
-        echo "Executing command:$sh_cmd<br>\n";
+        syslog(LOG_INFO, "Executing:$sh_cmd");
         $sh_cmd .= " --pass=$mysql_pass";
         system($sh_cmd);
     }
