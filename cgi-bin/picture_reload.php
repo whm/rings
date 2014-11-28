@@ -95,7 +95,7 @@ if (isset($upload)) {
     
     $noinput = true;
     $a_file = $_FILES["in_filename"];
-    if ( ($a_file != 'none') && isset($a_file) ) {
+    if (($a_file != 'none') && strlen($a_file) > 0) {
         $noinput=false;
     }
     if ($noinput) {
@@ -109,7 +109,7 @@ if (isset($upload)) {
             && $_FILES[$fileID]['error'] !=4) {
             echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
         }
-        if (isset($tmp_file) && ($tmp_file != "none")) {
+        if (strlen($tmp_file) > 0 && ($tmp_file != "none")) {
             $original_file      = $_FILES[$fileID]["name"];
             $content_type       = $_FILES[$fileID]["type"];
             $original_file_size = $_FILES[$fileID]["size"];
