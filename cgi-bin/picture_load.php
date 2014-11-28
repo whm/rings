@@ -21,10 +21,10 @@ require ('inc_page_open.php');
 //  $in_type != "n" anything else is a string
 
 function mkin ($cnx, $a_fld, $a_val, $in_type) {
-    
+
     global $flds;
     global $vals;
-    
+
     if (strlen($a_val) > 0) {
         $c = "";
         if (strlen($flds) > 0) {$c = ",";}
@@ -36,7 +36,7 @@ function mkin ($cnx, $a_fld, $a_val, $in_type) {
             $vals .= $c . $a_val;
         }
     }
-    
+
     return;
 }
 
@@ -44,7 +44,7 @@ function mkin ($cnx, $a_fld, $a_val, $in_type) {
 // get the next id
 
 function get_next ($cnx, $id) {
-    
+
     global $warn, $em;
 
     $return_number = 0;
@@ -125,7 +125,7 @@ if (!$result) {
 }
 
 if (!isset($in_upload)) {
-    
+
     // -- Display slots from
     echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
@@ -137,9 +137,9 @@ if (!isset($in_upload)) {
     echo "  </font>\n";
     echo "</form>\n";
     echo "<p>\n";
-    
+
     // -- Display the upload form
-    
+
     echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
     echo 'action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "<table border=\"1\">\n";
@@ -149,28 +149,29 @@ if (!isset($in_upload)) {
     echo "</tr>\n";
     echo "<tr>\n";
     for ($i=0; $i<$in_upload_slots; $i++) {
-        $a_file = $_REQUEST["in_filename_$i"];
         echo "<tr>\n";
         echo " <td>\n";
         echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
-        echo "  <input type=\"file\" size=\"60\" name=\"$a_file\">\n";
+        echo "  <input type=\"file\" size=\"60\" name=\"$in_filename_$i\">\n";
         echo "  </font>\n";
         echo " </td>\n";
-        echo "</tr>\n"; 
+        echo "</tr>\n";
     }
     echo "</table>\n";
-    echo "<input type=\"submit\" name=\"in_upload\" value=\"in_upload\">\n";
+    echo "<input type=\"submit\" name=\"Upload\" value=\"Upload\">\n";
+    echo "<input type=\"hidden\" name=\"in_upload\" value=\"in_upload\">\n";
     echo "<input type=\"hidden\" name=\"in_upload_slots\"\n";
     echo "                       value=\"$in_upload_slots\">\n";
     echo "</form>\n";
-    
+
 } else {
-    
+
     // -- Do the work
-    
+
     $noinput = true;
     for ($i=0; $noinput && ($i<$in_upload_slots); $i++) {
-        $a_file = $_FILES["in_filename_$i"] . '';
+        $a_file = $_REQUEST["in_filename_$i"] . '';
+        $_SESSION['msg'] .= "examining: $a_file ";
         if ( ($a_file != 'none') && (strlen($a_file)>0) ) {
             $noinput=false;
             $_SESSION['msg'] .= "$a_file ";
@@ -183,13 +184,13 @@ if (!isset($in_upload)) {
         echo "<h1>Upload results</h1>\n";
         echo "<p>\n";
         $noinput = true;
-        
+
         for ($i=0; $i<$in_upload_slots; $i++) {
             $fileID = "in_filename_" . $i;
             $tmp_file = $_FILES[$fileID]['tmp_name'];
-            if ($_FILES[$fileID]['error'] !=0 
+            if ($_FILES[$fileID]['error'] !=0
                 && $_FILES[$fileID]['error'] !=4) {
-                echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n"; 
+                echo "Error uploading ".$_FILES[$fileID]["name"]."<br>\n";
             }
             if ((strlen($tmp_file)>0) && ($tmp_file != "none")) {
                 $original_file      = $_FILES[$fileID]["name"];
@@ -198,11 +199,11 @@ if (!isset($in_upload)) {
                 $a_date  = date("Y-m-d H:i:s");
                 $z = strrpos ($original_file, ".");
                 $tmp = substr ($original_file, 0, $z);
-                
+
                 $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-                
+
                 $pid = get_next($cnx, "pid");
-                
+
                 $flds = $vals = '';
 
                 mkin ($cnx, 'pid',             $pid,               'n');
@@ -217,7 +218,7 @@ if (!isset($in_upload)) {
                     $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
                     $_SESSION['msg'] .= $warn."SQL:$cmd$em";
                 }
-                
+
                 $flds = $vals = '';
                 mkin ($cnx, 'pid',             $pid,               'n');
                 mkin ($cnx, 'picture_type',    $content_type,      's');
@@ -229,7 +230,7 @@ if (!isset($in_upload)) {
                 if (mysql_errno()) {
                     $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
                 }
-                
+
                 echo "$pid uploaded. ";
                 echo "<a href=\"picture_maint.php?in_pid=$pid\" "
                     . "target=\"_blank\">Update Picture Details.</a>";
