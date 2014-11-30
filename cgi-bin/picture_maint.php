@@ -145,7 +145,7 @@ if ( isset($in_pid) && !isset($row["pid"]) ) {
 }
 
 // Check to see if the raw image exists
-if (isset($in_pid)) {
+if (isset($in_pid) && strlen($in_pid) > 0) {
     $sel = "SELECT pid ";
     $sel .= "FROM pictures_raw ";
     $sel .= "WHERE pid = '$in_pid' ";
@@ -299,7 +299,14 @@ require ('page_top.php');
 </tr>
 <tr>
  <td align="right">Picture ID:</td>
- <td><?php print $row["pid"].'&nbsp;'.$row['file_name'].'&nbsp;'.$row['group_path']; ?>
+ <td><?php 
+    print $row["pid"]
+        . ' File:' . $row['file_name']
+        . ' Group:' . $row['group_path']
+        . ' <a href="picture_reload.php?in_pid=' . $in_pid . '" '
+        . 'target="_blank">Reload</a>'
+        . "\n";
+    ?>
     <input type="hidden" name="in_pid" value="<?php print $in_pid;?>">
  </td>
 </tr>
