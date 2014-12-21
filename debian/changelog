@@ -1,3 +1,14 @@
+picture-rings (2.9) UNRELEASED; urgency=medium
+
+  * Add link to cgi-bin-auth.  This will allow the use of webauth to
+    control access to the web pages.
+  * Start the conversion to mysqli.  Modify picture_sort and picture_maint
+    first.
+  * Correct problem in picture sort that was suppressing the display
+    of the picture details.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 20 Dec 2014 22:30:41 -0800
+
 picture-rings (2.8) unstable; urgency=low
 
   * Handle case where the raw image is missing.  This is not handled well, but 
