@@ -63,6 +63,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 // print a row of data
 
 function print_row ($n, $r) {
+    global $DBH;
     
     // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
