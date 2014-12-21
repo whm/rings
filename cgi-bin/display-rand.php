@@ -4,47 +4,45 @@ require('inc_auth_policy.php');
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
+require ('inc_db_connect.php');
 
 $thisGroup = 'rrpics';
 
 // Pick a specific ppe from our group
 $sel = "SELECT count(*) FROM picture_groups ";
 $sel .= "WHERE group_id='$thisGroup' ";
-$status = mysql_query ($sel, $db_link);
-$ret = mysql_fetch_array($status);
-$group_count = $ret[0];
+$status = $DBH->query($sel);
+$ret = $status->fetch_array(MYSQLI_ASSOC);
+$group_count = $ret->num_rows;
 
 $offset = rand(0,$group_count-1);
 $sel = "SELECT uid FROM picture_groups ";
 $sel .= "WHERE group_id='$thisGroup' ";
 $sel .= "LIMIT $offset, 1 ";
-$status = mysql_query ($sel, $db_link);
-$ret = mysql_fetch_array($status);
+$status = $DBH->query($sel);
+$ret = $status->fetch_array(MYSQLI_ASSOC);
 $uid = $ret[0];
 
 // Pick a picture at random
 $sel = "SELECT count(*) FROM picture_details ";
 $sel .= "WHERE uid='$uid' ";
-$status = mysql_query ($sel, $db_link);
-$ret = mysql_fetch_array($status);
+$status = $DBH->query ($sel);
+$ret = $status->fetch_array(MYSQLI_ASSOC);
 $picture_count = $ret[0];
 
 $offset = rand(0,$picture_count-1);
 $sel = "SELECT pid FROM picture_details ";
 $sel .= "WHERE uid='$uid' ";
 $sel .= "LIMIT $offset, 1 ";
-$status = mysql_query ($sel, $db_link);
-$ret = mysql_fetch_array($status);
+$status = $DBH->query ($sel);
+$ret = $status->fetch_array(MYSQLI_ASSOC);
 $pid = $ret[0];
 
 // Finally get the picture
 $sel = "SELECT picture_large,picture_type FROM pictures ";
 $sel .= "WHERE pid=$pid ";
-$status = mysql_query ($sel, $db_link);
-$ret = mysql_fetch_array($status);
+$status = $DBH->query($sel);
+$ret = $status->fetch_array(MYSQLI_ASSOC);
 $picture = $ret[0];
 $type    = $ret[1];
 

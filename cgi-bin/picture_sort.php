@@ -64,7 +64,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 
 function print_row ($n, $r) {
     global $DBH;
-    
+
     // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
     $sel .= 'p.display_name display_name ';
@@ -82,7 +82,7 @@ function print_row ($n, $r) {
             $br = "<hr>\n";
         }
     }
-    
+
     // check to see if the picture is possibly a duplicate
     $duplicate_list = '';
     $sel = 'SELECT pid ';
@@ -99,7 +99,7 @@ function print_row ($n, $r) {
       }
     }
     $sel .= "ORDER BY pid ";
-    
+
     //$duplicate_list .= $sel;
     $result = $DBH->query ($sel);
     $br = '';
@@ -111,7 +111,7 @@ function print_row ($n, $r) {
         }
     }
 
-    $pic_href 
+    $pic_href
         = '<a href="picture_maint.php?in_pid='.$r['pid'].'" target="_blank">';
     $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
     $up_pid = "up_pid_$n";
@@ -141,19 +141,19 @@ function print_row ($n, $r) {
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
-    echo "  <td> <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
+    echo "  <td> <input type=\"radio\" name=\"up_rotate_$n\"\n";
     echo "              value=\"LEFT\" >Left &nbsp;\n";
-    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
+    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n";
     echo "              value=\"RIGHT\">Right &nbsp;\n";
-    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n"; 
-    echo "              value=\"NONE\" CHECKED>None\n"; 
+    echo "       <input type=\"radio\" name=\"up_rotate_$n\"\n";
+    echo "              value=\"NONE\" CHECKED>None\n";
     echo "  </td>\n";
-    echo "  <td> <input type=\"radio\" name=\"up_grade_$n\"\n"; 
+    echo "  <td> <input type=\"radio\" name=\"up_grade_$n\"\n";
     echo "              value=\"A\" $chk_grade_a>A &nbsp;\n";
-    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n"; 
+    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n";
     echo "              value=\"B\" $chk_grade_b>B &nbsp;\n";
-    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n"; 
-    echo "              value=\"C\" $chk_grade_c>C\n"; 
+    echo "       <input type=\"radio\" name=\"up_grade_$n\"\n";
+    echo "              value=\"C\" $chk_grade_c>C\n";
     echo "  </td>\n";
     echo "</tr>\n";
     echo "<tr>\n";
@@ -183,7 +183,7 @@ require ('page_top.php');
 
 // Set up if we have been here before
 if (isset($in_button_find) || isset($in_new)) {
-    
+
     $condition = '';
     $condition .= set_search ('picture_date',
                               'start_date', '>', $in_start_date, $condition);
@@ -202,7 +202,7 @@ if (isset($in_button_find) || isset($in_new)) {
     if (strlen($cond) > 0) {$word = 'AND';}
 
     # override selections if the special group 'new' is selected
-    $uid_condition = '';  
+    $uid_condition = '';
     if (isset($in_new)>0) {
         $condition = '';
         $in_uids = array('new');
@@ -252,29 +252,29 @@ if (isset($in_button_find) || isset($in_new)) {
     }
     $_SESSION['s_list_select'] = $sel;
     $_SESSION['s_start_row'] = 0;
-    
+
     // find the number of rows
     $result = $DBH->query ($_SESSION['s_list_select']);
     if ($result) {
-        $_SESSION['s_num_user_rows'] = $result->num_rows; 
+        $_SESSION['s_num_user_rows'] = $result->num_rows;
     } else {
         $_SESSION['s_num_user_rows'] = 0;
     }
-    
+
 } elseif (isset($in_button_next)) {
-    
+
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $pics_per_page;
-    
+
 } elseif (isset($in_button_back)) {
-    
+
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $pics_per_page;
     if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
-    
+
 }
 
-$sel = $_SESSION['s_list_select'] . ' LIMIT ' 
+$sel = $_SESSION['s_list_select'] . ' LIMIT '
      . $_SESSION['s_start_row'] . ",$pics_per_page ";
 $end_row = $_SESSION['s_start_row'] + $pics_per_page;
 if ($end_row > $_SESSION['s_num_user_rows']) {
@@ -291,25 +291,25 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 <tr>
   <td align="right">Picture Date Range:</td>
   <td>
-  Start:<input type="text" name="in_start_date" 
+  Start:<input type="text" name="in_start_date"
                value="<?php print $_SESSION['sear_start_date']; ?>">
-  End:<input type="text" name="in_end_date" 
+  End:<input type="text" name="in_end_date"
                value="<?php print $_SESSION['sear_end_date']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Date Last Maint Range:</td>
   <td>
-  Start:<input type="text" name="in_start_maint" 
+  Start:<input type="text" name="in_start_maint"
          value="<?php print $_SESSION['sear_start_maint']; ?>">
-  End:<input type="text" name="in_end_maint" 
+  End:<input type="text" name="in_end_maint"
          value="<?php print $_SESSION['sear_end_maint']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Description:</td>
   <td>
-  <input type="text" name="in_description" 
+  <input type="text" name="in_description"
          value="<?php print $_SESSION['sear_description']; ?>">
   </td>
 </tr>
@@ -324,9 +324,9 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
 <tr>
   <td align="right">Order By:</td>
   <td>
-  Picture Date: <input type="radio" name="in_order" 
+  Picture Date: <input type="radio" name="in_order"
               <?php echo $sel_date;?> value="p.picture_date">
-  Picture ID: <input type="radio" name="in_order" 
+  Picture ID: <input type="radio" name="in_order"
               <?php echo $sel_pid;?> value="p.pid">
   </td>
 </tr>
@@ -338,8 +338,8 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
         var in_group_values  = new Array();
         var in_group_display = new Array();
      </script>
-     <input type="text" 
-            name="in_group_search" 
+     <input type="text"
+            name="in_group_search"
             onkeyup="find_select_items(this, this.form.elements['in_uids[]'], in_group_values, in_group_display);">
      <br>
      <select name="in_uids[]" size="4" multiple>
@@ -374,7 +374,7 @@ if ($result) {
 
 <p>
 
-<?php 
+<?php
 echo "$sel<br>\n";
 if (strlen($_SESSION['msg']) > 0) {
     echo $_SESSION['msg'];
@@ -382,8 +382,8 @@ if (strlen($_SESSION['msg']) > 0) {
 }
 
 if ($_SESSION['s_num_user_rows']>0) {
-    if (($end_row != $_SESSION['s_num_user_rows']) 
-        || ((strlen($_SESSION['s_start_row'])>0) 
+    if (($end_row != $_SESSION['s_num_user_rows'])
+        || ((strlen($_SESSION['s_start_row'])>0)
             && ($_SESSION['s_start_row'] > 0)) ) {
 ?>
 <table border="1">
@@ -401,18 +401,18 @@ if ($_SESSION['s_num_user_rows']>0) {
         <?php print $end_row; ?> of <?php print $_SESSION['s_num_user_rows'];?>
       </td>
       <td align="right">
-        <?php if ((strlen($_SESSION['s_start_row'])>0) 
+        <?php if ((strlen($_SESSION['s_start_row'])>0)
                  && ($_SESSION['s_start_row'] > 0)) { ?>
-        <input type="submit" name="in_button_back" value="Previous Page"> 
+        <input type="submit" name="in_button_back" value="Previous Page">
         <?php } ?>
       </td>
       </tr>
     </table>
 </td></tr>
 </table>
-<?php 
-  } 
-} 
+<?php
+  }
+}
 ?>
 
 </form>
@@ -446,11 +446,11 @@ if ($result) {
             $last_row = $row;
         }
     }
-    
+
     if ($last_row['pid'] > 0) {
         print_row ($cnt, $last_row);
     }
-    
+
     echo "</table>\n";
     echo '<input type="submit" name="in_button_update" value="Update">' . "\n";
     echo "<input type=\"hidden\"\n";
