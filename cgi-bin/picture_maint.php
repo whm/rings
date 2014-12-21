@@ -25,15 +25,6 @@ $DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-    $str = trim ($fld);
-    if (strlen($str) == 0) {
-        $str = "&nbsp;";
-    } 
-    return $str;
-}
-
 // -- Increment the time part of a datetime.  Don't do anything if we 
 //    need to goto the next day.
 function increment_time ($a_datetime) {
@@ -76,20 +67,8 @@ function increment_time ($a_datetime) {
 // Start of main processing for the page
 
 require ('/etc/whm/rings_dbs.php');
+require ('inc_db_connect.php');
 
-// connect to the database
-$conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$conn) {
-    $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
-    echo "$msg";
-    exit;
-}
-$cnx = mysql_select_db($mysql_db);
-if (!$cnx) {
-    $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
-    echo "$msg";
-    exit;
-}
 if (isset($in_pid)) {
     if ($in_pid=='CLEARFORM') {
         $add_flag = 1;
@@ -112,9 +91,9 @@ if (isset($in_button_next) || isset($in_button_prev)) {
         $sel = "SELECT pid ";
         $sel .= "FROM pictures_information ";
         $sel .= "WHERE pid = '$in_pid' ";
-        $result = mysql_query ($sel);
+        $result = $DBH::query ($sel);
         if ($result) {
-            if ($row = mysql_fetch_array($result)) {
+            if ($row = $result::fetch_array($result)) {
                 if (isset($row['pid'])) {
                     break;
                 }
@@ -129,9 +108,9 @@ if (isset($_SESSION['maint_last_datetime'])) {
 $sel = "SELECT * ";
 $sel .= "FROM pictures_information ";
 $sel .= "WHERE pid = '$in_pid' ";
-$result = mysql_query ($sel);
+$result = $DBH::query ($sel);
 if ($result) {
-    $row = mysql_fetch_array($result);
+    $row = $result::fetch_array($result);
     $this_type = trim($row["picture_type"]);
     if (strlen($row['picture_date']) == 0) {
         $row['picture_date'] = $row['date_taken'];
@@ -149,9 +128,9 @@ if (isset($in_pid) && strlen($in_pid) > 0) {
     $sel = "SELECT pid ";
     $sel .= "FROM pictures_raw ";
     $sel .= "WHERE pid = '$in_pid' ";
-    $result = mysql_query ($sel);
+    $result = $DBH::query ($sel);
     if ($result) {
-        $raw_row = mysql_fetch_array($result);
+        $raw_row = $result::fetch_array($result);
         if (!isset($raw_row['pid'])) {
             $_SESSION['s_msg'] .= "Raw image is missing for '$in_pid'.\n";
         }
@@ -402,53 +381,53 @@ $picturePeople = '';
 $thisID = $row["pid"];
 $people_cnt = 0;
 if (strlen($thisID) > 0) {
-  $cmd = "SELECT det.uid uid, p.display_name display_name ";
-  $cmd .= "FROM picture_details det, people_or_places p ";
-  $cmd .= "WHERE det.pid=$thisID ";
-  $cmd .= "AND det.uid = p.uid ";
-  $cmd .= "ORDER BY p.display_name ";
-  $result = mysql_query ($cmd);
-  if ($result) {
-    while ($link_row = mysql_fetch_array($result)) {
-      $a_uid = $link_row["uid"];
-      $a_name = $link_row["display_name"];
-      $found["$a_uid"] = 1;
-      $picturePeople .= "<tr>\n";
-      $picturePeople .= " <td>$a_name</td>\n";
-      $picturePeople .= " <td align=\"center\">\n";
-      $picturePeople .= '   <input type="checkbox" '
-          . 'name="in_del_' . $people_cnt . '" '
-          . 'value="delete">' . "\n";
-      $picturePeople .= '   <input type="hidden" '
-          . 'name="in_del_uid_' . $people_cnt . '" '
-          . 'value="' . $a_uid . '">' . "\n";
-      $picturePeople .= " </td>\n";
-      $picturePeople .= "</tr>\n";
-      $people_cnt++;
-    }
-  }  
+    $cmd = "SELECT det.uid uid, p.display_name display_name ";
+    $cmd .= "FROM picture_details det, people_or_places p ";
+    $cmd .= "WHERE det.pid=$thisID ";
+    $cmd .= "AND det.uid = p.uid ";
+    $cmd .= "ORDER BY p.display_name ";
+    $result = $DBH::query ($cmd);
+    if ($result) {
+        while ($link_row = $result::fetch_array($result)) {
+            $a_uid = $link_row["uid"];
+            $a_name = $link_row["display_name"];
+            $found["$a_uid"] = 1;
+            $picturePeople .= "<tr>\n";
+            $picturePeople .= " <td>$a_name</td>\n";
+            $picturePeople .= " <td align=\"center\">\n";
+            $picturePeople .= '   <input type="checkbox" '
+                . 'name="in_del_' . $people_cnt . '" '
+                . 'value="delete">' . "\n";
+            $picturePeople .= '   <input type="hidden" '
+                . 'name="in_del_uid_' . $people_cnt . '" '
+                . 'value="' . $a_uid . '">' . "\n";
+            $picturePeople .= " </td>\n";
+            $picturePeople .= "</tr>\n";
+            $people_cnt++;
+        }
+    }  
 }
 
 // Get a list of folks to add to the picture
 $cmd = "SELECT uid,display_name ";
 $cmd .= "FROM people_or_places ";
 $cmd .= "ORDER BY display_name ";
-$result = mysql_query ($cmd);
+$result = $DBH::query ($cmd);
 if ($result) {
-  while ($person_row = mysql_fetch_array($result)) {
-    $a_uid = $person_row["uid"];
-    if (isset($found["$a_uid"])) {continue;}
-    $uid_list[$a_uid] = $person_row['display_name'];
-    $thisWeight = 32767;
-    if ($_SESSION['s_uid_weight'][$a_uid]>0) {
-      $thisWeight = 30 
-                  * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
+    while ($person_row = $result::fetch_array($result)) {
+        $a_uid = $person_row["uid"];
+        if (isset($found["$a_uid"])) {continue;}
+        $uid_list[$a_uid] = $person_row['display_name'];
+        $thisWeight = 32767;
+        if ($_SESSION['s_uid_weight'][$a_uid]>0) {
+            $thisWeight = 30 
+                * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
+        }
+        $sort_uid = 'a'.sprintf("%05d", $thisWeight)
+                       . $person_row['display_name'];
+        $uid_sort[$sort_uid] = $a_uid;
     }
-    $sort_uid = 'a'.sprintf("%05d", $thisWeight)
-             . $person_row['display_name'];
-    $uid_sort[$sort_uid] = $a_uid;
-  }
-  ksort($uid_sort);
+    ksort($uid_sort);
 }
 
 ?>

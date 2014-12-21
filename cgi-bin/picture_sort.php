@@ -3,18 +3,18 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_uids  = $_REQUEST['in_uids'];
+$in_uids        = $_REQUEST['in_uids'];
 $in_start_date  = $_REQUEST['in_start_date'];
-$in_end_maint  = $_REQUEST['in_end_maint'];
-$in_end_date  = $_REQUEST['in_end_date'];
-$in_start_maint  = $_REQUEST['in_start_maint'];
-$in_pid  = $_REQUEST['in_pid'];
-$in_description  = $_REQUEST['in_description'];
-$in_order  = $_REQUEST['in_order'];
-$in_new  = $_REQUEST['in_new'];
-$in_button_find  = $_REQUEST['in_button_find'];
-$in_button_next  = $_REQUEST['in_button_next'];
-$in_button_back  = $_REQUEST['in_button_back'];
+$in_end_maint   = $_REQUEST['in_end_maint'];
+$in_end_date    = $_REQUEST['in_end_date'];
+$in_start_maint = $_REQUEST['in_start_maint'];
+$in_pid         = $_REQUEST['in_pid'];
+$in_description = $_REQUEST['in_description'];
+$in_order       = $_REQUEST['in_order'];
+$in_new         = $_REQUEST['in_new'];
+$in_button_find = $_REQUEST['in_button_find'];
+$in_button_next = $_REQUEST['in_button_next'];
+$in_button_back = $_REQUEST['in_button_back'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -25,25 +25,9 @@ $in_button_back  = $_REQUEST['in_button_back'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-    $str = trim ($fld);
-    if (strlen($str) == 0) {
-        $str = "&nbsp;";
-    } 
-    return $str;
-}
-
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
-if (!mysql_select_db($mysql_db, $db_link)) {
-    echo "<font color=\#ff0000\">";
-    echo "Error selecting database $mysql_db";
-    echo "</font><br>\n";
-}
+require ('inc_db_connect.php');
 
 $pics_per_page = 100;
 
@@ -82,17 +66,17 @@ function print_row ($n, $r) {
     
     // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
-    $sel .= 'p.display_name ';
+    $sel .= 'p.display_name display_name ';
     $sel .= "FROM picture_details d ";
     $sel .= "LEFT OUTER JOIN people_or_places p ";
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid = '".$r['pid']."' ";
     $sel .= "ORDER BY p.display_name ";
-    $result = mysql_query ($sel);
+    $result = $DBH::query ($sel);
     $plist = '';
     $br = '';
     if ($result) {
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = $result::fetch_array($result)) {
             $plist .= $br . $row['display_name'] . "\n";
             $br = "<hr>\n";
         }
@@ -114,13 +98,13 @@ function print_row ($n, $r) {
       }
     }
     $sel .= "ORDER BY pid ";
+    
     //$duplicate_list .= $sel;
-    $result = mysql_query ($sel);
-    $plist = '';
+    $result = $DBH::query ($sel);
     $br = '';
     if ($result) {
         $comma = '';
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = $result::fetch_array($result)) {
             $duplicate_list .= $comma . $row['pid'];
             $br = ', ';
         }
@@ -269,9 +253,9 @@ if (isset($in_button_find) || isset($in_new)) {
     $_SESSION['s_start_row'] = 0;
     
     // find the number of rows
-    $result = mysql_query ($_SESSION['s_list_select']);
+    $result = $DBH::query ($_SESSION['s_list_select']);
     if ($result) {
-        $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
+        $_SESSION['s_num_user_rows'] = $result::num_rows($result); 
     } else {
         $_SESSION['s_num_user_rows'] = 0;
     }
@@ -366,9 +350,9 @@ $cmd .= "LEFT OUTER JOIN people_or_places p ";
 $cmd .= "ON (p.uid = d.uid) ";
 $cmd .= "ORDER BY d.uid ";
 $add_cnt = 0;
-$result = mysql_query ($cmd);
+$result = $DBH::query ($cmd);
 if ($result) {
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = $result::fetch_array($result)) {
         $s = '';
         if ($uid_select[$row['uid']] > 0) {$s = " SELECTED";}
         echo '   <option value="'.$row['uid']."\"$s>".
@@ -445,11 +429,11 @@ if ($_SESSION['s_num_user_rows']>0) {
   </tr>
 <?php
 $cnt = 0;
-$result = mysql_query ($sel);
+$result = $DBH::query ($sel);
 $last_row = array();
 $people_list = '';
 if ($result) {
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = $result::fetch_array($result)) {
         if ($row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br>\n";}
             $people_list .= $row['display_name'];
