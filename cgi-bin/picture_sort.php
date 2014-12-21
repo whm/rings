@@ -76,7 +76,7 @@ function print_row ($n, $r) {
     $plist = '';
     $br = '';
     if ($result) {
-        while ($row = $result->fetch_array($result)) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $plist .= $br . $row['display_name'] . "\n";
             $br = "<hr>\n";
         }
@@ -104,7 +104,7 @@ function print_row ($n, $r) {
     $br = '';
     if ($result) {
         $comma = '';
-        while ($row = $result->fetch_array($result)) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $duplicate_list .= $comma . $row['pid'];
             $br = ', ';
         }
@@ -352,11 +352,11 @@ $cmd .= "ORDER BY d.uid ";
 $add_cnt = 0;
 $result = $DBH->query ($cmd);
 if ($result) {
-    while ($row = $result->fetch_array($result)) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $s = '';
         if ($uid_select[$row['uid']] > 0) {$s = " SELECTED";}
-        echo '   <option value="'.$row['uid']."\"$s>".
-            $row['uid']."-".$row['display_name']."\n";
+        echo '   <option value="' . $row['uid'] . "\"$s>"
+            . $row['display_name'] . '(' . $row['uid'] . ")\n";
     }
 }
 ?>
@@ -433,7 +433,7 @@ $result = $DBH->query ($sel);
 $last_row = array();
 $people_list = '';
 if ($result) {
-    while ($row = $result->fetch_array($result)) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         if ($row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br>\n";}
             $people_list .= $row['display_name'];

@@ -93,7 +93,7 @@ if (isset($in_button_next) || isset($in_button_prev)) {
         $sel .= "WHERE pid = '$in_pid' ";
         $result = $DBH->query ($sel);
         if ($result) {
-            if ($row = $result->fetch_array($result)) {
+            if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 if (isset($row['pid'])) {
                     break;
                 }
@@ -110,7 +110,7 @@ $sel .= "FROM pictures_information ";
 $sel .= "WHERE pid = '$in_pid' ";
 $result = $DBH->query ($sel);
 if ($result) {
-    $row = $result->fetch_array($result);
+    $row = $result->fetch_array(MYSQLI_ASSOC);
     $this_type = trim($row["picture_type"]);
     if (strlen($row['picture_date']) == 0) {
         $row['picture_date'] = $row['date_taken'];
@@ -130,7 +130,7 @@ if (isset($in_pid) && strlen($in_pid) > 0) {
     $sel .= "WHERE pid = '$in_pid' ";
     $result = $DBH->query ($sel);
     if ($result) {
-        $raw_row = $result->fetch_array($result);
+        $raw_row = $result->fetch_array(MYSQLI_ASSOC);
         if (!isset($raw_row['pid'])) {
             $_SESSION['s_msg'] .= "Raw image is missing for '$in_pid'.\n";
         }
@@ -388,7 +388,7 @@ if (strlen($thisID) > 0) {
     $cmd .= "ORDER BY p.display_name ";
     $result = $DBH->query ($cmd);
     if ($result) {
-        while ($link_row = $result->fetch_array($result)) {
+        while ($link_row = $result->fetch_array(MYSQLI_ASSOC)) {
             $a_uid = $link_row["uid"];
             $a_name = $link_row["display_name"];
             $found["$a_uid"] = 1;
@@ -414,7 +414,7 @@ $cmd .= "FROM people_or_places ";
 $cmd .= "ORDER BY display_name ";
 $result = $DBH->query ($cmd);
 if ($result) {
-    while ($person_row = $result->fetch_array($result)) {
+    while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
         $a_uid = $person_row["uid"];
         if (isset($found["$a_uid"])) {continue;}
         $uid_list[$a_uid] = $person_row['display_name'];
