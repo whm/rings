@@ -72,11 +72,11 @@ function print_row ($n, $r) {
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid = '".$r['pid']."' ";
     $sel .= "ORDER BY p.display_name ";
-    $result = $DBH::query ($sel);
+    $result = $DBH->query ($sel);
     $plist = '';
     $br = '';
     if ($result) {
-        while ($row = $result::fetch_array($result)) {
+        while ($row = $result->fetch_array($result)) {
             $plist .= $br . $row['display_name'] . "\n";
             $br = "<hr>\n";
         }
@@ -100,11 +100,11 @@ function print_row ($n, $r) {
     $sel .= "ORDER BY pid ";
     
     //$duplicate_list .= $sel;
-    $result = $DBH::query ($sel);
+    $result = $DBH->query ($sel);
     $br = '';
     if ($result) {
         $comma = '';
-        while ($row = $result::fetch_array($result)) {
+        while ($row = $result->fetch_array($result)) {
             $duplicate_list .= $comma . $row['pid'];
             $br = ', ';
         }
@@ -253,9 +253,9 @@ if (isset($in_button_find) || isset($in_new)) {
     $_SESSION['s_start_row'] = 0;
     
     // find the number of rows
-    $result = $DBH::query ($_SESSION['s_list_select']);
+    $result = $DBH->query ($_SESSION['s_list_select']);
     if ($result) {
-        $_SESSION['s_num_user_rows'] = $result::num_rows($result); 
+        $_SESSION['s_num_user_rows'] = $result->num_rows($result); 
     } else {
         $_SESSION['s_num_user_rows'] = 0;
     }
@@ -350,9 +350,9 @@ $cmd .= "LEFT OUTER JOIN people_or_places p ";
 $cmd .= "ON (p.uid = d.uid) ";
 $cmd .= "ORDER BY d.uid ";
 $add_cnt = 0;
-$result = $DBH::query ($cmd);
+$result = $DBH->query ($cmd);
 if ($result) {
-    while ($row = $result::fetch_array($result)) {
+    while ($row = $result->fetch_array($result)) {
         $s = '';
         if ($uid_select[$row['uid']] > 0) {$s = " SELECTED";}
         echo '   <option value="'.$row['uid']."\"$s>".
@@ -429,11 +429,11 @@ if ($_SESSION['s_num_user_rows']>0) {
   </tr>
 <?php
 $cnt = 0;
-$result = $DBH::query ($sel);
+$result = $DBH->query ($sel);
 $last_row = array();
 $people_list = '';
 if ($result) {
-    while ($row = $result::fetch_array($result)) {
+    while ($row = $result->fetch_array($result)) {
         if ($row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br>\n";}
             $people_list .= $row['display_name'];
