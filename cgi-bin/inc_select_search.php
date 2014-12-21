@@ -25,9 +25,9 @@
  * Then, call make a text box that has the following:
  *
  *  onkeyup="find_select_items(this, 
- *                                 this.form.elements['<form_element_to_search>'], 
- *                                 my_field_search_values, 
- *                                 my_field_search_array);"
+ *                             this.form.elements['<form_element_to_search>'], 
+ *                             my_field_search_values, 
+ *                             my_field_search_array);"
  *
  * A full example looks like this:
  *
