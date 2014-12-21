@@ -255,7 +255,7 @@ if (isset($in_button_find) || isset($in_new)) {
     // find the number of rows
     $result = $DBH->query ($_SESSION['s_list_select']);
     if ($result) {
-        $_SESSION['s_num_user_rows'] = $result->num_rows($result); 
+        $_SESSION['s_num_user_rows'] = $result->num_rows; 
     } else {
         $_SESSION['s_num_user_rows'] = 0;
     }
