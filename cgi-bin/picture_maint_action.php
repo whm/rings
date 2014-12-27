@@ -3,19 +3,19 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_fld  = $_REQUEST['in_fld'];
-$in_val  = $_REQUEST['in_val'];
-$in_picture_date  = $_REQUEST['in_picture_date'];
-$in_date_added  = $_REQUEST['in_date_added'];
-$in_pid  = $_REQUEST['in_pid'];
-$in_type  = $_REQUEST['in_type'];
-$in_date_last_maint  = $_REQUEST['in_date_last_maint'];
-$in_picture_sequence  = $_REQUEST['in_picture_sequence'];
-$in_newuids  = $_REQUEST['in_newuids'];
-$in_button_update  = $_REQUEST['in_button_update'];
+$in_fld                 = $_REQUEST['in_fld'];
+$in_val                 = $_REQUEST['in_val'];
+$in_picture_date        = $_REQUEST['in_picture_date'];
+$in_date_added          = $_REQUEST['in_date_added'];
+$in_pid                 = $_REQUEST['in_pid'];
+$in_type                = $_REQUEST['in_type'];
+$in_date_last_maint     = $_REQUEST['in_date_last_maint'];
+$in_picture_sequence    = $_REQUEST['in_picture_sequence'];
+$in_newuids             = $_REQUEST['in_newuids'];
+$in_button_update       = $_REQUEST['in_button_update'];
 $in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
-$in_button_rotate_right  = $_REQUEST['in_button_rotate_right'];
-$in_button_del  = $_REQUEST['in_button_del'];
+$in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
+$in_button_del          = $_REQUEST['in_button_del'];
 // ----------------------------------------------------------
 //
 
@@ -69,29 +69,31 @@ function sql_quote ($a_val, $in_type) {
 //-------------------------------------------------------------
 // Check for duplicate dates
 
-function date_dup_check($dt, $pid, $cnx) {
+function date_dup_check($dt, $pid) {
 
+    global $DBH;
+    
     $new_seq = 0;
 
     $sel = 'SELECT count(*) cnt FROM pictures_information ';
     $sel .= "WHERE picture_date='$dt' ";
     $sel .= "AND pid != $pid ";
-    $result = mysql_query ($sel, $cnx);
+    $result = $DBH->query($sel);
     if (!$result) {
-        $_SESSION['s_msg'] .= "<br>MySQL error executing: $sel";
+        $_SESSION['msg'] .= "<br>MySQL error executing: $sel";
         return 0;
     }
-    if ($row = mysql_fetch_array ($result)) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         if ($row['cnt'] > 0) {
             $sel = 'SELECT max(picture_sequence) max_seq ';
             $sel .= 'FROM pictures_information ';
             $sel .= "WHERE picture_date='$dt' ";
-            $result = mysql_query ($sel, $cnx);
+            $result = $DBH->query($sel);
             if (!$result) {
-                $_SESSION['s_msg'] .= "<br>MySQL error executing: $sel";
+                $_SESSION['msg'] .= "<br>MySQL error executing: $sel";
                 return 0;
             }
-            if ($row = mysql_fetch_array ($result)) {
+            if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 $new_seq = $row['max_seq'] + 1;
             }
         }
@@ -104,31 +106,23 @@ function date_dup_check($dt, $pid, $cnx) {
 // ----------------------------------------------------
 // Main Routine
 
-require ('/etc/whm/rings_dbs.php');
-// connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL host $mysql_host";
-}
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-    $_SESSION['s_msg'] .= "<br>Error connecting to MySQL db $mysql_db";
-}
+require('/etc/whm/rings_dbs.php');
+require('inc_db_connect.php');
+require('inc_db_functions.php');
 
-$now = date ('Y-m-d H:i:s');
+$now                = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;
-$in_date_added = $now;
+$in_date_added      = $now;
 
 // No spaces allowed in the identifier
 $in_pid = preg_replace ('/\s+/', '', $in_pid);
 
 // how to get back
-$next_url = "picture_maint.php";
+$next_url    = "picture_maint.php";
 $next_header = "REFRESH: 0; URL=$next_url";
 
 // set update message area
-$_SESSION['s_msg'] = '';
-$ok = 'color="#009900"';
+$ok   = 'color="#009900"';
 $warn = 'color="#330000"';
 
 // ---------------------------------------------------------
@@ -137,11 +131,11 @@ if ( isset($in_button_update) ) {
     
     // Try and get the old user record
     $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
-    $result = mysql_query ($sel, $cnx);
+    $result = $DBH->query($sel);
     if ($result) {
-        $row = mysql_fetch_array ($result);
+        $row = $result->fetch_array(MYSQLI_ASSOC);
         $this_picture = $row['pid'];
-        $fld_cnt = mysql_num_fields($result);
+        $fld_cnt      = $result->field_count;
     }
     $update_flag = 1;
     $add_flag = 0;
@@ -170,15 +164,17 @@ if ( $update_flag ) {
     $update_list[] = 'date_last_maint';
     
     # check for duplicate date, sequence
-    $seq = date_dup_check($in_picture_date, $in_pid, $cnx);
+    $seq = date_dup_check($in_picture_date, $in_pid);
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
     $up_msg = '';
-    for ($i=0; $i<$fld_cnt; $i++) {
-        $db_fld = mysql_field_name ($result, $i);
+    $db_flds = get_fld_names('pictures_information');
+    foreach ($fld_names as $db_fld) {
         $fld_update_flag = 0;
-        foreach ($update_list as $thisName) {
-            if ($thisName == $db_fld) {$fld_update_flag = 1;}
+        foreach ($update_list as $this_name) {
+            if ($this_name == $db_fld) {
+                $fld_update_flag = 1;
+            }
         }
         if ($fld_update_flag == 0) {continue;}
         $in_val = trim(stripslashes($_REQUEST["in_$db_fld"]));
@@ -188,7 +184,7 @@ if ( $update_flag ) {
         $_SESSION["$sess_fld"] = $in_val;
 
         if (trim($in_val) != trim($row[$db_fld])) {
-            $cmd .= "$comma $db_fld=".sql_quote($in_val,'s'). " ";
+            $cmd .= "$comma $db_fld=" . sql_quote($in_val,'s') . ' ';
             $comma = ',';
             $update_cnt++;
             $up_msg .= "<font $ok>$db_fld updated.</font><br>";
@@ -199,8 +195,8 @@ if ( $update_flag ) {
         // Make the changes 
         $sql_cmd = "UPDATE pictures_information SET $cmd ";
         $sql_cmd .= "WHERE pid = $in_pid ";
-        $result = mysql_query ($sql_cmd,$cnx);
-        $_SESSION['s_msg'] .= $up_msg;
+        $result = $DBH->($sql_cmd);
+        $_SESSION['msg'] .= $up_msg;
     }
     $next_pid = $in_pid;
     
@@ -212,17 +208,18 @@ if ( $update_flag ) {
             $cmd = "DELETE FROM picture_details ";
             $cmd .= "WHERE uid = '$a_uid' ";
             $cmd .= "AND pid = $in_pid ";
-            $result = mysql_query ($cmd);
+            $result = $DBH->($cmd);
             if ($result) {
                 $update_cnt++;
-                $_SESSION['s_msg'] .= "<font $ok>Deleted $a_uid from picture.</font><br>";
+                $_SESSION['msg'] .= "<font $ok>"
+                    . "Deleted $a_uid from picture . </font><br>";
                 $_SESSION['s_uid_weight'][$a_uid]--;
                 if ($_SESSION['s_uid_weight'][$a_uid] < 0) {
                     $_SESSION['s_uid_weight'][$a_uid] = 0;
                 }
             } else {
-                $_SESSION['s_msg'] .= "Problem deleting picture details.<br>";
-                $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
+                $_SESSION['msg'] .= "Problem deleting picture details.<br>";
+                $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
             }
         }
     }
@@ -237,22 +234,22 @@ if ( $update_flag ) {
             mkin ('uid', $a_uid, 's');
             mkin ('pid', $in_pid, 'n');
             $cmd = "INSERT INTO picture_details ($flds) VALUES ($vals)";
-            $add_result = mysql_query ($cmd,$cnx);
+            $add_result = $DBH->query($cmd);
             if ($add_result) {
                 $update_cnt++;
-                $_SESSION['s_msg'] .= "<font $ok>$a_uid added.</font><br>";
+                $_SESSION['msg'] .= "<font $ok>$a_uid added.</font><br>";
                 $_SESSION['s_uid_weight'][$a_uid]++;
                 if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
                     $_SESSION['s_uid_weight'][$a_uid] = 32767;
                 }
             } else {
-                $_SESSION['s_msg'] .= "Problem updating picture details<br>";
-                $_SESSION['s_msg'] .= "Problem SQL: $cmd<br>";
+                $_SESSION['msg'] .= "Problem updating picture details<br>";
+                $_SESSION['msg'] .= "Problem SQL: $cmd<br>";
             }
         }
     }
     if ($update_cnt < 2) {
-        $_SESSION['s_msg'] .= "No changes found.<br>";
+        $_SESSION['msg'] .= "No changes found.<br>";
     }
     
 } elseif ( isset($in_button_del) ) {
@@ -268,14 +265,14 @@ if ( $update_flag ) {
 
     foreach ($del_tables as $thisTable) {
         $sql_cmd = "DELETE FROM $thisTable WHERE pid=$in_pid ";
-        $result = mysql_query ($sql_cmd,$cnx);
+        $result = $DBH->query($sql_cmd);
         if ($result) {
-            $_SESSION['s_msg'] .= "<font $ok>Picture '$in_pid' deleted "
+            $_SESSION['msg'] .= "<font $ok>Picture '$in_pid' deleted "
                 . "from $thisTable.</font><br>";
         } else {
-            $_SESSION['s_msg'] 
+            $_SESSION['msg'] 
                 .= "Problem deleting $in_pid from $thisTable<br>";
-            $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
+            $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
         }
     }
 
@@ -295,9 +292,9 @@ if ( $update_flag ) {
     $ret = array();
     $z = exec($sh_cmd, $ret, $ret_status);
     if ($ret_status) {
-        $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-        foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
-        $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+        $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+        foreach ($ret as $v) $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+        $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
     }
 
     $sh_cmd = "/usr/bin/ring-resize";
@@ -307,9 +304,9 @@ if ( $update_flag ) {
     $ret = array();
     $z = exec($sh_cmd, $ret, $ret_status);
     if ($ret_status) {
-        $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-        foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
-        $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+        $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+        foreach ($ret as $v) $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+        $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
     }
 
     $next_pid = $in_pid;
@@ -319,8 +316,6 @@ if ( $update_flag ) {
     echo "Ooops, this should never happen!<br>\n";
     
 }
-
-mysql_close ($cnx);
 
 header ("$next_header?in_pid=$next_pid");
 ?>

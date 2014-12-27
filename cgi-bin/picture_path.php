@@ -2,8 +2,8 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_button_refresh  = $_REQUEST['in_button_refresh'];
-$in_start_row  = $_REQUEST['in_start_row'];
+$in_button_refresh = $_REQUEST['in_button_refresh'];
+$in_start_row      = $_REQUEST['in_start_row'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -15,25 +15,9 @@ $in_start_row  = $_REQUEST['in_start_row'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-    $str = trim ($fld);
-    if (strlen($str) == 0) {
-        $str = "&nbsp;";
-    } 
-    return $str;
-}
-
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
-if (!mysql_select_db($mysql_db, $db_link)) {
-    echo "<font color=\#ff0000\">";
-    echo "Error selecting database $mysql_db";
-    echo "</font><br>\n";
-}
+require ('inc_db_connect.php');
 
 $pics_per_page = 100;
 
@@ -69,7 +53,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 // print a row of data
 
 function print_row ($n, $r) {
-    
+
     $sel = 'SELECT p.uid, ';
     $sel .= 'p.display_name ';
     $sel .= "FROM picture_details d ";
@@ -77,16 +61,16 @@ function print_row ($n, $r) {
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid = '".$r['pid']."' ";
     $sel .= "ORDER BY p.display_name ";
-    $result = mysql_query ($sel);
+    $result = $DBH->query($sel);
     $plist = '';
-    $br = '';
+    $br    = '';
     if ($result) {
-        while ($row = mysql_fetch_array($result)) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $plist .= $br . $row['display_name'] . "\n";
             $br = "<hr>\n";
         }
     }
-    
+
     $pic_href = '<a href="picture_maint?in_pid='.$r['pid'].'" target="_blank">';
     $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
     $up_pid = "up_pid_$n";
@@ -152,7 +136,7 @@ $sel .= "LIMIT $in_start_row,100 ";
 <input type="text" name="in_start_row" value="<?php print $in_start_row;?>">
 <p>
 
-<?php 
+<?php
 echo "$sel<br>\n";
 if (strlen($_SESSION['msg']) > 0) {
     echo $_SESSION['msg'];
@@ -162,7 +146,6 @@ if (strlen($_SESSION['msg']) > 0) {
 ?>
 
 </form>
-
 
 <table border="1">
   <tr>
@@ -174,11 +157,11 @@ if (strlen($_SESSION['msg']) > 0) {
   </tr>
 <?php
 $cnt = 0;
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 $last_row = array();
 $people_list = '';
 if ($result) {
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         if ($row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br>\n";}
             $people_list .= $row['display_name'];
@@ -190,11 +173,11 @@ if ($result) {
             $last_row = $row;
         }
     }
-    
+
     if ($last_row['pid'] > 0) {
         print_row ($cnt, $last_row);
     }
-    
+
 } else {
     if (isset($in_button_refresh)) {
         echo "<font color=\"#ff0000\">Nothing found!</font>\n";

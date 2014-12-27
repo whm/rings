@@ -3,14 +3,14 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_pid = $_REQUEST['in_pid'];
-$in_button_find = $_REQUEST['in_button_find'];
-$in_button_next = $_REQUEST['in_button_next'];
-$in_button_prev = $_REQUEST['in_button_prev'];
-$in_button_update = $_REQUEST['in_button_update'];
-$in_button_rotate_left = $_REQUEST['in_button_rotate_left'];
+$in_pid                 = $_REQUEST['in_pid'];
+$in_button_find         = $_REQUEST['in_button_find'];
+$in_button_next         = $_REQUEST['in_button_next'];
+$in_button_prev         = $_REQUEST['in_button_prev'];
+$in_button_update       = $_REQUEST['in_button_update'];
+$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
 $in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
-$in_button_del = $_REQUEST['in_button_del'];
+$in_button_del          = $_REQUEST['in_button_del'];
 //
 // ----------------------------------------------------------
 // Globals

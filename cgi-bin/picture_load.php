@@ -3,9 +3,9 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_upload        = $_REQUEST['in_upload'];
-$in_upload_slots  = $_REQUEST['in_upload_slots'];
-$in_type          = $_REQUEST['in_type'];
+$in_upload       = $_REQUEST['in_upload'];
+$in_upload_slots = $_REQUEST['in_upload_slots'];
+$in_type         = $_REQUEST['in_type'];
 // ----------------------------------------------------------
 //
 
@@ -20,8 +20,9 @@ require ('inc_page_open.php');
 //  $in_type == "n" is a number
 //  $in_type != "n" anything else is a string
 
-function mkin ($cnx, $a_fld, $a_val, $in_type) {
+function mkin ($a_fld, $a_val, $in_type) {
 
+    global $DBH;
     global $flds;
     global $vals;
 
@@ -30,7 +31,7 @@ function mkin ($cnx, $a_fld, $a_val, $in_type) {
         if (strlen($flds) > 0) {$c = ",";}
         $flds .= $c . $a_fld;
         if ( $in_type != "n" ) {
-            $a_val = mysql_real_escape_string($a_val, $cnx);
+            $a_val = $DBH->real_escape_string($a_val);
             $vals .= $c . "'$a_val'";
         } else {
             $vals .= $c . $a_val;
@@ -43,48 +44,48 @@ function mkin ($cnx, $a_fld, $a_val, $in_type) {
 //-------------------------------------------------------------
 // get the next id
 
-function get_next ($cnx, $id) {
+function get_next ($id) {
 
+    global $DBH;
     global $warn, $em;
 
     $return_number = 0;
 
     $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
-    $result = mysql_query ($sel,$cnx);
-    if (mysql_errno()) {
-        $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+    $result = $DBH->query ($sel);
+    if ($result->errno()) {
+        $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error . $em;
         $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
     } else {
         if ($result) {
-            $row = mysql_fetch_array ($result);
+            $row = $result->fetch_array(MYSQLI_ASSOC);
             $return_number = $row["next_number"];
         }
     }
     if ($return_number > 0) {
         $nxt = $return_number + 1;
         $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-        $result = mysql_query ($cmd,$cnx);
-        if (mysql_errno()) {
-            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
+        $result = $DBH->query ($cmd,$cnx);
+        if ($result->errno()) {
+            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error . $em;
+            $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
         }
     } else {
         $nxt = 1;
         $cmd = "INSERT INTO  next_number (id,next_number) ";
         $cmd .= "VALUES ('$id',$nxt) ";
-        $result = mysql_query ($cmd,$cnx);
-        if (mysql_errno()) {
-            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
+        $result = $DBH->($cmd);
+        if ($result->errno()) {
+            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error . $em;
+            $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
         } else {
             if ($result) {
                 $return_number = $nxt;
             }
         }
     }
-
+    
     return $return_number;
-
 }
 
 ?>
@@ -115,16 +116,7 @@ $_SESSION['upload_slots'] = $in_upload_slots;
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-    $_SESSION['msg'] .= "<br>Error connecting to MySQL host $mysql_host";
-}
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-    $_SESSION['msg'] .= "<br>Error connecting to MySQL db $mysql_db";
-}
+require ('inc_db_connect.php');
 
 if (!isset($in_upload)) {
 
@@ -194,33 +186,33 @@ if (!isset($in_upload)) {
 
         $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
 
-        $pid = get_next($cnx, "pid");
+        $pid = get_next('pid');
 
         $flds = $vals = '';
 
-        mkin ($cnx, 'pid',             $pid,               'n');
-        mkin ($cnx, 'raw_picture_size',strlen($the_file_contents),'n');
-        mkin ($cnx, 'file_name',       $original_file,     's');
-        mkin ($cnx, 'date_last_maint', $a_date,            'd');
-        mkin ($cnx, 'date_added',      $a_date,            'd');
+        mkin ('pid',             $pid,               'n');
+        mkin ('raw_picture_size',strlen($the_file_contents),'n');
+        mkin ('file_name',       $original_file,     's');
+        mkin ('date_last_maint', $a_date,            'd');
+        mkin ('date_added',      $a_date,            'd');
         $cmd = "INSERT INTO pictures_information ";
         $cmd .= "($flds) VALUES ($vals) ";
-        $result = mysql_query ($cmd, $cnx);
-        if (mysql_errno()) {
-            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
-            $_SESSION['msg'] .= $warn."SQL:$cmd$em";
+        $result = $DBH->query ($cmd);
+        if ($result->errno) {
+            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error .$em;
+            $_SESSION['msg'] .= $warn . "SQL:$cmd$em";
         }
 
         $flds = $vals = '';
-        mkin ($cnx, 'pid',             $pid,               'n');
-        mkin ($cnx, 'picture_type',    $content_type,      's');
-        mkin ($cnx, 'picture',         $the_file_contents, 's');
-        mkin ($cnx, 'date_last_maint', $a_date,            'd');
-        mkin ($cnx, 'date_added',      $a_date,            'd');
+        mkin ('pid',             $pid,               'n');
+        mkin ('picture_type',    $content_type,      's');
+        mkin ('picture',         $the_file_contents, 's');
+        mkin ('date_last_maint', $a_date,            'd');
+        mkin ('date_added',      $a_date,            'd');
         $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
-        $result = mysql_query ($cmd, $cnx);
-        if (mysql_errno()) {
-            $_SESSION['msg'] .= $warn."MySQL error:".mysql_error().$em;
+        $result = $DBH->query($cmd);
+        if ($result->errno) {
+            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error . $em;
         }
 
         echo "$pid uploaded. ";
@@ -247,8 +239,6 @@ if (!isset($in_upload)) {
     echo "<p>\n";
     echo "<a href=\"picture_load.php\">Back to Load Files</a>\n";
 }
-
-mysql_close($cnx);
 
 if (strlen($_SESSION['msg']) > 0) {
     echo $_SESSION['msg'];

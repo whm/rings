@@ -98,8 +98,6 @@ if ($in_pid > 0) {
     check_action_queue($in_pid);
 }
 
-sys_display_msg();
-
 ?>
 
 <?php require('page_bottom.php'); ?>
