@@ -3,13 +3,13 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_number  = $_REQUEST['in_number'];
-$in_start_date  = $_REQUEST['in_start_date'];
-$in_last  = $_REQUEST['in_last'];
-$in_start  = $_REQUEST['in_start'];
-$in_next  = $_REQUEST['in_next'];
-$in_prev  = $_REQUEST['in_prev'];
-$in_uid  = $_REQUEST['in_uid'];
+$in_number     = $_REQUEST['in_number'];
+$in_start_date = $_REQUEST['in_start_date'];
+$in_last       = $_REQUEST['in_last'];
+$in_start      = $_REQUEST['in_start'];
+$in_next       = $_REQUEST['in_next'];
+$in_prev       = $_REQUEST['in_prev'];
+$in_uid        = $_REQUEST['in_uid'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -21,18 +21,6 @@ $in_uid  = $_REQUEST['in_uid'];
 // Init session, connect to database
 $authNotRequired = 1;
 require('inc_ring_init.php');
-
-// -- Print a space or the field
-function prt ($fld) {
-    $str = trim ($fld);
-    if (strlen($str) == 0) {
-        $str = "&nbsp;";
-    } 
-    return $str;
-}
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
 
 // ----------------------------------------------------------
 // Function to exit without displaying anything and return to 
@@ -75,7 +63,6 @@ if ($in_number == 0) {
 }
 $_SESSION['s_thumbs_per_page'] = $in_number;
 
-
 if (strlen($in_uid) == 0) {
     $in_uid = $_SESSION['s_uid'];
 } else {
@@ -91,9 +78,9 @@ $thisPerson = "$in_uid";
 $sel = "SELECT display_name ";
 $sel .= "FROM people_or_places pp ";
 $sel .= "WHERE uid='$in_uid' ";
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 if ($result) {
-    if ($row = mysql_fetch_array($result)) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $thisPerson = $row['display_name'];
     }
 }
@@ -109,9 +96,9 @@ $sel .= "WHERE d.uid='$in_uid' ";
 $sel .= "AND $grade_sel ";
 
 $thisCount = 0;
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 if ($result) {
-    if ($row = mysql_fetch_array($result)) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $thisCount = $row['cnt'];
     }
 }
@@ -127,9 +114,9 @@ if (strlen($in_start_date) > 0) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
-    $result = mysql_query ($sel);
+    $result = $DBH->query ($sel);
     if ($result) {
-        if ($row = mysql_fetch_array($result)) {
+        if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $partCount = $row['cnt'];
         }
     }
@@ -184,68 +171,70 @@ $sel .= "AND $grade_sel ";
 $sel .= "GROUP BY d.pid ";
 $sel .= "ORDER BY p.picture_date,p.picture_sequence ";
 $sel .= "LIMIT $in_start, $in_number ";
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 if (!$result) {
-  echo "Person '$in_uid' not found.<br>\n";
+    echo "Person '$in_uid' not found.<br>\n";
 } else {
 
-  echo "<table border=\"1\"><tr><td>\n";
+    echo "<table border=\"1\"><tr><td>\n";
 
-  echo "<tr><td>";
-  echo " <table broder=\"0\" width=\"100%\">\n";
-  echo " <tr>\n";
-  echo "  <td>\n";
-  if ($in_start > 0) {
-      $in_prev = $in_start - $in_number;
-      if ($in_prev < 0) {$in_prev = 0;}
-      if ($in_prev > 0) {
-          echo "<a href=\"$PHPSELF?in_start=0\">First</a>";
-          echo " - ";
-      }
-      echo "<a href=\"$PHPSELF?in_start=$in_prev\">Previous</a>";
-  } else {
-      echo "&nbsp;";
-  }
-  echo "  </td>\n"; 
-  echo "  <td align=\"right\">\n"; 
-  $in_next = $in_start + $in_number;
-  if ($in_next < $thisCount) {
-      if ($in_next+$in_number > $thisCount) {
-          $in_next = $thisCount - $in_number;
-      }
-      echo "<a href=\"$PHPSELF?in_start=$in_next\">Next</a>";
-      if ($in_next+$in_number < $thisCount) {
-          $in_last = $thisCount - $in_number;
-          echo " - ";
-          echo "<a href=\"$PHPSELF?in_start=$in_last\">Last</a>";
-      }
-  } else {
-      echo "&nbsp;";
-  }
-  echo "  </td>\n"; 
-  echo " </tr>\n"; 
-  echo " </table>\n"; 
-  echo "</td></tr>\n";
-
-  echo "<tr><td>";
-  $cnt = 20;
-  $hr = '';
-  while ($row = mysql_fetch_array($result)) {
-    if ($cnt>6) {
-      echo "<br>\n";
-      echo $hr;
-      echo $row['picture_date']."\n";
-      echo "<br>\n";
-      $cnt = 0;
-      $hr = "<hr>\n";
+    echo "<tr><td>";
+    echo " <table broder=\"0\" width=\"100%\">\n";
+    echo " <tr>\n";
+    echo "  <td>\n";
+    if ($in_start > 0) {
+        $in_prev = $in_start - $in_number;
+        if ($in_prev < 0) {$in_prev = 0;}
+        if ($in_prev > 0) {
+            echo "<a href=\"$PHPSELF?in_start=0\">First</a>";
+            echo " - ";
+        }
+        echo "<a href=\"$PHPSELF?in_start=$in_prev\">Previous</a>";
+    } else {
+        echo "&nbsp;";
     }
-    $pid = $row["pid"];
-    $pic_href = "<a href=\"picture_select.php?in_ring_pid=$pid\" target=\"_blank\">";
-    $thumb = "<img src=\"display.php?in_pid=$pid&in_size=small\" border=\"0\">";
-    echo $pic_href . $thumb . "</a>\n";
-    $cnt++;
-  }
-  echo "</td></tr></table>\n";
+    echo "  </td>\n"; 
+    echo "  <td align=\"right\">\n"; 
+    $in_next = $in_start + $in_number;
+    if ($in_next < $thisCount) {
+        if ($in_next+$in_number > $thisCount) {
+            $in_next = $thisCount - $in_number;
+        }
+        echo "<a href=\"$PHPSELF?in_start=$in_next\">Next</a>";
+        if ($in_next+$in_number < $thisCount) {
+            $in_last = $thisCount - $in_number;
+            echo " - ";
+            echo "<a href=\"$PHPSELF?in_start=$in_last\">Last</a>";
+        }
+    } else {
+        echo "&nbsp;";
+    }
+    echo "  </td>\n"; 
+    echo " </tr>\n"; 
+    echo " </table>\n"; 
+    echo "</td></tr>\n";
+
+    echo "<tr><td>";
+    $cnt = 20;
+    $hr = '';
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        if ($cnt>6) {
+            echo "<br>\n";
+            echo $hr;
+            echo $row['picture_date']."\n";
+            echo "<br>\n";
+            $cnt = 0;
+            $hr = "<hr>\n";
+        }
+        $pid = $row["pid"];
+        $pic_href = '<a href="picture_select.php?in_ring_pid=' . $pid .'" '
+            . 'target="_blank">';
+        $thumb = '<img src="display.php?in_pid=$pid&in_size=small" '
+            . 'border="0">';
+        echo $pic_href . $thumb . "</a>\n";
+        $cnt++;
+    }
+    echo "</td></tr></table>\n";
 }
 ?>
 <br>

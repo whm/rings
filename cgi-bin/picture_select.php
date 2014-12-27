@@ -3,12 +3,12 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_slide_show  = $_REQUEST['in_slide_show'];
-$in_login  = $_REQUEST['in_login'];
-$in_ring_uid  = $_REQUEST['in_ring_uid'];
+$in_slide_show     = $_REQUEST['in_slide_show'];
+$in_login          = $_REQUEST['in_login'];
+$in_ring_uid       = $_REQUEST['in_ring_uid'];
 $in_ring_next_seq  = $_REQUEST['in_ring_next_seq'];
-$in_ring_pid  = $_REQUEST['in_ring_pid'];
-$in_ring_next_date  = $_REQUEST['in_ring_next_date'];
+$in_ring_pid       = $_REQUEST['in_ring_pid'];
+$in_ring_next_date = $_REQUEST['in_ring_next_date'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -23,8 +23,6 @@ require('inc_format.php');
 $authNotRequired = 1;
 if ($in_login == 2) {$authNotRequired = '';}
 require('inc_ring_init.php');
-
-require ('/etc/whm/rings_dbs.php');
 
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';
@@ -145,7 +143,9 @@ function add_email_list(idx) {
 $next_links = array();
 
 $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
-if (strlen($_SESSION['whm_directory_user'])>0) { $invisible_sel = ''; }
+if (strlen($_SESSION['whm_directory_user'])>0) {
+    $invisible_sel = '';
+}
 
 if (isset($in_ring_uid)) {
 
@@ -183,9 +183,9 @@ if (isset($in_ring_uid)) {
         }
         $sel .= "AND $grade_sel ";
         $sel .= $order_sel;
-        $result = mysql_query ($sel);
+        $result = $DBH->query($sel);
         if ($result) {
-            while ($row = mysql_fetch_array($result)) {
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 if ( auth_picture_invisible($row['pid']) == 0 ) {
                     $new_pid = $row['pid'];
                     break;
@@ -198,9 +198,9 @@ if (isset($in_ring_uid)) {
     if (strlen($new_pid) == 0) {
         $sel = $base_sel;
         $sel .= $order_sel;
-        $result = mysql_query ($sel);
+        $result = $DBH->query($sel);
         if ($result) {
-            while ($row = mysql_fetch_array($result)) {
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 if ( auth_picture_invisible($row['pid']) == 0 ) {
                     $new_pid = $row['pid'];
                     break;
@@ -243,23 +243,24 @@ if (isset($in_ring_pid)) {
     if (strlen($_SESSION['whm_directory_user']) == 0) {
         $sel .= "AND public='Y' ";
     }
-    $result = mysql_query ($sel);
+    $result = $DBH->query($sel);
     if ($result) {
-        $row = mysql_fetch_array($result);
-        $this_type = trim($row["picture_type"]);
-        $this_pid = $row["pid"];
+        $row = $result->fetch_array(MYSQLI_ASSOC);
+        $this_type         = trim($row["picture_type"]);
+        $this_pid          = $row["pid"];
         $this_picture_date = $row["picture_date"];
-        $this_picture_seq = $row["picture_sequence"];
-        $this_fullbytes = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
-        $image_reference .= "<img src=\"display.php";
-        $image_reference .= "?in_pid=$this_pid";
-        $image_reference .= "&in_size=$thisSize\">\n";
+        $this_picture_seq  = $row["picture_sequence"];
+        $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
+        $image_reference   .= "<img src=\"display.php";
+        $image_reference   .= "?in_pid=$this_pid";
+        $image_reference   .= "&in_size=$thisSize\">\n";
         if (strlen($row['description'])>0) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
         }
         $image_reference .= "<p>\n";
-        $image_reference .= "Date Taken: ".format_date_time($this_picture_date)."\n";
+        $image_reference .= "Date Taken: "
+            . format_date_time($this_picture_date) . "\n";
         $image_reference .= "<p>\n";
         $sel = "SELECT det.uid   uid, ";
         $sel .= "pp.display_name display_name ";
@@ -267,15 +268,15 @@ if (isset($in_ring_pid)) {
         $sel .= "JOIN people_or_places pp ";
         $sel .= "ON (det.uid = pp.uid $private_sel) ";
         $sel .= "WHERE det.pid=$in_ring_pid ";
-        $result=  mysql_query ($sel);
+        $result=  $DBH->query($sel);
         if ($result) {
-            while ($row = mysql_fetch_array($result)) {
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 $next_links[$row['uid']] = $row['display_name'];
             }
         }
         $next_links['next-by-date'] = 'Next by Date';
     } else {
-        $_SESSION['s_msg'] .= 'ERROR: '.mysql_error()."<b>\n";
+        $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<b>\n";
         $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
     }
     
