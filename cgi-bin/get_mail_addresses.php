@@ -3,27 +3,13 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_type  = $_REQUEST['in_type'];
+$in_type          = $_REQUEST['in_type'];
 $in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //
 // File: get_mail_addresses.php
 // Fate: 23-Nov-2004
 // Author: Bill MacAllister
-
-// Information about where the addresses are
-require ('/etc/whm/rings_dbs.php');
-
-// look up the from address
-$ds = ldap_connect($ldap_server);
-$return_attr = array('cn','mail');
-$ldap_filter = '(&(mail=*)(objectclass=person))';
-$sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
-$info = @ldap_get_entries($ds, $sr);
-$ret_cnt = $info["count"];
-
-  $from_display = '&lt;'.$info[0]["mail"][0].'&gt; ' . $info[0]["cn"][0];
-  $from_addr = '<'.$info[0]["mail"][0].'> ' . $info[0]["cn"][0];
 
 ?>
 <html>
@@ -65,6 +51,15 @@ function setAddress () {
       onsubmit="return setAddress()">
 <select name="addr" multiple size="16">
 <?php
+
+// Look up the from address.  This is an anonymous bind.
+$ds = ldap_connect($ldap_server);
+$return_attr = array('cn','mail');
+$ldap_filter = '(&(mail=*)(objectclass=person))';
+$sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
+$info = @ldap_get_entries($ds, $sr);
+$ret_cnt = $info["count"];
+// Display the options
 for ($i=0; $i<$ret_cnt;$i++) {
   $from_display = $info[$i]["cn"][0] . ' &lt;'.$info[$i]["mail"][0].'&gt; ';
   $from_addr = '<'.$info[$i]["mail"][0].'> ' . $info[$i]["cn"][0];
