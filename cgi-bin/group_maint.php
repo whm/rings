@@ -3,13 +3,13 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_group_id = $_REQUEST['in_group_id'];
-$in_group_name = $_REQUEST['in_group_name'];
+$in_group_id          = $_REQUEST['in_group_id'];
+$in_group_name        = $_REQUEST['in_group_name'];
 $in_group_description = $_REQUEST['in_group_description'];
-$in_button_find = $_REQUEST['in_button_find'];
-$in_button_add = $_REQUEST['in_button_add'];
-$in_button_update = $_REQUEST['in_button_update'];
-$in_button_delete = $_REQUEST['in_button_delete'];
+$in_button_find       = $_REQUEST['in_button_find'];
+$in_button_add        = $_REQUEST['in_button_add'];
+$in_button_update     = $_REQUEST['in_button_update'];
+$in_button_delete     = $_REQUEST['in_button_delete'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -20,48 +20,32 @@ $in_button_delete = $_REQUEST['in_button_delete'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  } 
-  return $str;
-}
+// database pointers
+require ('/etc/whm/rings_dbs.php');
+require ('inc_db_connect.php');
 
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-require ('/etc/whm/rings_dbs.php');
-
-// connect to the database
-$conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$conn) {
-  $_SESSION['s_msg'] .= "Error connecting to MySQL host $mysql_host<br>";
-}
-$cnx = mysql_select_db($mysql_db);
-if (!$cnx) {
-  $_SESSION['s_msg'] .= "Error connecting to MySQL db $mysql_db<br>";
-}
 if (isset($in_group_id)) {
-  if ($in_group_id=='CLEARFORM') {
-    $add_flag = 1;
-    unset ($in_group_id);
-  }
+    if ($in_group_id == 'CLEARFORM') {
+        $add_flag = 1;
+        unset ($in_group_id);
+    }
 } else {
-  $in_group_id = '';
+    $in_group_id = '';
 }
 
 $sel = "SELECT * ";
 $sel .= "FROM groups ";
 $sel .= "WHERE group_id = '$in_group_id' ";
 $sel .= "ORDER BY group_id ";
-$result = mysql_query ($sel);
+$result = $DBH->query ($sel);
 if ($result) {
-  $row = mysql_fetch_array($result);
+    $row = $result->fetch_array(MYSQLI_ASSOC);
 }
 if ( isset($in_group_id) && !isset($row["group_id"]) ) {
-   $_SESSION['s_msg'] .= "Group '$in_group_id' not found.<br>\n";
+   $_SESSION['msg'] .= "Group '$in_group_id' not found.<br>\n";
 }
 ?>
 
@@ -98,15 +82,15 @@ require ('page_top.php');
   </td>
 </tr>
 <?php 
-if (isset($_SESSION['s_msg'])) { 
-  if (strlen($_SESSION['s_msg'])>0) { 
+if (isset($_SESSION['msg'])) { 
+  if (strlen($_SESSION['msg'])>0) { 
 ?>
 <tr><td bgcolor="#ffffff" align="center" colspan="2">
-    <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
+    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
     </td>
 </tr>
 <?php 
-  $_SESSION['s_msg'] = '';
+  $_SESSION['msg'] = '';
   } 
 }?>
 </table>
@@ -160,35 +144,37 @@ if (isset($_SESSION['s_msg'])) {
 
 $people_cnt = 0;
 if (strlen($in_group_id) > 0) {
-  $cmd = "SELECT g.uid uid, ";
-  $cmd .= "p.display_name name ";
-  $cmd .= "FROM picture_groups g ";
-  $cmd .= "LEFT OUTER JOIN people_or_places p ";
-  $cmd .= "ON (g.uid = p.uid) "; 
-  $cmd .= "WHERE g.group_id = '$in_group_id' ";
-  $cmd .= "ORDER BY p.display_name ";
-  $result = mysql_query ($cmd);
-  if ($result) {
-    while ($link_row = mysql_fetch_array($result)) {
-      $a_uid = $link_row["uid"];
-      $a_name = $link_row["name"];
-      $found["$a_uid"] = 1;
-      if ($people_cnt == 0) {
-        echo "<tr><th colspan=\"2\">People to Remove from Group</th></tr>\n";
-        echo "<tr>\n";
-        echo " <td align=\"right\">People to Remove:</td>\n";
-        echo " <td>\n";
-        echo "  <select name=\"in_deluids[]\" multiple>\n";
-      }
-      $people_cnt++;
-      echo "   <option value=\"$a_uid\">$a_name\n";
-    }
-    if ($people_cnt > 0) {
-      echo "</select>\n";
-      echo " </td>\n";
-      echo "<tr>\n";
-    }
-  }  
+    $cmd = "SELECT g.uid uid, ";
+    $cmd .= "p.display_name name ";
+    $cmd .= "FROM picture_groups g ";
+    $cmd .= "LEFT OUTER JOIN people_or_places p ";
+    $cmd .= "ON (g.uid = p.uid) "; 
+    $cmd .= "WHERE g.group_id = '$in_group_id' ";
+    $cmd .= "ORDER BY p.display_name ";
+    $result = $DBH->query ($cmd);
+    if ($result) {
+        while ($link_row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $a_uid           = $link_row["uid"];
+            $a_name          = $link_row["name"];
+            $found["$a_uid"] = 1;
+            if ($people_cnt == 0) {
+                echo '<tr><th colspan="2">'
+                    . 'People to Remove from Group'
+                    . "</th></tr>\n";
+                echo "<tr>\n";
+                echo ' <td align="right">People to Remove:</td>' . "\n";
+                echo " <td>\n";
+                echo '  <select name="in_deluids[]" multiple>' . "\n";
+            }
+            $people_cnt++;
+            echo '   <option value="$a_uid">' . $a_name . "\n";
+        }
+        if ($people_cnt > 0) {
+            echo "</select>\n";
+            echo " </td>\n";
+            echo "<tr>\n";
+        }
+    }  
 }
 ?>
 
@@ -202,30 +188,36 @@ $cmd = "SELECT uid,display_name ";
 $cmd .= "FROM people_or_places ";
 $cmd .= "ORDER BY display_name ";
 $add_cnt = 0;
-$result = mysql_query ($cmd);
+$result = $DBH->query ($cmd);
 if ($result) {
-  while ($person_row = mysql_fetch_array($result)) {
-    $a_uid = trim($person_row["uid"]);
-    if (isset($found["$a_uid"])) {continue;}
-    $a_name = $person_row["display_name"];
-    if ($add_cnt == 0) {
-      echo "<tr>\n";
-      echo " <td align=\"right\">People to Add:</td>\n";
-      echo " <td>\n";
-      echo "  <input type=\"text\"\n"; 
-      echo "         name=\"in_group_search\" \n";
-      echo "         onkeyup=\"find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);\">\n";
-      echo "  <br>\n";
-      echo "  <select name=\"in_newuids[]\" multiple>\n";
+    while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $a_uid = trim($person_row["uid"]);
+        if ( isset( $found["$a_uid"] ) ) {
+            continue;
+        }
+        $a_name = $person_row["display_name"];
+        if ($add_cnt == 0) {
+            echo "<tr>\n";
+            echo ' <td align="right">People to Add:</td>' . "\n";
+            echo " <td>\n";
+            echo '  <input type="text"' . "\n"; 
+            echo '         name="in_group_search"' . "\n";
+            echo '         onkeyup="find_select_items('
+                . 'this, '
+                . 'this.form.elements['in_newuids[]'], '
+                . 'in_ppe_values, '
+                . 'in_ppe_display);">' . "\n";
+            echo "  <br>\n";
+            echo '  <select name="in_newuids[]" multiple>' . "\n";
+        }
+        $add_cnt++;
+        echo "   <option value=\"$a_uid\">$a_name\n";
     }
-    $add_cnt++;
-    echo "   <option value=\"$a_uid\">$a_name\n";
-  }
-  if ($add_cnt > 0) {
-    echo "</select>\n";
-    echo " </td>\n";
-    echo "<tr>\n";
-  }
+    if ($add_cnt > 0) {
+        echo "</select>\n";
+        echo " </td>\n";
+        echo "<tr>\n";
+    }
 }
 ?>
 
