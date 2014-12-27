@@ -66,7 +66,7 @@ if ( strlen($btn_update)>0 ) {
             $result = $DBH->query($sql_cmd);
             if (!$result) {
                 $_SESSION['s_msg'] .=
-                    "<font $warn>ERROR:".mysql_error($cnx)."</font><br>\n";
+                    "<font $warn>ERROR:" . $result->error . "</font><br>\n";
                 $_SESSION['s_msg'] .=
                     "<font $warn>Problem SQL:$sql_cmd</font><br>\n";
             }

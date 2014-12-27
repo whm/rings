@@ -26,25 +26,9 @@ $in_button_back  = $_REQUEST['in_button_back'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  } 
-  return $str;
-}
-
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
-if (!mysql_select_db($mysql_db, $db_link)) {
-  echo "<font color=\#ff0000\">";
-  echo "Error selecting database $mysql_db";
-  echo "</font><br>\n";
-}
+require ('inc_db_connect.php');
 
 // ------------------------------------------------------------
 // format an sql condition clause
@@ -89,16 +73,16 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 $thisTitle = 'Picture Search';
 require ('page_top.php');
 
-  // how many to display
-  if (strlen($in_count) > 0) {
+// how many to display
+if (strlen($in_count) > 0) {
     $_SESSION['sear_count'] = $in_count;
-  } else {
+} else {
     $in_count = $_SESSION['sear_count'];
-  }
-  if ($in_count == 0) {$in_count = 30;}
+}
+if ($in_count == 0) {$in_count = 30;}
 
-  // Set up if we have been here before
-  if (isset($in_button_find)) {
+// Set up if we have been here before
+if (isset($in_button_find)) {
 
     $condition = '';
     $condition .= set_search ('key_words',
@@ -133,27 +117,27 @@ require ('page_top.php');
 
     $_SESSION['s_start_row'] = 0;
     // find the number of rows
-    $result = mysql_query ($_SESSION['s_list_select']);
+    $result = $DBH->query($_SESSION['s_list_select']);
     if ($result) {
-      $_SESSION['s_num_user_rows'] = mysql_num_rows($result); 
+        $_SESSION['s_num_user_rows'] = $result->num_rows;
     } else {
-      $_SESSION['s_num_user_rows'] = 0;
+        $_SESSION['s_num_user_rows'] = 0;
     }
-  } elseif (isset($in_button_next)) {
+} elseif (isset($in_button_next)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $in_count;
-  } elseif (isset($in_button_back)) {
+} elseif (isset($in_button_back)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $in_count;
     if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
-  }
+}
 
-  $sel = $_SESSION['s_list_select'] . ' LIMIT '
-       . $_SESSION['s_start_row'] . ",$in_count ";
-  $end_row = $_SESSION['s_start_row'] + $in_count;
-  if ($end_row > $_SESSION['s_num_user_rows']) {
+$sel = $_SESSION['s_list_select'] . ' LIMIT '
+      . $_SESSION['s_start_row'] . ",$in_count ";
+$end_row = $_SESSION['s_start_row'] + $in_count;
+if ($end_row > $_SESSION['s_num_user_rows']) {
     $end_row = $_SESSION['s_num_user_rows'];
-  }
+}
 ?>
 
 <p>
@@ -162,47 +146,47 @@ require ('page_top.php');
 <div align="center">
 <table>
 <tr><td align="right">Keywords:</td>
-    <td> 
-    <input type="text" name="in_key" 
+    <td>
+    <input type="text" name="in_key"
            value="<?php print $_SESSION['sear_key']; ?>">
     </td>
 </tr>
 <tr>
   <td align="right">Taken By:</td>
   <td>
-  <input type="text" name="in_taken_by" 
+  <input type="text" name="in_taken_by"
          value="<?php print $_SESSION['sear_taken_by']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Description:</td>
   <td>
-  <input type="text" name="in_description" 
+  <input type="text" name="in_description"
          value="<?php print $sear_description; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Picture Date Range:</td>
   <td>
-  Start:<input type="text" name="in_start_date" 
+  Start:<input type="text" name="in_start_date"
                value="<?php print $_SESSION['sear_start_date']; ?>">
-  End:<input type="text" name="in_end_date" 
+  End:<input type="text" name="in_end_date"
                value="<?php print $_SESSION['sear_end_date']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Date Last Maint Range:</td>
   <td>
-  Start:<input type="text" name="in_start_maint" 
+  Start:<input type="text" name="in_start_maint"
          value="<?php print $_SESSION['sear_start_maint']; ?>">
-  End:<input type="text" name="in_end_maint" 
+  End:<input type="text" name="in_end_maint"
          value="<?php print $_SESSION['sear_end_maint']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Count:</td>
   <td>
-  <input type="text" name="in_count" size=6 
+  <input type="text" name="in_count" size=6
          value="<?php print $in_count; ?>">
   </td>
 </tr>
@@ -217,9 +201,9 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
 <tr>
   <td align="right">Order By:</td>
   <td>
-  Picture Date: <input type="radio" name="in_order" 
+  Picture Date: <input type="radio" name="in_order"
               <?php echo $sel_date;?> value="p.picture_date">
-  Picture ID: <input type="radio" name="in_order" 
+  Picture ID: <input type="radio" name="in_order"
               <?php echo $sel_pid;?> value="p.pid">
   </td>
 </tr>
@@ -231,13 +215,13 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
 </tr>
 </table>
 
-<?php 
+<?php
    if ($_SESSION['s_num_user_rows']>0) {
 ?>
 <table border="1">
 
-<?php if (($end_row != $_SESSION['s_num_user_rows']) 
-      || ((strlen($_SESSION['s_start_row'])>0) 
+<?php if (($end_row != $_SESSION['s_num_user_rows'])
+      || ((strlen($_SESSION['s_start_row'])>0)
           && ($_SESSION['s_start_row'] > 0)) ) {
 ?>
   <tr>
@@ -255,9 +239,9 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
         <?php print $end_row; ?> of <?php print $_SESSION['s_num_user_rows'];?>
       </td>
       <td align="right">
-        <?php if ((strlen($_SESSION['s_start_row'])>0) 
+        <?php if ((strlen($_SESSION['s_start_row'])>0)
                   && ($_SESSION['s_start_row'] > 0)) { ?>
-        <input type="submit" name="in_button_back" value="Previous Page"> 
+        <input type="submit" name="in_button_back" value="Previous Page">
         <?php } ?>
       </td>
       </tr>
@@ -274,9 +258,9 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
     <th>Description</th>
   </tr>
 <?php
-    $result = mysql_query ($sel);
+    $result = $DBH->query($sel);
     if ($result) {
-      while ($row = mysql_fetch_array($result)) {
+      while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $pid = $row["pid"];
         $pic_href = '<a href="picture_maint.php?in_pid=$pid" '
             . 'target="_blank">';

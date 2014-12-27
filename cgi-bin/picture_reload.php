@@ -3,10 +3,10 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_pid  = $_REQUEST['in_pid'];
-$in_setdate  = $_REQUEST['in_setdate'];
-$in_button_find  = $_REQUEST['in_button_find'];
-$upload = $_REQUEST['upload'];
+$in_pid         = $_REQUEST['in_pid'];
+$in_setdate     = $_REQUEST['in_setdate'];
+$in_button_find = $_REQUEST['in_button_find'];
+$upload         = $_REQUEST['upload'];
 // ----------------------------------------------------------
 //
 
@@ -38,14 +38,8 @@ $em   = "</font><br>\n";
 openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
 
 // database pointers
-require ('/etc/whm/rings_dbs.php');
-
-// connect to the database
-$cnx = mysqli_connect ( $mysql_host, $mysql_user, $mysql_pass, $mysql_db );
-if (!$cnx) {
-    $_SESSION['msg'] .= "<br>Error connecting to MySQL host $mysql_host";
-}
-
+require('/etc/whm/rings_dbs.php');
+require('inc_db_connect.php');
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
@@ -121,45 +115,36 @@ if ($in_pid > 0) {
             $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
 
             $cmd = "UPDATE pictures_information SET ";
-            $cmd .= "raw_picture_size = ".strlen($the_file_contents).", ";
+            $cmd .= "raw_picture_size = " . strlen($the_file_contents) . ", ";
             $cmd .= "date_last_maint = NOW() ";
             $cmd .= "WHERE pid = $in_pid ";
-            $sth = mysqli_prepare ($cnx, $cmd);
-            if (mysqli_errno($cnx)) {
-                $_SESSION['msg'] .= $warn."MySQL prepare error:".
-                    mysqli_error($cnx).$em;
-                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
-            }
-            mysqli_stmt_execute($sth);
-            if (mysqli_errno($cnx)) {
-                $_SESSION['msg'] .= $warn."MySQL execute error:".
-                    mysqli_error($cnx).$em;
+            $sth = $DBH->query($cmd);
+            if ($sth->errno) {
+                $_SESSION['msg'] .= $warn."MySQL prepare error:"
+                    . $sth->error . $em;
                 $_SESSION['msg'] .= $warn."SQL:$cmd$em";
             }
 
             $cmd = "INSERT INTO pictures_raw SET ";
-            $cmd .= "pid = $in_pid, ";
-            $cmd .= "picture_type = '$content_type', ";
+            $cmd .= "pid = ?, ";
+            $cmd .= "picture_type = ?, ";
             $cmd .= "picture = ?, ";
             $cmd .= "date_last_maint = NOW(), ";
             $cmd .= "date_added = NOW() ";
             $cmd .= "ON DUPLICATE KEY UPDATE ";
-            $cmd .= "picture_type = '$content_type', ";
+            $cmd .= "picture_type = ?, ";
             $cmd .= "picture = ?, ";
             $cmd .= "date_last_maint = NOW() ";
-            $sth = mysqli_prepare ($cnx, $cmd);
-            if (mysqli_errno($cnx)) {
-                $_SESSION['msg'] .= $warn."MySQL prepare error:".
-                    mysqli_error($cnx).$em;
-                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
-            }
-            mysqli_stmt_bind_param($sth, "ss",
-                                   $the_file_contents,
-                                   $the_file_contents);
-            mysqli_stmt_execute($sth);
-            if (mysqli_errno($cnx)) {
-                $_SESSION['msg'] .= $warn."MySQL execute error:".
-                    mysqli_error($cnx).$em;
+            $sth = $DBH->prepare($cmd);
+            $sth->bind_param('i', $in_pid);
+            $sth->bind_param('s', $content_type);
+            $sth->bind_param('b', $the_file_contents);
+            $sth->bind_param('s', $content_type);
+            $sth->bind_param('b', $the_file_contents);
+            $sth->execute();
+            if ($sth->errno) {
+                $_SESSION['msg'] .= $warn."MySQL prepare error:"
+                    . $sth->error . $em;
                 $_SESSION['msg'] .= $warn."SQL:$cmd$em";
             }
             
@@ -184,8 +169,6 @@ if ($in_pid > 0) {
         }
     }
 }
-
-mysqli_close($cnx);
 
 if (strlen($_SESSION['msg']) > 0) {
     echo $_SESSION['msg'];

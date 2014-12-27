@@ -3,14 +3,14 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_displayname  = $_REQUEST['in_displayname'];
-$in_description  = $_REQUEST['in_description'];
-$in_uid  = $_REQUEST['in_uid'];
+$in_displayname = $_REQUEST['in_displayname'];
+$in_description = $_REQUEST['in_description'];
+$in_uid         = $_REQUEST['in_uid'];
 $in_visibility  = $_REQUEST['in_visibility'];
-$in_cn  = $_REQUEST['in_cn'];
-$in_button_find  = $_REQUEST['in_button_find'];
-$in_button_next  = $_REQUEST['in_button_next'];
-$in_button_back  = $_REQUEST['in_button_back'];
+$in_cn          = $_REQUEST['in_cn'];
+$in_button_find = $_REQUEST['in_button_find'];
+$in_button_next = $_REQUEST['in_button_next'];
+$in_button_back = $_REQUEST['in_button_back'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -21,28 +21,12 @@ $in_button_back  = $_REQUEST['in_button_back'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-    $str = trim ($fld);
-    if (strlen($str) == 0) {
-        $str = "&nbsp;";
-    } 
-    return $str;
-}
-
 //-------------------------------------------------------------
 // Start of main processing for the page
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');
-
-// connect to the db
-$db_link = mysql_connect($mysql_host, $mysql_user, $mysql_pass);
-if (!mysql_select_db($mysql_db, $db_link)) {
-    echo "<font color=\#ff0000\">";
-    echo "Error selecting database $mysql_db";
-    echo "</font><br>\n";
-}
+require('inc_db_connect.php');
 ?>
 
 <html>
@@ -103,9 +87,9 @@ if (isset($in_button_find)) {
         . "ORDER BY uid ";
     $_SESSION['sp_start_row'] = 0;
     // find the number of rows
-    $result = mysql_query ($_SESSION['sp_list_select']);
+    $result = $DBH->query($_SESSION['sp_list_select']);
     if ($result) {
-        $_SESSION['sp_num_user_rows'] = mysql_num_rows($result); 
+        $_SESSION['sp_num_user_rows'] = $result->num_rows; 
     } else {
         $_SESSION['sp_num_user_rows'] = 0;
     }
@@ -227,10 +211,10 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
     <th>Public</th>
   </tr>
 <?php
-    $result = mysql_query ($sel);
+    $result = $DBH->query($sel);
     if ($result) {
-      while ($row = mysql_fetch_array($result)) {
-        $uid = $row["uid"];
+      while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $uid       = $row["uid"];
         $user_href = urlencode("$uid");
         $user_href = "<a href=\"people_maint.php?in_uid=$user_href\">";
         echo " <tr>\n";

@@ -3,15 +3,15 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_subject  = $_REQUEST['in_subject'];
-$in_message  = $_REQUEST['in_message'];
-$in_from_addr  = $_REQUEST['in_from_addr'];
-$in_cc_addr  = $_REQUEST['in_cc_addr'];
-$in_to_addr  = $_REQUEST['in_to_addr'];
-$in_button_to  = $_REQUEST['in_button_to'];
-$in_button_cc  = $_REQUEST['in_button_cc'];
-$in_button_send  = $_REQUEST['in_button_send'];
-$in_button_cancel  = $_REQUEST['in_button_cancel'];
+$in_subject       = $_REQUEST['in_subject'];
+$in_message       = $_REQUEST['in_message'];
+$in_from_addr     = $_REQUEST['in_from_addr'];
+$in_cc_addr       = $_REQUEST['in_cc_addr'];
+$in_to_addr       = $_REQUEST['in_to_addr'];
+$in_button_to     = $_REQUEST['in_button_to'];
+$in_button_cc     = $_REQUEST['in_button_cc'];
+$in_button_send   = $_REQUEST['in_button_send'];
+$in_button_cancel = $_REQUEST['in_button_cancel'];
 $in_button_email  = $_REQUEST['in_button_email'];
 // ----------------------------------------------------------
 //
@@ -28,21 +28,13 @@ require ('htmlMimeMail.php');
 
 // set update message area
 $err_msg = '';
-$ok = '<font color="#009900">';
+$ok   = '<font color="#009900">';
 $warn = '<font color="#330000">';
 $mend = "</font><br>\n";
-$msg = '';
+$msg  = '';
 
 require ('/etc/whm/rings_dbs.php');
-// connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-    $err_msg .= "$warn Error connecting to MySQL host $mysql_host$mend";
-}
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-    $err_msg .= "$warn Error connecting to MySQL db $mysql_db$mend";
-}
+require('inc_db_connect.php');
 
 // get the picture information
 if (isset($in_button_send)) {
@@ -97,30 +89,30 @@ if (isset($in_button_send)) {
 
         // get the picture information
         $sel = "SELECT * FROM pictures_information WHERE pid=$email_pid ";
-        $result = mysql_query ($sel,$cnx);
+        $result = $DBH->query($sel);
         if (!$result) {
             $err_msg .= "$warn Problem finding picture information.$mend";
             $err_msg .= "$warn Problem SQL:$sel$mend";
             break;
         } 
     
-        $row = mysql_fetch_array ($result);
+        $row = $result->fetch_array(MYSQLI_ASSOC);
         $thisFilename = $row['file_name'];
     
         // get the picture
         $sel = "SELECT * FROM pictures_large WHERE pid=$email_pid ";
-        $result = mysql_query ($sel,$cnx);
+        $result = $DBH->query ($sel,$cnx);
         if (!$result) {
             $err_msg .= "$warn Problem finding image.$mend";
             $err_msg .= "$warn Problem SQL:$sel$mend";
             break;
         } else {
         
-            $row = mysql_fetch_array ($result);
+            $row = $result->fetch_array(MYSQLI_ASSOC);
             $thisPicture = $row['picture'];
             $thisFiletype = $row['picture_type'];
             
-            $msg .= "$ok Picture size ".strlen($thisPicture)."$mend";
+            $msg .= "$ok Picture size " . strlen($thisPicture) . "$mend";
         
             // Add the picture
             $mailMsg->addAttachment($thisPicture, 
@@ -134,8 +126,6 @@ if (isset($in_button_send)) {
         $mailResult = $mailMsg->send($to_addrs);
     }
 }
-
-mysql_close ($cnx);
 
 ?>
 <html>

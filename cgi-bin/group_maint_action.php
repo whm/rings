@@ -48,29 +48,13 @@ function mkin ($a_fld, $a_val, $in_type) {
   return;
 }
 
-function get_fld_names ($this_group) {
-    global $DBH;
-
-    $sel = "SELECT * FROM $this_group LIMIT 0,1";
-    $result = $DBH->query ($sel);
-    $names = array();
-    if ($result) {
-        $fld_cnt = $result->field_count;
-        for ($i=0; $i<$fld_cnt; $i++) {
-            $fld_info = $result->fetch_field_direct($i);
-            $db_fld   = $fld_info->name;
-            $names[] = $db_fld;
-        }
-    }
-    return $names;
-}
-
 // ----------------------------------------------------
 // Main Routine
 
 // database pointers
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
+require('/etc/whm/rings_dbs.php');
+require('inc_db_connect.php');
+require('inc_db_functions.php');
 
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;
@@ -249,8 +233,6 @@ if ( $update_flag ) {
     echo "Ooops, this should never happen!<br>\n";
 
 }
-
-mysql_close ($cnx);
 
 header ("$next_header?in_group_id=$next_group_id");
 

@@ -3,9 +3,9 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_uid  = $_REQUEST['in_uid'];
-$in_button_find = $_REQUEST['in_button_find'];
-$in_button_add = $_REQUEST['in_button_add'];
+$in_uid           = $_REQUEST['in_uid'];
+$in_button_find   = $_REQUEST['in_button_find'];
+$in_button_add    = $_REQUEST['in_button_add'];
 $in_button_update = $_REQUEST['in_button_update'];
 $in_button_delete = $_REQUEST['in_button_delete'];
 // ----------------------------------------------------------
@@ -18,47 +18,30 @@ $in_button_delete = $_REQUEST['in_button_delete'];
 
 require ('inc_page_open.php');
 
-// -- Print a space or the field
-function prt ($fld) {
-  $str = trim ($fld);
-  if (strlen($str) == 0) {
-    $str = "&nbsp;";
-  }
-  return $str;
-}
-
 //-------------------------------------------------------------
 // Start of main processing for the page
 
 require ('/etc/whm/rings_dbs.php');
+require('inc_db_connect.php');
 
-// connect to the database
-$conn = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$conn) {
-  $_SESSION['s_msg'] .= "Error connecting to MySQL host $mysql_host<br>";
-}
-$cnx = mysql_select_db($mysql_db);
-if (!$cnx) {
-  $_SESSION['s_msg'] .= "Error connecting to MySQL db $mysql_db<br>";
-}
 if (isset($in_uid)) {
-  if ($in_uid=='CLEARFORM') {
-    $add_flag = 1;
-    $in_uid = '';
-  }
+    if ($in_uid=='CLEARFORM') {
+        $add_flag = 1;
+        $in_uid = '';
+    }
 } else {
-  $in_uid = '';
+    $in_uid = '';
 }
 
 $sel = "SELECT * ";
 $sel .= "FROM people_or_places ";
 $sel .= "WHERE uid = '$in_uid' ";
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 if ($result) {
-  $row = mysql_fetch_array($result);
+    $row = $result->fetch_array(MYSQLI_ASSOC);
 }
 if ( isset($in_uid) && !isset($row["uid"]) ) {
-   $_SESSION['s_msg'] .= "Person '$in_uid' not found.<br>\n";
+    $_SESSION['s_msg'] .= "Person '$in_uid' not found.<br>\n";
 }
 ?>
 
