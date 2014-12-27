@@ -3,19 +3,19 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_size  = $_REQUEST['in_size'];
-$in_seconds  = $_REQUEST['in_seconds'];
-$in_group_id  = $_REQUEST['in_group_id'];
-$in_login  = $_REQUEST['in_login'];
-$in_pos  = $_REQUEST['in_pos'];
-$in_grade  = $_REQUEST['in_grade'];
-$in_type  = $_REQUEST['in_type'];
-$in_pref_display  = $_REQUEST['in_pref_display'];
-$in_button_set = $_REQUEST['in_button_set'];
+$in_size         = $_REQUEST['in_size'];
+$in_seconds      = $_REQUEST['in_seconds'];
+$in_group_id     = $_REQUEST['in_group_id'];
+$in_login        = $_REQUEST['in_login'];
+$in_pos          = $_REQUEST['in_pos'];
+$in_grade        = $_REQUEST['in_grade'];
+$in_type         = $_REQUEST['in_type'];
+$in_pref_display = $_REQUEST['in_pref_display'];
+$in_button_set   = $_REQUEST['in_button_set'];
 // ----------------------------------------------------------
 //
 // -------------------------------------------------------------
-// ring_select.php
+// index.php for the Picture Rings application
 // author: Bill MacAllister
 // date: 26-Nov-2004
 //
@@ -208,8 +208,8 @@ if (strlen($in_group_id) == 0) {
 }
 
 $sel = "SELECT * FROM groups ORDER BY group_name ";
-if (  $result = mysql_query ($sel,$cnx) ) {
-    while ( $row = mysql_fetch_array ($result) ) {
+if (  $result = $DBH->query($sel) ) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $s = '';
         if ($_SESSION['group_id'] == $row['group_id']) {
             $s = ' SELECTED';
@@ -226,9 +226,11 @@ if (  $result = mysql_query ($sel,$cnx) ) {
 
 <tr>
 <th align="right" valign="top">Show Preferences:</th>
-<td><input type="radio" name="in_pref_display"  <?php echo $chk_pref_yes;?> onClick="showPreferences()" value="Y">Yes
+<td><input type="radio" name="in_pref_display"  <?php echo $chk_pref_yes;?>
+           onClick="showPreferences()" value="Y">Yes
     &nbsp;&nbsp;
-    <input type="radio" name="in_pref_display"  <?php echo $chk_pref_no;?> onClick="hidePreferences()" value="N">No
+    <input type="radio" name="in_pref_display"  <?php echo $chk_pref_no;?>
+           onClick="hidePreferences()" value="N">No
     <br>
 
     <p id="preferencesDisplay">
@@ -367,9 +369,9 @@ if ( strlen($in_group_id) > 0) {
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
     }
-    $result = mysql_query ($sel,$cnx);
+    $result = $DBH->query($sel);
     $pp_list = array();
-    while ( $row = mysql_fetch_array ($result) ) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $pp_list[$row["uid"]] = $row["display_name"];
         $pp_desc[$row["uid"]] = $row["description"];
         $pp_pid[$row["uid"]]  = $row["pid"];

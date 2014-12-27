@@ -3,8 +3,8 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_id  = $_REQUEST['in_id'];
-$in_pid  = $_REQUEST['in_pid'];
+$in_id            = $_REQUEST['in_id'];
+$in_pid           = $_REQUEST['in_pid'];
 $in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //

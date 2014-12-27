@@ -4,7 +4,7 @@
 // Register Global Fix
 //
 $in_pid  = $_REQUEST['in_pid'];
-$in_size  = $_REQUEST['in_size'];
+$in_size = $_REQUEST['in_size'];
 // ----------------------------------------------------------
 //
 // Display a picture
@@ -43,20 +43,20 @@ if ($display_warning > 0) {
         $sel = "SELECT picture,picture_type FROM pictures_raw ";
     }
     $sel .= "WHERE pid=$in_pid ";
-    $status = mysql_query ($sel, $cnx);
-    $ret = mysql_fetch_array($status);
-    $picture = $ret[0];
-    $type    = $ret[1];
+    $result  = $DBH->query($sel);
+    $row     = $result->fetch_array(MYSQLI_ASSOC);
+    $picture = $row['picture'];
+    $type    = $row['picture_type'];
     
     if (strlen($picture) == 0) {
         // fall back to the raw image because the requested size
         // was not found.
         $sel = "SELECT picture,picture_type FROM pictures_raw ";
         $sel .= "WHERE pid=$in_pid ";
-        $status = mysql_query ($sel, $cnx);
-        $ret = mysql_fetch_array($status);
-        $picture = $ret[0];
-        $type    = $ret[1];
+        $result  = $DBH->query($sel);
+        $row     = $result->fetch_array(MYSQLI_ASSOC);
+        $picture = $row['picture'];
+        $type    = $row['picture_type'];
     }
     
     if (strlen($picture) == 0) {
@@ -78,5 +78,4 @@ if ($display_warning > 0) {
     }
     
 }
-mysql_close ($cnx);
 ?>
