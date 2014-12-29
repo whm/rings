@@ -10,19 +10,7 @@ require ('inc_page_open.php');
 require ('/etc/whm/rings_dbs.php');
 
 // connect to the database
-$cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-if (!$cnx) {
-  $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
-  echo "$msg";
-  exit;
-}
-$result = mysql_select_db($mysql_db);
-if (!$result) {
-  $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
-  echo "$msg";
-  exit;
-}
-
+require ('inc_db_connect.php');
 ?>
 <html>
 <head>
@@ -44,7 +32,7 @@ $next_links = array();
 $sel = "SELECT * ";
 $sel .= "FROM groups ";
 $sel .= "ORDER BY group_id ";
-$result = mysql_query ($sel);
+$result = $DBH->query($sel);
 if ($result) {
   echo "<table border=\"1\">\n";
   echo " <tr>\n";
@@ -54,7 +42,7 @@ if ($result) {
   echo "  <th>Date Added</th>\n";
   echo "  <th>Date Last Maint</th>\n";
   echo " </tr>\n";
-  while ($row = mysql_fetch_array($result)) {
+  while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
     $this_id          = trim($row["group_id"]);
     $this_name        = trim($row["group_name"]);
     $this_description = trim($row["group_description"]);
@@ -77,4 +65,3 @@ if ($result) {
 <?php require('page_bottom.php'); ?>
 </body>
 </html>
-

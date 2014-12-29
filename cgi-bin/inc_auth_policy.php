@@ -14,21 +14,23 @@ $in_logout  = $_REQUEST['in_logout'];
 
 // Look up people and see if any are invisible.
 function auth_picture_invisible ($pid) {
-    global $cnx;
+    global $DBH;
     $hide_picture = 0;
     if (strlen($_SESSION['whm_directory_user'])==0) { 
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pid=$pid ";
         $sel .= "AND pop.visibility = 'INVISIBLE' ";
-        $rset = mysql_query ($sel, $cnx);
+        $rset = $DBH->query($sel);
         if (!$rset) {
-            $_SESSION['s_msg'] .= 'ERROR: '.mysql_error($cnx)."<br>\n";
+            $_SESSION['s_msg'] .= 'ERROR: ' . $rset->error . "<br>\n";
             $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
-            while ( $row = mysql_fetch_array($rset) ) {
-                if ($row['hidden_count'] > 0) $hide_picture = 1;
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                if ($row['hidden_count'] > 0) {
+                    $hide_picture = 1;
+                }
                 last;
             }
         }
@@ -38,21 +40,23 @@ function auth_picture_invisible ($pid) {
 
 // Look up a person and see if they are to be displayed.
 function auth_person_hidden ($uid) {
-    global $cnx;
+    global $DBH;
     $hide_person = 0;
     if (strlen($_SESSION['whm_directory_user'])==0) { 
         $sel = "SELECT count(*) hidden_count FROM people_or_places ";
         $sel .= "WHERE uid='$uid' ";
         $sel .= "AND (visibility = 'INVISIBLE' ";
         $sel .=      "OR visibility = 'HIDDEN') ";
-        $rset = mysql_query ($sel, $cnx);
+        $rset = $DBH->query($sel);
         if (!$rset) {
-            $_SESSION['s_msg'] .= 'ERROR: '.mysql_error($cnx)."<br>\n";
+            $_SESSION['s_msg'] .= 'ERROR: ' . $rset->error . "<br>\n";
             $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
-            while ( $row = mysql_fetch_array($rset) ) {
-                if ($row['hidden_count'] > 0) {$hide_person = 1;}
+            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                if ($row['hidden_count'] > 0) {
+                    $hide_person = 1;
+                }
                 last;
             }
         }

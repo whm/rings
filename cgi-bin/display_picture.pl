@@ -29,13 +29,13 @@ my $dbh = DBI->connect ($dbi, $mysql_user, $mysql_pass)
     or die "%pride-f-cantconn, Can't connect to database $dbi\n";
 
 # -- setup statement to look up work orders
-my $sel = "SELECT ";
-$sel .= "picture, ";
-$sel .= "picture_type ";
-$sel .= "FROM pictures ";
-$sel .= "WHERE pid='$pid' ";
-my $sth = $dbh->prepare ("$sel");
-$sth->execute();
+my $sel = 'SELECT ';
+$sel .= 'picture, ';
+$sel .= 'picture_type ';
+$sel .= 'FROM pictures ';
+$sel .= 'WHERE pid=? ';
+my $sth = $dbh->prepare ($sel);
+$sth->execute($pid);
 
 my $cnt = 1;
 my $pblob = '';
@@ -75,7 +75,7 @@ if (my $row = $sth->fetchrow_hashref('NAME_lc') ) {
             $x = $x2;
             $y = $y2;
         }
-        if ( (($pmax_x>0) & ($pmax_y>0)) 
+        if ( (($pmax_x>0) & ($pmax_y>0))
              & (($pmax_x<$width) || ($pmax_y<$height)) ) {
             if ($x1 < $x2) {
                 $x = $x1;
