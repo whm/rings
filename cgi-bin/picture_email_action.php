@@ -101,7 +101,7 @@ if (isset($in_button_send)) {
     
         // get the picture
         $sel = "SELECT * FROM pictures_large WHERE pid=$email_pid ";
-        $result = $DBH->query ($sel,$cnx);
+        $result = $DBH->query ($sel);
         if (!$result) {
             $err_msg .= "$warn Problem finding image.$mend";
             $err_msg .= "$warn Problem SQL:$sel$mend";
