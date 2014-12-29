@@ -19,7 +19,7 @@ require ('inc_page_open.php');
 //  $in_type == "n" is a number
 //  $in_type != "n" anything else is a string
 
-function mkin ($cnx, $a_fld, $a_val, $in_type) {
+function mkin ($a_fld, $a_val, $in_type) {
 
     global $DBH;
     global $flds;
@@ -57,18 +57,18 @@ function unzip_and_load ($zipfile) {
             
             // Store picture information and the picture
             //
-            $pid = get_next($cnx, "pid");
+            $pid = get_next('pid');
             $original_file = $file;
             $content_type = 'image/jpeg';
             $the_file_contents = fread(fopen($file,'r'), 10000000);
             $original_picture_size = strlen($the_file_contents);
             
             $flds = $vals = '';
-            mkin ($cnx, 'pid',              $pid,                  'n');
-            mkin ($cnx, 'raw_picture_size', $original_picture_size,'n');
-            mkin ($cnx, 'file_name',        $file,                 's');
-            mkin ($cnx, 'date_last_maint',  $a_date,               'd');
-            mkin ($cnx, 'date_added',       $a_date,               'd');
+            mkin ('pid',              $pid,                  'n');
+            mkin ('raw_picture_size', $original_picture_size,'n');
+            mkin ('file_name',        $file,                 's');
+            mkin ('date_last_maint',  $a_date,               'd');
+            mkin ('date_added',       $a_date,               'd');
             $cmd = "INSERT INTO pictures_information ";
             $cmd .= "($flds) VALUES ($vals) ";
             $result = $DBH->query ($cmd);
@@ -78,11 +78,11 @@ function unzip_and_load ($zipfile) {
             }
             
             $flds = $vals = '';
-            mkin ($cnx, 'pid',             $pid,               'n');
-            mkin ($cnx, 'picture_type',    $content_type,      's');
-            mkin ($cnx, 'picture',         $the_file_contents, 's');
-            mkin ($cnx, 'date_last_maint', $a_date,            'd');
-            mkin ($cnx, 'date_added',      $a_date,            'd');
+            mkin ('pid',             $pid,               'n');
+            mkin ('picture_type',    $content_type,      's');
+            mkin ('picture',         $the_file_contents, 's');
+            mkin ('date_last_maint', $a_date,            'd');
+            mkin ('date_added',      $a_date,            'd');
             $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
             $result = $DBH->query($cmd);
             if ($result->errno) {
@@ -98,54 +98,6 @@ function unzip_and_load ($zipfile) {
         }
     }
     exec("rm -r $tmpdir");
-}
-
-//-------------------------------------------------------------
-// get the next id
-
-function get_next ($id) {
-
-    global $DBH;
-    global $warn, $em;
-
-    $return_number = 0;
-
-    $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
-    $result = $DBH->query ($sel,$cnx);
-    if ($result->errno) {
-        $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-        $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
-    } else {
-        if ($result) {
-            $row = $result->fetch_array(MYSQLI_ASSOC);
-            $return_number = $row["next_number"];
-        }
-    }
-    if ($return_number > 0) {
-        $nxt = $return_number + 1;
-        $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-        $result = $DBH->query($cmd);
-        if ($DBH->errno) {
-            $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
-        }
-    } else {
-        $nxt = 1;
-        $cmd = "INSERT INTO  next_number (id,next_number) ";
-        $cmd .= "VALUES ('$id',$nxt) ";
-        $result = $DBH->query($cmd);
-        if ($result->errno) {
-            $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
-        } else {
-            if ($result) {
-                $return_number = $nxt;
-            }
-        }
-    }
-
-    return $return_number;
-
 }
 
 ?>
@@ -179,7 +131,7 @@ require ('inc_db_connect.php');
 if (!isset($upload)) {
     
     // -- Display slots from
-    echo '<form method="post" action=" . $_SERVER['PHP_SELF'] . '">' . "\n";
+    echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
     echo "   Number of Pictures to upload at once: \n";
     echo "  <input type=\"text\" size=\"3\"\n";
@@ -255,15 +207,15 @@ if (!isset($upload)) {
                     
                     $a_date            = date("Y-m-d H:i:s");
                     $the_file_contents = fread(fopen($tmp_file,'r'), 10000000);
-                    $pid               = get_next($cnx, "pid");
+                    $pid               = get_next('pid');
                     $original_picture_size = strlen($the_file_contents);
                     
                     $flds = $vals = '';
-                    mkin ($cnx, 'pid',             $pid,               'n');
-                    mkin ($cnx, 'raw_picture_size',strlen($original_picture_size),'n');
-                    mkin ($cnx, 'file_name',       $original_file,     's');
-                    mkin ($cnx, 'date_last_maint', $a_date,            'd');
-                    mkin ($cnx, 'date_added',      $a_date,            'd');
+                    mkin ('pid',             $pid,               'n');
+                    mkin ('raw_picture_size',strlen($original_picture_size),'n');
+                    mkin ('file_name',       $original_file,     's');
+                    mkin ('date_last_maint', $a_date,            'd');
+                    mkin ('date_added',      $a_date,            'd');
                     $cmd = "INSERT INTO pictures_information ";
                     $cmd .= "($flds) VALUES ($vals) ";
                     $result = $DBH->query ($cmd);
@@ -273,11 +225,11 @@ if (!isset($upload)) {
                     }
                     
                     $flds = $vals = '';
-                    mkin ($cnx, 'pid',             $pid,               'n');
-                    mkin ($cnx, 'picture_type',    $content_type,      's');
-                    mkin ($cnx, 'picture',         $the_file_contents, 's');
-                    mkin ($cnx, 'date_last_maint', $a_date,            'd');
-                    mkin ($cnx, 'date_added',      $a_date,            'd');
+                    mkin ('pid',             $pid,               'n');
+                    mkin ('picture_type',    $content_type,      's');
+                    mkin ('picture',         $the_file_contents, 's');
+                    mkin ('date_last_maint', $a_date,            'd');
+                    mkin ('date_added',      $a_date,            'd');
                     $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
                     $result = $DBH->query ($cmd);
                     if ($result->errno) {

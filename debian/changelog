@@ -6,6 +6,7 @@ picture-rings (2.9) UNRELEASED; urgency=medium
     first.
   * Correct problem in picture sort that was suppressing the display
     of the picture details.
+  * Replace all mysql functions with mysqli.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 20 Dec 2014 22:30:41 -0800
 
