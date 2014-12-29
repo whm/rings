@@ -3,10 +3,10 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_id = $_REQUEST['in_id'];
-$in_pid = $_REQUEST['in_pid'];
-$in_grade = $_REQUEST['in_grade'];
-$in_username = $_REQUEST['in_username'];
+$in_id            = $_REQUEST['in_id'];
+$in_pid           = $_REQUEST['in_pid'];
+$in_grade         = $_REQUEST['in_grade'];
+$in_username      = $_REQUEST['in_username'];
 $in_button_submit = $_REQUEST['in_button_submit'];
 // ----------------------------------------------------------
 //
@@ -42,7 +42,7 @@ function closeWindow() {
 </tr>
 <tr><td align="center"><input type="radio" name="in_grade" value="C">C</td>
 </tr>
-<tr><td align="center"><input type="submit" name="in_button_submit" 
+<tr><td align="center"><input type="submit" name="in_button_submit"
                               value="Set Grade">
 </td>
 </tr>
@@ -60,18 +60,7 @@ if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
 
     // connect to the database
     require ('/etc/whm/rings_dbs.php');
-    $cnx = mysql_connect ( $mysql_host, $mysql_user, $mysql_pass );
-    if (!$cnx) {
-        $msg = $msg . "<br>Error connecting to MySQL host $mysql_host";
-        echo "$msg";
-        exit;
-    }
-    $result = mysql_select_db($mysql_db);
-    if (!$result) {
-        $msg = $msg . "<br>Error connecting to MySQL db $mysql_db";
-        echo "$msg";
-        exit;
-    }
+    require ('inc_db_connect.php');
 
     $cmd = "INSERT INTO picture_grades SET ";
     $cmd .= "pid = $in_pid, ";
@@ -82,15 +71,15 @@ if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
     $cmd .= "ON DUPLICATE KEY UPDATE ";
     $cmd .= "grade = '$in_grade', ";
     $cmd .= "date_last_maint = NOW() ";
-    $result = mysql_query ($cmd);
+    $result = $DBH->query($cmd);
 
     $sel = "SELECT count(*), grade FROM picture_grades ";
     $sel .= "WHERE pid = $in_pid ";
     $sel .= "GROUP BY grade ORDER BY count(*) ";
     $sel .= "LIMIT 0,1 ";
-    $result = mysql_query ($sel);
+    $result = $DBH->query($sel);
     if ($result) {
-        $row = mysql_fetch_array($result);
+        $row = $result->fetch_array(MYSQLI_ASSOC);
         $high_grade = $row['grade'];
     }
 
@@ -98,7 +87,7 @@ if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
     $cmd .= "grade = '$high_grade', ";
     $cmd .= "date_last_maint = NOW() ";
     $cmd .= "WHERE pid = $in_pid ";
-    $result = mysql_query ($cmd);
+    $result = $DBH->query($cmd);
 
     echo "<script language=\"JavaScript\">\n";
     echo " window.close();\n";
