@@ -1,27 +1,24 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_message  = $_REQUEST['in_message'];
-$in_subject  = $_REQUEST['in_subject'];
-$in_pid  = $_REQUEST['in_pid'];
-$in_cc_addr  = $_REQUEST['in_cc_addr'];
-$in_to_addr  = $_REQUEST['in_to_addr'];
-$in_button_to  = $_REQUEST['in_button_to'];
-$in_button_cc  = $_REQUEST['in_button_cc'];
-$in_button_send  = $_REQUEST['in_button_send'];
-$in_button_cancel  = $_REQUEST['in_button_cancel'];
-$in_button_email  = $_REQUEST['in_button_email'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // picture_email.php
 // author: Bill MacAllister
 // date: 22-Nov-2004
 //
-// Open a session, perform authorization check, and include authorization 
+// Open a session, perform authorization check, and include authorization
 // routines unique to the rings.
+
+require('inc_util.php');
+$in_message       = get_request('in_message');
+$in_subject       = get_request('in_subject');
+$in_pid           = get_request('in_pid');
+$in_cc_addr       = get_request('in_cc_addr');
+$in_to_addr       = get_request('in_to_addr');
+$in_button_to     = get_request('in_button_to');
+$in_button_cc     = get_request('in_button_cc');
+$in_button_send   = get_request('in_button_send');
+$in_button_cancel = get_request('in_button_cancel');
+$in_button_email  = get_request('in_button_email');
+
 require('inc_auth_policy.php');
 
 require ('/etc/whm/rings_dbs.php');
@@ -73,7 +70,7 @@ function get_mail_addresses(addrType) {
 
 <h1>Email a Picture</h1>
 
-<form name="emailMessage" 
+<form name="emailMessage"
       method="post"
       action="picture_email_action.php">
 
@@ -93,8 +90,8 @@ function get_mail_addresses(addrType) {
 </tr>
 <tr>
   <td align="right">To:</td>
-  <td><textarea cols="60" 
-                rows="3" 
+  <td><textarea cols="60"
+                rows="3"
                 wrap="physical"
                 name="in_to_addr"><?php echo $in_to_addr;?></textarea>
   </td>
@@ -106,8 +103,8 @@ function get_mail_addresses(addrType) {
 </tr>
 <tr>
   <td align="right">CC:</td>
-  <td><textarea cols="60" 
-                rows="2" 
+  <td><textarea cols="60"
+                rows="2"
                 wrap="physical"
                 name="in_cc_addr"><?php echo $in_cc_addr;?></textarea>
   </td>
@@ -128,8 +125,8 @@ function get_mail_addresses(addrType) {
 </tr>
 <tr>
   <td align="right">Message:</td>
-  <td><textarea cols="70" 
-                rows="20" 
+  <td><textarea cols="70"
+                rows="20"
                 wrap="physical"
                 name="in_message"><?php echo $in_message;?></textarea>
   </td>
@@ -148,7 +145,7 @@ function get_mail_addresses(addrType) {
   <td align="center">
     <?php
     $email_list = explode(" ", $_SESSION['s_email_list']);
-    foreach ($email_list as $email_pid) { 
+    foreach ($email_list as $email_pid) {
       if ($email_pid > 0) {
         echo "<img src=\"display.php?in_pid=$email_pid&in_size=small\">\n";
       }
@@ -168,4 +165,3 @@ function get_mail_addresses(addrType) {
 
 </Body>
 </html>
-

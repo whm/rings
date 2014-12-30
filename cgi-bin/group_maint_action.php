@@ -1,29 +1,26 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_fld             = $_REQUEST['in_fld'];
-$in_val             = $_REQUEST['in_val'];
-$in_group_id        = $_REQUEST['in_group_id'];
-$in_date_added      = $_REQUEST['in_date_added'];
-$in_type            = $_REQUEST['in_type'];
-$in_date_last_maint = $_REQUEST['in_date_last_maint'];
-$in_group_uid       = $_REQUEST['in_group_uid'];
-$in_deluids         = $_REQUEST['in_deluids'];
-$in_uid             = $_REQUEST['in_uid'];
-$in_newuids         = $_REQUEST['in_newuids'];
-$in_button_add      = $_REQUEST['in_button_add'];
-$in_button_update   = $_REQUEST['in_button_update'];
-$in_button_delete   = $_REQUEST['in_button_delete'];
-// ----------------------------------------------------------
-//
-
 // File: people_maint_action.php
 // Author: Bill MacAllister
 // Date: 31-Dec-2001
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_fld             = get_request('in_fld');
+$in_val             = get_request('in_val');
+$in_group_id        = get_request('in_group_id');
+$in_date_added      = get_request('in_date_added');
+$in_type            = get_request('in_type');
+$in_date_last_maint = get_request('in_date_last_maint');
+$in_group_uid       = get_request('in_group_uid');
+$in_deluids         = get_request('in_deluids');
+$in_uid             = get_request('in_uid');
+$in_newuids         = get_request('in_newuids');
+$in_button_add      = get_request('in_button_add');
+$in_button_update   = get_request('in_button_update');
+$in_button_delete   = get_request('in_button_delete');
 
 //-------------------------------------------------------------
 // construct flds and vals for an insert
@@ -113,7 +110,7 @@ if ( $update_flag ) {
         if ($db_fld == "date_added") {
             continue;
         }
-        $in_val = trim($_REQUEST["in_$db_fld"]);
+        $in_val = trim(get_request("in_$db_fld"));
         if (trim($in_val) != trim($row[$db_fld])) {
             $in_val = str_replace ("'", "\\'", $in_val);
             $cmd .= "$comma $db_fld='$in_val' ";
@@ -130,8 +127,8 @@ if ( $update_flag ) {
         $result = $DBH->query($sql_cmd);
         $_SESSION['msg'] .= $up_msg;
     }
-  
-    // -- add people to group 
+
+    // -- add people to group
 
     if (is_array($in_newuids)) {
         foreach ($in_newuids as $i => $a_uid) {
@@ -147,7 +144,7 @@ if ( $update_flag ) {
         }
     }
 
-    // -- delete people from group 
+    // -- delete people from group
 
     if (is_array($in_deluids)) {
         foreach ($in_deluids as $i => $a_uid) {
@@ -179,14 +176,14 @@ if ( $update_flag ) {
         $vals = '';
         $fld_names = get_fld_names('groups');
         foreach ($fld_names as $db_fld) {
-            $in_val = trim($_REQUEST["in_$db_fld"]);
+            $in_val = trim(get_request("in_$db_fld"));
             mkin ($db_fld, $in_val, 's');
         }
         $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";
         $result = $DBH->query($sql_cmd);
         $_SESSION['msg'] .= "<font $ok>Group '$in_group_id' added </font><br>";
 
-        // -- add people to group 
+        // -- add people to group
 
         if (is_array($in_newuids)) {
             foreach ($in_newuids as $i => $a_uid) {

@@ -1,23 +1,4 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_start_date  = $_REQUEST['in_start_date'];
-$in_end_maint  = $_REQUEST['in_end_maint'];
-$in_key  = $_REQUEST['in_key'];
-$in_end_date  = $_REQUEST['in_end_date'];
-$in_count  = $_REQUEST['in_count'];
-$in_start_maint  = $_REQUEST['in_start_maint'];
-$in_pid  = $_REQUEST['in_pid'];
-$in_order  = $_REQUEST['in_order'];
-$in_taken_by  = $_REQUEST['in_taken_by'];
-$in_description  = $_REQUEST['in_description'];
-$in_button_find  = $_REQUEST['in_button_find'];
-$in_button_next  = $_REQUEST['in_button_next'];
-$in_button_back  = $_REQUEST['in_button_back'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // people_search.php
 // author: Bill MacAllister
@@ -25,6 +6,22 @@ $in_button_back  = $_REQUEST['in_button_back'];
 //
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_start_date  = get_request('in_start_date');
+$in_end_maint   = get_request('in_end_maint');
+$in_key         = get_request('in_key');
+$in_end_date    = get_request('in_end_date');
+$in_count       = get_request('in_count');
+$in_start_maint = get_request('in_start_maint');
+$in_pid         = get_request('in_pid');
+$in_order       = get_request('in_order');
+$in_taken_by    = get_request('in_taken_by');
+$in_description = get_request('in_description');
+$in_button_find = get_request('in_button_find');
+$in_button_next = get_request('in_button_next');
+$in_button_back = get_request('in_button_back');
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');

@@ -3,10 +3,14 @@
 // File: picture_load.php
 // Author: Bill MacAllister
 
-// Open a session, connect to the database, load convenience routines,
-// and initialize the message area.
-require('inc_ring_init.php');
-require('inc_maint_check.php');
+require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_pid         = get_request('in_pid');
+$in_setdate     = get_request('in_setdate');
+$in_button_find = get_request('in_button_find');
+$upload         = get_request('upload');
 
 // Form or URL inputs
 $in_pid         = get_request('in_pid');
@@ -86,13 +90,81 @@ if ($in_pid > 0) {
         echo "<input type=\"submit\" name=\"upload\" value=\"Upload\">\n";
         echo "</form>\n";
     } else {
-        // Save the file and request regeneration
-        if (accept_and_store('in_filename', $in_pid)) {
-            echo "<h2>Upload Failure</h2>\n";
-            echo "<p>\n";
+
+        // -- Do the work
+
+        $file_id = 'in_filename';
+        $tmp_file = $_FILES[$file_id]['tmp_name'];
+        if ($_FILES[$file_id]['error'] !=0
+            && $_FILES[$file_id]['error'] !=4) {
+            echo "Error uploading ".$_FILES[$file_id]["name"]."<br>\n";
+        }
+        if (!isset($tmp_file) || strlen($tmp_file) == 0) {
+            $_SESSION['msg'] .= "<br>$warn No file uploaded.</font>\n";
         } else {
-            echo "<h2>File uploaded</h2>\n";
+            echo "<h1>Upload results</h1>\n";
             echo "<p>\n";
+            $original_file      = $_FILES[$fileID]["name"];
+            $content_type       = $_FILES[$fileID]["type"];
+            $original_file_size = $_FILES[$fileID]["size"];
+            $a_date  = date("Y-m-d H:i:s");
+            $z = strrpos ($original_file, ".");
+            $tmp = substr ($original_file, 0, $z);
+
+            $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
+
+            $cmd = "UPDATE pictures_information SET ";
+            $cmd .= "raw_picture_size = " . strlen($the_file_contents) . ", ";
+            $cmd .= "date_last_maint = NOW() ";
+            $cmd .= "WHERE pid = $in_pid ";
+            $sth = $DBH->query($cmd);
+            if ($sth->errno) {
+                $_SESSION['msg'] .= $warn."MySQL prepare error:"
+                    . $sth->error . $em;
+                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
+            }
+
+            $cmd = "INSERT INTO pictures_raw SET ";
+            $cmd .= "pid = ?, ";
+            $cmd .= "picture_type = ?, ";
+            $cmd .= "picture = ?, ";
+            $cmd .= "date_last_maint = NOW(), ";
+            $cmd .= "date_added = NOW() ";
+            $cmd .= "ON DUPLICATE KEY UPDATE ";
+            $cmd .= "picture_type = ?, ";
+            $cmd .= "picture = ?, ";
+            $cmd .= "date_last_maint = NOW() ";
+            $sth = $DBH->prepare($cmd);
+            $sth->bind_param('i', $in_pid);
+            $sth->bind_param('s', $content_type);
+            $sth->bind_param('b', $the_file_contents);
+            $sth->bind_param('s', $content_type);
+            $sth->bind_param('b', $the_file_contents);
+            $sth->execute();
+            if ($sth->errno) {
+                $_SESSION['msg'] .= $warn."MySQL prepare error:"
+                    . $sth->error . $em;
+                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
+            }
+
+            echo "$in_pid uploaded. ";
+            echo "<a href=\"picture_maint.php?in_pid=$in_pid\" "
+                . "target=\"_blank\">Update Picture Details.</a>";
+            echo "<br>\n";
+
+            unlink ($tmp_file);
+
+            $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
+            $sh_cmd .= " --start=$in_pid";
+            $sh_cmd .= " --end=$in_pid";
+            $sh_cmd .= " --host=$mysql_host";
+            $sh_cmd .= " --user=$mysql_user";
+            $sh_cmd .= " --db=$mysql_db";
+            $sh_cmd .= " --update";
+            if (strlen($in_setdate)>0) {$sh_cmd .= " --dateupdate";}
+            syslog(LOG_INFO, "Executing:$sh_cmd");
+            $sh_cmd .= " --pass=$mysql_pass";
+            system($sh_cmd);
         }
     }
     check_action_queue($in_pid);

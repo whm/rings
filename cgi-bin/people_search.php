@@ -1,25 +1,22 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_displayname = $_REQUEST['in_displayname'];
-$in_description = $_REQUEST['in_description'];
-$in_uid         = $_REQUEST['in_uid'];
-$in_visibility  = $_REQUEST['in_visibility'];
-$in_cn          = $_REQUEST['in_cn'];
-$in_button_find = $_REQUEST['in_button_find'];
-$in_button_next = $_REQUEST['in_button_next'];
-$in_button_back = $_REQUEST['in_button_back'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // people_search.php
 // author: Bill MacAllister
 // date: 31-Dec-2001
 //
 
-require ('inc_page_open.php');
+require('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_displayname = get_request('in_displayname');
+$in_description = get_request('in_description');
+$in_uid         = get_request('in_uid');
+$in_visibility  = get_request('in_visibility');
+$in_cn          = get_request('in_cn');
+$in_button_find = get_request('in_button_find');
+$in_button_next = get_request('in_button_next');
+$in_button_back = get_request('in_button_back');
 
 //-------------------------------------------------------------
 // Start of main processing for the page
@@ -89,7 +86,7 @@ if (isset($in_button_find)) {
     // find the number of rows
     $result = $DBH->query($_SESSION['sp_list_select']);
     if ($result) {
-        $_SESSION['sp_num_user_rows'] = $result->num_rows; 
+        $_SESSION['sp_num_user_rows'] = $result->num_rows;
     } else {
         $_SESSION['sp_num_user_rows'] = 0;
     }
@@ -115,36 +112,36 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 <div align="center">
 <table>
 <tr><td align="right">UserID:</td>
-    <td> 
-    <input type="text" name="in_uid" 
+    <td>
+    <input type="text" name="in_uid"
            value="<?php print $_SESSION['sp_uid']; ?>">
     </td>
 </tr>
 <tr>
   <td align="right">Display Name:</td>
   <td>
-  <input type="text" name="in_displayname" 
+  <input type="text" name="in_displayname"
          value="<?php print $_SESSION['sp_displayname']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Common Name:</td>
   <td>
-  <input type="text" name="in_cn" 
+  <input type="text" name="in_cn"
          value="<?php print $_SESSION['sp_cn']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Description:</td>
   <td>
-  <input type="text" name="in_description" 
+  <input type="text" name="in_description"
          value="<?php print $_SESSION['sp_description']; ?>">
   </td>
 </tr>
 <tr>
   <td align="right">Visibility:</td>
   <td>
-  <?php 
+  <?php
   $chk_show = $chk_hide = $chk_invis = '';
   if     ($_SESSION['sp_visibility'] == 'SHOW')      { $chk_show  = 'CHECKED'; }
   elseif ($_SESSION['sp_visibility'] == 'HIDDEN')    { $chk_hide  = 'CHECKED'; }
@@ -153,11 +150,11 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
   ?>
   <input type="radio" name="in_visibility" value="ALL" <?php echo $chk_all;?>>All
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_visibility" value="SHOW" <?php echo $chk_show;?>>Show 
+  <input type="radio" name="in_visibility" value="SHOW" <?php echo $chk_show;?>>Show
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_visibility" value="HIDDEN" <?php echo $chk_hide;?>>Hidden 
+  <input type="radio" name="in_visibility" value="HIDDEN" <?php echo $chk_hide;?>>Hidden
   &nbsp;&nbsp;&nbsp;
-  <input type="radio" name="in_visibility" value="INVISIBLE" <?php echo $chk_invis;?>>Invisibile 
+  <input type="radio" name="in_visibility" value="INVISIBLE" <?php echo $chk_invis;?>>Invisibile
   </td>
 </tr>
 <tr>
@@ -167,12 +164,12 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 </tr>
 </table>
 
-<?php 
+<?php
    if ($_SESSION['sp_num_user_rows']>0) {
 ?>
 <table border="1">
 
-<?php 
+<?php
 $start_row_flag = 0;
 if ($_SESSION['sp_start_row'] > 0) {
     $start_row_flag = 1;
@@ -195,7 +192,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
       </td>
       <td align="right">
         <?php if ($start_row_flag>0) { ?>
-        <input type="submit" name="in_button_back" value="Previous Page"> 
+        <input type="submit" name="in_button_back" value="Previous Page">
         <?php } ?>
       </td>
       </tr>

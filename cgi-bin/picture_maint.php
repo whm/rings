@@ -1,31 +1,28 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_pid                 = $_REQUEST['in_pid'];
-$in_button_find         = $_REQUEST['in_button_find'];
-$in_button_next         = $_REQUEST['in_button_next'];
-$in_button_prev         = $_REQUEST['in_button_prev'];
-$in_button_update       = $_REQUEST['in_button_update'];
-$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
-$in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
-$in_button_del          = $_REQUEST['in_button_del'];
-//
-// ----------------------------------------------------------
-// Globals
-//
-$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)[\s-:](\d+)[-:](\d+)[-:](\d+)/';
-$DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
 // -------------------------------------------------------------
 // picture_maint.php
 // author: Bill MacAllister
 // date: December 31, 2001
-//
 
 require ('inc_page_open.php');
+require('inc_util.php');
 
-// -- Increment the time part of a datetime.  Don't do anything if we 
+// Form or URL inputs
+$in_pid                 = get_request('in_pid');
+$in_button_find         = get_request('in_button_find');
+$in_button_next         = get_request('in_button_next');
+$in_button_prev         = get_request('in_button_prev');
+$in_button_update       = get_request('in_button_update');
+$in_button_rotate_left  = get_request('in_button_rotate_left');
+$in_button_rotate_right = get_request('in_button_rotate_right');
+$in_button_del          = get_request('in_button_del');
+
+// Globals
+//
+$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)[\s-:](\d+)[-:](\d+)[-:](\d+)/';
+$DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
+
+// -- Increment the time part of a datetime.  Don't do anything if we
 //    need to goto the next day.
 function increment_time ($a_datetime) {
 
@@ -213,7 +210,7 @@ require ('page_top.php');
 ?>
 
 <div align="center">
-<form name="find_picture" 
+<form name="find_picture"
       action="<?php print $PHP_SELF;?>"
       method="post">
 <table border="1">
@@ -232,10 +229,10 @@ require ('page_top.php');
 </table>
 </form>
 
-<p> 
+<p>
 
-<form name="picture_data" 
-      action="picture_maint_action.php" 
+<form name="picture_data"
+      action="picture_maint_action.php"
       onsubmit="return verifyInput()"
       method="post">
 <table border="0">
@@ -248,25 +245,25 @@ require ('page_top.php');
  <td colspan="2">
     <table border="0" width="100%">
     <tr>
-    <td><input type="submit" 
+    <td><input type="submit"
                onClick="setUpdate()"
-               name="in_button_update" 
+               name="in_button_update"
                value="Update">
     </td>
     <td align="center">
-        <input type="submit" 
-               name="in_button_rotate_left" 
+        <input type="submit"
+               name="in_button_rotate_left"
                value="Rotate Left">
     </td>
     <td align="center">
-        <input type="submit" 
-               name="in_button_rotate_right" 
+        <input type="submit"
+               name="in_button_rotate_right"
                value="Rotate Right">
     </td>
     <td align="center">
-        <input type="submit" 
+        <input type="submit"
                onClick="setDelete()"
-               name="in_button_del" 
+               name="in_button_del"
                value="Delete">
     </td>
     <td align="right">
@@ -278,7 +275,7 @@ require ('page_top.php');
 </tr>
 <tr>
  <td align="right">Picture ID:</td>
- <td><?php 
+ <td><?php
     print $row["pid"]
         . ' File:' . $row['file_name']
         . ' Group:' . $row['group_path']
@@ -299,9 +296,9 @@ require ('page_top.php');
              value="<?php print $row["picture_date"]; ?>">
 
       <?php if (isset($next_datetime)) { ?>
-      <input type="hidden" 
-             name="next_datetime" 
-             value="<?php echo $next_datetime;?>"> 
+      <input type="hidden"
+             name="next_datetime"
+             value="<?php echo $next_datetime;?>">
       <br>
       <input type="checkbox"
              name="set_date"
@@ -343,15 +340,15 @@ if ($row['grade'] == 'B') {
 } elseif ($row['grade'] == 'C') {
     $chk_c = 'CHECKED';
     $chk_a = '';
-} 
+}
 ?>
  <td align="right">Grade:</td>
- <td> <input type="radio" name="in_grade" 
+ <td> <input type="radio" name="in_grade"
              value="A" <?php echo $chk_a;?>>A &nbsp;&nbsp;
-      <input type="radio" name="in_grade" 
+      <input type="radio" name="in_grade"
              value="B" <?php echo $chk_b;?>>B &nbsp;&nbsp;
-      <input type="radio" name="in_grade" 
-             value="C" <?php echo $chk_c;?>>C 
+      <input type="radio" name="in_grade"
+             value="C" <?php echo $chk_c;?>>C
  </td>
 </tr>
 
@@ -361,13 +358,13 @@ $chk_n = '';
 if ($row['public'] == 'N') {
     $chk_n = 'CHECKED';
     $chk_y = '';
-} 
+}
 ?>
 <tr>
  <td align="right">Public:</td>
- <td> <input type="radio" name="in_public" 
+ <td> <input type="radio" name="in_public"
              value="Y" <?php echo $chk_y;?>>Yes &nbsp;&nbsp;
-      <input type="radio" name="in_public" 
+      <input type="radio" name="in_public"
              value="N" <?php echo $chk_n;?>>No
  </td>
 </tr>
@@ -405,7 +402,7 @@ if (strlen($thisID) > 0) {
             $picturePeople .= "</tr>\n";
             $people_cnt++;
         }
-    }  
+    }
 }
 
 // Get a list of folks to add to the picture
@@ -420,7 +417,7 @@ if ($result) {
         $uid_list[$a_uid] = $person_row['display_name'];
         $thisWeight = 32767;
         if ($_SESSION['s_uid_weight'][$a_uid]>0) {
-            $thisWeight = 30 
+            $thisWeight = 30
                 * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
         }
         $sort_uid = 'a'.sprintf("%05d", $thisWeight)
@@ -441,8 +438,8 @@ if ($result) {
       var in_ppe_values  = new Array();
       var in_ppe_display = new Array();
    </script>
-   <input type="text" 
-          name="in_group_search" 
+   <input type="text"
+          name="in_group_search"
           onkeyup="find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);">
    <br>
 <?php
@@ -468,18 +465,18 @@ if (is_array($uid_sort)) {
  </td>
 
  <td colspan="2" align="center" valign="top">
-<?php 
-if (isset($_SESSION['s_msg'])) { 
-  if (strlen($_SESSION['s_msg'])>0) { 
+<?php
+if (isset($_SESSION['s_msg'])) {
+  if (strlen($_SESSION['s_msg'])>0) {
 ?>
 <span bgcolor="#ffffff" align="center">
     <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
     </span>
 
-<?php 
+<?php
     $_SESSION['s_msg'] = '';
   }
-} 
+}
 ?>
 <p>
 <table border="1">

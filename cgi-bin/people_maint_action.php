@@ -1,25 +1,23 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_fld             = $_REQUEST['in_fld'];
-$in_date_added      = $_REQUEST['in_date_added'];
-$in_val             = $_REQUEST['in_val'];
-$in_date_last_maint = $_REQUEST['in_date_last_maint'];
-$in_type            = $_REQUEST['in_type'];
-$in_uid             = $_REQUEST['in_uid'];
-$in_cn              = $_REQUEST['in_cn'];
-$in_button_add      = $_REQUEST['in_button_add'];
-$in_button_update   = $_REQUEST['in_button_update'];
-$in_button_delete   = $_REQUEST['in_button_delete'];
-// ----------------------------------------------------------
-//
 // File: people_maint_action.php
 // Author: Bill MacAllister
 // Date: 31-Dec-2001
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_fld             = get_request('in_fld');
+$in_date_added      = get_request('in_date_added');
+$in_val             = get_request('in_val');
+$in_date_last_maint = get_request('in_date_last_maint');
+$in_type            = get_request('in_type');
+$in_uid             = get_request('in_uid');
+$in_cn              = get_request('in_cn');
+$in_button_add      = get_request('in_button_add');
+$in_button_update   = get_request('in_button_update');
+$in_button_delete   = get_request('in_button_delete');
 
 //-------------------------------------------------------------
 // construct flds and vals for an insert
@@ -122,7 +120,7 @@ if ( $update_flag ) {
     foreach ($fld_names as $db_fld) {
         if ($db_fld == "date_of_birth") {continue;}
         if ($db_fld == "date_added")    {continue;}
-        $in_val = trim($_REQUEST["in_$db_fld"]);
+        $in_val = trim(get_request("in_$db_fld"));
         if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
         if (trim($in_val) != trim($row[$db_fld])) {
             $in_val = str_replace ("'", '\'', $in_val);
@@ -141,7 +139,7 @@ if ( $update_flag ) {
         $_SESSION['s_msg'] .= $up_msg;
     }
     $next_uid = $in_uid;
-  
+
 } elseif ( $add_flag || (isset($in_button_add)) ) {
 
     // -- Add a new record -------------------------------
@@ -160,7 +158,7 @@ if ( $update_flag ) {
         $vals = '';
         $fld_names = get_fld_names('people_or_places');
         foreach ($fld_names as $db_fld) {
-            $in_val = trim($_REQUEST["in_$db_fld"]);
+            $in_val = trim(get_request("in_$db_fld"));
             if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
             mkin ($db_fld, $in_val, 's');
         }

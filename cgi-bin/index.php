@@ -1,19 +1,4 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_size         = $_REQUEST['in_size'];
-$in_seconds      = $_REQUEST['in_seconds'];
-$in_group_id     = $_REQUEST['in_group_id'];
-$in_login        = $_REQUEST['in_login'];
-$in_pos          = $_REQUEST['in_pos'];
-$in_grade        = $_REQUEST['in_grade'];
-$in_type         = $_REQUEST['in_type'];
-$in_pref_display = $_REQUEST['in_pref_display'];
-$in_button_set   = $_REQUEST['in_button_set'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // index.php for the Picture Rings application
 // author: Bill MacAllister
@@ -24,7 +9,18 @@ if (strlen($in_login) == 0) {
     $authNotRequired = 1;
 }
 require('inc_ring_init.php');
+require('inc_util.php');
 
+// Form or URL inputs
+$in_size         = get_request('in_size');
+$in_seconds      = get_request('in_seconds');
+$in_group_id     = get_request('in_group_id');
+$in_login        = get_request('in_login');
+$in_pos          = get_request('in_pos');
+$in_grade        = get_request('in_grade');
+$in_type         = get_request('in_type');
+$in_pref_display = get_request('in_pref_display');
+$in_button_set   = get_request('in_button_set');
 
 // Cookie to Session map
 $cm['GID'] = 'group_id';
@@ -33,7 +29,7 @@ $cm['GRD'] = 'display_grade';
 $cm['SEC'] = 'display_seconds';
 $cm['BP']  = 'button_position';
 
-// Set sessions variables from cookie if session variable is 
+// Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
 $s = $_COOKIE[$cookie_id].'|';
 foreach ($cm as $cid => $sid) {
@@ -48,7 +44,7 @@ foreach ($cm as $cid => $sid) {
 if (strlen($in_group_id)>0) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
-    // If there is not group_id in the session space then see if there is a 
+    // If there is not group_id in the session space then see if there is a
     // cookie and use that to set session values.
     if (strlen($_SESSION['group_id']) > 0) {
         $in_group_id = $_SESSION['group_id'];
@@ -217,7 +213,7 @@ if (  $result = $DBH->query($sel) ) {
         }
         echo ' <option value="'.$row['group_id'].'"' . $s . '>'
             .$row['group_name']."\n";
-    }  
+    }
 }
 ?>
 </select>
@@ -245,13 +241,13 @@ if (  $result = $DBH->query($sel) ) {
     <td><input type="radio" <?php echo $chk_large;?> name="in_size"
                 value="large">Large
          &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_larger;?> name="in_size" 
+         <input type="radio" <?php echo $chk_larger;?> name="in_size"
                 value="larger">Larger
          &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_1280_1024;?> name="in_size" 
+         <input type="radio" <?php echo $chk_1280_1024;?> name="in_size"
                 value="1280_1024">Larger Still
          &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_raw;?> name="in_size" 
+         <input type="radio" <?php echo $chk_raw;?> name="in_size"
                 value="raw">Gigantic
     </td>
     </tr>
@@ -261,10 +257,10 @@ if (  $result = $DBH->query($sel) ) {
     <td><input type="radio" <?php echo $chk_a;?> name="in_grade"
                 value="A">Only A's
          &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_b;?> name="in_grade" 
+         <input type="radio" <?php echo $chk_b;?> name="in_grade"
                 value="B">A's and B's
          &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_c;?> name="in_grade" 
+         <input type="radio" <?php echo $chk_c;?> name="in_grade"
                 value="C">A's, B's, and C's
     </td>
     </tr>
@@ -272,7 +268,7 @@ if (  $result = $DBH->query($sel) ) {
     <tr>
     <th align="right">Seconds to Pause During Show:</th>
     <td>
-       <input type="text" size="4" name="in_seconds" 
+       <input type="text" size="4" name="in_seconds"
               value="<?php echo $in_seconds;?>">
     </td>
     </tr>
@@ -283,7 +279,7 @@ if (  $result = $DBH->query($sel) ) {
        <input type="radio" <?php echo $chk_pos_top;?> name="in_pos"
               value="T">Top
        &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_pos_bottom;?> name="in_pos" 
+       <input type="radio" <?php echo $chk_pos_bottom;?> name="in_pos"
               value="B">Bottom
     </td>
     </tr>
@@ -294,7 +290,7 @@ if (  $result = $DBH->query($sel) ) {
        <input type="radio" <?php echo $chk_type_text;?> name="in_type"
               value="T">Text
        &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_type_graphic;?> name="in_type" 
+       <input type="radio" <?php echo $chk_type_graphic;?> name="in_type"
               value="G">Graphic
     </td>
     </tr>
@@ -330,17 +326,17 @@ if ( strlen($in_group_id) > 0) {
 
     // ------------------------------------------
     // display ring choices
-    
+
     if (strlen($this_group_name) > 0) {
-        echo "<h1>Pick a Picture from the $this_group_name Ring</h1>\n"; 
+        echo "<h1>Pick a Picture from the $this_group_name Ring</h1>\n";
     } else {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
     // Hide the private folks
     $vis_sel = '';
-    if (strlen($_SESSION['whm_directory_user'])==0) { 
+    if (strlen($_SESSION['whm_directory_user'])==0) {
         $vis_sel = "AND visibility != 'HIDDEN'";
-        $vis_sel = "AND visibility != 'INVISIBLE' "; 
+        $vis_sel = "AND visibility != 'INVISIBLE' ";
     }
 
     if ($in_group_id == "all-groups") {
@@ -380,7 +376,7 @@ if ( strlen($in_group_id) > 0) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (!isset($_SESSION['whm_directory_user']) && 
+        if (!isset($_SESSION['whm_directory_user']) &&
             auth_person_hidden($this_uid) > 0) {
             continue;
         }
@@ -409,7 +405,7 @@ if ( strlen($in_group_id) > 0) {
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
         echo '   <strong>'.$this_name.'</strong></a> &mdash; '.$this_desc."\n";
         echo " </p>\n";
-    }   
+    }
 }
 
 ?>
@@ -421,27 +417,27 @@ if ( strlen($in_group_id) > 0) {
 
 <dt>Some pictures are missing.  What happened?</dt>
 <dd>Initially anyone could see all of the pictures stored in the rings.
-This bothered some people.  And for a short time the site was 
-opened to Google indexing this made people even more uncomfortable.  
-To address these concerns the site policies have changed.  Any person 
-identified in the rings can choose any one of three policies applied 
+This bothered some people.  And for a short time the site was
+opened to Google indexing this made people even more uncomfortable.
+To address these concerns the site policies have changed.  Any person
+identified in the rings can choose any one of three policies applied
 to pictures they are identified in:
 <ul>
-<li>Invisible - any picture with the person in it is completely 
+<li>Invisible - any picture with the person in it is completely
 suppressed.
-<li>Hidden - pictures are display but no names or links are created 
+<li>Hidden - pictures are display but no names or links are created
 for the person.
-<li>Visible - names and pictures are shown to anyone that cares to 
+<li>Visible - names and pictures are shown to anyone that cares to
 look.
 </ul>
 These policies apply only to anyone that has not logged into the server.
-If you would like to see all of the pictures you need to login, and 
-to login you need credentials, and to get credentials send a 
+If you would like to see all of the pictures you need to login, and
+to login you need credentials, and to get credentials send a
 request to <?php echo $ring_admin;?>.
 <p>
-Additionally, anyone that wants their pictures to be visible to everyone, 
-but does not like the fact that Google, et. al. will index their 
-name, can request that only a nickname be displayed.  If this is the 
+Additionally, anyone that wants their pictures to be visible to everyone,
+but does not like the fact that Google, et. al. will index their
+name, can request that only a nickname be displayed.  If this is the
 case just let us know and it will be so.
 </dd>
 
@@ -449,15 +445,15 @@ case just let us know and it will be so.
 <dd>Some dates are accurate, some are just a wild guess.  Pictures are ordered
 by date and time, so the really important thing is that the dates be in the
 correct sequence, not that any individual date be absolutely accurate.  It is
-nice if they are close because correlations across rings will make sense, 
+nice if they are close because correlations across rings will make sense,
 but that is not always possible.
 </dd>
 
 <p>
 <dt>Who makes up the descriptions, dates, etc.?</dt>
-<dd>At this point all updates are by 
-<?php echo $ring_admin;?>.  If you want to update the web site yourself, 
-either to add pictures, update descriptions or whatever contact 
+<dd>At this point all updates are by
+<?php echo $ring_admin;?>.  If you want to update the web site yourself,
+either to add pictures, update descriptions or whatever contact
 <?php echo $ring_admin;?>.
 </dd>
 
@@ -475,7 +471,7 @@ if (strlen($_SESSION['s_msg']) > 0) {
 </html>
 
 <script language="JavaScript">
-<?php 
+<?php
 if (strlen($chk_pref_yes) < 1) {
     echo "getDom(\"preferencesDisplay\").style.display = 'none';\n";
 }

@@ -1,18 +1,16 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_id            = $_REQUEST['in_id'];
-$in_pid           = $_REQUEST['in_pid'];
-$in_grade         = $_REQUEST['in_grade'];
-$in_username      = $_REQUEST['in_username'];
-$in_button_submit = $_REQUEST['in_button_submit'];
-// ----------------------------------------------------------
-//
 // File: get_VOTE.php
 // Author: Bill MacAllister
 
+require ('inc_util.php');
+
+// Get form or URL inputs
+$in_id            = get_request('in_id');
+$in_pid           = get_request('in_pid');
+$in_grade         = get_request('in_grade');
+$in_username      = get_request('in_username');
+$in_button_submit = get_request('in_button_submit');
 ?>
 <html>
 <head>
