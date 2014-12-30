@@ -1,22 +1,18 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_uid           = $_REQUEST['in_uid'];
-$in_button_find   = $_REQUEST['in_button_find'];
-$in_button_add    = $_REQUEST['in_button_add'];
-$in_button_update = $_REQUEST['in_button_update'];
-$in_button_delete = $_REQUEST['in_button_delete'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // people_maint.php
 // author: Bill MacAllister
 // date: December 31, 2001
-//
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_uid           = get_request('in_uid');
+$in_button_find   = get_request('in_button_find');
+$in_button_add    = get_request('in_button_add');
+$in_button_update = get_request('in_button_update');
+$in_button_delete = get_request('in_button_delete');
 
 //-------------------------------------------------------------
 // Start of main processing for the page

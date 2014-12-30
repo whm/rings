@@ -1,11 +1,4 @@
 <?PHP
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_button_refresh = $_REQUEST['in_button_refresh'];
-$in_start_row      = $_REQUEST['in_start_row'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // picture_sort.php
 // author: Bill MacAllister
@@ -14,6 +7,11 @@ $in_start_row      = $_REQUEST['in_start_row'];
 // Hack of picture sort to display pictures with null group_path
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_button_refresh = get_request('in_button_refresh');
+$in_start_row      = get_request('in_start_row');
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');

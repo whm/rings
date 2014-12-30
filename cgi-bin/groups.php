@@ -5,11 +5,11 @@
 // date: December 31, 2001
 //
 
-require ('inc_page_open.php');
-
-require ('/etc/whm/rings_dbs.php');
+require('inc_page_open.php');
+require('inc_util.php');
 
 // connect to the database
+require('/etc/whm/rings_dbs.php');
 require ('inc_db_connect.php');
 ?>
 <html>

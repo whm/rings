@@ -1,19 +1,16 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_pid         = $_REQUEST['in_pid'];
-$in_setdate     = $_REQUEST['in_setdate'];
-$in_button_find = $_REQUEST['in_button_find'];
-$upload         = $_REQUEST['upload'];
-// ----------------------------------------------------------
-//
-
 // File: picture_load.php
 // Author: Bill MacAllister
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_pid         = get_request('in_pid');
+$in_setdate     = get_request('in_setdate');
+$in_button_find = get_request('in_button_find');
+$upload         = get_request('upload');
 
 ?>
 
@@ -91,7 +88,7 @@ if ($in_pid > 0) {
         echo "</form>\n";
 
     } else {
-        
+
         // -- Do the work
 
         $file_id = 'in_filename';
@@ -111,7 +108,7 @@ if ($in_pid > 0) {
             $a_date  = date("Y-m-d H:i:s");
             $z = strrpos ($original_file, ".");
             $tmp = substr ($original_file, 0, $z);
-            
+
             $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
 
             $cmd = "UPDATE pictures_information SET ";
@@ -147,14 +144,14 @@ if ($in_pid > 0) {
                     . $sth->error . $em;
                 $_SESSION['msg'] .= $warn."SQL:$cmd$em";
             }
-            
+
             echo "$in_pid uploaded. ";
             echo "<a href=\"picture_maint.php?in_pid=$in_pid\" "
                 . "target=\"_blank\">Update Picture Details.</a>";
             echo "<br>\n";
-            
+
             unlink ($tmp_file);
-            
+
             $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
             $sh_cmd .= " --start=$in_pid";
             $sh_cmd .= " --end=$in_pid";

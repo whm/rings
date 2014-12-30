@@ -1,16 +1,14 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_type          = $_REQUEST['in_type'];
-$in_button_submit = $_REQUEST['in_button_submit'];
-// ----------------------------------------------------------
-//
 // File: get_mail_addresses.php
 // Fate: 23-Nov-2004
 // Author: Bill MacAllister
 
+require('inc_util.php');
+
+// Form or URL inputs
+$in_type          = get_request('in_type');
+$in_button_submit = get_request('in_button_submit');
 ?>
 <html>
 <head>
@@ -35,7 +33,7 @@ function setAddress () {
       c = ",\n";
     }
   }
-  window.opener.document.emailMessage.in_<?php echo $in_type;?>_addr.value 
+  window.opener.document.emailMessage.in_<?php echo $in_type;?>_addr.value
           = val;
   window.close();
   return false;

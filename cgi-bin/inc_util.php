@@ -3,6 +3,13 @@
 // author: Bill MacAllister
 
 //-------------------------------------------------------------
+// get a value from the REQUEST array if it exists
+
+function get_request ($idx, $default = NULL) {
+    return isset($_REQUEST[$idx]) ? $_REQUEST[$idx] : $default;
+}
+
+//-------------------------------------------------------------
 // printable date time
 function format_date_time ($in) {
 
@@ -17,7 +24,7 @@ function format_date_time ($in) {
         $a_time = $matches[4];
         $ret_mon = $a_mon;
         if ($a_mon == 1) {$ret_mon = "Jan";}
-        elseif ($a_mon == 2) {$ret_mon = "Feb";}  
+        elseif ($a_mon == 2) {$ret_mon = "Feb";}
         elseif ($a_mon == 3) {$ret_mon = "Mar";}
         elseif ($a_mon == 4) {$ret_mon = "Apr";}
         elseif ($a_mon == 5) {$ret_mon = "May";}
@@ -28,12 +35,12 @@ function format_date_time ($in) {
         elseif ($a_mon == 10) {$ret_mon = "Oct";}
         elseif ($a_mon == 11) {$ret_mon = "Nov";}
         elseif ($a_mon == 12) {$ret_mon = "Dec";}
-        $ret_date = "$a_day-$ret_mon-$a_yr"; 
-        
+        $ret_date = "$a_day-$ret_mon-$a_yr";
+
         $ret_time = $a_time;
         $ret_time = str_replace ('.000', '', $ret_time);
-        $ret_time = str_replace ('00:00:00', '', $ret_time);  
-        
+        $ret_time = str_replace ('00:00:00', '', $ret_time);
+
     }
 
     if (date("Y-m-d")==$a_date && strlen($ret_time)>0) {$ret_date = '';}

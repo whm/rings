@@ -1,18 +1,15 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_upload       = $_REQUEST['in_upload'];
-$in_upload_slots = $_REQUEST['in_upload_slots'];
-$in_type         = $_REQUEST['in_type'];
-// ----------------------------------------------------------
-//
-
 // File: picture_load.php
 // Author: Bill MacAllister
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_upload       = get_request('in_upload');
+$in_upload_slots = get_request('in_upload_slots');
+$in_type         = get_request('in_type');
 
 //-------------------------------------------------------------
 // construct an flds and values for an insert

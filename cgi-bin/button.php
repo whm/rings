@@ -1,12 +1,11 @@
 <?php
 header ("Content-type: image/png");
-//
+
+require('inc_util.php');
+
+$in_button = get_request('in_button');
+
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_button  = $_REQUEST['in_button'];
-// ----------------------------------------------------------
-//
 $width = 144;
 $inwidth = strlen($in_button)*8;
 if ($inwidth>$width) {$width = $inwidth;}

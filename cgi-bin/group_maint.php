@@ -1,17 +1,4 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_group_id          = $_REQUEST['in_group_id'];
-$in_group_name        = $_REQUEST['in_group_name'];
-$in_group_description = $_REQUEST['in_group_description'];
-$in_button_find       = $_REQUEST['in_button_find'];
-$in_button_add        = $_REQUEST['in_button_add'];
-$in_button_update     = $_REQUEST['in_button_update'];
-$in_button_delete     = $_REQUEST['in_button_delete'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // group_maint.php
 // author: Bill MacAllister
@@ -19,6 +6,16 @@ $in_button_delete     = $_REQUEST['in_button_delete'];
 //
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_group_id          = get_request('in_group_id');
+$in_group_name        = get_request('in_group_name');
+$in_group_description = get_request('in_group_description');
+$in_button_find       = get_request('in_button_find');
+$in_button_add        = get_request('in_button_add');
+$in_button_update     = get_request('in_button_update');
+$in_button_delete     = get_request('in_button_delete');
 
 // database pointers
 require ('/etc/whm/rings_dbs.php');

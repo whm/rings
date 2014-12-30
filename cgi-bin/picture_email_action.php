@@ -3,16 +3,6 @@
 // ----------------------------------------------------------
 // Register Global Fix
 //
-$in_subject       = $_REQUEST['in_subject'];
-$in_message       = $_REQUEST['in_message'];
-$in_from_addr     = $_REQUEST['in_from_addr'];
-$in_cc_addr       = $_REQUEST['in_cc_addr'];
-$in_to_addr       = $_REQUEST['in_to_addr'];
-$in_button_to     = $_REQUEST['in_button_to'];
-$in_button_cc     = $_REQUEST['in_button_cc'];
-$in_button_send   = $_REQUEST['in_button_send'];
-$in_button_cancel = $_REQUEST['in_button_cancel'];
-$in_button_email  = $_REQUEST['in_button_email'];
 // ----------------------------------------------------------
 //
 
@@ -21,7 +11,20 @@ $in_button_email  = $_REQUEST['in_button_email'];
 // Date: 26-Nov-2004
 
 require ('inc_page_open.php');
+require ('inc_util.php');
 require ('htmlMimeMail.php');
+
+// Form or URL inputs
+$in_subject       = get_request('in_subject');
+$in_message       = get_request('in_message');
+$in_from_addr     = get_request('in_from_addr');
+$in_cc_addr       = get_request('in_cc_addr');
+$in_to_addr       = get_request('in_to_addr');
+$in_button_to     = get_request('in_button_to');
+$in_button_cc     = get_request('in_button_cc');
+$in_button_send   = get_request('in_button_send');
+$in_button_cancel = get_request('in_button_cancel');
+$in_button_email  = get_request('in_button_email');
 
 // ----------------------------------------------------
 // Main Routine
@@ -38,7 +41,7 @@ require('inc_db_connect.php');
 
 // get the picture information
 if (isset($in_button_send)) {
-    
+
     // get to: distribution list
     $to_addrs = array();
     $a_to = trim(strtok($in_to_addr, ','));
@@ -47,7 +50,7 @@ if (isset($in_button_send)) {
         $to_addrs[] = $a_to;
         $a_to = trim(strtok(','));
     }
-        
+
     // make a mail message
     $mailMsg = new htmlMimeMail();
     if ( strlen(trim($in_message)) == 0 ) {
@@ -55,14 +58,14 @@ if (isset($in_button_send)) {
     }
     $mailMsg->setText($in_message);
     $msg .= $ok.'Message text size:'.strlen($in_message).$mend;
-        
+
     // CC address
     $in_cc_addr = trim($in_cc_addr);
     if ( strlen($in_cc_addr) > 0 ) {
         $msg .= $ok.'CC:'.htmlentities($in_cc_addr).$mend;
         $mailMsg->setCc($in_cc_addr);
     }
-        
+
     // From address
     $env_from = $in_from_addr;
     if ( preg_match ('/<(.*?)>/', $in_from_addr, $matches) ) {
@@ -71,12 +74,12 @@ if (isset($in_button_send)) {
     $msg .= $ok.'Envelope From:'.htmlentities($env_from).$mend;
     $mailMsg->setFrom($env_from);
     //  $msg .= "$ok Header From:". htmlentities($in_from_addr) . $mend;
-    //  $mailMsg->setHeader('From', $in_from_addr); 
-    
+    //  $mailMsg->setHeader('From', $in_from_addr);
+
     // Add subject header
     $msg .= $ok.'Subject:'.htmlentities($in_subject).$mend;
     $mailMsg->setSubject($in_subject);
-        
+
     // Add mailer header
     $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
     $mailMsg->setHeader('X-Mailer', $xhdr);
@@ -94,11 +97,11 @@ if (isset($in_button_send)) {
             $err_msg .= "$warn Problem finding picture information.$mend";
             $err_msg .= "$warn Problem SQL:$sel$mend";
             break;
-        } 
-    
+        }
+
         $row = $result->fetch_array(MYSQLI_ASSOC);
         $thisFilename = $row['file_name'];
-    
+
         // get the picture
         $sel = "SELECT * FROM pictures_large WHERE pid=$email_pid ";
         $result = $DBH->query ($sel);
@@ -107,16 +110,16 @@ if (isset($in_button_send)) {
             $err_msg .= "$warn Problem SQL:$sel$mend";
             break;
         } else {
-        
+
             $row = $result->fetch_array(MYSQLI_ASSOC);
             $thisPicture = $row['picture'];
             $thisFiletype = $row['picture_type'];
-            
+
             $msg .= "$ok Picture size " . strlen($thisPicture) . "$mend";
-        
+
             // Add the picture
-            $mailMsg->addAttachment($thisPicture, 
-                                    $thisFilename, 
+            $mailMsg->addAttachment($thisPicture,
+                                    $thisFilename,
                                     $thisFiletype);
         }
     }

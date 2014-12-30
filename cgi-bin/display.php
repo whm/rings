@@ -1,17 +1,22 @@
 <?php
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_pid  = $_REQUEST['in_pid'];
-$in_size = $_REQUEST['in_size'];
-// ----------------------------------------------------------
-//
 // Display a picture
 
-// Init session, connect to database
+// Don't require authorization.  It will be checked and the picture
+// will not be display if it is private.
+
 $authNotRequired = 1;
+
+// Page startup and utility routines
 require('inc_ring_init.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_pid  = get_request('in_pid');
+$in_size = get_request('in_size');
+
+// database pointers
+require ('/etc/whm/rings_dbs.php');
+require ('inc_db_connect.php');
 
 $display_warning = auth_picture_invisible($in_pid);
 if ($display_warning > 0) {

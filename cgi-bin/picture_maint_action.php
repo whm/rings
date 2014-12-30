@@ -1,31 +1,26 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_fld                 = $_REQUEST['in_fld'];
-$in_val                 = $_REQUEST['in_val'];
-$in_picture_date        = $_REQUEST['in_picture_date'];
-$in_date_added          = $_REQUEST['in_date_added'];
-$in_pid                 = $_REQUEST['in_pid'];
-$in_type                = $_REQUEST['in_type'];
-$in_date_last_maint     = $_REQUEST['in_date_last_maint'];
-$in_picture_sequence    = $_REQUEST['in_picture_sequence'];
-$in_newuids             = $_REQUEST['in_newuids'];
-$in_button_update       = $_REQUEST['in_button_update'];
-$in_button_rotate_left  = $_REQUEST['in_button_rotate_left'];
-$in_button_rotate_right = $_REQUEST['in_button_rotate_right'];
-$in_button_del          = $_REQUEST['in_button_del'];
-// ----------------------------------------------------------
-//
-
 // File: picture_maint_action.php
 // Author: Bill MacAllister
 // Date: 31-Dec-2001
-// Note: Initially at least this is update and delete only.  Add is
-// handled by a separate script.
 
 require ('inc_page_open.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_fld                 = get_request('in_fld');
+$in_val                 = get_request('in_val');
+$in_picture_date        = get_request('in_picture_date');
+$in_date_added          = get_request('in_date_added');
+$in_pid                 = get_request('in_pid');
+$in_type                = get_request('in_type');
+$in_date_last_maint     = get_request('in_date_last_maint');
+$in_picture_sequence    = get_request('in_picture_sequence');
+$in_newuids             = get_request('in_newuids');
+$in_button_update       = get_request('in_button_update');
+$in_button_rotate_left  = get_request('in_button_rotate_left');
+$in_button_rotate_right = get_request('in_button_rotate_right');
+$in_button_del          = get_request('in_button_del');
 
 //-------------------------------------------------------------
 // construct flds and vals for an insert
@@ -34,9 +29,9 @@ require ('inc_page_open.php');
 //  $in_type != "n" anything else is a string
 
 function mkin ($a_fld, $a_val, $in_type) {
-    
+
     global $flds, $vals;
-    
+
     $a_val = trim ($a_val);
     $c = "";
     if (strlen($flds) > 0) {$c = ",";}
@@ -46,7 +41,7 @@ function mkin ($a_fld, $a_val, $in_type) {
     } else {
         $vals = $vals . $c . $a_val;
     }
-    
+
     return;
 }
 
@@ -57,13 +52,13 @@ function mkin ($a_fld, $a_val, $in_type) {
 //  $in_type != "n" anything else is a string
 
 function sql_quote ($a_val, $in_type) {
-    
+
     $ret = trim ($a_val);
     if ( $in_type != "n" ) {
         $ret = "'" . str_replace("'", "\'", $ret) . "'";
     }
     return $ret;
-    
+
 }
 
 //-------------------------------------------------------------
@@ -72,7 +67,7 @@ function sql_quote ($a_val, $in_type) {
 function date_dup_check($dt, $pid) {
 
     global $DBH;
-    
+
     $new_seq = 0;
 
     $sel = 'SELECT count(*) cnt FROM pictures_information ';
@@ -128,7 +123,7 @@ $warn = 'color="#330000"';
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
 if ( isset($in_button_update) ) {
-    
+
     // Try and get the old user record
     $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
     $result = $DBH->query($sel);
@@ -147,22 +142,22 @@ if ( isset($in_button_update) ) {
 }
 
 if ( $update_flag ) {
-    
+
     // -- Change an Existing record ----------------------
-    
+
     $comma = '';
     $cmd = '';
     $update_cnt = 0;
-    
+
     $update_list[] = 'picture_date';
     $update_list[] = 'picture_sequence';
     $update_list[] = 'description';
     $update_list[] = 'key_words';
-    $update_list[] = 'taken_by'; 
-    $update_list[] = 'grade'; 
-    $update_list[] = 'public'; 
+    $update_list[] = 'taken_by';
+    $update_list[] = 'grade';
+    $update_list[] = 'public';
     $update_list[] = 'date_last_maint';
-    
+
     # check for duplicate date, sequence
     $seq = date_dup_check($in_picture_date, $in_pid);
     $_SESSION['maint_last_datetime'] = $in_picture_date;
@@ -177,9 +172,9 @@ if ( $update_flag ) {
             }
         }
         if ($fld_update_flag == 0) {continue;}
-        $in_val = trim(stripslashes($_REQUEST["in_$db_fld"]));
-        
-        // remember the last entered value    
+        $in_val = trim(stripslashes(get_request("in_$db_fld")));
+
+        // remember the last entered value
         $sess_fld = "session_$db_fld";
         $_SESSION["$sess_fld"] = $in_val;
 
@@ -190,21 +185,21 @@ if ( $update_flag ) {
             $up_msg .= "<font $ok>$db_fld updated.</font><br>";
         }
     }
-    
+
     if ($update_cnt>1) {
-        // Make the changes 
+        // Make the changes
         $sql_cmd = "UPDATE pictures_information SET $cmd ";
         $sql_cmd .= "WHERE pid = $in_pid ";
         $result = $DBH->($sql_cmd);
         $_SESSION['msg'] .= $up_msg;
     }
     $next_pid = $in_pid;
-    
+
     // delete picture details
-    for ($i=0; $i<$_REQUEST['in_del_cnt']; $i++) {
-        $a_flag = $_REQUEST["in_del_$i"];
+    for ($i=0; $i<get_request('in_del_cnt', 0); $i++) {
+        $a_flag = get_request("in_del_$i");
         if (isset($a_flag)) {
-            $a_uid = $_REQUEST["in_del_uid_$i"];
+            $a_uid = get_request("in_del_uid_$i");
             $cmd = "DELETE FROM picture_details ";
             $cmd .= "WHERE uid = '$a_uid' ";
             $cmd .= "AND pid = $in_pid ";
@@ -223,9 +218,9 @@ if ( $update_flag ) {
             }
         }
     }
-    
+
     // add picture details
-    for ($i=0; $i<$_REQUEST['in_add_cnt']; $i++) {
+    for ($i=0; $i<get_request('in_add_cnt'); $i++) {
         $a_uid = '';
         if (isset($in_newuids[$i])) {$a_uid = $in_newuids[$i];}
         if (strlen($a_uid) > 0) {
@@ -251,11 +246,11 @@ if ( $update_flag ) {
     if ($update_cnt < 2) {
         $_SESSION['msg'] .= "No changes found.<br>";
     }
-    
+
 } elseif ( isset($in_button_del) ) {
-    
+
     // -- Delete a record -------------------------------
-    
+
     $del_tables[] = 'pictures_information';
     $del_tables[] = 'pictures_raw';
     $del_tables[] = 'pictures_small';
@@ -270,14 +265,14 @@ if ( $update_flag ) {
             $_SESSION['msg'] .= "<font $ok>Picture '$in_pid' deleted "
                 . "from $thisTable.</font><br>";
         } else {
-            $_SESSION['msg'] 
+            $_SESSION['msg']
                 .= "Problem deleting $in_pid from $thisTable<br>";
             $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
         }
     }
 
     $next_uid = 'CLEARFORM';
-    
+
 } elseif ( isset($in_button_rotate_right) || isset($in_button_rotate_left) ) {
 
     $sh_cmd = "/usr/bin/ring-rotate";
@@ -312,9 +307,9 @@ if ( $update_flag ) {
     $next_pid = $in_pid;
 
 } else {
-    
+
     echo "Ooops, this should never happen!<br>\n";
-    
+
 }
 
 header ("$next_header?in_pid=$next_pid");

@@ -1,26 +1,22 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_number     = $_REQUEST['in_number'];
-$in_start_date = $_REQUEST['in_start_date'];
-$in_last       = $_REQUEST['in_last'];
-$in_start      = $_REQUEST['in_start'];
-$in_next       = $_REQUEST['in_next'];
-$in_prev       = $_REQUEST['in_prev'];
-$in_uid        = $_REQUEST['in_uid'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // ring_thumbnails.php
 // author: Bill MacAllister
 // date: 26-Nov-2004
-//
 
 // Init session, connect to database
 $authNotRequired = 1;
 require('inc_ring_init.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_number     = get_request('in_number');
+$in_start_date = get_request('in_start_date');
+$in_last       = get_request('in_last');
+$in_start      = get_request('in_start');
+$in_next       = get_request('in_next');
+$in_prev       = get_request('in_prev');
+$in_uid        = get_request('in_uid');
 
 // ----------------------------------------------------------
 // Function to exit without displaying anything and return to 

@@ -1,23 +1,18 @@
 <?PHP
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_slide_show     = $_REQUEST['in_slide_show'];
-$in_login          = $_REQUEST['in_login'];
-$in_ring_uid       = $_REQUEST['in_ring_uid'];
-$in_ring_next_seq  = $_REQUEST['in_ring_next_seq'];
-$in_ring_pid       = $_REQUEST['in_ring_pid'];
-$in_ring_next_date = $_REQUEST['in_ring_next_date'];
-// ----------------------------------------------------------
-//
 // -------------------------------------------------------------
 // picture_select.php
 // author: Bill MacAllister
 // date: August 15, 2004
 
-// Formatting help
-require('inc_format.php');
+require('inc_util.php');
+
+// Form or URL inputs
+$in_slide_show     = get_request('in_slide_show');
+$in_login          = get_request('in_login');
+$in_ring_uid       = get_request('in_ring_uid');
+$in_ring_next_seq  = get_request('in_ring_next_seq');
+$in_ring_pid       = get_request('in_ring_pid');
+$in_ring_next_date = get_request('in_ring_next_date');
 
 // Init session, connect to database
 $authNotRequired = 1;
@@ -34,16 +29,16 @@ $grade_sel .= "OR p.grade IS NULL) ";
 // ---------------------------------------------
 // make a link to another picture
 
-function make_a_link ($thisUID, 
+function make_a_link ($thisUID,
                       $thisPID,
-                      $this_picture_date, 
+                      $this_picture_date,
                       $this_seq,
                       $thisName) {
 
     $thisLink = '';
     if (auth_picture_invisible($thisPID)) {return $thisLink;}
     if (auth_person_hidden($thisUID))    {return $thisLink;}
-            
+
     $urlName = urlencode($thisName);
     $thisLink .= '<a href="picture_select.php';
     $thisLink .= '?in_ring_uid='.urlencode($thisUID);
@@ -170,8 +165,8 @@ if (isset($in_ring_uid)) {
         $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
     }
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
-    
-    // look up the next picture 
+
+    // look up the next picture
     if (isset($in_ring_next_date)) {
         $sel = $base_sel;
         $sel .= "WHERE ((picture_date='$in_ring_next_date' ";
@@ -219,7 +214,7 @@ if (isset($in_ring_uid)) {
 
 if (isset($in_ring_pid)) {
 
-    // If the picture contains an invisible person return the caller to 
+    // If the picture contains an invisible person return the caller to
     // the index page.
     if (auth_picture_invisible($in_ring_pid) > 0) {
         auth_redirect();
@@ -227,15 +222,15 @@ if (isset($in_ring_pid)) {
     }
 
     $thisSize = $_SESSION['display_size'];
-    if (!($thisSize=='large' 
-          || $thisSize=='larger' 
-          || $thisSize=='1280_1024' 
+    if (!($thisSize=='large'
+          || $thisSize=='larger'
+          || $thisSize=='1280_1024'
           || $thisSize == 'raw')) {
         $thisSize = 'larger';
     }
 
     // Get data
-    
+
     $image_reference = '';
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
@@ -279,10 +274,10 @@ if (isset($in_ring_pid)) {
         $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<b>\n";
         $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
     }
-    
+
     // ------------------------------------------
     // display the links
-    
+
     if ($_SESSION['button_position'] == 'B') {
         echo $image_reference;
     }
@@ -298,10 +293,10 @@ if (isset($in_ring_pid)) {
         if (strlen($in_ring_uid)>0) {
             // display the reason we got here first so that it is easy
             // to step through these pictures.
-            $l = make_a_link($in_ring_uid, 
+            $l = make_a_link($in_ring_uid,
                              $this_pid,
                              $this_picture_date,
-                             $this_picture_seq, 
+                             $this_picture_seq,
                              $next_links[$in_ring_uid]);
             if (strlen($l) > 0) {echo $l."<br>\n";}
         }
@@ -315,9 +310,9 @@ if (isset($in_ring_pid)) {
             $c = '';
             foreach ($next_links as $thisUID => $thisName) {
                 if ($in_ring_uid == $thisUID) {continue;}
-                $l = make_a_link($thisUID, 
+                $l = make_a_link($thisUID,
                                  $this_pid,
-                                 $this_picture_date, 
+                                 $this_picture_date,
                                  $this_picture_seq,
                                  $next_links[$thisUID]);
                 if (strlen($l) > 0) {
@@ -340,23 +335,23 @@ if (isset($in_ring_pid)) {
     echo "\n";
     echo '<tr>'."\n";
     echo '<td valign="top" align="center">'."\n";
-    
+
     echo '<a href="display.php?in_pid='.$this_pid.'" target="_blank">';
     echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
     echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
     echo 'alt="Display full size image in a new window.">';
     echo "</a>\n";
-    
+
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-    
+
     echo '<a href="index.php">';
     echo '<img src="/rings-images/rings.png" border="0" ';
     echo 'onMouseOver="showSelect();" onMouseOut="hideSelect();" ';
     echo 'alt="Pick a new Picture Ring">';
     echo "</a>\n";
-    
+
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-    
+
     $loggedInUser = $_SESSION['whm_directory_user'];
     if (strlen($loggedInUser)>0) {
         echo '<img src="/rings-images/icon-grade.png"  border="0" ';
@@ -370,23 +365,23 @@ if (isset($in_ring_pid)) {
         echo "onClick=\"add_email_list($this_pid);\" ";
         echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
         echo 'alt="Add this picture to the email list">';
-    
+
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-    
+
         echo '<a href="picture_maint.php'
             . '?in_pid='.$this_pid.'" target="_blank">';
         echo '<img src="/rings-images/icon-edit.png" border="0" ';
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
         echo 'alt="Edit Picture Information">';
         echo "</a>\n";
-        
+
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
         echo '<img src="/rings-images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
         echo 'alt="Give this picture a grade.">';
-        
+
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
         echo '<a href="' . $_SERVER['PHP_SELF'];
@@ -401,38 +396,38 @@ if (isset($in_ring_pid)) {
         echo '<img src="/rings-images/login.jpg" border="0">';
         echo "</a>\n";
     }
-    
+
     echo '<p id="mailHelpDisplay">'."\n";
     echo "Select this picture to email\n";
     echo "<br>\n";
     echo "</p>\n";
-    
+
     echo '<p id="bigHelpDisplay">'."\n";
     echo "Display picture full size\n";
     echo "<br>\n";
     echo "($this_fullbytes kbytes)\n";
     echo "</p>\n";
-    
+
     echo '<p id="selectHelpDisplay">'."\n";
     echo "Select another Picture Ring\n";
     echo "</p>\n";
-    
+
     echo '<p id="editHelpDisplay">'."\n";
     echo "Edit Picture Ring Details\n";
     echo "</p>\n";
-    
+
     echo '<p id="gradeHelpDisplay">'."\n";
     echo "Set the Grade for this picture.\n";
     echo "</p>\n";
-    
+
     echo '<p id="reloadHelpDisplay">'."\n";
     echo "Re-Load a picture from a file.\n";
     echo "</p>\n";
-    
+
     echo "</td>\n";
     echo "</tr>\n";
     echo "</table>\n";
-    
+
 }
 
 if (strlen($_SESSION['s_msg']) > 0) {
@@ -453,7 +448,7 @@ hideEdit();
 hideGrade();
 hideReload();
 
-<?php if ($in_slide_show > 0) { 
+<?php if ($in_slide_show > 0) {
 
     $display_seconds = $_SESSION['display_seconds'];
     if ($display_seconds<3) {$display_seconds = 3;}

@@ -1,9 +1,11 @@
 <?php
-//
-// ----------------------------------------------------------
-// Register Global Fix
-//
-$in_button  = $_REQUEST['in_button'];
+// Display a small button
+
+require('inc_util.php');
+
+// Form or URL input
+$in_button  = get_request('in_button');
+
 // ----------------------------------------------------------
 //
 $width = 100;

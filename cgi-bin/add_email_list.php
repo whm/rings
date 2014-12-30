@@ -1,18 +1,14 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-$in_id            = $_REQUEST['in_id'];
-$in_pid           = $_REQUEST['in_pid'];
-$in_button_submit = $_REQUEST['in_button_submit'];
-// ----------------------------------------------------------
-//
 // File: add_email_list.php
 // Author: Bill MacAllister
 
 require('inc_ring_init.php');
 
+// Form or URL input
+$in_id            = get_request('in_id');
+$in_pid           = get_request('in_pid');
+$in_button_submit = get_request('in_button_submit');
 ?>
 <html>
 <head>
