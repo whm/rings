@@ -2,7 +2,6 @@
 //
 // Open a session check authorization
 $whm_base = '/usr/share/whm-ldapauth-php/cgi-bin';
-require("$whm_base/whm_php_sessions.inc");
 require("$whm_base/whm_php_auth.inc");
 require('inc_util.php');
 
