@@ -5,9 +5,6 @@
 // date: 26-Nov-2004
 //
 
-if (strlen($in_login) == 0) {
-    $authNotRequired = 1;
-}
 require('inc_ring_init.php');
 require('inc_util.php');
 
@@ -21,6 +18,12 @@ $in_grade        = get_request('in_grade');
 $in_type         = get_request('in_type');
 $in_pref_display = get_request('in_pref_display');
 $in_button_set   = get_request('in_button_set');
+
+if (isset($in_login) && $in_login > 0) {
+    $authNotRequired = 0;
+} else {
+    $authNotRequired = 1;
+}
 
 // Cookie to Session map
 $cm['GID'] = 'group_id';
