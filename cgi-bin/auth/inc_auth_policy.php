@@ -1,17 +1,10 @@
 <?php
-//
-// Open a session check authorization
-$whm_base = '/usr/share/whm-ldapauth-php/cgi-bin';
-require("$whm_base/whm_php_auth.inc");
-
-// Form or URL input
-$in_logout = isset($_REQUEST['in_logout']) ? $_REQUEST['in_logout'] : NULL;
 
 // ----------------------------------------------------------
 // Look up people and see if any are invisible.
 function auth_picture_invisible ($pid) {
     global $DBH;
-    if (isset($_SESSION['whm_directory_user'])) {
+    if (isset($_SERVER['REMOTE_USER'])) {
         $hide_picture = 0;
     } else {
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
@@ -38,7 +31,7 @@ function auth_picture_invisible ($pid) {
 // Look up a person and see if they are to be displayed.
 function auth_person_hidden ($uid) {
     global $DBH;
-    if (isset($_SESSION['whm_directory_user'])) {
+    if (isset($_SERVER['REMOTE_USER'])) {
         $hide_person = 0;
     } else {
         $sel = "SELECT count(*) hidden_count FROM people_or_places ";
@@ -74,15 +67,5 @@ function http_redirect ($nextURL="index.php") {
     echo "</body>\n";
     echo "</html>\n";
     exit;
-}
-
-if ($in_logout>0) {
-    session_destroy();
-    $_SESSION['whm_directory_user'] = '';
-    http_redirect('http://rings.ca-zephyr.org/rings');
-}
-
-if (!isset($authNotRequired)) {
-    whm_auth('rings');
 }
 ?>
