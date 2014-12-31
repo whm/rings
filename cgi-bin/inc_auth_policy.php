@@ -13,7 +13,7 @@ $in_logout  = get_request('in_logout');
 function auth_picture_invisible ($pid) {
     global $DBH;
     $hide_picture = 0;
-    if (strlen($_SESSION['whm_directory_user'])==0) { 
+    if (!isset($_SESSION['whm_directory_user'])) { 
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pid=$pid ";
@@ -81,7 +81,7 @@ if ($in_logout>0) {
     http_redirect('http://rings.ca-zephyr.org/rings');
 }
 
-if (strlen($authNotRequired)==0) {
+if (!isset($authNotRequired)) {
     whm_auth('rings');
 }
 ?>
