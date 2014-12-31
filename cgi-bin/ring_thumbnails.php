@@ -160,7 +160,7 @@ $sel = "SELECT p.picture_date, d.pid ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
-if (strlen($_SESSION['whm_directory_user']) == 0) {
+if (!isset($_SESSION['whm_directory_user'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";

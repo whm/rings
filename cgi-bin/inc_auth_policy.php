@@ -11,8 +11,9 @@ $in_logout = isset($_REQUEST['in_logout']) ? $_REQUEST['in_logout'] : NULL;
 // Look up people and see if any are invisible.
 function auth_picture_invisible ($pid) {
     global $DBH;
-    $hide_picture = 0;
-    if (!isset($_SESSION['whm_directory_user'])) {
+    if (isset($_SESSION['whm_directory_user'])) {
+        $hide_picture = 0;
+    } else {
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pid=$pid ";
@@ -37,8 +38,9 @@ function auth_picture_invisible ($pid) {
 // Look up a person and see if they are to be displayed.
 function auth_person_hidden ($uid) {
     global $DBH;
-    $hide_person = 0;
-    if (strlen($_SESSION['whm_directory_user'])==0) {
+    if (isset($_SESSION['whm_directory_user'])) {
+        $hide_person = 0;
+    } else {
         $sel = "SELECT count(*) hidden_count FROM people_or_places ";
         $sel .= "WHERE uid='$uid' ";
         $sel .= "AND (visibility = 'INVISIBLE' ";
