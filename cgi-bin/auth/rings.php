@@ -6,14 +6,11 @@
 //
 // Open a session, perform authorization check, and include authorization
 // routines unique to the rings.
-require('inc_auth_policy.php');
-require('inc_util.php');
+require('auth/inc_auth_policy.php');
+require('auth/inc_util.php');
 
 // Form or URL inputs
-$in_logout   = get_request('in_logout');
 $in_ring_pid = get_request('in_ring_pid');
-
-if ($in_logout>0) {session_destroy();}
 
 require ('/etc/whm/rings_dbs.php');
 require ('inc_db_connect.php');
