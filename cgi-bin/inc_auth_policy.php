@@ -3,10 +3,9 @@
 // Open a session check authorization
 $whm_base = '/usr/share/whm-ldapauth-php/cgi-bin';
 require("$whm_base/whm_php_auth.inc");
-require('inc_util.php');
 
 // Form or URL input
-$in_logout  = get_request('in_logout');
+$in_logout = isset($_REQUEST['in_logout']) ? $_REQUEST['in_logout'] : NULL;
 
 // ----------------------------------------------------------
 // Look up people and see if any are invisible.
