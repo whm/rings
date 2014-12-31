@@ -48,7 +48,7 @@ foreach ($cm as $cid => $sid) {
 }
 
 // set the group
-if (strlen($in_group_id)>0) {
+if (isset($in_group_id)) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
     // If there is not group_id in the session space then see if there is a
@@ -318,7 +318,7 @@ if (  $result = $DBH->query($sel) ) {
 </form>
 
 <?php
-if (strlen($_SESSION['whm_directory_user'])>0) {
+if (isset($_SESSION['whm_directory_user'])) {
     echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     if (isset($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
