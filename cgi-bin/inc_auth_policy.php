@@ -12,14 +12,14 @@ $in_logout = isset($_REQUEST['in_logout']) ? $_REQUEST['in_logout'] : NULL;
 function auth_picture_invisible ($pid) {
     global $DBH;
     $hide_picture = 0;
-    if (!isset($_SESSION['whm_directory_user'])) { 
+    if (!isset($_SESSION['whm_directory_user'])) {
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pid=$pid ";
         $sel .= "AND pop.visibility = 'INVISIBLE' ";
-        $rset = $DBH->query($sel);
-        if (!$rset) {
-            $_SESSION['s_msg'] .= 'ERROR: ' . $rset->error . "<br>\n";
+        $result = $DBH->query($sel);
+        if (!$result) {
+            $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<br>\n";
             $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
@@ -38,14 +38,14 @@ function auth_picture_invisible ($pid) {
 function auth_person_hidden ($uid) {
     global $DBH;
     $hide_person = 0;
-    if (strlen($_SESSION['whm_directory_user'])==0) { 
+    if (strlen($_SESSION['whm_directory_user'])==0) {
         $sel = "SELECT count(*) hidden_count FROM people_or_places ";
         $sel .= "WHERE uid='$uid' ";
         $sel .= "AND (visibility = 'INVISIBLE' ";
         $sel .=      "OR visibility = 'HIDDEN') ";
-        $rset = $DBH->query($sel);
-        if (!$rset) {
-            $_SESSION['s_msg'] .= 'ERROR: ' . $rset->error . "<br>\n";
+        $result = $DBH->query($sel);
+        if (!$result) {
+            $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<br>\n";
             $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
