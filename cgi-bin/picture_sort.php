@@ -109,8 +109,9 @@ function print_row ($n, $r) {
     }
 
     $pic_href
-        = '<a href="picture_maint.php?in_pid='.$r['pid'].'" target="_blank">';
-    $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
+        = '<a href="picture_maint.php?in_pid=' . $r['pid']
+        . '" target="_blank">';
+    $thumb = '<img src="display.php?in_pid=' . $r['pid'] . '&in_size=small">';
     $up_pid = "up_pid_$n";
     $chk_grade_b = 'CHECKED';
     if ($r['grade'] == 'A') {
