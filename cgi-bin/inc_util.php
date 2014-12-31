@@ -1,5 +1,5 @@
 <?php
-// file: inc_format_date.php
+// file: inc_util.php
 // author: Bill MacAllister
 
 //-------------------------------------------------------------
