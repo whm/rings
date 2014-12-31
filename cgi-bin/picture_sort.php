@@ -180,6 +180,7 @@ $thisTitle = 'Picture Sort';
 require ('page_top.php');
 
 // Set up if we have been here before
+$uid_word = '';
 if (isset($in_button_find) || isset($in_new)) {
 
     $condition = '';
@@ -197,7 +198,9 @@ if (isset($in_button_find) || isset($in_new)) {
     $_SESSION['s_order_by'] = $in_order;
 
     $word = 'WHERE';
-    if (strlen($cond) > 0) {$word = 'AND';}
+    if (isset($cond)) {
+        $word = 'AND';
+    }
 
     # override selections if the special group 'new' is selected
     $uid_condition = '';
@@ -216,7 +219,6 @@ if (isset($in_button_find) || isset($in_new)) {
                 break;
             }
             $uid_condition .= "$uid_word d.uid = '$a_uid' ";
-            $_SESSION['sear_uids'] .= "$c$a_uid";
             $uid_select[$a_uid] = 1;
             $uid_word = "OR";
         }
@@ -313,6 +315,7 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 </tr>
 
 <?php
+$sel_pid = $sel_date = '';
 if ($_SESSION['s_order_by'] == 'p.pid') {
     $sel_pid = 'CHECKED';
 } else {
@@ -436,11 +439,11 @@ $last_row = array();
 $people_list = '';
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if ($row['pid'] == $last_row['pid']) {
+        if (isset($last_row['pid']) && $row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br>\n";}
             $people_list .= $row['display_name'];
         } else {
-            if ($last_row['pid'] > 0) {
+            if (isset($last_row['pid'])) {
                 print_row ($cnt, $last_row);
                 $cnt++;
             }
