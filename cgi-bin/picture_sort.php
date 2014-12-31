@@ -14,7 +14,6 @@ $in_start_date  = get_request('in_start_date');
 $in_end_maint   = get_request('in_end_maint');
 $in_end_date    = get_request('in_end_date');
 $in_start_maint = get_request('in_start_maint');
-$in_pid         = get_request('in_pid');
 $in_description = get_request('in_description');
 $in_order       = get_request('in_order');
 $in_new         = get_request('in_new');
@@ -263,14 +262,14 @@ if (isset($in_button_find) || isset($in_new)) {
 
 } elseif (isset($in_button_next)) {
 
-    $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $pics_per_page;
 
 } elseif (isset($in_button_back)) {
 
-    $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $pics_per_page;
-    if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
+    if ($_SESSION['s_start_row'] < 0) {
+        $_SESSION['s_start_row'] = 0;
+    }
 
 }
 
