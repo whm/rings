@@ -1,6 +1,6 @@
 <?PHP
 // -------------------------------------------------------------
-// index.php for the Picture Rings application
+// index.php for the Picture Ring application
 // author: Bill MacAllister
 // date: 26-Nov-2004
 //
@@ -34,9 +34,13 @@ $cm['BP']  = 'button_position';
 
 // Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
-$s = $_COOKIE[$cookie_id].'|';
+if (isset($_COOKIE[$cookie_id])) {
+    $s = $_COOKIE[$cookie_id] . '|';
+} else {
+    $s = '|';
+}
 foreach ($cm as $cid => $sid) {
-    if (strlen($_SESSION[$sid]) == 0) {
+    if (!isset($_SESSION[$sid])) {
         if (preg_match("/\|$cid=(.+?)\|/", $s, $vals)) {
             $_SESSION[$sid] = $vals[1];
         }
@@ -49,9 +53,9 @@ if (strlen($in_group_id)>0) {
 } else {
     // If there is not group_id in the session space then see if there is a
     // cookie and use that to set session values.
-    if (strlen($_SESSION['group_id']) > 0) {
+    if (isset($_SESSION['group_id'])) {
         $in_group_id = $_SESSION['group_id'];
-    } elseif (strlen($_COOKIE[$cookie_id]) > 0) {
+    } elseif (isset($_COOKIE[$cookie_id])) {
         $s = $_COOKIE[$cookie_id].'|';
         foreach ($cm as $cid => $sid) {
             if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
@@ -62,12 +66,12 @@ if (strlen($in_group_id)>0) {
 }
 
 // set the display size
-if (strlen($in_size)>0) {
+if (isset($in_size)) {
     $_SESSION['display_size'] = $in_size;
 } else {
     $in_size = $_SESSION['display_size'];
 }
-if (strlen($in_size)==0) {
+if (!isset($in_size)) {
     $in_size = 'larger';
 }
 $chk_large = $chk_larger = $chk_raw = $chk_1280_1024 = '';
@@ -124,13 +128,19 @@ if ($in_pos == 'B') {
 $_SESSION['button_position'] = $in_pos;
 
 // set button postion on picture display pages
-if (strlen($in_type) == 0) {$in_type = $_SESSION['button_type'];}
+if (!isset($in_type) && isset($_SESSION['button_type'])) {
+    $in_type = $_SESSION['button_type'];
+} else {
+    $in_type = 'G';
+}
 $chk_btext = $chk_bgraphic = '';
 if ($in_type == 'T') {
-    $chk_type_text = 'CHECKED';
+    $chk_type_text    = 'CHECKED';
+    $chk_type_graphic = '';
 } else {
+    $chk_type_text    = '';
     $chk_type_graphic = 'CHECKED';
-    $in_type = 'G';
+    $in_type          = 'G';
 }
 $_SESSION['button_type'] = $in_type;
 
@@ -310,7 +320,7 @@ if (  $result = $DBH->query($sel) ) {
 <?php
 if (strlen($_SESSION['whm_directory_user'])>0) {
     echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
-    if (strlen($_SESSION['s_email_list']) > 0) {
+    if (isset($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
     echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_logout=2">Logout</a>';
@@ -325,12 +335,12 @@ if (strlen($_SESSION['whm_directory_user'])>0) {
 
 <?php
 
-if ( strlen($in_group_id) > 0) {
+if (isset($in_group_id)) {
 
     // ------------------------------------------
     // display ring choices
 
-    if (strlen($this_group_name) > 0) {
+    if (isset($this_group_name)) {
         echo "<h1>Pick a Picture from the $this_group_name Ring</h1>\n";
     } else {
         echo "<h1>Pick a Picture Ring</h1>\n";
@@ -464,7 +474,7 @@ either to add pictures, update descriptions or whatever contact
 
 <!-- Message area -->
 <?php
-if (strlen($_SESSION['s_msg']) > 0) {
+if (isset($_SESSION['msg'])) {
     echo "<br>".$_SESSION['s_msg']."<br>\n";
     $_SESSION['s_msg'] = '';
 }

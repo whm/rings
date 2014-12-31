@@ -351,8 +351,11 @@ $add_cnt = 0;
 $result = $DBH->query ($cmd);
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $s = '';
-        if ($uid_select[$row['uid']] > 0) {$s = " SELECTED";}
+        if (isset($uid_select[$row['uid']])) {
+            $s = " SELECTED";
+        } else {
+            $s = '';
+        }
         echo '   <option value="' . $row['uid'] . "\"$s>"
             . $row['display_name'] . '(' . $row['uid'] . ")\n";
     }
