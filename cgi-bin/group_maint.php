@@ -201,7 +201,7 @@ if ($result) {
             echo '         name="in_group_search"' . "\n";
             echo '         onkeyup="find_select_items('
                 . 'this, '
-                . 'this.form.elements['in_newuids[]'], '
+                . "this.form.elements['in_newuids[]'], "
                 . 'in_ppe_values, '
                 . 'in_ppe_display);">' . "\n";
             echo "  <br>\n";
