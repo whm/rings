@@ -64,8 +64,7 @@ if (strlen($in_uid) == 0) {
     $_SESSION['s_uid'] = $in_uid;
 }
 
-if (strlen($_SESSION['whm_directory_user'])==0 && 
-    auth_person_hidden($in_uid) > 0) {
+if (!isset($_SERVER['REMOTE_USER'])) && auth_person_hidden($in_uid) > 0) {
     back_to_index();
 }
 
@@ -105,7 +104,7 @@ if (strlen($in_start_date) > 0) {
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.picture_date>'$in_start_date' ";
     $sel .= "AND $grade_sel ";
-    if (strlen($_SESSION['whm_directory_user']) == 0) {
+    if (!isset($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
@@ -159,7 +158,7 @@ $sel = "SELECT p.picture_date, d.pid ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
-if (!isset($_SESSION['whm_directory_user'])) {
+if (!isset($_SERVER['REMOTE_USER'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";

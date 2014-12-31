@@ -137,9 +137,10 @@ function add_email_list(idx) {
 
 $next_links = array();
 
-$invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
-if (strlen($_SESSION['whm_directory_user'])>0) {
+if (isset($_SERVER['REMOTE_USER'])) {
     $invisible_sel = '';
+} else {
+    $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
 }
 
 if (isset($in_ring_uid)) {
@@ -173,7 +174,7 @@ if (isset($in_ring_uid)) {
         $sel .= "AND picture_sequence>$in_ring_next_seq) ";
         $sel .= "OR (picture_date>'$in_ring_next_date')) ";
         $sel .= "AND p.pid != $in_ring_pid ";
-        if (strlen($_SESSION['whm_directory_user']) == 0) {
+        if (!isset($_SERVER['REMOTE_USER'])) {
             $sel .= "AND public='Y' ";
         }
         $sel .= "AND $grade_sel ";
@@ -235,7 +236,7 @@ if (isset($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid=$in_ring_pid ";
-    if (strlen($_SESSION['whm_directory_user']) == 0) {
+    if (!isset($_SERVER['REMOTE_USER'])) {
         $sel .= "AND public='Y' ";
     }
     $result = $DBH->query($sel);
@@ -352,8 +353,10 @@ if (isset($in_ring_pid)) {
 
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-    $loggedInUser = $_SESSION['whm_directory_user'];
-    if (strlen($loggedInUser)>0) {
+    if (isset($_SERVER['REMOTE_USER'])) {
+        $loggedInUser = $_SERVER['REMOTE_USER'];
+    }
+    if (isset($loggedInUser)) {
         echo '<img src="/rings-images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
