@@ -113,13 +113,13 @@ function print_row ($n, $r) {
         . '" target="_blank">';
     $thumb = '<img src="display.php?in_pid=' . $r['pid'] . '&in_size=small">';
     $up_pid = "up_pid_$n";
-    $chk_grade_b = 'CHECKED';
+    $chk_grade_a = $chk_grade_b = $chk_grade_c = '';
     if ($r['grade'] == 'A') {
-        $chk_grade_b = '';
         $chk_grade_a = 'CHECKED';
     } elseif ($r['grade'] == 'C') {
-        $chk_grade_b = '';
         $chk_grade_c = 'CHECKED';
+    } else {
+        $chk_grade_b = 'CHECKED';
     }
     echo " <tr>\n";
     echo "  <td>$pic_href$thumb<a/></td>\n";
