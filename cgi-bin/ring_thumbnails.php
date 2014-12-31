@@ -34,7 +34,7 @@ function back_to_index () {
     echo '<a href="rings">Rings of Pictures</a>'."\n";
     echo "</body>\n";
     echo "</html>\n";
-    $_SESSION['s_msg'] .= "Ring Not Found.\n";
+    $_SESSION['msg'] .= "Ring Not Found.\n";
 
     exit;
 }
@@ -239,10 +239,10 @@ if (!$result) {
        alt="Pick a New Ring"
        border="0"></a>
 <?php 
-if (strlen($_SESSION['s_msg']) > 0) {
+if (isset($_SESSION['msg'])) {
     echo "<p>\n";
-    echo $_SESSION['s_msg'];
-    $_SESSION['s_msg'] = '';
+    echo $_SESSION['msg'];
+    $_SESSION['msg'] = '';
 }
 ?>
 
