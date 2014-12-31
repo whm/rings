@@ -475,8 +475,8 @@ either to add pictures, update descriptions or whatever contact
 <!-- Message area -->
 <?php
 if (isset($_SESSION['msg'])) {
-    echo "<br>".$_SESSION['s_msg']."<br>\n";
-    $_SESSION['s_msg'] = '';
+    echo "<br>".$_SESSION['msg']."<br>\n";
+    $_SESSION['msg'] = '';
 }
 ?>
 

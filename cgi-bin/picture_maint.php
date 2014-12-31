@@ -117,7 +117,7 @@ if ($result) {
     }
 }
 if ( isset($in_pid) && !isset($row["pid"]) ) {
-    $_SESSION['s_msg'] .= "Picture '$in_pid' not found.\n";
+    $_SESSION['msg'] .= "Picture '$in_pid' not found.\n";
 }
 
 // Check to see if the raw image exists
@@ -129,7 +129,7 @@ if (isset($in_pid) && strlen($in_pid) > 0) {
     if ($result) {
         $raw_row = $result->fetch_array(MYSQLI_ASSOC);
         if (!isset($raw_row['pid'])) {
-            $_SESSION['s_msg'] .= "Raw image is missing for '$in_pid'.\n";
+            $_SESSION['msg'] .= "Raw image is missing for '$in_pid'.\n";
         }
     }
 }
@@ -466,16 +466,14 @@ if (is_array($uid_sort)) {
 
  <td colspan="2" align="center" valign="top">
 <?php
-if (isset($_SESSION['s_msg'])) {
-  if (strlen($_SESSION['s_msg'])>0) {
+if (isset($_SESSION['msg'])) {
 ?>
 <span bgcolor="#ffffff" align="center">
-    <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
+    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
     </span>
 
 <?php
-    $_SESSION['s_msg'] = '';
-  }
+    $_SESSION['msg'] = '';
 }
 ?>
 <p>

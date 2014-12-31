@@ -136,7 +136,7 @@ if ( $update_flag ) {
         $sql_cmd = "UPDATE people_or_places SET $cmd ";
         $sql_cmd .= "WHERE uid = '$this_user'";
         $result = $DBH->query($sql_cmd);
-        $_SESSION['s_msg'] .= $up_msg;
+        $_SESSION['msg'] .= $up_msg;
     }
     $next_uid = $in_uid;
 
@@ -152,7 +152,8 @@ if ( $update_flag ) {
     }
 
     if ( strlen($this_user) > 0) {
-        $_SESSION['s_msg'] .= "Person already exists!<br>New entry NOT Added.<br>";
+        $_SESSION['msg']
+            .= "Person already exists!<br>New entry NOT Added.<br>";
     } else {
         $flds = '';
         $vals = '';
@@ -165,8 +166,8 @@ if ( $update_flag ) {
 
         $sql_cmd = "INSERT INTO people_or_places ($flds) VALUES ($vals)";
         $result = $DBH->query($sql_cmd);
-        $_SESSION['s_msg'] .= "<font $ok>Person '$in_uid' added ";
-        $_SESSION['s_msg'] .= "to people.</font><br>";
+        $_SESSION['msg'] .= "<font $ok>Person '$in_uid' added ";
+        $_SESSION['msg'] .= "to people.</font><br>";
 
     }
     $next_uid = $in_uid;
@@ -178,11 +179,11 @@ if ( $update_flag ) {
     $sql_cmd = "DELETE FROM people_or_places WHERE uid='$in_uid'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        $_SESSION['s_msg'] .= "<font $ok>Person '$in_uid' dropped ";
-        $_SESSION['s_msg'] .= "from people.</font><br>";
+        $_SESSION['msg'] .= "<font $ok>Person '$in_uid' dropped ";
+        $_SESSION['msg'] .= "from people.</font><br>";
     } else {
-        $_SESSION['s_msg'] .= "Problem deleting $in_uid<br>";
-        $_SESSION['s_msg'] .= "Problem SQL: $sql_cmd<br>";
+        $_SESSION['msg'] .= "Problem deleting $in_uid<br>";
+        $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
     }
     $next_uid = 'CLEARFORM';
 

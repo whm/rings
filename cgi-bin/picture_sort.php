@@ -462,9 +462,9 @@ if ($result) {
         echo "<font color=\"#ff0000\">Nothing found!</font>\n";
     }
 }
-if (strlen($_SESSION['s_msg'])>0) {
-    echo '<p>'.$_SESSION['s_msg']."\n";
-    $_SESSION['s_msg'] = '';
+if (isset($_SESSION['msg'])>0) {
+    echo '<p>'.$_SESSION['msg']."\n";
+    $_SESSION['msg'] = '';
 }
 ?>
 </div>

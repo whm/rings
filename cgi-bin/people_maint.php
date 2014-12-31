@@ -37,7 +37,7 @@ if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
 }
 if ( isset($in_uid) && !isset($row["uid"]) ) {
-    $_SESSION['s_msg'] .= "Person '$in_uid' not found.<br>\n";
+    $_SESSION['msg'] .= "Person '$in_uid' not found.<br>\n";
 }
 ?>
 
@@ -71,16 +71,14 @@ require ('page_top.php');
   </td>
 </tr>
 <?php
-if (isset($_SESSION['s_msg'])) {
-  if (strlen($_SESSION['s_msg'])>0) {
+if (isset($_SESSION['msg'])) {
 ?>
 <tr><td bgcolor="#ffffff" align="center" colspan="2">
-    <font color="#ff0000"><?php print $_SESSION['s_msg'];?></font>
+    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
     </td>
 </tr>
 <?php
-  }
-  $_SESSION['s_msg'] = '';
+  $_SESSION['msg'] = '';
 }?>
 </table>
 </form>

@@ -20,7 +20,6 @@ $now = date ('Y-m-d H:i:s');
 $up_date_last_maint = $now;
 
 // set update message area
-$_SESSION['s_msg'] = '';
 $ok = 'color="#009900"';
 $warn = 'color="#330000"';
 
@@ -52,7 +51,7 @@ if ( strlen($btn_update)>0 ) {
                 if ("$up_val" != "$db_val") {
                     $cmd .= ", $fld='$up_val' ";
                     $update_cnt++;
-                    $_SESSION['s_msg'] .=
+                    $_SESSION['msg'] .=
                         "<font $ok>$up_pid/$fld $db_val -> $up_val</font><br>";
                 }
             }
@@ -64,9 +63,9 @@ if ( strlen($btn_update)>0 ) {
             $sql_cmd .= "WHERE pid = $up_pid ";
             $result = $DBH->query($sql_cmd);
             if (!$result) {
-                $_SESSION['s_msg'] .=
+                $_SESSION['msg'] .=
                     "<font $warn>ERROR:" . $result->error . "</font><br>\n";
-                $_SESSION['s_msg'] .=
+                $_SESSION['msg'] .=
                     "<font $warn>Problem SQL:$sql_cmd</font><br>\n";
             }
         }
@@ -89,9 +88,11 @@ if ( strlen($btn_update)>0 ) {
             $ret = array();
             $z = exec($sh_cmd, $ret, $ret_status);
             if ($ret_status) {
-                $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-                foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
-                $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+                $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+                foreach ($ret as $v) {
+                    $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+                }
+                $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
             }
             // resize everything
             $sh_cmd = "/usr/bin/ring-resize";
@@ -101,13 +102,16 @@ if ( strlen($btn_update)>0 ) {
             $ret = array();
             $z = exec($sh_cmd, $ret, $ret_status);
             if ($ret_status) {
-                $_SESSION['s_msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-                foreach ($ret as $v) $_SESSION['s_msg'] .= "<font $ok>$v</font><br>\n";
-                $_SESSION['s_msg'] .= "SCRIPT ERROR</br>\n";
+                $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+                foreach ($ret as $v) {
+                    $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+                }
+                $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
             }
         }
         if ($update_cnt>0) {
-            $_SESSION['s_msg'] .= "<font $ok>$up_pid rotated $rotation</font><br>\n";
+            $_SESSION['msg']
+                .= "<font $ok>$up_pid rotated $rotation</font><br>\n";
         }
 
     }

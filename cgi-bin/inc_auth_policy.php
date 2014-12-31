@@ -19,8 +19,8 @@ function auth_picture_invisible ($pid) {
         $sel .= "AND pop.visibility = 'INVISIBLE' ";
         $result = $DBH->query($sel);
         if (!$result) {
-            $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<br>\n";
-            $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
+            $_SESSION['msg'] .= 'ERROR: ' . $result->error . "<br>\n";
+            $_SESSION['msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
             while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -45,8 +45,8 @@ function auth_person_hidden ($uid) {
         $sel .=      "OR visibility = 'HIDDEN') ";
         $result = $DBH->query($sel);
         if (!$result) {
-            $_SESSION['s_msg'] .= 'ERROR: ' . $result->error . "<br>\n";
-            $_SESSION['s_msg'] .= "SQL: $sel<br>\n";
+            $_SESSION['msg'] .= 'ERROR: ' . $result->error . "<br>\n";
+            $_SESSION['msg'] .= "SQL: $sel<br>\n";
             $hide_picture = 1;
         } else {
             while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
