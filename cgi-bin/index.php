@@ -318,7 +318,7 @@ if (  $result = $DBH->query($sel) ) {
 </form>
 
 <?php
-if (isset($_SESSION['whm_directory_user'])) {
+if (isset($_SERVER['REMOTE_USER'])) {
     echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     if (isset($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
@@ -347,7 +347,7 @@ if (isset($in_group_id)) {
     }
     // Hide the private folks
     $vis_sel = '';
-    if (strlen($_SESSION['whm_directory_user'])==0) {
+    if (!isset($_SERVER['REMOTE_USER'])) {
         $vis_sel = "AND visibility != 'HIDDEN'";
         $vis_sel = "AND visibility != 'INVISIBLE' ";
     }
@@ -389,8 +389,8 @@ if (isset($in_group_id)) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (!isset($_SESSION['whm_directory_user']) &&
-            auth_person_hidden($this_uid) > 0) {
+        if (!isset($_SERVER['REMOTE_USER'])
+        && auth_person_hidden($this_uid) > 0) {
             continue;
         }
 

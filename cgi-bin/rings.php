@@ -169,7 +169,7 @@ if ($display_rings>0) {
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     echo "<a href=\"/rings/display.php?in_pid=$this_pid\" ";
     echo "target=\"_blank\">Image Full Size ($this_fullbytes Kbytes)</a>\n";
-    if (strlen($_SESSION['whm_directory_user'])>0) {
+    if (isset[$_SERVER['REMOTE_USER'])) {
         echo "<p>\n";
         echo "<h5><a href=\"picture_maint?in_pid=$this_pid\" ";
         echo "target=\"_blank\">$this_pid</a> ";

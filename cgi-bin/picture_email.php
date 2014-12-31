@@ -26,7 +26,7 @@ require ('/etc/whm/rings_dbs.php');
 // look up the from address
 $ds = ldap_connect($ldap_server);
 $return_attr = array('cn','mail');
-$ldap_filter = '(uid='.$_SESSION['whm_directory_user'].')';
+$ldap_filter = '(uid=' . $_SERVER['REMOTE_USER'] . ')';
 $sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
 $info = @ldap_get_entries($ds, $sr);
 $ret_cnt = $info["count"];
