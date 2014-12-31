@@ -1,4 +1,4 @@
-<?php
+x<?php
 //
 // Open a session check authorization
 $whm_base = '/usr/share/whm-ldapauth-php/cgi-bin';
@@ -27,7 +27,7 @@ function auth_picture_invisible ($pid) {
                 if ($row['hidden_count'] > 0) {
                     $hide_picture = 1;
                 }
-                last;
+                break;
             }
         }
     }
@@ -53,7 +53,7 @@ function auth_person_hidden ($uid) {
                 if ($row['hidden_count'] > 0) {
                     $hide_person = 1;
                 }
-                last;
+                break;
             }
         }
     }
