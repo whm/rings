@@ -1,4 +1,4 @@
-x<?php
+<?php
 //
 // Open a session check authorization
 $whm_base = '/usr/share/whm-ldapauth-php/cgi-bin';
