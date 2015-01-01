@@ -106,12 +106,13 @@ $sel .= "WHERE pid = '$in_pid' ";
 $result = $DBH->query ($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
-    $this_type = trim($row["picture_type"]);
-    if (strlen($row['picture_date']) == 0) {
+    if (!isset($row['picture_date']) || strlen($row['picture_date']) == 0) {
         $row['picture_date'] = $row['date_taken'];
     }
-    if (strlen($row['pid'])>0) {
-        foreach ($row as $fld => $val) {$row[$fld] = trim($val);}
+    if (isset($row['pid']) && strlen($row['pid'])>0) {
+        foreach ($row as $fld => $val) {
+            $row[$fld] = trim($val);
+        }
     }
 }
 if ( isset($in_pid) && !isset($row["pid"]) ) {
@@ -209,7 +210,7 @@ require ('page_top.php');
 
 <div align="center">
 <form name="find_picture"
-      action="<?php print $PHP_SELF;?>"
+      action="<?php print $_SERVER['PHP_SELF'];?>"
       method="post">
 <table border="1">
 <tr>
