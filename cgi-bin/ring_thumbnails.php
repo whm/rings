@@ -41,7 +41,7 @@ function back_to_index () {
 // ============
 // Main routine 
 
-if (strlen($_SESSION['display_grade']) == 0) {
+if (!isset($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
 $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
@@ -51,10 +51,11 @@ $grade_sel .= "OR p.grade IS NULL) ";
 if (strlen($in_start) == 0) {$in_start = 0;}
 
 if ($in_number == 0) {
-    if ($_SESSION['s_thumbs_per_page'] > 0) {
+    if (isset($_SESSION['s_thumbs_per_page'])) {
         $in_number = $_SESSION['s_thumbs_per_page'];
     } else {
-        $in_number = 10 * 7;}
+        $in_number = 10 * 7;
+    }
 }
 $_SESSION['s_thumbs_per_page'] = $in_number;
 
@@ -132,7 +133,7 @@ if (strlen($in_start_date) > 0) {
 <body bgcolor="#eeeeff">
 
 <h2><?php echo $thisPerson;?></h2>
-<form method="post" action="<?php echo $PHPSELF;?>">
+<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
 
 <table border="0">
 <tr><td align="right">Starting Date:</td>
@@ -180,10 +181,11 @@ if (!$result) {
         $in_prev = $in_start - $in_number;
         if ($in_prev < 0) {$in_prev = 0;}
         if ($in_prev > 0) {
-            echo "<a href=\"$PHPSELF?in_start=0\">First</a>";
+            echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=0">First</a>';
             echo " - ";
         }
-        echo "<a href=\"$PHPSELF?in_start=$in_prev\">Previous</a>";
+        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_prev
+            . '">Previous</a>';
     } else {
         echo "&nbsp;";
     }
@@ -194,11 +196,13 @@ if (!$result) {
         if ($in_next+$in_number > $thisCount) {
             $in_next = $thisCount - $in_number;
         }
-        echo "<a href=\"$PHPSELF?in_start=$in_next\">Next</a>";
+        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_next
+            . '">Next</a>';
         if ($in_next+$in_number < $thisCount) {
             $in_last = $thisCount - $in_number;
             echo " - ";
-            echo "<a href=\"$PHPSELF?in_start=$in_last\">Last</a>";
+            echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_last
+                . '">Last</a>';
         }
     } else {
         echo "&nbsp;";
