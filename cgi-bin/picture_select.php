@@ -4,7 +4,9 @@
 // author: Bill MacAllister
 // date: August 15, 2004
 
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_slide_show     = get_request('in_slide_show');
@@ -17,7 +19,6 @@ $in_ring_next_date = get_request('in_ring_next_date');
 // Init session, connect to database
 $authNotRequired = 1;
 if ($in_login == 2) {$authNotRequired = '';}
-require('inc_ring_init.php');
 
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';

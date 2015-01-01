@@ -1,14 +1,9 @@
 <?php
 // Display a picture
 
-// Don't require authorization.  It will be checked and the picture
-// will not be display if it is private.
-
-$authNotRequired = 1;
-
-// Page startup and utility routines
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
 require('inc_ring_init.php');
-require('inc_util.php');
 
 // Form or URL inputs
 $in_pid  = get_request('in_pid');

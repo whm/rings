@@ -4,7 +4,9 @@
 // Fate: 23-Nov-2004
 // Author: Bill MacAllister
 
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_type          = get_request('in_type');

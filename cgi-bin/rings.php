@@ -3,18 +3,13 @@
 // rings.php
 // author: Bill MacAllister
 // date: December 31, 2001
-//
-// Open a session, perform authorization check, and include authorization
-// routines unique to the rings.
-require('auth/inc_auth_policy.php');
-require('auth/inc_util.php');
+
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_ring_pid = get_request('in_ring_pid');
-
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
-
 ?>
 <html>
 <head>

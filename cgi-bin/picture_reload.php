@@ -3,8 +3,9 @@
 // File: picture_load.php
 // Author: Bill MacAllister
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_pid         = get_request('in_pid');
@@ -33,10 +34,6 @@ $em   = "</font><br>\n";
 // -- main routine
 
 openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
-
-// database pointers
-require('/etc/whm/rings_dbs.php');
-require('inc_db_connect.php');
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">

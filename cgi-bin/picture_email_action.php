@@ -1,17 +1,13 @@
 <?php
-//
 // ----------------------------------------------------------
-// Register Global Fix
-//
-// ----------------------------------------------------------
-//
-
 // File: picture_email_action.php
 // Author: Bill MacAllister
 // Date: 26-Nov-2004
 
-require ('inc_page_open.php');
-require ('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
+
 require ('htmlMimeMail.php');
 
 // Form or URL inputs
@@ -35,9 +31,6 @@ $ok   = '<font color="#009900">';
 $warn = '<font color="#330000">';
 $mend = "</font><br>\n";
 $msg  = '';
-
-require ('/etc/whm/rings_dbs.php');
-require('inc_db_connect.php');
 
 // get the picture information
 if (isset($in_button_send)) {

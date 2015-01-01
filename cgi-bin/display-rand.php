@@ -1,10 +1,7 @@
 <?php
-// Open a session and check for authorization
-require('inc_auth_policy.php');
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 $thisGroup = 'rrpics';
 

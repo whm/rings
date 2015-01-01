@@ -7,7 +7,11 @@
 // Open a session, perform authorization check, and include authorization
 // routines unique to the rings.
 
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
+
+// Input data
 $in_message       = get_request('in_message');
 $in_subject       = get_request('in_subject');
 $in_pid           = get_request('in_pid');
@@ -18,10 +22,6 @@ $in_button_cc     = get_request('in_button_cc');
 $in_button_send   = get_request('in_button_send');
 $in_button_cancel = get_request('in_button_cancel');
 $in_button_email  = get_request('in_button_email');
-
-require('inc_auth_policy.php');
-
-require ('/etc/whm/rings_dbs.php');
 
 // look up the from address
 $ds = ldap_connect($ldap_server);

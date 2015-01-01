@@ -4,17 +4,15 @@
 // Author: Bill MacAllister
 // Date: October 2002
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_button_update  = get_request('in_button_update');
 $in_up_picture_cnt = get_request('up_picture_cnt', 0);
 // ----------------------------------------------------
 // Main Routine
-
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
 
 $now = date ('Y-m-d H:i:s');
 $up_date_last_maint = $now;

@@ -5,8 +5,9 @@
 // date: 26-Nov-2004
 //
 
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
 require('inc_ring_init.php');
-require('inc_util.php');
 
 // Form or URL inputs
 $in_size         = get_request('in_size');
@@ -128,17 +129,17 @@ if ($in_pos == 'B') {
 $_SESSION['button_position'] = $in_pos;
 
 // set button postion on picture display pages
-if (!isset($in_type) && isset($_SESSION['button_type'])) {
-    $in_type = $_SESSION['button_type'];
-} else {
-    $in_type = 'G';
+if (!isset($in_type)) {
+    if (isset($_SESSION['button_type'])) {
+        $in_type = $_SESSION['button_type'];
+    } else {
+        $in_type = 'G';
+    }
 }
-$chk_btext = $chk_bgraphic = '';
+$chk_type_text = $chk_type_graphic = '';
 if ($in_type == 'T') {
     $chk_type_text    = 'CHECKED';
-    $chk_type_graphic = '';
 } else {
-    $chk_type_text    = '';
     $chk_type_graphic = 'CHECKED';
     $in_type          = 'G';
 }

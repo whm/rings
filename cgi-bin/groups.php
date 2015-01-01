@@ -5,12 +5,9 @@
 // date: December 31, 2001
 //
 
-require('inc_page_open.php');
-require('inc_util.php');
-
-// connect to the database
-require('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 ?>
 <html>
 <head>

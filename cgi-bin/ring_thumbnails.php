@@ -6,7 +6,6 @@
 
 // Init session, connect to database
 require('inc_ring_init.php');
-require('inc_util.php');
 
 // Form or URL inputs
 $in_number     = get_request('in_number');
