@@ -64,7 +64,7 @@ if (strlen($in_uid) == 0) {
     $_SESSION['s_uid'] = $in_uid;
 }
 
-if (!isset($_SERVER['REMOTE_USER'])) && auth_person_hidden($in_uid) > 0) {
+if (!isset($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
     back_to_index();
 }
 
