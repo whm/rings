@@ -200,7 +200,7 @@ if ( $update_flag ) {
             $cmd = "DELETE FROM picture_details ";
             $cmd .= "WHERE uid = '$a_uid' ";
             $cmd .= "AND pid = $in_pid ";
-            $result = $DBH->($cmd);
+            $result = $DBH->query($cmd);
             if ($result) {
                 $update_cnt++;
                 $_SESSION['msg'] .= "<font $ok>"
