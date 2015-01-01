@@ -3,8 +3,9 @@
 // File: picture_load.php
 // Author: Bill MacAllister
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_upload       = get_request('in_upload');
@@ -62,11 +63,6 @@ openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
 if ($_SESSION['upload_slots'] < 1) {$_SESSION['upload_slots'] = 5;}
 if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;
-
-// database pointers
-require('/etc/whm/rings_dbs.php');
-require('inc_db_connect.php');
-require('inc_db_functions.php');
 
 if (!isset($in_upload)) {
 

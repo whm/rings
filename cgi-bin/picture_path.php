@@ -6,16 +6,13 @@
 //
 // Hack of picture sort to display pictures with null group_path
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_button_refresh = get_request('in_button_refresh');
 $in_start_row      = get_request('in_start_row');
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
 
 $pics_per_page = 100;
 

@@ -5,8 +5,9 @@
 // date: 31-Dec-2001
 //
 
-require('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_displayname = get_request('in_displayname');
@@ -20,10 +21,6 @@ $in_button_back = get_request('in_button_back');
 
 //-------------------------------------------------------------
 // Start of main processing for the page
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
-require('inc_db_connect.php');
 ?>
 
 <html>

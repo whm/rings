@@ -4,8 +4,9 @@
 // Author: Bill MacAllister
 // Date: 31-Dec-2001
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_fld             = get_request('in_fld');
@@ -58,10 +59,6 @@ function sql_quote ($a_val, $in_type) {
 
 // ----------------------------------------------------
 // Main Routine
-
-require ('/etc/whm/rings_dbs.php');
-require('inc_db_connect.php');
-require('inc_db_functions.php');
 
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;

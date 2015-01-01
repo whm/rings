@@ -4,8 +4,9 @@
 // author: Bill MacAllister
 // date: December 31, 2001
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_pid                 = get_request('in_pid');
@@ -62,9 +63,6 @@ function increment_time ($a_datetime) {
 
 //-------------------------------------------------------------
 // Start of main processing for the page
-
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
 
 if (isset($in_pid)) {
     if ($in_pid=='CLEARFORM') {

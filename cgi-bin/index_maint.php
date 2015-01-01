@@ -5,7 +5,9 @@
 // date: December 31, 2001
 //
 
-require ('inc_page_open.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 //-------------------------------------------------------------
 // Start of main processing for the page

@@ -3,7 +3,9 @@
 // File: get_VOTE.php
 // Author: Bill MacAllister
 
-require ('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require ('inc_ring_init.php');
 
 // Get form or URL inputs
 $in_id            = get_request('in_id');
@@ -55,10 +57,6 @@ function closeWindow() {
 
 <?php
 if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
-
-    // connect to the database
-    require ('/etc/whm/rings_dbs.php');
-    require ('inc_db_connect.php');
 
     $cmd = "INSERT INTO picture_grades SET ";
     $cmd .= "pid = $in_pid, ";

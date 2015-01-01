@@ -5,8 +5,9 @@
 // date: December 31, 2001
 //
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_group_id          = get_request('in_group_id');
@@ -16,10 +17,6 @@ $in_button_find       = get_request('in_button_find');
 $in_button_add        = get_request('in_button_add');
 $in_button_update     = get_request('in_button_update');
 $in_button_delete     = get_request('in_button_delete');
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
 
 //-------------------------------------------------------------
 // Start of main processing for the page

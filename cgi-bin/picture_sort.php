@@ -3,10 +3,10 @@
 // picture_sort.php
 // author: Bill MacAllister
 // date: October 2002
-//
 
-require ('inc_page_open.php');
-require('inc_util.php');
+// Open a session, connect to the database, load convenience routines,
+// and initialize the message area.
+require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_uids        = get_request('in_uids');
@@ -20,10 +20,6 @@ $in_new         = get_request('in_new');
 $in_button_find = get_request('in_button_find');
 $in_button_next = get_request('in_button_next');
 $in_button_back = get_request('in_button_back');
-
-// database pointers
-require ('/etc/whm/rings_dbs.php');
-require ('inc_db_connect.php');
 
 $pics_per_page = 100;
 
