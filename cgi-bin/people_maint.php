@@ -36,6 +36,10 @@ if ($result) {
 }
 if ( isset($in_uid) && !isset($row["uid"]) ) {
     $_SESSION['msg'] .= "Person '$in_uid' not found.<br>\n";
+    $fld_names = get_fld_names('people_or_places');
+    foreach ($fld_names as $db_fld) {
+        $row[$db_fld] = '';
+    }
 }
 ?>
 
