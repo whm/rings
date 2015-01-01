@@ -138,12 +138,23 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 <tr>
   <td align="right">Visibility:</td>
   <td>
-  <?php
-  $chk_show = $chk_hide = $chk_invis = '';
-  if     ($_SESSION['sp_visibility'] == 'SHOW')      { $chk_show  = 'CHECKED'; }
-  elseif ($_SESSION['sp_visibility'] == 'HIDDEN')    { $chk_hide  = 'CHECKED'; }
-  elseif ($_SESSION['sp_visibility'] == 'INVISIBLE') { $chk_invis = 'CHECKED'; }
-  else                                               { $chk_all   = 'CHECKED'; }
+<?php
+$chk_all = $chk_show = $chk_hide = $chk_invis = '';
+if (isset($_SESSION['sp_visibility'])) {
+    if ($_SESSION['sp_visibility'] == 'SHOW') {
+        $chk_show  = 'CHECKED';
+    }
+    if ($_SESSION['sp_visibility'] == 'HIDDEN') {
+        $chk_hide  = 'CHECKED';
+    }
+    if ($_SESSION['sp_visibility'] == 'INVISIBLE') {
+        $chk_invis = 'CHECKED';
+    } else {
+        $chk_all   = 'CHECKED';
+    }
+} else {
+    $chk_all   = 'CHECKED';
+}
   ?>
   <input type="radio" name="in_visibility" value="ALL" <?php echo $chk_all;?>>All
   &nbsp;&nbsp;&nbsp;

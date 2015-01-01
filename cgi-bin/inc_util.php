@@ -43,8 +43,6 @@ function format_date_time ($in) {
 
     }
 
-    if (date("Y-m-d")==$a_date && strlen($ret_time)>0) {$ret_date = '';}
-
     return $ret_date.'&nbsp;'.$ret_time;
 }
 

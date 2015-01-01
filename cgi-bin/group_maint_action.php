@@ -77,7 +77,7 @@ if ( isset($in_button_update) ) {
     $sel = "SELECT * FROM groups WHERE group_id='$in_group_id'";
     $result = $DBH->query ($sel);
     if ($result) {
-        $row = $result->fetch_array(MYSQLI_ASSOC)
+        $row = $result->fetch_array(MYSQLI_ASSOC);
         $this_group = $row['group_id'];
         $fld_cnt = $result->field_count;
     }
@@ -101,7 +101,7 @@ if ( $update_flag ) {
 
     $up_msg = '';
     for ($i=0; $i<$fld_cnt; $i++) {
-        $fld_info = $DBH->fetch_field_direct($i);
+        $fld_info = $result->fetch_field_direct($i);
         $db_fld   = $fld_info->name;
         if ($db_fld == "date_added") {
             continue;

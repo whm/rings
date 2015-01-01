@@ -132,20 +132,8 @@ if (isset($in_pid) && strlen($in_pid) > 0) {
         }
     }
 }
-
-// some reasonable defaults
-if ($row["key_words"]=='NEW' && isset($session_key_words)) {
-    $row["key_words"] = $session_key_words;
-}
-if ($row["picture_date"]=='UNKNOWN' && isset($session_picture_date)) {
-    $row["picture_date"] = $session_picture_date;
-}
-if (strlen($row["taken_by"])==0 && isset($session_taken_by)) {
-    $row["taken_by"] = $session_taken_by;
-}
 ?>
 <html>
-<!-- Version 2.7 -->
 <head>
 <title>Picture Maintenance</title>
 <?php require('inc_page_head.php'); ?>

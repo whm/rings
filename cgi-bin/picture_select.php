@@ -146,8 +146,9 @@ if (isset($_SERVER['REMOTE_USER'])) {
 
 if (isset($in_ring_uid)) {
 
-    $new_pid = '';
-
+    $new_pid   = '';
+    $order_sel = '';
+    
     // Build selection for next links
     $base_sel = "SELECT ";
     $base_sel .= "p.picture_date     picture_date, ";
@@ -243,7 +244,6 @@ if (isset($in_ring_pid)) {
     $result = $DBH->query($sel);
     if ($result) {
         $row = $result->fetch_array(MYSQLI_ASSOC);
-        $this_type         = trim($row["picture_type"]);
         $this_pid          = $row["pid"];
         $this_picture_date = $row["picture_date"];
         $this_picture_seq  = $row["picture_sequence"];
@@ -263,7 +263,7 @@ if (isset($in_ring_pid)) {
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
         $sel .= "JOIN people_or_places pp ";
-        $sel .= "ON (det.uid = pp.uid $private_sel) ";
+        $sel .= "ON (det.uid = pp.uid) ";
         $sel .= "WHERE det.pid=$in_ring_pid ";
         $result=  $DBH->query($sel);
         if ($result) {
