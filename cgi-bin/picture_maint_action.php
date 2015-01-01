@@ -160,7 +160,7 @@ if ( $update_flag ) {
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
     $up_msg = '';
-    $db_flds = get_fld_names('pictures_information');
+    $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $fld_update_flag = 0;
         foreach ($update_list as $this_name) {
