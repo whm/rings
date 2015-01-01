@@ -40,6 +40,10 @@ if ($result) {
 }
 if ( isset($in_group_id) && !isset($row["group_id"]) ) {
    $_SESSION['msg'] .= "Group '$in_group_id' not found.<br>\n";
+    $fld_names = get_fld_names('groups');
+    foreach ($fld_names as $db_fld) {
+        $row[$db_fld] = '';
+    }
 }
 ?>
 

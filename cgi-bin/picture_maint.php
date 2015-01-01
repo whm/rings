@@ -117,6 +117,10 @@ if ($result) {
 }
 if ( isset($in_pid) && !isset($row["pid"]) ) {
     $_SESSION['msg'] .= "Picture '$in_pid' not found.\n";
+    $fld_names = get_fld_names('pictures_information');
+    foreach ($fld_names as $db_fld) {
+        $row[$db_fld] = '';
+    }
 }
 
 // Check to see if the raw image exists
@@ -263,19 +267,26 @@ require ('page_top.php');
 <tr>
  <td align="right">Picture ID:</td>
  <td><?php
-    print $row["pid"]
-        . ' File:' . $row['file_name']
-        . ' Group:' . $row['group_path']
-        . ' <a href="picture_reload.php?in_pid=' . $in_pid . '" '
-        . 'target="_blank">Reload</a>'
-        . "\n";
+    if (isset($row['pid'])) {
+        $pic_info = $row["pid"];
+        if (isset($row['file_name'])) {
+            $pic_info .= ' File:' . $row['file_name'];
+        }
+        if (isset($row['group_path'])) {
+            $pic_info .= ' Group:' . $row['group_path'];
+        }
+        $pic_info .= ' <a href="picture_reload.php?in_pid=' . $in_pid . '" '
+            . 'target="_blank">Reload</a>'
+            . "\n";
+        print $pic_info;
+    }
     ?>
     <input type="hidden" name="in_pid" value="<?php print $in_pid;?>">
  </td>
 </tr>
 <tr>
  <td align="right">Old Date Taken:</td>
- <td><?php print $row["date_taken"]; ?></td>
+ <td><?php $row['date_taken']; ?></td>
 </tr>
 <tr>
  <td align="right">Picture Date:</td>
