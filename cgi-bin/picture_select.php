@@ -46,7 +46,7 @@ function make_a_link ($thisUID,
     $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
     $thisLink .= '&in_ring_next_seq='.urlencode($this_seq);
     $thisLink .= '">';
-    if ($_SESSION['button_type'] == 'G') {
+    if (isset($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
         $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
     } else {
         $thisLink .= $thisName;
@@ -279,7 +279,8 @@ if (isset($in_ring_pid)) {
     // ------------------------------------------
     // display the links
 
-    if ($_SESSION['button_position'] == 'B') {
+    if (isset($_SESSION['button_position'])
+    && $_SESSION['button_position'] == 'B') {
         echo $image_reference;
     }
 
