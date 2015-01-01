@@ -247,7 +247,7 @@ if (  $result = $DBH->query($sel) ) {
     <table border="1" cellpadding="2">
 
     <tr>
-    <td rowspan="4">
+    <td rowspan="5">
     <input type="submit" name="in_button_set" value="Set">
     </td>
     <th align="right">Picture Size:</th>
