@@ -414,7 +414,7 @@ if ($result) {
         if (isset($found["$a_uid"])) {continue;}
         $uid_list[$a_uid] = $person_row['display_name'];
         $thisWeight = 32767;
-        if ($_SESSION['s_uid_weight'][$a_uid]>0) {
+        if (isset($_SESSION['s_uid_weight'][$a_uid])) {
             $thisWeight = 30
                 * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
         }

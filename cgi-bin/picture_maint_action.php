@@ -187,7 +187,7 @@ if ( $update_flag ) {
         // Make the changes
         $sql_cmd = "UPDATE pictures_information SET $cmd ";
         $sql_cmd .= "WHERE pid = $in_pid ";
-        $result = $DBH->($sql_cmd);
+        $result = $DBH->query($sql_cmd);
         $_SESSION['msg'] .= $up_msg;
     }
     $next_pid = $in_pid;
