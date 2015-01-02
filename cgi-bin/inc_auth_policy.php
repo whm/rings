@@ -61,9 +61,14 @@ function auth_person_hidden ($uid) {
 // authentication.
 function auth_url($url) {
     $new_url = $url;
-    $new_url = preg_replace('^http:\/\/', 'https://', $url);
+    if (substr($new_url, 0, 7) == 'http://') {
+        $new_url = substr($new_url, 7);
+    }
     if (substr($new_url, 0, 8) != 'https://') {
-        $new_url = 'https://' . $new_url;
+        if (substr($new_url, 0, 1) != '/') {
+            $new_url = '/' . $new_url;
+        }
+        $new_url = 'https://' . $_SERVER['HTTP_HOST'] . $new_url;
     }
     return $new_url;
 }
