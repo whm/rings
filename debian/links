@@ -1,1 +1,3 @@
-usr/share/rings/cgi-bin/ usr/share/rings/cgi-bin/auth
+usr/share/rings/cgi-bin/auth/index.php usr/share/rings/cgi-bin/index.php
+usr/share/rings/cgi-bin/auth/index.php usr/share/rings/cgi-bin/rings.php
+usr/share/rings/cgi-bin/auth/picture_select.php usr/share/rings/cgi-bin/picture_select.php
