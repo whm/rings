@@ -203,7 +203,7 @@ if (isset($in_ring_uid)) {
     }
 
     if (strlen($new_pid) == 0) {
-        http_redirect('/index.php');
+        http_redirect('/rings/index.php');
         exit;
     } else {
         $in_ring_pid = $new_pid;
@@ -215,7 +215,7 @@ if (isset($in_ring_pid)) {
     // If the picture contains an invisible person return the caller to
     // the index page.
     if (auth_picture_invisible($in_ring_pid) > 0) {
-        http_redirect('/index.php');
+        http_redirect('/rings/index.php');
         exit;
     }
 
