@@ -56,6 +56,9 @@ if (isset($in_group_id)) {
                 $_SESSION[$sid] = $vals[1];
             }
         }
+        if (isset($_SESSION['group_id'])) {
+            $in_group_id = $_SESSION['group_id'];
+        }
     }
 }
 
@@ -205,7 +208,7 @@ function showPreferences(){
 
 <?php
 
-if (strlen($in_group_id) == 0) {
+if (!isset($in_group_id)) {
     $in_group_id = 'happenings';
     $_SESSION['group_id'] = $in_group_id;
 }
