@@ -46,4 +46,18 @@ function format_date_time ($in) {
     return $ret_date.'&nbsp;'.$ret_time;
 }
 
+//-------------------------------------------------------------
+// Redirect the user to the home page
+function http_redirect ($nextURL="index.php") {
+    header ("REFRESH: 0; URL=$nextURL");
+    echo "<html>\n";
+    echo "<head>\n";
+    echo "<title>Rings</title>\n";
+    echo "</head>\n";
+    echo "<body>\n";
+    echo "<h1><a href=\"$nextURL\">Rings</a></h1>\n";
+    echo "</body>\n";
+    echo "</html>\n";
+    exit;
+}
 ?>

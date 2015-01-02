@@ -10,15 +10,10 @@ require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_slide_show     = get_request('in_slide_show');
-$in_login          = get_request('in_login');
 $in_ring_uid       = get_request('in_ring_uid');
 $in_ring_next_seq  = get_request('in_ring_next_seq');
 $in_ring_pid       = get_request('in_ring_pid');
 $in_ring_next_date = get_request('in_ring_next_date');
-
-// Init session, connect to database
-$authNotRequired = 1;
-if ($in_login == 2) {$authNotRequired = '';}
 
 if (strlen($_SESSION['display_grade']) == 0) {
     $_SESSION['display_grade'] = 'A';
@@ -208,7 +203,7 @@ if (isset($in_ring_uid)) {
     }
 
     if (strlen($new_pid) == 0) {
-        auth_redirect();
+        http_redirect('/index.php');
         exit;
     } else {
         $in_ring_pid = $new_pid;
@@ -220,7 +215,7 @@ if (isset($in_ring_pid)) {
     // If the picture contains an invisible person return the caller to
     // the index page.
     if (auth_picture_invisible($in_ring_pid) > 0) {
-        auth_redirect();
+        http_redirect('/index.php');
         exit;
     }
 
@@ -386,17 +381,8 @@ if (isset($in_ring_pid)) {
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
         echo 'alt="Give this picture a grade.">';
-
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-        echo '<a href="' . $_SERVER['PHP_SELF'];
-        echo '?in_logout=1';
-        echo '&in_ring_pid='.$in_ring_pid.'">';
-        echo '<img src="/rings-images/logout.jpg" border="0">';
-        echo "</a>\n";
     } else {
-        echo '<a href="' . $_SERVER['PHP_SELF'];
-        echo '?in_login=2';
+        echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
         echo '&in_ring_pid='.$in_ring_pid.'">';
         echo '<img src="/rings-images/login.jpg" border="0">';
         echo "</a>\n";
