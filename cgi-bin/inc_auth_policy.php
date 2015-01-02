@@ -65,7 +65,7 @@ function auth_url($url) {
     if (substr($new_url, 0, 8) != 'https://') {
         $new_url = 'https://' . $new_url;
     }
-    return $new_utl;
+    return $new_url;
 }
 
 ?>
