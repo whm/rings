@@ -322,7 +322,7 @@ if (isset($_SERVER['REMOTE_USER'])) {
     }
     echo "</h5>\n";
 } else {
-    echo '<a href="' . http_redirect(auth_url($_SERVER['PHP_SELF'])). '"'
+    echo '<a href="' . auth_url($_SERVER['PHP_SELF']) . '"'
         . '>Login</a>' . "\n";
     echo '&nbsp;-&nbsp;To see all of the pictures you need to login' . "\n";
     echo "</h5>\n";
