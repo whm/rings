@@ -34,6 +34,7 @@ function auth_person_hidden ($uid) {
     if (isset($_SERVER['REMOTE_USER'])) {
         $hide_person = 0;
     } else {
+        $hide_person = 0;
         $sel = "SELECT count(*) hidden_count FROM people_or_places ";
         $sel .= "WHERE uid='$uid' ";
         $sel .= "AND (visibility = 'INVISIBLE' ";
