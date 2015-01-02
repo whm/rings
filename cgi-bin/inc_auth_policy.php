@@ -56,17 +56,16 @@ function auth_person_hidden ($uid) {
     return $hide_person;
 }
 
-// Redirect the user to the home page
-function http_redirect ($nextURL="index.php") {
-    header ("REFRESH: 0; URL=$nextURL");
-    echo "<html>\n";
-    echo "<head>\n";
-    echo "<title>Rings</title>\n";
-    echo "</head>\n";
-    echo "<body>\n";
-    echo "<h1><a href=\"$nextURL\">Rings</a></h1>\n";
-    echo "</body>\n";
-    echo "</html>\n";
-    exit;
+// Create a url that will display the current page using ssl.This
+// allows an apache configuration that uses webauth for
+// authentication.
+function auth_url($url) {
+    $new_url = $url;
+    $new_url = preg_replace('^http:\/\/', 'https://', $url);
+    if (substr($new_url, 0, 8) != 'https://') {
+        $new_url = 'https://' . $new_url;
+    }
+    return $new_utl;
 }
+
 ?>

@@ -13,18 +13,11 @@ require('inc_ring_init.php');
 $in_size         = get_request('in_size');
 $in_seconds      = get_request('in_seconds');
 $in_group_id     = get_request('in_group_id');
-$in_login        = get_request('in_login');
 $in_pos          = get_request('in_pos');
 $in_grade        = get_request('in_grade');
 $in_type         = get_request('in_type');
 $in_pref_display = get_request('in_pref_display');
 $in_button_set   = get_request('in_button_set');
-
-if (isset($in_login) && $in_login > 0) {
-    $authNotRequired = 0;
-} else {
-    $authNotRequired = 1;
-}
 
 // Cookie to Session map
 $cm['GID'] = 'group_id';
@@ -324,10 +317,10 @@ if (isset($_SERVER['REMOTE_USER'])) {
     if (isset($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
-    echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_logout=2">Logout</a>';
     echo "</h5>\n";
 } else {
-    echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_login=2">Login</a>' . "\n";
+    echo '<a href="' . http_redirect(auth_url($_SERVER['PHP_SELF'])). '"'
+        . '>Login</a>' . "\n";
     echo '&nbsp;-&nbsp;To see all of the pictures you need to login' . "\n";
     echo "</h5>\n";
 }
