@@ -165,7 +165,7 @@ if (strlen($in_group_id) > 0) {
                 echo '  <select name="in_deluids[]" multiple>' . "\n";
             }
             $people_cnt++;
-            echo '   <option value="$a_uid">' . $a_name . "\n";
+            echo '   <option value="' . $a_uid . '">' . $a_name . "\n";
         }
         if ($people_cnt > 0) {
             echo "</select>\n";
