@@ -24,9 +24,7 @@
    &nbsp;<a href="picture_maint.php">Maint</a><br>
    &nbsp;<a href="picture_sort.php">Sort</a><br>
    &nbsp;<a href="picture_sort.php?in_new=1">New</a><br>
-   <br>
    &nbsp;<a href="picture_path.php">Path</a><br>
-   &nbsp;<a href="picture_search.php">Find</a><br>
    <br>
    People<br>
    &nbsp;<a href="people_search.php">Find</a><br>
