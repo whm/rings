@@ -131,28 +131,6 @@ sub unix_seconds {
     return $ret;
 }
 
-# -------------------------------------------------------------
-#  construct flds and values for an insert
-# 
-#   $in_type == "n" is a number
-#   $in_type != "n" anything else is a string
-
-sub mkin {
-    
-    (my $a_fld, my $a_val, my $in_type) = @_;
-    
-    if (length($a_val) > 0) {
-        my $c = "";
-        if (length($flds) > 0) {$c = ",";}
-        $flds .= $c . $a_fld;
-        if ( $in_type ne "n" ) {
-            $a_val = $dbh_update->quote($a_val);
-        }
-        $vals .= $c . $a_val;
-    }
-    return;
-}
-
 # ------------------------------------------------
 # store pictures
 
@@ -459,14 +437,13 @@ sub save_file {
 
     if (length($opt_ppe)>0) {
         dbg (" Creating picture details $pid $opt_ppe");
-        $flds = $vals = '';
-        mkin ('pid', $pid,     'n');
-        mkin ('uid', $opt_ppe, 's');
-        my $cmd = "INSERT INTO picture_details ($flds) VALUES ($vals)";
-        if ($opt_debug) {dbg("length of sql command: ".length($cmd));}
+        my $cmd = 'INSERT INTO picture_details (pid,uid) VALUES (?,?)';
+        if ($opt_debug) {
+            dbg("cmd:$cmd");
+        }
         if ($opt_update) {
             my $sth_update = $dbh_update->prepare ($cmd);
-            $sth_update->execute();
+            $sth_update->execute($pid, $opt_ppe);
         }
     }
     
