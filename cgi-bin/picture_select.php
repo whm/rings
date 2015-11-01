@@ -383,7 +383,7 @@ if (isset($in_ring_pid)) {
         echo 'alt="Give this picture a grade.">';
     } else {
         echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
-        echo '&in_ring_pid='.$in_ring_pid.'">';
+        echo '?in_ring_pid='.$in_ring_pid.'">';
         echo '<img src="/rings-images/login.jpg" border="0">';
         echo "</a>\n";
     }
