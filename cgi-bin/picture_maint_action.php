@@ -204,10 +204,12 @@ if ( $update_flag ) {
             if ($result) {
                 $update_cnt++;
                 $_SESSION['msg'] .= "<font $ok>"
-                    . "Deleted $a_uid from picture . </font><br>";
-                $_SESSION['s_uid_weight'][$a_uid]--;
-                if ($_SESSION['s_uid_weight'][$a_uid] < 0) {
-                    $_SESSION['s_uid_weight'][$a_uid] = 0;
+                    . "Deleted $a_uid from picture. </font><br>";
+                if (isset($_SESSION['s_uid_weight'][$a_uid])) {
+                    $_SESSION['s_uid_weight'][$a_uid]--;
+                    if ($_SESSION['s_uid_weight'][$a_uid] < 0) {
+                        $_SESSION['s_uid_weight'][$a_uid] = 0;
+                    }
                 }
             } else {
                 $_SESSION['msg'] .= "Problem deleting picture details.<br>";
@@ -230,9 +232,13 @@ if ( $update_flag ) {
             if ($add_result) {
                 $update_cnt++;
                 $_SESSION['msg'] .= "<font $ok>$a_uid added.</font><br>";
-                $_SESSION['s_uid_weight'][$a_uid]++;
-                if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
-                    $_SESSION['s_uid_weight'][$a_uid] = 32767;
+                if (isset($_SESSION['s_uid_weight'][$a_uid]) {
+                    $_SESSION['s_uid_weight'][$a_uid]++;
+                    if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
+                        $_SESSION['s_uid_weight'][$a_uid] = 32767;
+                    }
+                } else {
+                    $_SESSION['s_uid_weight'][$a_uid] = 1;
                 }
             } else {
                 $_SESSION['msg'] .= "Problem updating picture details<br>";
