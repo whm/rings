@@ -15,7 +15,7 @@ $in_ring_next_seq  = get_request('in_ring_next_seq');
 $in_ring_pid       = get_request('in_ring_pid');
 $in_ring_next_date = get_request('in_ring_next_date');
 
-if (strlen($_SESSION['display_grade']) == 0) {
+if (!isset($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
 $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
@@ -158,7 +158,7 @@ if (isset($in_ring_uid)) {
         // Selecting by a specific ring uid
         $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     }
-    if (strlen($invisible_sel) > 0) {
+    if (isset($invisible_sel)) {
         $base_sel .= "JOIN people_or_places pp ";
         $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
     }
@@ -188,7 +188,7 @@ if (isset($in_ring_uid)) {
     }
 
     // either there was no previous picture or we are wrapping around
-    if (strlen($new_pid) == 0) {
+    if (!isset($new_pid)) {
         $sel = $base_sel;
         $sel .= $order_sel;
         $result = $DBH->query($sel);
@@ -202,7 +202,7 @@ if (isset($in_ring_uid)) {
         }
     }
 
-    if (strlen($new_pid) == 0) {
+    if (!isset($new_pid)) {
         http_redirect('/rings/index.php');
         exit;
     } else {
@@ -246,7 +246,7 @@ if (isset($in_ring_pid)) {
         $image_reference   .= "<img src=\"display.php";
         $image_reference   .= "?in_pid=$this_pid";
         $image_reference   .= "&in_size=$thisSize\">\n";
-        if (strlen($row['description'])>0) {
+        if (isset($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
         }
@@ -288,7 +288,7 @@ if (isset($in_ring_pid)) {
     if (count($next_links)>0) {
         asort($next_links);
 
-        if (strlen($in_ring_uid)>0) {
+        if (isset($in_ring_uid)) {
             // display the reason we got here first so that it is easy
             // to step through these pictures.
             $l = make_a_link($in_ring_uid,
@@ -296,7 +296,7 @@ if (isset($in_ring_pid)) {
                              $this_picture_date,
                              $this_picture_seq,
                              $next_links[$in_ring_uid]);
-            if (strlen($l) > 0) {echo $l."<br>\n";}
+            if (isset($l)) {echo $l."<br>\n";}
         }
         echo '<font  color="white">';
         if ($in_slide_show > 0) {
@@ -313,7 +313,7 @@ if (isset($in_ring_pid)) {
                                  $this_picture_date,
                                  $this_picture_seq,
                                  $next_links[$thisUID]);
-                if (strlen($l) > 0) {
+                if (isset($l)) {
                     echo $c.$l;
                     $c = ' <font color="#000000">.</font> ';
                 }
@@ -374,13 +374,6 @@ if (isset($in_ring_pid)) {
         echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
         echo 'alt="Edit Picture Information">';
         echo "</a>\n";
-
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-        echo '<img src="/rings-images/icon-grade.png"  border="0" ';
-        echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
-        echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
-        echo 'alt="Give this picture a grade.">';
     } else {
         echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
         echo '?in_ring_pid='.$in_ring_pid.'">';
