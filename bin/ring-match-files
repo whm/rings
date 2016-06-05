@@ -1,8 +1,6 @@
 #!/usr/bin/perl
 #
-# ring-make-files - Take and input director and produce ring image
-# files.
-#
+# ring-match-files - Match files with entries in the rings database.
 
 use Carp;
 use Cwd;
@@ -10,8 +8,6 @@ use DBI;
 use File::Copy;
 use File::Find;
 use Getopt::Long;
-use Image::ExifTool 'ImageInfo';
-use Image::Magick;
 use Pod::Usage;
 use strict;
 use Time::Local;
@@ -19,8 +15,6 @@ use Time::Local;
 my $CNT;
 my $DBH;
 my $DEBUG_TIME;
-my %PICTURE_SIZES;
-my $TYPE_LIST = '(gif|jpeg|jpg|png)';
 
 my $opt_db = 'rings';
 my $opt_db_host = 'spowl.ca-zephyr.org';
@@ -30,9 +24,6 @@ my $opt_debug;
 my $opt_help;
 my $opt_inroot;
 my $opt_manual;
-my $opt_outroot = '/srv/rings';
-my $opt_replace;
-my $opt_update;
 
 # ------------------------------------------------
 # output debugging information
@@ -120,34 +111,6 @@ sub make_picture_files {
 
 sub generate_sizes {
     my ($in_file, $out_root, $out_file) = @_;
-
-    my $work_to_do;
-    if ($opt_replace) {
-        $work_to_do = 1;
-    } else {
-        for my $size_id (sort keys %PICTURE_SIZES) {
-            my $x = $PICTURE_SIZES{$size_id}{'x'};
-            my $y = $PICTURE_SIZES{$size_id}{'y'};
-            if ($x == 0) {
-                next;
-            }
-            # Create output directory if necessary
-            my $out_path = $out_root . '/' . $size_id;
-            if (! -d $out_path) {
-                $work_to_do = 1;
-                last;
-            }
-            my $out_full_path = $out_path . "/${out_file}";
-            if (!-e $out_full_path) {
-                $work_to_do = 1;
-                last;
-            }
-        }
-    }
-
-    if (!$work_to_do) {
-        return;
-    }
     
     # read the image
     my $this_pic = new Image::Magick;
@@ -201,27 +164,12 @@ sub generate_sizes {
     }
 
     for my $size_id (sort keys %PICTURE_SIZES) {
-        my $max_x = $PICTURE_SIZES{$size_id}{'x'};
-        my $max_y = $PICTURE_SIZES{$size_id}{'y'};
-        if ($max_x == 0) {
+        my $x = $PICTURE_SIZES{$size_id}{'x'};
+        my $y = $PICTURE_SIZES{$size_id}{'y'};
+        if ($x == 0) {
             next;
         }
 
-        # Set the picture size
-        my $x = $width;
-        my $y = $height;
-        my $x1 = $max_x;
-        my $y1 = ($x1/$width) * $height;
-        my $y2 = $max_y;
-        my $x2 = ($y2/$height) * $width;
-        if ($x1 < $x2) {
-            $x = $x1;
-            $y = $y1;
-        } else {
-            $x = $x2;
-            $y = $y2;
-        }
-        
         # Create output directory if necessary
         my $out_path = $out_root . '/' . $size_id;
         if ($opt_debug) { dbg("creating directory ${out_path}"); }
@@ -325,8 +273,8 @@ ring-make-files
 
 =head1 SYNOPSIS
 
-ring-make-files [--inroot=directory-path] [--outroot=/srv/rings]
-                [--update] [--db-host=mysql-host] [--db=dbname]
+ring-make-files [--inroot=directory-path] [--update]
+                [--db-host=mysql-host] [--db=dbname]
                 --db-user=mysql-username --db-pass=mysql-password
                 [--debug] [--help] [--manual]
 
@@ -343,10 +291,6 @@ scaled from the original picture in a parallel directory tree.
 =item --inroot=directory-path
 
 The location of the input pictures.
-
-=item --outroot=/srv/rings
-
-The location to write picture files to.  The default is /srv/rings.
 
 =item --db-host=mysql-hostname
 
