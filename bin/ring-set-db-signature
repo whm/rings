@@ -1,0 +1,212 @@
+#!/usr/bin/perl
+#
+# ring-set-db-signature - Set the picture-id in the pictures_information table.
+
+use Carp;
+use Cwd;
+use DBI;
+use File::Copy;
+use File::Find;
+use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
+use Image::Magick;
+use Pod::Usage;
+use strict;
+use Time::Local;
+
+my $CNT;
+my $DBH;
+my $DEBUG_TIME;
+
+my $opt_db = 'rings';
+my $opt_db_host = 'spowl.ca-zephyr.org';
+my $opt_db_pass;
+my $opt_db_user;
+my $opt_debug;
+my $opt_help;
+my $opt_limit;
+my $opt_manual;
+my $opt_update;
+
+# ------------------------------------------------
+# output debugging information
+
+sub dbg {
+    
+    (my $tmp) = @_;
+    
+    my $now = time;
+    my $elapsed = $now - $DEBUG_TIME;
+    print "$now ($elapsed) $tmp \n";
+    $DEBUG_TIME = $now;
+    return;
+    
+}
+
+# ------------------------------------------------
+# Read small pictures and store the first 255 bytes of the small
+# picture in the pictures_information table.
+
+sub update_picture_ids {
+    
+    my $cmd = 'UPDATE pictures_small SET width = ?, ';
+    $cmd .= 'height = ?, ';
+    $cmd .= 'size = ?, ';
+    $cmd .= 'signature = ? ';
+    $cmd .= 'WHERE pid = ? ';
+    if ($opt_debug) {dbg ($cmd);}
+    my $sth_update = $DBH->prepare ($cmd);
+    
+    my $sel = "SELECT pid, picture FROM pictures_small ";
+    if ($opt_limit) {
+        $sel .= "limit 0,$opt_limit";
+    }
+    if ($opt_debug) {dbg($sel);}
+    my $sth = $DBH->prepare ($sel);
+    $sth->execute();
+    my %sizes = ();
+    while (my $row = $sth->fetchrow_hashref) {
+        my $this_pid = $row->{pid};
+        my $img = Image::Magick->new();
+        $img->Read(blob => $row->{picture});
+        my ($width, 
+            $height, 
+            $size, 
+            $format, 
+            $compression,
+            $signature) 
+            = $img->Get('width',
+                        'height',
+                        'filesize',
+                        'format',
+                        'compression',
+                        'signature');
+        $signature =~ s/\s+//xmsg;
+        if ($opt_update) {
+            printf("Setting: pid=%s width=%s height=%s signature=%s\n",
+                   $row->{pid}, $width, $height, $signature);
+            $sth_update->execute($width,
+                                 $height,
+                                 $size,
+                                 $signature,
+                                 $this_pid);
+        } else {
+            printf("Proposing: pid=%s width=%s height=%s signature=%s\n",
+                   $row->{pid}, $width, $height, $signature);
+        }
+    }
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+print ">>> ring-set-db-signature\n";
+
+$| = 1;
+
+# -- get options
+GetOptions(
+    'db=s'      => \$opt_db,
+    'db-host=s' => \$opt_db_host,
+    'db-pass=s' => \$opt_db_pass,
+    'db-user=s' => \$opt_db_user,
+    'debug'     => \$opt_debug,
+    'help'      => \$opt_help,
+    'limit=i'   => \$opt_limit,
+    'manual'    => \$opt_manual,
+    'update'    => \$opt_update
+    );
+
+# -- help the poor souls out
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+if ($opt_debug) {dbg('Initialzie debugging');}
+
+if (!$opt_db_pass) {
+    print "%MAC-F-PASSREQ, a MySQL password is required\n";
+    pod2usage(-verbose => 1);
+}
+if (!$opt_db_user) {
+    print "%MAC-F-USERREQ, a MySQL username is required\n";
+    pod2usage(-verbose => 1);
+}
+
+if ($opt_debug) {dbg ("Initialize timer");}
+
+# -- Open up connections to the MySQL data
+
+my $dbi = "dbi:mysql:host=$opt_db_host;database=$opt_db";
+$DBH = DBI->connect ($dbi, $opt_db_user, $opt_db_pass)
+    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
+
+update_picture_ids();
+
+$DBH->disconnect
+    or croak("ERROR: Disconnect failed for $dbi (read)");
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-set-db-signature
+
+=head1 SYNOPSIS
+
+ring-set-db-signature [--db-host=mysql-host] [--db=dbname]
+--db-user=mysql-username --db-pass=mysql-password [--debug] [--help]
+[--manual]
+
+
+=head1 DESCRIPTION
+
+Update the picture_id field in the pictures_information table.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --db-host=mysql-hostname
+
+MySQL host name.
+
+=item --db=database-name
+
+MySQL database name.  If not specified then rings is used.
+
+=item --db-user=mysql-username
+
+MySQL username.  Required.
+
+=item --db-host=mysql-password
+
+MySQL password.  Required.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
+

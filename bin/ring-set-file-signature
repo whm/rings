@@ -1,0 +1,203 @@
+#!/usr/bin/perl
+#
+# ring-set-file-signature - Set the picture-id in the pictures_information table.
+
+use Carp;
+use Cwd;
+use DBI;
+use File::Copy;
+use File::Find;
+use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
+use Image::Magick;
+use Pod::Usage;
+use strict;
+use Time::Local;
+
+my $CNT;
+my $DBH;
+my $DEBUG_TIME;
+
+my $opt_db = 'rings';
+my $opt_db_host = 'spowl.ca-zephyr.org';
+my $opt_db_pass;
+my $opt_db_user;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+
+# ------------------------------------------------
+# output debugging information
+
+sub dbg {
+    
+    (my $tmp) = @_;
+    
+    my $now = time;
+    my $elapsed = $now - $DEBUG_TIME;
+    print "$now ($elapsed) $tmp \n";
+    $DEBUG_TIME = $now;
+    return;
+    
+}
+
+# ------------------------------------------------
+# Read small pictures and store the first 255 bytes of the small
+# picture in the pictures_information table.
+
+sub set_signature {
+    my $this_file      = $_;
+    my $this_path      = $File::Find::dir;
+    my $this_full_path = $File::Find::name;
+
+    # This is not the droid you are looking for
+    if ($this_file !~ /[.](gif|jpeg|jpg|png)$/xmsi) {
+        return;
+    }
+    if ($this_full_path !~ m{/pictures_small/}xms) {
+        return;
+    }
+
+    my $cmd = 'INSERT INTO tmp_matching ';
+    $cmd .= '(file_path, signature, width, height, size) ';
+    $cmd .= 'VALUES (?, ?, ?, ?, ?) ';
+    if ($opt_debug) {dbg ($cmd);}
+    my $sth_update = $DBH->prepare ($cmd);
+    
+    my $img = Image::Magick->new();
+    $img->Read($this_full_path);
+    my ($width, 
+        $height, 
+        $size, 
+        $format, 
+        $compression,
+        $signature) 
+        = $img->Get('width',
+                    'height',
+                    'filesize',
+                    'format',
+                    'compression',
+                    'signature');
+    $signature =~ s/\s+//xmsg;
+    print "Setting signature for $this_file to ($signature)\n";
+    $sth_update->execute($this_full_path, 
+                         $signature,
+                         $width,
+                         $height,
+                         $size);
+
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+print ">>> ring-set-file-signature\n";
+
+$| = 1;
+
+# -- get options
+GetOptions(
+    'db=s'      => \$opt_db,
+    'db-host=s' => \$opt_db_host,
+    'db-pass=s' => \$opt_db_pass,
+    'db-user=s' => \$opt_db_user,
+    'debug'     => \$opt_debug,
+    'help'      => \$opt_help,
+    'manual'    => \$opt_manual
+    );
+
+# -- help the poor souls out
+if ($opt_help || !$ARGV[0]) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+if ($opt_debug) {dbg('Initialzie debugging');}
+
+if (!$opt_db_pass) {
+    print "%MAC-F-PASSREQ, a MySQL password is required\n";
+    pod2usage(-verbose => 1);
+}
+if (!$opt_db_user) {
+    print "%MAC-F-USERREQ, a MySQL username is required\n";
+    pod2usage(-verbose => 1);
+}
+
+if ($opt_debug) {dbg ("Initialize timer");}
+
+# -- Open up connections to the MySQL data
+
+my $dbi = "dbi:mysql:host=$opt_db_host;database=$opt_db";
+$DBH = DBI->connect ($dbi, $opt_db_user, $opt_db_pass)
+    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
+
+my $a_dir = $ARGV[0];
+my @dirs = ($a_dir);
+find(\&set_signature, @dirs);
+
+$DBH->disconnect
+    or croak("ERROR: Disconnect failed for $dbi (read)");
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-set-file-signature
+
+=head1 SYNOPSIS
+
+ring-set-file-signature [--db-host=mysql-host] [--db=dbname]
+--db-user=mysql-username --db-pass=mysql-password [--debug] [--help]
+[--manual]
+
+
+=head1 DESCRIPTION
+
+Update the picture_id field in the pictures_information table.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --db-host=mysql-hostname
+
+MySQL host name.
+
+=item --db=database-name
+
+MySQL database name.  If not specified then rings is used.
+
+=item --db-user=mysql-username
+
+MySQL username.  Required.
+
+=item --db-host=mysql-password
+
+MySQL password.  Required.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
+

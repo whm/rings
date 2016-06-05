@@ -492,6 +492,26 @@ if (isset($_SESSION['msg'])) {
    <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">  <br>
 <?php } ?>
 
+<?php
+# Picture matching code
+$sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
+$sel .= "FROM tmp_matching ";
+$sel .= "JOIN pictures_small ";
+$sel .= "ON (pictures_small.size = tmp_matching.size ";
+$sel .= "AND pictures_small.width = tmp_matching.width) ";
+$sel .= "WHERE pictures_small.pid = $in_pid ";
+$result = $DBH->query ($sel);
+if ($result) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $this_path = $row['file_path'];
+        $this_sig  = $row['signature'];
+        echo '<img src="/rings/display_file.php?in_signature=';
+        echo $this_signature;
+        echo '">' . "\n";
+        echo "<br>\n";
+    }
+}
+?>
 
  </td>
 
