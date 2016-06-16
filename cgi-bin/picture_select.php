@@ -15,7 +15,7 @@ $in_ring_next_seq  = get_request('in_ring_next_seq');
 $in_ring_pid       = get_request('in_ring_pid');
 $in_ring_next_date = get_request('in_ring_next_date');
 
-if (!isset($_SESSION['display_grade'])) {
+if (empty($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
 $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
@@ -42,7 +42,7 @@ function make_a_link ($thisUID,
     $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
     $thisLink .= '&in_ring_next_seq='.urlencode($this_seq);
     $thisLink .= '">';
-    if (isset($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
+    if (!empty($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
         $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
     } else {
         $thisLink .= $thisName;
@@ -133,13 +133,13 @@ function add_email_list(idx) {
 
 $next_links = array();
 
-if (isset($_SERVER['REMOTE_USER'])) {
+if (!empty($_SERVER['REMOTE_USER'])) {
     $invisible_sel = '';
 } else {
     $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
 }
 
-if (isset($in_ring_uid)) {
+if (!empty($in_ring_uid)) {
 
     $new_pid   = '';
     $order_sel = '';
@@ -158,20 +158,20 @@ if (isset($in_ring_uid)) {
         // Selecting by a specific ring uid
         $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
     }
-    if (isset($invisible_sel)) {
+    if (!empty($invisible_sel)) {
         $base_sel .= "JOIN people_or_places pp ";
         $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
     }
     $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
 
     // look up the next picture
-    if (isset($in_ring_next_date)) {
+    if (!empty($in_ring_next_date)) {
         $sel = $base_sel;
         $sel .= "WHERE ((picture_date='$in_ring_next_date' ";
         $sel .= "AND picture_sequence>$in_ring_next_seq) ";
         $sel .= "OR (picture_date>'$in_ring_next_date')) ";
         $sel .= "AND p.pid != $in_ring_pid ";
-        if (!isset($_SERVER['REMOTE_USER'])) {
+        if (empty($_SERVER['REMOTE_USER'])) {
             $sel .= "AND public='Y' ";
         }
         $sel .= "AND $grade_sel ";
@@ -188,7 +188,7 @@ if (isset($in_ring_uid)) {
     }
 
     // either there was no previous picture or we are wrapping around
-    if (!isset($new_pid)) {
+    if (empty($new_pid)) {
         $sel = $base_sel;
         $sel .= $order_sel;
         $result = $DBH->query($sel);
@@ -202,7 +202,7 @@ if (isset($in_ring_uid)) {
         }
     }
 
-    if (!isset($new_pid)) {
+    if (empty($new_pid)) {
         http_redirect('/rings/index.php');
         exit;
     } else {
@@ -210,7 +210,7 @@ if (isset($in_ring_uid)) {
     }
 }
 
-if (isset($in_ring_pid)) {
+if (!empty($in_ring_pid)) {
 
     // If the picture contains an invisible person return the caller to
     // the index page.
@@ -233,7 +233,7 @@ if (isset($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid=$in_ring_pid ";
-    if (!isset($_SERVER['REMOTE_USER'])) {
+    if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND public='Y' ";
     }
     $result = $DBH->query($sel);
@@ -246,7 +246,7 @@ if (isset($in_ring_pid)) {
         $image_reference   .= "<img src=\"display.php";
         $image_reference   .= "?in_pid=$this_pid";
         $image_reference   .= "&in_size=$thisSize\">\n";
-        if (isset($row['description'])) {
+        if (!empty($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
         }
@@ -275,7 +275,7 @@ if (isset($in_ring_pid)) {
     // ------------------------------------------
     // display the links
 
-    if (isset($_SESSION['button_position'])
+    if (!empty($_SESSION['button_position'])
     && $_SESSION['button_position'] == 'B') {
         echo $image_reference;
     }
@@ -288,7 +288,7 @@ if (isset($in_ring_pid)) {
     if (count($next_links)>0) {
         asort($next_links);
 
-        if (isset($in_ring_uid)) {
+        if (!empty($in_ring_uid)) {
             // display the reason we got here first so that it is easy
             // to step through these pictures.
             $l = make_a_link($in_ring_uid,
@@ -296,7 +296,7 @@ if (isset($in_ring_pid)) {
                              $this_picture_date,
                              $this_picture_seq,
                              $next_links[$in_ring_uid]);
-            if (isset($l)) {echo $l."<br>\n";}
+            if (!empty($l)) {echo $l."<br>\n";}
         }
         echo '<font  color="white">';
         if ($in_slide_show > 0) {
@@ -313,7 +313,7 @@ if (isset($in_ring_pid)) {
                                  $this_picture_date,
                                  $this_picture_seq,
                                  $next_links[$thisUID]);
-                if (isset($l)) {
+                if (!empty($l)) {
                     echo $c.$l;
                     $c = ' <font color="#000000">.</font> ';
                 }
@@ -350,10 +350,10 @@ if (isset($in_ring_pid)) {
 
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-    if (isset($_SERVER['REMOTE_USER'])) {
+    if (!empty($_SERVER['REMOTE_USER'])) {
         $loggedInUser = $_SERVER['REMOTE_USER'];
     }
-    if (isset($loggedInUser)) {
+    if (!empty($loggedInUser)) {
         echo '<img src="/rings-images/icon-grade.png"  border="0" ';
         echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
         echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
@@ -414,7 +414,7 @@ if (isset($in_ring_pid)) {
 
 }
 
-if (isset($_SESSION['msg'])) {
+if (!empty($_SESSION['msg'])) {
   echo $_SESSION['msg'];
   $_SESSION['msg'] = '';
 }
