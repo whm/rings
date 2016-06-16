@@ -502,13 +502,14 @@ $sel .= "AND pictures_small.width = tmp_matching.width) ";
 $sel .= "WHERE pictures_small.pid = $in_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
-    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $this_path = $row['file_path'];
         $this_sig  = $row['signature'];
         echo '<img src="/rings/display_file.php?in_signature=';
-        echo $this_signature;
+        echo $this_sig;
         echo '">' . "\n";
         echo "<br>\n";
+        echo $row['file_path'] . "<br>\n";
     }
 }
 ?>
