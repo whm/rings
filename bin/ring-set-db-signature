@@ -2,6 +2,7 @@
 #
 # ring-set-db-signature - Set the picture-id in the pictures_information table.
 
+use AppConfig qw(:argcount :expand);
 use Carp;
 use Cwd;
 use DBI;
@@ -15,13 +16,12 @@ use strict;
 use Time::Local;
 
 my $CNT;
+my $CONF;
 my $DBH;
 my $DEBUG_TIME;
 
-my $opt_db = 'rings';
-my $opt_db_host = 'spowl.ca-zephyr.org';
-my $opt_db_pass;
-my $opt_db_user;
+my $opt_conf = 'rings.conf';
+my $opt_example;
 my $opt_debug;
 my $opt_force;
 my $opt_help;
@@ -42,6 +42,88 @@ sub dbg {
     $DEBUG_TIME = $now;
     return;
     
+}
+
+# ------------------------------------------------
+# Read configuration
+
+sub read_conf {
+    my $conf_file = '/etc/whm/rings.fix';
+    if ($opt_conf) {
+        $conf_file = $opt_conf;
+    }
+
+    my $conf = AppConfig->new({});
+    $conf->define(
+        'ring_root',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => '/opt/rings'
+        }
+    );
+    $conf->define(
+        'db_host',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => 'localhost'
+        }
+    );
+    $conf->define(
+        'db_name',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => 'rings'
+        }
+    );
+    $conf->define(
+        'db_credentials',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => '/etc/whm/rings_db.conf'
+        }
+    );
+
+    if (-e $conf_file) {
+        $conf->file($conf_file);
+    } else {
+        die("Configuration file is required");
+    }
+
+    # Read database credentials and add them to the $conf structure
+    my $db_conf = AppConfig->new({});
+    $db_conf->define('db_user', { ARGCOUNT => ARGCOUNT_ONE } );
+    $db_conf->define('db_pass', { ARGCOUNT => ARGCOUNT_ONE } );
+    if (-e $conf->db_credentials()) {
+        $db_conf->file($conf->db_credentials());
+    } else {
+        msg('INFO: db_credentials = ' . $conf->db_credentials . "\n");
+        die("Data base password and user required in configuration file.");
+    }
+    $conf->define('db_user');
+    $conf->db_user($db_conf->db_user());
+    $conf->define('db_pass');
+    $conf->db_pass($db_conf->db_pass());
+    
+    return $conf;
+}
+
+sub example_conf {
+
+    msg("# ----------------------------------------------------\n");
+    msg("# Example /etc/whm/rings.conf\n");
+    msg("#\n");
+    msg("ring_root = /opt/rings\n");
+    msg("db_host = localhost\n");
+    msg("db_name = rings\n");
+    msg("db_credentials = /etc/whm/rings_db.conf\n");
+    msg("\n");
+    msg("# ----------------------------------------------------\n");
+    msg("# Example /etc/whm/rings_db.conf\n");
+    msg("# ----------------------------------------------------\n");
+    msg("#\n");
+    msg("db_user = rings\n");
+    msg("db_pass = pass\n");
+    return;
 }
 
 # ------------------------------------------------
@@ -155,16 +237,13 @@ $| = 1;
 
 # -- get options
 GetOptions(
-    'db=s'      => \$opt_db,
-    'db-host=s' => \$opt_db_host,
-    'db-pass=s' => \$opt_db_pass,
-    'db-user=s' => \$opt_db_user,
-    'debug'     => \$opt_debug,
-    'force'     => \$opt_force,
-    'help'      => \$opt_help,
-    'limit=i'   => \$opt_limit,
-    'manual'    => \$opt_manual,
-    'update'    => \$opt_update
+    'conf=s'  => \$opt_conf,
+    'debug'   => \$opt_debug,
+    'force'   => \$opt_force,
+    'help'    => \$opt_help,
+    'limit=i' => \$opt_limit,
+    'manual'  => \$opt_manual,
+    'update'  => \$opt_update
     );
 
 # -- help the poor souls out
@@ -177,22 +256,18 @@ if ($opt_manual) {
 
 if ($opt_debug) {dbg('Initialzie debugging');}
 
-if (!$opt_db_pass) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 1);
-}
-if (!$opt_db_user) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 1);
-}
-
-if ($opt_debug) {dbg ("Initialize timer");}
-
 # -- Open up connections to the MySQL data
 
-my $dbi = "dbi:mysql:host=$opt_db_host;database=$opt_db";
-$DBH = DBI->connect ($dbi, $opt_db_user, $opt_db_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
+$CONF = read_conf();
+
+# -- Open up connections to the MySQL data
+my $db_host = $CONF->db_host();
+my $db_name = $CONF->db_name();
+my $dbi     = "dbi:mysql:host=$db_host;database=$db_name";
+$DBH = DBI->connect ($dbi, $CONF->db_user(), $CONF->db_pass())
+    or die "ERROR: Can't connect to database $dbi for read\n";
+$DBH->{LongTruncOk} = 1;
+$DBH->{LongReadLen} = 10000000;
 
 my %sizes = read_picture_sizes();
 for my $id (sort keys %sizes) {
@@ -212,9 +287,8 @@ ring-set-db-signature
 
 =head1 SYNOPSIS
 
-ring-set-db-signature [--force] [--db-host=mysql-host] [--db=dbname]
---db-user=mysql-username --db-pass=mysql-password [--debug] [--help]
-[--manual]
+ring-set-db-signature [--force] [--conf=file] [--example] [--debug]
+[--help] [--manual]
 
 
 =head1 DESCRIPTION
@@ -230,13 +304,13 @@ Update the picture_id field in the pictures_information table.
 Force an update even if the picture's signature is already set.  The
 default is to skip entries that already have the signature set.
 
-=item --db-host=mysql-hostname
+=item --conf=file
 
-MySQL host name.
+Configuration file.
 
-=item --db=database-name
+=item --example
 
-MySQL database name.  If not specified then rings is used.
+Print an example configuration file.
 
 =item --db-user=mysql-username
 
