@@ -1,24 +1,29 @@
 #!/usr/bin/perl
 
-use strict;
+use AppConfig qw(:argcount :expand);
 use DBI;
+use File::Slurp;
+use File::Find;
 use Getopt::Long;
 use Image::Magick;
 use Pod::Usage;
+use strict;
 use Time::Local;
 
-our $dbh;
-our $dbh_update;
-our $debug;
-our $debug_time;
-our $opt_db;
-our $opt_debug;
-our $opt_help;
-our $opt_manual;
-our $opt_update;
-our $opt_host;
-our $opt_user;
-our $opt_pass;
+my $CONF;
+my $DBH;
+my $DBH_UPDATE;
+my $DEBUG_TIME;
+my $UPDATE_CNT = 0;
+
+my $opt_conf = 'rings.conf';
+my $opt_example;
+my $opt_debug;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+my $opt_limit;
+my $opt_update;
 
 # ------------------------------------------------
 # output debugging information
@@ -28,11 +33,20 @@ sub dbg {
     (my $tmp) = @_;
     
     my $now = time;
-    my $elapsed = $now - $debug_time;
+    my $elapsed = $now - $DEBUG_TIME;
     print "$now ($elapsed) $tmp \n";
-    $debug_time = $now;
+    $DEBUG_TIME = $now;
     return;
     
+}
+
+# ------------------------------------------------
+# output text
+
+sub msg {
+    (my $tmp) = @_;
+    print $tmp;
+    return;
 }
 
 # ------------------------------------------------
@@ -73,74 +87,180 @@ sub unix_seconds {
 }
 
 # ------------------------------------------------
-# process the files
+# Read configuration
 
-sub read_and_update {
+sub read_conf {
+    my $conf_file = '/etc/whm/rings.fix';
+    if ($opt_conf) {
+        $conf_file = $opt_conf;
+    }
+
+    my $conf = AppConfig->new({});
+    $conf->define(
+        'ring_root',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => '/opt/rings'
+        }
+    );
+    $conf->define(
+        'db_host',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => 'localhost'
+        }
+    );
+    $conf->define(
+        'db_name',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => 'rings'
+        }
+    );
+    $conf->define(
+        'db_credentials',
+        {
+            ARGCOUNT => ARGCOUNT_ONE,
+            DEFAULT  => '/etc/whm/rings_db.conf'
+        }
+    );
+
+    if (-e $conf_file) {
+        $conf->file($conf_file);
+    } else {
+        die("Configuration file is required");
+    }
+
+    # Read database credentials and add them to the $conf structure
+    my $db_conf = AppConfig->new({});
+    $db_conf->define('db_user', { ARGCOUNT => ARGCOUNT_ONE } );
+    $db_conf->define('db_pass', { ARGCOUNT => ARGCOUNT_ONE } );
+    if (-e $conf->db_credentials()) {
+        $db_conf->file($conf->db_credentials());
+    } else {
+        msg('INFO: db_credentials = ' . $conf->db_credentials . "\n");
+        die("Data base password and user required in configuration file.");
+    }
+    $conf->define('db_user');
+    $conf->db_user($db_conf->db_user());
+    $conf->define('db_pass');
+    $conf->db_pass($db_conf->db_pass());
     
-    # -- get a list of pid's first
-    my $cnt = 0;
+    return $conf;
+}
 
-    my $sel = "SELECT ";
-    $sel .= "pid ";
-    $sel .= "FROM pictures ";
-    my $sth = $dbh->prepare ($sel);
+sub example_conf {
+
+    msg("# ----------------------------------------------------\n");
+    msg("# Example /etc/whm/rings.conf\n");
+    msg("#\n");
+    msg("ring_root = /opt/rings\n");
+    msg("db_host = localhost\n");
+    msg("db_name = rings\n");
+    msg("db_credentials = /etc/whm/rings_db.conf\n");
+    msg("\n");
+    msg("# ----------------------------------------------------\n");
+    msg("# Example /etc/whm/rings_db.conf\n");
+    msg("# ----------------------------------------------------\n");
+    msg("#\n");
+    msg("db_user = rings\n");
+    msg("db_pass = pass\n");
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Check files and make sure they are in the db
+
+sub check_db{
+
+    my $this_path = $File::Find::dir;
+    my $this_file = $_;
+    my $this_pid;
+    if ($this_path !~ /\/raw$/xms) {
+        return;
+    }
+    if ($this_file =~ /(\d+)[.](jpg|jpeg)/xmsi) {
+        $this_pid = $1;
+    } else {
+        return;
+    }
+
+    if ($opt_debug) {
+        dbg("this_path:$this_path this_file:$this_file this_pid:$this_pid");
+    }
+
+    my $sel = "SELECT pid,picture FROM pictures_raw WHERE pid = ?";
+    my $sth = $DBH->prepare ($sel);
     if ($opt_debug) {dbg($sel);}
-    $sth->execute();
-
-    my @pidList;
+    $sth->execute($this_pid);
+    my $cnt         = 0;
+    my $picture_len = 0;
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
-        push @pidList, $row->{pid};
+        $picture_len = length($row->{picture});
+    }
+    if ($picture_len > 0) {
+        return;
     }
 
-    my $cmd = "UPDATE pictures_information SET ";
-    $cmd .= "raw_picture_size = ? ";
-    $cmd .= "WHERE pid = ? ";
-    if ($opt_debug) {dbg($cmd);}
-    my $sth_update = $dbh_update->prepare ($cmd);
+    # read in the whole picture file
+    my $this_picture = read_file("$this_path/$this_file", binmode => ':raw');
 
-    foreach my $i (@pidList) {
-
-        my $sel = "SELECT ";
-        $sel .= "picture ";
-        $sel .= "FROM pictures_raw ";
-        $sel .= "WHERE pid=$i ";
-        my $sth = $dbh->prepare ($sel);
-        if ($opt_debug) {dbg($sel);}
-        $sth->execute();
-        if (my $row = $sth->fetchrow_hashref) {
-            my $l = length($row->{picture});
-            if ($l > 0) {
-                dbg("pid:$i length:$l");
-                if ($opt_update) {
-                    $sth_update->execute(
-                                         $l,
-                                         $i);
-                }
-            }
+    # write the picture to the database
+    my $this_date = sql_datetime();
+    if ($cnt) {
+        my $cmd = 'INSERT INTO pictures_raw ';
+        $cmd .= "(pid, picture_type, picture, date_added, date_last_maint) ";
+        $cmd .= "VALUES (?, ?, ?, ?, ?) ";
+        $cmd .= "WHERE pid = ? ";
+        if ($opt_debug) {dbg($cmd);}
+        my $sth_update = $DBH_UPDATE->prepare ($cmd);
+        if ($opt_update) {
+            msg("Inserting $this_pid\n");
+            $sth_update->execute($this_pid,
+                                 'image/JPEG',
+                                 $this_picture,
+                                 $this_date,
+                                 $this_date);
+        } else {
+            msg("Proposing to insert $this_pid\n");
         }
-
+    } else {
+        my $cmd = "UPDATE pictures_raw SET ";
+        $cmd .= "picture = ? ";
+        $cmd .= "WHERE pid = ? ";
+        if ($opt_debug) {dbg($cmd);}
+        my $sth_update = $DBH_UPDATE->prepare ($cmd);
+        if ($opt_update) {
+            msg("Updating $this_pid\n");
+            $sth_update->execute($this_picture, $this_pid);
+        } else {
+            msg("Proposing to update $this_pid\n");
+        }
     }
-
+    $UPDATE_CNT++;
+    if ($UPDATE_CNT => $opt_limit) {
+        exit;
+    }
+    return;
 }
 
 # -------------
 # Main routine
 # -------------
 
-print ">>> ring-fix                    v:10-Jul-2006\n";
+print ">>> ring-fix                    v:27-Jun-2016\n";
 
 # -- get options
 GetOptions(
-           'db=s'           => \$opt_db,
-           'debug'          => \$opt_debug,
-           'help'           => \$opt_help,
-           'host=s'         => \$opt_host,
-           'manual'         => \$opt_manual,
-           'pass=s'         => \$opt_pass,
-           'user=s'         => \$opt_user,
-           'update'         => \$opt_update
-           );
+    'conf=s'  => \$opt_conf,
+    'debug'   => \$opt_debug,
+    'example' => \$opt_example,
+    'help'    => \$opt_help,
+    'limit=i' => \$opt_limit,
+    'manual'  => \$opt_manual,
+    'update'  => \$opt_update
+    );
 
 # -- help the poor souls out
 if ($opt_help) {
@@ -149,47 +269,31 @@ if ($opt_help) {
 if ($opt_manual) {
     pod2usage(-verbose => 1);
 }
-
-if (length($opt_host) == 0) {
-    print "%MAC-F-HOSTREQ, a MySQL host is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-
-if (length($opt_db) == 0) {
-    print "%MAC-F-DBREQ, a MySQL database is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-
-if (length($opt_pass) == 0) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-if (length($opt_user) == 0) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 0);
-    exit;
+if ($opt_example) {
+    example_conf();
+    exit 1;
 }
 
 if ($opt_debug) {dbg ("Initialize timer.");}
 
+$CONF = read_conf();
+
 # -- Open up connections to the MySQL data
+my $db_host = $CONF->db_host();
+my $db_name = $CONF->db_name();
+my $dbi     = "dbi:mysql:host=$db_host;database=$db_name";
+$DBH = DBI->connect ($dbi, $CONF->db_user(), $CONF->db_pass())
+    or die "ERROR: Can't connect to database $dbi for read\n";
+$DBH->{LongTruncOk} = 1;
+$DBH->{LongReadLen} = 10000000;
+$DBH_UPDATE = DBI->connect ($dbi, $CONF->db_user(), $CONF->db_pass())
+    or die "ERROR: Can't connect to database $dbi for write\n";
 
-my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
-$dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 10000000;
-$dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
+find(\&check_db, $CONF->ring_root());
 
-read_and_update();
-
-$dbh->disconnect
+$DBH->disconnect
     or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
-$dbh_update->disconnect
+$DBH_UPDATE->disconnect
     or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (update)";
 
 exit;
@@ -202,35 +306,24 @@ ring-fix
 
 =head1 SYNOPSIS
 
- ring-fix [--update] \
-              --host=mysql-host --db=databasename \
-              --user=mysql-username --pass=mysql-password 
-              [--debug] [--help] [--manual] 
-
+ring-fix [--update] [--debug] [--help] [--manual] [--conf=file]
+[--example]
 
 =head1 DESCRIPTION
 
-Move picture data around a bit.
+Restore raw pictures in database from file.
 
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
 
-=item --host=mysql-hostname
+=item --conf=file
 
-MySQL host name.  If not specified then localhost is used.
+Configuration file defaults to ./ring-fix.conf.
 
-=item --db=databasename
+=item --example
 
-The name of the MySQL database.  If not specified then rings is used.
-
-=item --user=mysql-username
-
-MySQL username.  Required.
-
-=item --host=mysql-password
-
-MySQL password.  Required.
+Print an example configuration file and exit.
 
 =item --update
 
@@ -252,7 +345,7 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill@macallister.grass-valley.ca.us>
+Bill MacAllister <bill@ca-zephyr.org>
 
 =cut
 
