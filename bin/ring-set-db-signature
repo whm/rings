@@ -23,6 +23,7 @@ my $opt_db_host = 'spowl.ca-zephyr.org';
 my $opt_db_pass;
 my $opt_db_user;
 my $opt_debug;
+my $opt_force;
 my $opt_help;
 my $opt_limit;
 my $opt_manual;
@@ -44,12 +45,49 @@ sub dbg {
 }
 
 # ------------------------------------------------
-# Read small pictures and store the first 255 bytes of the small
-# picture in the pictures_information table.
+# Read picture sizes
+
+sub read_picture_sizes {
+    
+    my $sel = "SELECT size_id, max_height, max_width ";
+    $sel .= "FROM picture_sizes";
+    if ($opt_debug) {dbg($sel);}
+    my $sth = $DBH->prepare ($sel);
+    $sth->execute();
+    my %sizes = ();
+    while (my $row = $sth->fetchrow_hashref) {
+        $sizes{ $row->{size_id} }{'x'}     = $row->{max_width};
+        $sizes{ $row->{size_id} }{'y'}     = $row->{max_height};
+    }
+    return %sizes;
+}
+
+# ------------------------------------------------------------------------
+# Return the picture image for a single picture.  Getting them one
+# at a time preserves memory and in the end is faster because there
+# is no swapping.
+
+sub get_a_picture {
+    my ($this_table, $pid) = @_;
+    my $sel = "SELECT picture FROM $this_table WHERE pid = ? ";
+    if ($opt_debug) {dbg($sel);}
+    my $sth = $DBH->prepare ($sel);
+    $sth->execute($pid);
+    my $pic;
+    while (my $row = $sth->fetchrow_hashref) {
+        $pic  = $row->{picture};
+    }
+    return $pic;
+}
+
+# ------------------------------------------------
+# Generate a picture signature for all of the pictures in a 
+# table.
 
 sub update_picture_ids {
+    my ($this_table) = @_;
     
-    my $cmd = 'UPDATE pictures_small SET width = ?, ';
+    my $cmd = "UPDATE $this_table SET width = ?, ";
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
     $cmd .= 'signature = ? ';
@@ -57,18 +95,27 @@ sub update_picture_ids {
     if ($opt_debug) {dbg ($cmd);}
     my $sth_update = $DBH->prepare ($cmd);
     
-    my $sel = "SELECT pid, picture FROM pictures_small ";
+    my $sel = "SELECT pid, signature FROM $this_table ";
+    $sel .= "ORDER BY pid ";
     if ($opt_limit) {
         $sel .= "limit 0,$opt_limit";
     }
     if ($opt_debug) {dbg($sel);}
     my $sth = $DBH->prepare ($sel);
     $sth->execute();
-    my %sizes = ();
     while (my $row = $sth->fetchrow_hashref) {
-        my $this_pid = $row->{pid};
+        my $this_pid  = $row->{pid};
+        my $signature = $row->{signature};
+        if (length($signature) > 0 && !$opt_force) {
+            next;
+        }
+        my $this_pic = get_a_picture($this_table, $this_pid);
+        if (!$this_pic) {
+            print "WARN: problem getting $this_pid from $this_table\n";
+            next;
+        }
         my $img = Image::Magick->new();
-        $img->Read(blob => $row->{picture});
+        $img->Read(blob => $this_pic);
         my ($width, 
             $height, 
             $size, 
@@ -113,6 +160,7 @@ GetOptions(
     'db-pass=s' => \$opt_db_pass,
     'db-user=s' => \$opt_db_user,
     'debug'     => \$opt_debug,
+    'force'     => \$opt_force,
     'help'      => \$opt_help,
     'limit=i'   => \$opt_limit,
     'manual'    => \$opt_manual,
@@ -146,7 +194,10 @@ my $dbi = "dbi:mysql:host=$opt_db_host;database=$opt_db";
 $DBH = DBI->connect ($dbi, $opt_db_user, $opt_db_pass)
     or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
 
-update_picture_ids();
+my %sizes = read_picture_sizes();
+for my $id (sort keys %sizes) {
+    update_picture_ids($id);
+}
 
 $DBH->disconnect
     or croak("ERROR: Disconnect failed for $dbi (read)");
@@ -161,7 +212,7 @@ ring-set-db-signature
 
 =head1 SYNOPSIS
 
-ring-set-db-signature [--db-host=mysql-host] [--db=dbname]
+ring-set-db-signature [--force] [--db-host=mysql-host] [--db=dbname]
 --db-user=mysql-username --db-pass=mysql-password [--debug] [--help]
 [--manual]
 
@@ -173,6 +224,11 @@ Update the picture_id field in the pictures_information table.
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
+
+=item --force
+
+Force an update even if the picture's signature is already set.  The
+default is to skip entries that already have the signature set.
 
 =item --db-host=mysql-hostname
 
