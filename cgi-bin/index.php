@@ -20,6 +20,7 @@ $in_pref_display = get_request('in_pref_display');
 $in_button_set   = get_request('in_button_set');
 
 // Cookie to Session map
+$cookie_id = $CONF['cookie_id'];
 $cm['GID'] = 'group_id';
 $cm['SZ']  = 'display_size';
 $cm['GRD'] = 'display_grade';
@@ -28,13 +29,13 @@ $cm['BP']  = 'button_position';
 
 // Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
-if (isset($_COOKIE[$cookie_id])) {
-    $s = $_COOKIE[$cookie_id] . '|';
-} else {
+if (empty($_COOKIE[$cookie_id])) {
     $s = '|';
+} else {
+    $s = $_COOKIE[$cookie_id] . '|';
 }
 foreach ($cm as $cid => $sid) {
-    if (!isset($_SESSION[$sid])) {
+    if (empty($_SESSION[$sid])) {
         if (preg_match("/\|$cid=(.+?)\|/", $s, $vals)) {
             $_SESSION[$sid] = $vals[1];
         }
@@ -42,35 +43,36 @@ foreach ($cm as $cid => $sid) {
 }
 
 // set the group
-if (isset($in_group_id)) {
+if (!empty($in_group_id)) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
     // If there is not group_id in the session space then see if there is a
     // cookie and use that to set session values.
-    if (isset($_SESSION['group_id'])) {
+    if (!empty($_SESSION['group_id'])) {
         $in_group_id = $_SESSION['group_id'];
-    } elseif (isset($_COOKIE[$cookie_id])) {
+    } elseif (!empty($_COOKIE[$cookie_id])) {
         $s = $_COOKIE[$cookie_id].'|';
         foreach ($cm as $cid => $sid) {
             if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
                 $_SESSION[$sid] = $vals[1];
             }
         }
-        if (isset($_SESSION['group_id'])) {
+        if (!empty($_SESSION['group_id'])) {
             $in_group_id = $_SESSION['group_id'];
         }
     }
 }
 
 // set the display size
-if (isset($in_size)) {
-    $_SESSION['display_size'] = $in_size;
-} else {
-    $in_size = $_SESSION['display_size'];
+if (empty($in_size)) {
+    if (empty($_SESSION['display_size'])) {
+        $in_size = 'larger';
+    } else {
+        $in_size = $_SESSION['display_size'];
+    }
 }
-if (!isset($in_size)) {
-    $in_size = 'larger';
-}
+$_SESSION['display_size'] = $in_size;
+
 $chk_large = $chk_larger = $chk_raw = $chk_1280_1024 = '';
 if ($in_size == 'large') {
     $chk_large = 'CHECKED';
@@ -125,8 +127,8 @@ if ($in_pos == 'B') {
 $_SESSION['button_position'] = $in_pos;
 
 // set button postion on picture display pages
-if (!isset($in_type)) {
-    if (isset($_SESSION['button_type'])) {
+if (empty($in_type)) {
+    if (!empty($_SESSION['button_type'])) {
         $in_type = $_SESSION['button_type'];
     } else {
         $in_type = 'G';
@@ -208,7 +210,7 @@ function showPreferences(){
 
 <?php
 
-if (!isset($in_group_id)) {
+if (empty($in_group_id)) {
     $in_group_id = 'happenings';
     $_SESSION['group_id'] = $in_group_id;
 }
@@ -315,9 +317,9 @@ if (  $result = $DBH->query($sel) ) {
 </form>
 
 <?php
-if (isset($_SERVER['REMOTE_USER'])) {
+if (!empty($_SERVER['REMOTE_USER'])) {
     echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
-    if (isset($_SESSION['s_email_list'])) {
+    if (!empty($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
     echo "</h5>\n";
@@ -332,19 +334,19 @@ if (isset($_SERVER['REMOTE_USER'])) {
 
 <?php
 
-if (isset($in_group_id)) {
+if (!empty($in_group_id)) {
 
     // ------------------------------------------
     // display ring choices
 
-    if (isset($this_group_name)) {
+    if (!empty($this_group_name)) {
         echo "<h1>Pick a Picture from the $this_group_name Ring</h1>\n";
     } else {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
     // Hide the private folks
     $vis_sel = '';
-    if (!isset($_SERVER['REMOTE_USER'])) {
+    if (empty($_SERVER['REMOTE_USER'])) {
         $vis_sel = "AND visibility != 'HIDDEN'";
         $vis_sel = "AND visibility != 'INVISIBLE' ";
     }
@@ -386,7 +388,7 @@ if (isset($in_group_id)) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (!isset($_SERVER['REMOTE_USER'])
+        if (empty($_SERVER['REMOTE_USER'])
         && auth_person_hidden($this_uid) > 0) {
             continue;
         }
@@ -443,7 +445,7 @@ look.
 These policies apply only to anyone that has not logged into the server.
 If you would like to see all of the pictures you need to login, and
 to login you need credentials, and to get credentials send a
-request to <?php echo $ring_admin;?>.
+request to <?php echo $CONF['ring_admin'];?>.
 <p>
 Additionally, anyone that wants their pictures to be visible to everyone,
 but does not like the fact that Google, et. al. will index their
@@ -462,16 +464,16 @@ but that is not always possible.
 <p>
 <dt>Who makes up the descriptions, dates, etc.?</dt>
 <dd>At this point all updates are by
-<?php echo $ring_admin;?>.  If you want to update the web site yourself,
-either to add pictures, update descriptions or whatever contact
-<?php echo $ring_admin;?>.
+<?php echo $CONF['ring_admin'];?>.  If you want to update the web site
+yourself, either to add pictures, update descriptions or whatever contact
+<?php echo $CONF['ring_admin'];?>.
 </dd>
 
 </dl>
 
 <!-- Message area -->
 <?php
-if (isset($_SESSION['msg'])) {
+if (!empty($_SESSION['msg'])) {
     echo "<br>".$_SESSION['msg']."<br>\n";
     $_SESSION['msg'] = '';
 }

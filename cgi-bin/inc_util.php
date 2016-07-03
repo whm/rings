@@ -1,6 +1,9 @@
 <?php
 // file: inc_util.php
 // author: Bill MacAllister
+//
+// Functions defined here should be completely self-contained and
+// not depends on any variables or functions outside of this file.
 
 //-------------------------------------------------------------
 // get a value from the REQUEST array if it exists
@@ -11,6 +14,7 @@ function get_request ($idx, $default = NULL) {
 
 //-------------------------------------------------------------
 // printable date time
+
 function format_date_time ($in) {
 
     $ret_date = $in;
@@ -48,6 +52,7 @@ function format_date_time ($in) {
 
 //-------------------------------------------------------------
 // Redirect the user to the home page
+
 function http_redirect ($nextURL="index.php") {
     header ("REFRESH: 0; URL=$nextURL");
     echo "<html>\n";
@@ -60,4 +65,31 @@ function http_redirect ($nextURL="index.php") {
     echo "</html>\n";
     exit;
 }
+
+//-------------------------------------------------------------
+// Read an attribute=value configuation file, store the results
+// in an array and return the array.
+
+function read_conf ($conf_file = '/etc/rings/rings.conf') {
+
+    # Bail out if we can find the file
+    if (! file_exists($conf_file)) {
+        return;
+    }
+
+    # Open the file and read it line by line
+    $this_conf = array();
+    $fh = fopen($conf_file, 'r');
+    while (($line = fgets($fh)) != false) {
+        if (substr($line, 0, 1) == '#') {
+            continue;
+        }
+        if (preg_match('/^(\S+)\s*=\s*(.*)/', $line, $part)) {
+            $this_conf[trim($part[1])] = trim($part[2]);
+        }
+    }
+    fclose($fh);
+    return $this_conf;
+}
+
 ?>
