@@ -1,3 +1,13 @@
+picture-rings (2.10) unstable; urgency=medium
+
+  * Add script ring-db2files script to pull pictures blobs from the 
+    database and store them as files.
+  * Update ring-load to support new files format.
+  * Create WHM::Rings module to hold common routines for perl scripts.
+  * Move to picture display from files.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 03 Jul 2016 11:45:24 -0700
+
 picture-rings (2.9) UNRELEASED; urgency=medium
 
   * Add link to cgi-bin-auth.  This will allow the use of webauth to
