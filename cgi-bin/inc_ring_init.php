@@ -27,6 +27,12 @@ if (empty($CONF['ring_root'])) {
 if (empty($CONF['ring_id'])) {
     $CONF['ring_id'] = 'ring_id';
 }
+if (empty($CONF['default_size'])) {
+    $CONF['default_size'] = 'pictures_raw';
+}
+if (empty($CONF['default_index_size'])) {
+    $CONF['default_index_size'] = 'pictures_small';
+}
 if (empty($CONF['cookie_id'])) {
     $CONF['cookie_id'] = 'rings-' . $CONF['ring_id'];
 }

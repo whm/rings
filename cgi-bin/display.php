@@ -25,7 +25,7 @@ require('inc_ring_init.php');
 
 // Form or URL inputs
 $in_pid  = get_request('in_pid');
-$in_size = get_request('in_size');
+$in_size = validate_size(get_request('in_size'));
 
 $display_warning = auth_picture_invisible($in_pid);
 if ($display_warning > 0) {
@@ -52,8 +52,7 @@ if ($display_warning > 0) {
     exit;
 }
 
-$sel = 'SELECT picture_lot FROM pictures_information ';
-$sel .= 'WHERE pid=?';
+$sel = 'SELECT picture_lot FROM pictures_information WHERE pid=?';
 if (!$stmt = $DBH->prepare($sel)) {
     $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
     syslog(LOG_ERR, $m);
