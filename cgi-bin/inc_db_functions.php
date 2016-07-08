@@ -67,4 +67,31 @@ function get_next ($id) {
     return $return_number;
 
 }
+
+//-------------------------------------------------------------
+// Validate the size and return raw if not found
+
+function validate_size ($id) {
+
+    global $DBH;
+    global $CONF;
+    
+    $sel = 'SELECT size_id,description FROM picure_sizes WHERE size_id=? ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+        syslog(LOG_ERR, $m);
+        syslog(LOG_INFO, "Problem statement: $sel");
+    }
+    $stmt->bind_param('s', $id);
+    $stmt->execute();
+    $stmt->bind_result($p1, $p2);
+    if ($stmt->fetch()) {
+        $this_size = $p1;
+    } else {
+        $this_size = $CONF['raw_id'];
+    }
+    $stmt->close();
+
+    return $this_size;
+}
 ?>
