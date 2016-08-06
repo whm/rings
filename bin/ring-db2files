@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+##############################################################################
+# ring-db2files
+##############################################################################
+#
+# Convert from database picture storage to files based storage.
+
+use DBI;
+use Pod::Usage;
+use strict;
+use Time::Local;
+use Rings::Common;
+
+# ----------------------------------------------------------------------
+# Read a picture from a table and write it to disk
+
+sub export_picture {
+    my ($pid, $file, $group, $max_size, $table) = @_;
+
+    dbg("pid:$pid max_size:$max_size") if $CONF->debug;
+
+    # Create a path for the file. Start by making sure the file name
+    # does not include a path.
+    my @parts = split /\//, $file;
+    my $fileName = $parts[scalar(@parts)-1];
+
+    # Create dir for picture group
+    my $output_root = $CONF->picture_root;
+    $output_root .= "/$group";
+    $output_root =~ s{//}{/}xmsg;
+    mkdir $output_root if ! -e $output_root;
+    msg ('fatal', "Problem creating directory $output_root")
+        if ! -e $output_root;
+
+    # Create dir for this picture size
+    my $pictureDir = "$output_root/$max_size";
+    mkdir $pictureDir if (! -e $pictureDir);
+    msg ('fatal', "Problem creating directory $pictureDir")
+        if ! -e $pictureDir;
+
+    my $thisPictureFile = "$pictureDir/$fileName";
+
+    my $sel = "SELECT * FROM $table WHERE pid = ? ";
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare ($sel);
+    $sth->execute($pid);
+
+    while (my $row = $sth->fetchrow_hashref) {
+
+        dbg("writing file: $thisPictureFile") if $CONF->debug;
+        open PF, ">$thisPictureFile";
+        print PF $row->{picture};
+        close PF;
+
+    }
+
+    return;
+}
+
+# ----------------------------------------------------------------------
+# process the files
+
+sub read_and_write {
+
+    # Get sizes to write
+    my %psizes = get_picture_sizes();
+
+    # -- get a list of picture ids
+
+    my $sel = "SELECT * FROM pictures_information ";
+    my $sth = $DBH->prepare ($sel);
+    dbg($sel) if $CONF->debug;
+    $sth->execute();
+
+    while (my $row = $sth->fetchrow_hashref) {
+        for my $s (keys %psizes) {
+            export_picture($row->{pid},
+                           $row->{file_name},
+                           $row->{group_path},
+                           $s,
+                           "pictures_$s");
+        }
+    }
+}
+
+# -------------
+# Main routine
+# -------------
+
+print ">>> ring-db2files\n";
+
+get_config($ARGV[0]);
+
+# -- help the poor souls out
+pod2usage(-verbose => 0) if $CONF->help;
+pod2usage(-verbose => 2) if $CONF->manual;
+
+# -- Open up connections to the MySQL data
+db_connect();
+
+read_and_write();
+
+db_disconnect;
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-db2files
+
+=head1 SYNOPSIS
+
+ring-db2files [properties-file] [--debug] [--help] [--manual]
+
+=head1 DESCRIPTION
+
+This is a conversion script that moves from the rings database schema
+where pictures are stored as blobs in the database to the rings where
+only meta data is stored in the database and the pictures are stored
+as files on disk.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut

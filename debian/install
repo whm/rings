@@ -1,4 +1,5 @@
 cgi-bin/* usr/share/rings/cgi-bin/auth
+modules/* usr/share/perl5
 images/*  usr/share/rings/images
 styles/*  usr/share/rings/styles
 conf/* etc/apache2/sites-available
