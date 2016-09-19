@@ -12,47 +12,34 @@ use strict;
 use Time::Local;
 use Rings::Common;
 
+my $opt_conf;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+
 # ----------------------------------------------------------------------
 # Read a picture from a table and write it to disk
 
 sub export_picture {
     my ($pid, $file, $group, $max_size, $table) = @_;
 
-    dbg("pid:$pid max_size:$max_size") if $CONF->debug;
+    create_picture_dirs($group, $max_size);
 
-    # Create a path for the file. Start by making sure the file name
-    # does not include a path.
-    my @parts = split /\//, $file;
-    my $fileName = $parts[scalar(@parts)-1];
-
-    # Create dir for picture group
-    my $output_root = $CONF->picture_root;
-    $output_root .= "/$group";
-    $output_root =~ s{//}{/}xmsg;
-    mkdir $output_root if ! -e $output_root;
-    msg ('fatal', "Problem creating directory $output_root")
-        if ! -e $output_root;
-
-    # Create dir for this picture size
-    my $pictureDir = "$output_root/$max_size";
-    mkdir $pictureDir if (! -e $pictureDir);
-    msg ('fatal', "Problem creating directory $pictureDir")
-        if ! -e $pictureDir;
-
-    my $thisPictureFile = "$pictureDir/$fileName";
-
-    my $sel = "SELECT * FROM $table WHERE pid = ? ";
+    my $sel = "SELECT * FROM $table ";
+    $sel .= "JOIN picture_types ";
+    $sel .= "ON (${table}.picture_type = ? ";
+    $sel .= "WHERE pid = ? ";
     dbg($sel) if $CONF->debug;
     my $sth = $DBH->prepare ($sel);
-    $sth->execute($pid);
+    $sth->execute($pid, $type);
 
-    while (my $row = $sth->fetchrow_hashref) {
-
+    if (my $row = $sth->fetchrow_hashref) {
+        my $type = $row->{type};
+        my $thisPictureFile = pid_to_path($pid, $group, $max_size, $type);
         dbg("writing file: $thisPictureFile") if $CONF->debug;
         open PF, ">$thisPictureFile";
         print PF $row->{picture};
         close PF;
-
     }
 
     return;
@@ -90,11 +77,22 @@ sub read_and_write {
 
 print ">>> ring-db2files\n";
 
-get_config($ARGV[0]);
+# -- get options
+GetOptions(
+    'conf=s' => \$opt_conf,
+    'debug'  => \$opt_debug,
+    'help'   => \$opt_help,
+    'manual' => \$opt_manual
+);
+get_config($opt_conf);
 
 # -- help the poor souls out
 pod2usage(-verbose => 0) if $CONF->help;
 pod2usage(-verbose => 2) if $CONF->manual;
+
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
 
 # -- Open up connections to the MySQL data
 db_connect();

@@ -6,258 +6,49 @@
 use strict;
 use Cwd;
 use DBI;
+use File::Copy;
+use File::Spec;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
 use Pod::Usage;
+use Rings::Common;
 use Time::Local;
 
-our %prefs = ();
-our %tableList = ();
-our $cnt;
-our $dbh;
-our $dbh_update;
-our $debug;
-our $debug_time;
-our $flds;
-our $last_datetime;
-our $opt_datetaken;
-our $opt_db;
-our $opt_debug;
-our $opt_force;
-our $opt_host;
-our $opt_help;
-our $opt_keyword;
-our $opt_manual;
-our $opt_pass;
-our $opt_path;
-our $opt_photographer;
-our $opt_ppe;
-our $opt_user;
-our $opt_update;
-our $timeStamp;
-our $vals;
+my $CNT = 0;
+my %PSIZES = ();
+
+my $opt_conf;
+my $opt_debug;
+my $opt_force;
+my $opt_help;
+my $opt_manual;
+my $opt_path = './';
+my $opt_update;
+
+##############################################################################
+# Subroutines
+##############################################################################
 
 # ------------------------------------------------
-# output debugging information
+# return regex target string with all files types supported
 
-sub dbg {
-    
-    (my $tmp) = @_;
-    
-    my $now = time;
-    my $elapsed = $now - $debug_time;
-    print "$now ($elapsed) $tmp \n";
-    $debug_time = $now;
-    return;
-    
-}
-
-# -------------------------------------------------------------
-# get next id
-
-sub get_next {
-    
-    (my $id) = @_;
-    
-    my $return_number = "NEXT-NUMBER-FAILED";
-    
-    my $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
-    if ($debug) {dbg ($sel);}
-    my $sth = $dbh->prepare ("$sel");
-    $sth->execute();
-    
-    while (my $row = $sth->fetchrow_hashref('NAME_lc') ) {
-        $return_number = $row->{next_number};
-        if ($return_number > 0) {
-            my $nxt = $return_number + 1;
-            my $cmd = "UPDATE next_number SET next_number=$nxt ";
-            $cmd .= "WHERE id='$id' ";
-            if ($debug) {dbg ($cmd);}
-            my $sth_update = $dbh_update->prepare ("$cmd");
-            $sth_update->execute();
-        } else {
-            my $nxt = 1;
-            my $cmd = "INSERT INTO  next_number (id,next_number) ";
-            $cmd .= "VALUES ('$id',$nxt) ";
-            $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-            if ($debug) {dbg ($cmd);}
-            if ($opt_update) {
-                my $sth_update = $dbh_update->prepare ("$cmd");
-                $sth_update->execute();
-            }
-            $return_number = $nxt;
-        }
+sub get_file_types {
+    my %mime_types = get_picture_types();
+    my %file_types = ();
+    for my $t (keys %mime_types) {
+        $file_types{ $mime_types{$t} }++;
     }
-    
-    return $return_number;
-    
-}
-
-# ------------------------------------------------
-# sql date time string from unix time stamp
-
-sub sql_datetime {
-    
-    my ($dt) = @_;
-    
-    if (length($dt)==0) {$dt = time}
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
-    $mon++;
-    $year += 1900;
-    
-    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
-    $year,$mon,$mday,$hour,$min,$sec;
-}
-
-# ------------------------------------------------
-# unix time stamp from sql date time string
-
-sub unix_seconds {
-    
-    my ($dt) = @_;
-    
-    my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
-        my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
-        $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
+    my $type_list = '';
+    my $or        = '(';
+    for my $t (keys %file_types) {
+        $type_list .= $or . $t;
+        $or = '|';
     }
-    return $ret;
-}
-
-# ------------------------------------------------
-# store pictures
-
-sub store_picture {
-
-    my ($thisPID, 
-        $thisTable, 
-        $thisPicture,
-        $thisType) = @_;
-    
-    dbg (" Processing $thisPID $thisTable");
-    
-    my @blob;
-    $blob[0] = $thisPicture;
-    my $thisPic = Image::Magick->New();
-    $thisPic->BlobToImage(@blob);
-    
-    my ($width, 
-        $height, 
-        $size, 
-        $format, 
-        $compression) 
-        = $thisPic->Get('width',
-                        'height',
-                        'filesize',
-                        'format',
-                        'compression');
-
-    if ($opt_debug) {
-        dbg ("      format: $format");
-        dbg (" compression: $compression");
-        dbg ("       width: $width");
-        dbg ("      height: $height");
+    if ($or eq '|') {
+        $type_list .= ')';
     }
-
-    # default to moderate
-    my $max_x = 640;
-    my $max_y = 480;
-
-    if ($thisTable eq 'pictures_large') {
-        $max_x = 640;
-        $max_y = 480;
-    } elsif ($thisTable eq 'pictures_larger') {
-        $max_x = 800;
-        $max_y = 600;
-    } elsif ($thisTable eq 'pictures_1280_1024') {
-        $max_x = 1280;
-        $max_y = 1024;
-    } elsif ($thisTable eq 'pictures_small') {
-        $max_x = 125;
-        $max_y = 125;
-    }
-    
-    my $newPic   = $thisPic->Clone();
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = ($x1/$width) * $height;
-    my $y2 = $max_y;
-    my $x2 = ($y2/$height) * $width;
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
-    }
-    dbg (" Producing picture $x by $y ");
-    $newPic->Resize(width=>$x, height=>$y);
-    my @bPic  = $newPic->ImageToBlob();
-    
-    my $sel = "SELECT pid FROM $thisTable ";
-    $sel .= "WHERE pid=$thisPID ";
-    my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
-    $sth->execute();
-    
-    my $row = $sth->fetchrow_hashref;
-
-    if ($row->{pid} != $thisPID && $thisPID > 0) {
-        
-        my $cmd = "INSERT INTO $thisTable (";
-        $cmd .= 'pid,';
-        $cmd .= 'picture_type,';
-        $cmd .= 'width,';
-        $cmd .= 'height,';
-        $cmd .= 'picture,';
-        $cmd .= 'date_last_maint,';
-        $cmd .= 'date_added';
-        $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
-        my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {dbg($cmd);}
-        if ($opt_update) {
-            $sth_update->execute(
-                                 $thisPID,
-                                 $thisType,
-                                 $width,
-                                 $height,
-                                 $bPic[0],
-                                 sql_datetime(),
-                                 sql_datetime()
-                                 );
-        }
-        
-    } elsif ($thisPID > 0) {
-        
-        my $cmd = "UPDATE $thisTable SET ";
-        $cmd .= 'picture_type = ?,';
-        $cmd .= 'width = ?,';
-        $cmd .= 'height = ?,';
-        $cmd .= 'picture = ?,';
-        $cmd .= 'date_last_maint = ? ';
-        $cmd .= 'WHERE pid = ? ';
-        my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {dbg($cmd);}
-        if ($opt_update) {
-            $sth_update->execute(
-                                 $thisType,
-                                 $width,
-                                 $height,
-                                 $bPic[0],
-                                 sql_datetime(),
-                                 $thisPID,
-                                 );
-        }
-    }
-    
+    return $type_list;
 }
 
 # ------------------------------------------------
@@ -266,75 +57,26 @@ sub store_picture {
 sub save_file {
     
     (my $a_file) = @_;
-    
-    my $a_filename = $a_file;
-    $a_filename =~ s/^[\/]+//;
-    while ($a_filename =~ s/^.*?\///) {}
 
+    $CNT++;
+    
+    # Pull out the file name, the file type, and the parent directory
+    my $a_fullname = File::Spec->rel2abs($a_file);
+    my ($a_vol, $a_dirlist, $a_filename) = File::Spec->splitpath($a_fullname);
     my $a_filetype = '';
     if ($a_filename =~  /^(.*?)\.(.*)/) {
         $a_filename = $1;
         $a_filetype = $2;
     }
-    
-    $cnt++;
-    
-    # -- read the image
-    my $thisPic = new Image::Magick;
-    $thisPic->Read($a_file);
-    my ($width, 
-        $height, 
-        $size, 
-        $format, 
-        $compression) 
-        = $thisPic->Get('width',
-                        'height',
-                        'filesize',
-                        'format',
-                        'compression');
+    $a_dirlist =~ s{^/}{}xms;
+    $a_dirlist =~ s{/$}{}xms;
+    my @dirs = File::Spec->splitdir($a_dirlist);
+    my $a_parent = $dirs[-1];
 
-    if ($opt_debug) {
-        dbg ("      format: $format");
-        dbg (" compression: $compression");
-        dbg ("       width: $width");
-        dbg ("      height: $height");
-    }
+    my $blob = read_file("$in_file", binmode => ':raw');
+    my %pic = get_meta_data($blob);
 
-
-    # -- Make sure it is a jpeg image
-    
-    if ($compression ne 'JPEG') {
-        $thisPic->Set(compression=>'JPEG');
-        $compression = 'JPEG';
-    }
-    my $ptype   = "image/$compression";
-    
-    # -- Create the image file to store
-
-    my @bPic = $thisPic->ImageToBlob();
-
-    # -- Extract the EXIF data 
-
-    my $info = ImageInfo(\@bPic[0]);
-    my $camera            = ${$info}{'Model'};
-    my $this_datetime     = ${$info}{'CreateDate'};
-    my $this_shutterspeed = ${$info}{'ShutterSpeed'};
-    my $this_fnumber      = ${$info}{'FNumber'};
-    my $this_raw_size     = length $bPic[0];
-    if ($opt_debug) {
-        dbg ("        size: $this_raw_size");
-        dbg ("       model: $camera");
-        dbg ("    datetime: $this_datetime");
-        dbg ("exposuretime: $this_shutterspeed");
-        dbg ("     fnumber: $this_fnumber");
-        dbg ("EXIF Information ==============================");
-        foreach my $t (keys %{$info}) {
-            print "$t = ${$info}{$t}\n";
-        }
-        dbg ("EXIF Information end ==========================");
-    }
-
-    # -- Check for duplicate picture 
+    # Check for duplicate picture
     my $sql = "SELECT pid FROM pictures_information ";
     $sql .= "WHERE raw_picture_size = ? ";
     $sql .= "AND camera = ? ";
@@ -342,10 +84,12 @@ sub save_file {
     $sql .= "AND fstop = ?";
     if ($opt_debug) {dbg($sql);}
     my $sth = $dbh_update->prepare ($sql);
-    $sth->execute($this_raw_size,
-                  $camera, 
-                  $this_shutterspeed,
-                  $this_fnumber);
+    $sth->execute(
+        $pic{size},
+        $pic{camera}, 
+        $pic{shutterspeed},
+        $pic{this_fnumber}
+    );
     my $dup_cnt = 0;
     while ( my $row = $sth->fetchrow_hashref() ) {
         $dup_cnt++;
@@ -356,126 +100,59 @@ sub save_file {
         return
     }
 
-    # -- Store the raw image
-
+    # Set the PID
     my $pid = 1;
     if ($opt_update) {
         $pid = get_next("pid");
     }
+
+    # Store the meta data
+    store_meta_pid($pid, \%pic);
+
+    # Copy the raw picture to rings directory
+    my $pic_path = create_picture_dirs($a_parent, 'raw');
+    my $pic_file = "${pic_path}/${pid}.${a_filetype}";
+    copy($a_file, $pic_file)
+      or msg('fatal', "Problem copying $a_file to $pic_path");
+        
     dbg (" Creating elements for picture record $pid");
-    
-    my $cmd = "INSERT INTO pictures_raw SET ";
-    $cmd .= "pid = ?,";
-    $cmd .= "picture = ?,";
-    $cmd .= "picture_type = ?,";
-    $cmd .= "height = ?,";
-    $cmd .= "width = ?,";
-    $cmd .= "date_last_maint = ?,";
-    $cmd .= "date_added = ? ";
-    if ($opt_debug) {dbg($cmd);}
-    if ($opt_update) {
-        my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute($pid,
-                             $bPic[0], 
-                             $ptype,
-                             $height,
-                             $width,
-                             sql_datetime(),
-                             sql_datetime());
-    }
-
-    foreach my $t (sort keys %tableList) {
-        store_picture ($pid, 
-                       $t,
-                       $bPic[0], 
-                       $ptype);
-    }
-
-    # -- Create information record
-
-    if (length($this_datetime) == 0) {
-        $this_datetime = sql_datetime($timeStamp);
-    }
-    my $pic_datetime = $this_datetime;
-    if ($this_datetime == $last_datetime) {
-        $pic_datetime = sprintf("%s.%3.3d", $this_datetime, $cnt);
-        $pic_datetime =~ s/\.\./\./g;
-    }
-    $last_datetime = $this_datetime;
-
-    my $cmd = "INSERT INTO pictures_information SET ";
-    $cmd .= "pid = ?,";
-    $cmd .= "picture_date = ?,";
-    $cmd .= "picture_sequence = ?,";
-    $cmd .= "date_taken = ?,";
-    $cmd .= "file_name = ?,";
-    $cmd .= "key_words = ?,";
-    $cmd .= "taken_by = ?,";
-    $cmd .= "raw_picture_size = ?,";
-    $cmd .= "camera = ?,";
-    $cmd .= "shutter_speed = ?,";
-    $cmd .= "fstop = ?,";
-    $cmd .= "date_last_maint = ?,";
-    $cmd .= "date_added = ?";
-    if ($opt_debug) {dbg($cmd);}
-    if ($opt_update) {
-        my $sth_update = $dbh_update->prepare ($cmd);
-        $sth_update->execute($pid,
-                             $pic_datetime,
-                             $cnt, 
-                             $pic_datetime,
-                             $a_filename, 
-                             $opt_keyword,
-                             $opt_photographer,
-                             $this_raw_size,
-                             $camera,
-                             $this_shutterspeed,
-                             $this_fnumber,
-                             sql_datetime(),
-                             sql_datetime());
-    }
-
-    if (length($opt_ppe)>0) {
-        dbg (" Creating picture details $pid $opt_ppe");
-        my $cmd = 'INSERT INTO picture_details (pid,uid) VALUES (?,?)';
-        if ($opt_debug) {
-            dbg("cmd:$cmd");
-        }
-        if ($opt_update) {
-            my $sth_update = $dbh_update->prepare ($cmd);
-            $sth_update->execute($pid, $opt_ppe);
+    foreach my $s (sort keys %PSIZES) {
+        my $pic = store_meta_picture (
+            $pid,
+            $s,
+            $meta{'picture'},
+            $meta{'type'}
+        );
+        if ($s ne 'raw') {
+            my $ppath = create_picture_dirs($a_parent, $s);
+            my $pfile = "${ppath}/${pid}.${a_filetype}";
+            open(my $fh, '>', $pfile);
+            print $fh $pic;
+            close $fh;
         }
     }
-    
-    $timeStamp = $timeStamp + 60;
-    
-    # -- clean up
-    undef $thisPic;
+
+    return;
 }
 
 # -------------
 # Main routine
 # -------------
 
-print ">>> ring-load                    v:27-Aug-2011\n";
+print ">>> ring-load    v:18-Sep-2016\n";
 
 # -- get options
 GetOptions(
-           'datetaken=s'    => \$opt_datetaken,
-           'db=s'           => \$opt_db,
-           'debug'          => \$opt_debug,
-           'help'           => \$opt_help,
-           'force'          => \$opt_force,
-           'host=s'         => \$opt_host,
-           'keyword=s'      => \$opt_keyword,
-           'manual'         => \$opt_manual,
-           'pass=s'         => \$opt_pass,
-           'path=s'         => \$opt_path,
-           'photographer=s' => \$opt_photographer,
-           'ppe=s'          => \$opt_ppe,
-           'user=s'         => \$opt_user,
-           'update'         => \$opt_update
-           );
+    'conf=s' => \$opt_conf,
+    'debug'  => \$opt_debug,
+    'force'  => \$opt_force,
+    'help'   => \$opt_help,
+    'manual' => \$opt_manual,
+    'path=s' => \$opt_path,
+    'update' => \$opt_update
+);
+
+get_config($opt_conf);
 
 # -- help the poor souls out
 if ($opt_help) {
@@ -485,107 +162,34 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-%tableList = ('pictures_small' => 1,
-              'pictures_large' => 1,
-              'pictures_larger' => 1,
-              'pictures_1280_1024' => 1);
-
-# -- read preferences from ./rings
-my $pref_file = $ENV{'HOME'}.'/.rings';
-if ( -e $pref_file) {
-    if ($opt_debug) {dbg("Reading $pref_file file");}
-    open (pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {dbg("inline:$inline");}
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
-                my $attr = lc($1);
-                my $val = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {dbg("attr:$attr val:$val");}
-            }
-        }
-    }
-    close pref;
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
 }
-
-if (length($opt_host) == 0)    {$opt_host    = $prefs{'host'};}
-if (length($opt_db) == 0)      {$opt_db      = $prefs{'db'};}
-if (length($opt_keyword) == 0) {$opt_keyword = $prefs{'keyword'};}
-if (length($opt_pass) == 0)    {$opt_pass    = $prefs{'pass'};}
-if (length($opt_path) == 0)    {$opt_path    = $prefs{'path'};}
-if (length($opt_ppe) == 0)     {$opt_ppe     = $prefs{'ppe'};}
-if (length($opt_user) == 0)    {$opt_user    = $prefs{'user'};}
-if (length($opt_photographer) == 0) {
-    $opt_photographer = $prefs{'photographer'};
-}
-
-if (length($opt_host) == 0) {
-    $opt_host = 'localhost';
-}
-if (length($opt_db) == 0) {
-    $opt_db = 'rings';
-}
-if (length($opt_ppe) == 0)     {$opt_ppe = 'new';}
-
-$timeStamp = unix_seconds($opt_datetaken);
-if ($opt_debug) {dbg("starting timestamp: $timeStamp");}
-
-if (length($opt_keyword) == 0) {
-    $opt_keyword = 'NEWPICTURE';
-    print "    Using keyword of NEWPICTURE\n";
-}
-
-if (length($opt_pass) == 0) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 1);
-    exit;
-}
-if (length($opt_user) == 0) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 1);
-    exit;
-}
-
-if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
+db_connect();
 
-my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
-$dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 20000000;
-$dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
+%PSIZES = get_picture_sizes();
 
-my $thisDir = './';
-if (length($opt_path)>0 ) {
-    $thisDir = $opt_path;
+if ($CONF->debug) {
+    dbg ("Initialize timer.");
 }
 
-my $typeList = '(gif|jpeg|jpg|png)';
-print "Examining files that match $thisDir*.$typeList\n";
+$type_list = get_type_list();
 
-$cnt = 0;
-my @fileList = glob ($thisDir.'*');
-foreach my $f (@fileList) {
-    if ( $f =~ /(.*?)\.$typeList$/i ) {
-        if ($opt_debug) {dbg ("    Saving file: $f");}
+print "Examining files that match ${opt_path}*.${type_list}\n";
+
+my @file_list = glob ($opt_path . '*');
+foreach my $f (@file_list) {
+    if ( $f =~ /(.*?)\.$type_list$/i ) {
+        if ($CONF->debug) {
+            dbg ("    Saving file: $f");
+        }
         save_file($f);
     }
 }
 
-print "$cnt pictures processed\n";
-
-$dbh->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
-$dbh_update->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (update)";
+print "$CNT pictures processed\n";
 
 exit;
 
