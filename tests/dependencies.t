@@ -9,6 +9,7 @@ use Test::More qw( no_plan );
 
 use_ok('AppConfig');
 use_ok('Carp');
+use_ok('DBI');
 use_ok('File::Copy');
 use_ok('Getopt::Long');
 use_ok('IPC::Run');

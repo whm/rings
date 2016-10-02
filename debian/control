@@ -2,7 +2,12 @@ Source: picture-rings
 Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
-Build-Depends: debhelper (>= 8), perltidy
+Build-Depends: debhelper (>= 8),
+ libappconfig-perl,
+ libdbi-perl,
+ libdbd-mysql-perl,
+ libipc-run-perl,
+ perltidy
 Standards-Version: 3.9.4
 
 Package: picture-rings
@@ -11,11 +16,13 @@ Depends: apache2,
  exif,
  imagemagick,
  libapache2-mod-php5,
+ libappconfig-perl,
  libdbi-perl,
  libdbd-mysql-perl,
  libfile-homedir-perl,
  libimage-exif-perl,
  libimage-exiftool-perl,
+ libipc-run-perl,
  perl,
  ${perl:Depends}
 Description: Rings Picture Gallery Web Application

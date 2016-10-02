@@ -5,7 +5,7 @@
 use Test::More qw( no_plan );
 
 my $out;
-my $s = '../usr/bin/ring-db2files';
+my $s = 'perl -I ../modules/ ../usr/bin/ring-db2files';
 
 $out = `$s --help 2>&1`;
 if (!ok($out =~ /^Usage/, 'Help Switch')) {
