@@ -304,7 +304,7 @@ sub get_picture_sequence {
     if ($CONF->debug) {dbg($sel);}
     $sth->execute($dt);
     while (my $row = $sth->fetchrow_hashref) {
-        $se1++;
+        $seq++;
     }
     return $seq;
 }
@@ -318,13 +318,6 @@ sub get_meta_data {
 
     # Data returned will be passed in a hash
     my %ret = ();
-    
-    dbg (" Getting meta data for $in_file");
-    if (! -e $in_file) {
-        msg("ERROR: $in_file not found");
-        return;
-    }
-
     $ret{'picture'} = $in_blob;
 
     # Get picture meta data
@@ -339,12 +332,12 @@ sub get_meta_data {
         $ret{'format'},
         $ret{'compression'},
         $ret{'signature'})
-        = $thisPic->Get('width',
-                        'height',
-                        'filesize',
-                        'format',
-                        'compression',
-                        'signature');
+        = $pic->Get('width',
+                    'height',
+                    'filesize',
+                    'format',
+                    'compression',
+                    'signature');
     if ($CONF->debug) {
         dbg ('      format: ' . $ret{'format'});
         dbg (' compression: ' . $ret{'compression'});

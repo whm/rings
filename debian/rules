@@ -7,6 +7,9 @@ VERSION := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
 %:
 	dh $@
 
+override_dh_auto_test:
+	cd tests; make verbose
+
 override_dh_auto_install:
 	mkdir -p debian/$(PACKAGE)/usr/share/man/man1
 	set -e; for script in `ls usr/bin` ; do \
