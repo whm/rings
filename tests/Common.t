@@ -5,7 +5,7 @@
 use Test::More qw( no_plan );
 
 my $out;
-my $s = '../usr/share/perl5/Rings/Common.pm';
+my $s = '../modules/Rings/Common.pm';
 
 my $t = "${s}.tdy";
 

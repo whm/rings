@@ -30,7 +30,7 @@ sub export_picture {
     $sel .= "ON (${table}.picture_type = ? ";
     $sel .= "WHERE pid = ? ";
     dbg($sel) if $CONF->debug;
-    my $sth = $DBH->prepare ($sel);
+    my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $type);
 
     if (my $row = $sth->fetchrow_hashref) {
@@ -56,17 +56,14 @@ sub read_and_write {
     # -- get a list of picture ids
 
     my $sel = "SELECT * FROM pictures_information ";
-    my $sth = $DBH->prepare ($sel);
+    my $sth = $DBH->prepare($sel);
     dbg($sel) if $CONF->debug;
     $sth->execute();
 
     while (my $row = $sth->fetchrow_hashref) {
         for my $s (keys %psizes) {
-            export_picture($row->{pid},
-                           $row->{file_name},
-                           $row->{group_path},
-                           $s,
-                           "pictures_$s");
+            export_picture($row->{pid}, $row->{file_name},
+                $row->{group_path}, $s, "pictures_$s");
         }
     }
 }
