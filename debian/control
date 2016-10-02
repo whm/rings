@@ -2,14 +2,22 @@ Source: picture-rings
 Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
-Build-Depends: debhelper (>= 8)
+Build-Depends: debhelper (>= 8), perltidy
 Standards-Version: 3.9.4
 
 Package: picture-rings
 Architecture: all
-Depends: ${perl:Depends}, libdbi-perl, libdbd-mysql-perl, imagemagick,
- apache2, libapache2-mod-php5, exif,
- libimage-exif-perl, libimage-exiftool-perl, libfile-homedir-perl
+Depends: apache2,
+ exif,
+ imagemagick,
+ libapache2-mod-php5,
+ libdbi-perl,
+ libdbd-mysql-perl,
+ libfile-homedir-perl,
+ libimage-exif-perl,
+ libimage-exiftool-perl,
+ perl,
+ ${perl:Depends}
 Description: Rings Picture Gallery Web Application
  This web application organizations pictures and displays them via a 
  web server.  The images are loaded into a mysql database in serveral 
