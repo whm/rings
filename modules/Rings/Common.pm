@@ -23,27 +23,28 @@ BEGIN {
     use Exporter();
 
     our @ISA    = qw(Exporter);
-    our @EXPORT = qw($CONF
-                     $DBH
-                     $DBH_UPDATE
-                     db_connect
-                     db_disconnect
-                     dbg
-                     check_picture_size
-                     create_picture_dirs
-                     get_config
-                     get_meta_data
-                     get_next_id
-                     get_picture_sizes
-                     get_picture_types
-                     msg
-                     pid_to_path
-                     sql_datetime
-                     store_meta_data
-                     store_picture
-                     trim
-                     unix_seconds
-                     );
+    our @EXPORT = qw(
+        $CONF
+        $DBH
+        $DBH_UPDATE
+        db_connect
+        db_disconnect
+        dbg
+        check_picture_size
+        create_picture_dirs
+        get_config
+        get_meta_data
+        get_next_id
+        get_picture_sizes
+        get_picture_types
+        msg
+        pid_to_path
+        sql_datetime
+        store_meta_data
+        store_picture
+        trim
+        unix_seconds
+    );
 
     our $VERSION = '1.1';
 
@@ -57,20 +58,17 @@ our $DBH_UPDATE;
 # Open up connections to the MySQL data
 
 sub db_connect {
-    my $dbi = 'dbi:mysql:'
-        . 'host='.$CONF->db_host.';'
-        . 'database='.$CONF->db_name;
+    my $dbi
+      = 'dbi:mysql:'
+      . 'host=' . $CONF->db_host . ';'
+      . 'database='
+      . $CONF->db_name;
     my %attr = (PrintError => 1, RaiseError => 1);
-    $DBH = DBI->connect ($dbi,
-                         $CONF->db_user,
-                         $CONF->db_password,
-                         \%attr)
-        or die "ERROR: Can't connect to database $dbi for read\n";
-    $DBH_UPDATE = DBI->connect ($dbi,
-                                $CONF->db_user,
-                                $CONF->db_password,
-                                \%attr)
-        or die "ERROR: Can't connect to database $dbi for update\n";
+    $DBH = DBI->connect ($dbi, $CONF->db_user, $CONF->db_password, \%attr)
+      or die "ERROR: Can't connect to database $dbi for read\n";
+    $DBH_UPDATE
+      = DBI->connect ($dbi, $CONF->db_user, $CONF->db_password, \%attr)
+      or die "ERROR: Can't connect to database $dbi for update\n";
     return;
 }
 
@@ -79,7 +77,8 @@ sub db_connect {
 
 sub db_disconnect {
     $DBH->disconnect or die "ERROR: Database disconnect failed (read)";
-    $DBH_UPDATE->disconnect or die "ERROR: Database disconnect failed (update)";
+    $DBH_UPDATE->disconnect
+      or die "ERROR: Database disconnect failed (update)";
     return;
 }
 
@@ -107,75 +106,75 @@ sub get_config {
     $CONF->define(
         'db_credentials=s',
         {
-            DEFAULT => '/etc/rings/rings.conf',
+            DEFAULT  => '/etc/rings/rings.conf',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'db_host=s',
         {
-            DEFAULT => '/etc/rings/rings.conf',
+            DEFAULT  => '/etc/rings/rings.conf',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define('db_name', { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('debug', { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('debug',   { ARGCOUNT => ARGCOUNT_ONE });
     $CONF->define(
         'default_group_id',
         {
-            DEFAULT => 'new',
+            DEFAULT  => 'new',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'default_display_size',
         {
-            DEFAULT => 'larger',
+            DEFAULT  => 'larger',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'default_display_grade',
         {
-            DEFAULT => 'A',
+            DEFAULT  => 'A',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'default_display_seconds',
         {
-            DEFAULT => '4',
+            DEFAULT  => '4',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'default_button_position',
         {
-            DEFAULT => 'top',
+            DEFAULT  => 'top',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'default_button_type=s',
         {
-            DEFAULT => 'graphic',
+            DEFAULT  => 'graphic',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'picture_root',
         {
-            DEFAULT => '/srv/rings',
+            DEFAULT  => '/srv/rings',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
     $CONF->define(
         'syslog',
         {
-            DEFAULT => 'local3',
+            DEFAULT  => 'local3',
             ARGCOUNT => ARGCOUNT_ONE,
         }
-        );
+    );
 
     # Read preferences files in order from global location,
     # home directory, and command line.
@@ -183,7 +182,7 @@ sub get_config {
     push @confs, $global_config;
     push @confs, $conf_file;
     if ($ENV{'HOME'}) {
-        push @confs, $ENV{'HOME'}.'/.rings.conf';
+        push @confs, $ENV{'HOME'} . '/.rings.conf';
     }
     foreach my $z (@confs) {
         $CONF->file($z) if -e $z;
@@ -212,8 +211,8 @@ sub get_config {
 sub get_db_config {
     my ($conf_file) = @_;
     my $db_conf = AppConfig->new({});
-    $db_conf->define('db_user',     {ARGCOUNT => ARGCOUNT_ONE});
-    $db_conf->define('db_password', {ARGCOUNT => ARGCOUNT_ONE});
+    $db_conf->define('db_user',     { ARGCOUNT => ARGCOUNT_ONE });
+    $db_conf->define('db_password', { ARGCOUNT => ARGCOUNT_ONE });
     $db_conf->file($conf_file);
     return $db_conf;
 }
@@ -228,26 +227,26 @@ sub get_next_id {
     my $return_number = "NEXT-NUMBER-FAILED";
 
     my $sel = 'SELECT next_number FROM next_number WHERE id=? ';
-    dbg ($sel) if $CONF->debug;
-    my $sth = $DBH->prepare ($sel);
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare($sel);
     $sth->execute($id);
 
     my $cnt = 0;
-    while (my $row = $sth->fetchrow_hashref('NAME_lc') ) {
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
         $return_number = $row->{next_number} + 1;
         my $cmd = 'UPDATE next_number SET next_number=? WHERE id=? ';
-        dbg ($cmd) if $CONF->debug;
-        my $sth_update = $DBH_UPDATE->prepare ($cmd);
+        dbg($cmd) if $CONF->debug;
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
         $sth_update->execute($return_number, $id)
-            or die "Error updating next number for $id: $DBH::errstr\n";
+          or die "Error updating next number for $id: $DBH::errstr\n";
         $cnt++;
     }
     if ($cnt == 0) {
         $return_number = 1;
         my $cmd = 'INSERT INTO  next_number (id,next_number) VALUES (?,?) ';
-        dbg ($cmd) if $CONF->debug;
+        dbg($cmd) if $CONF->debug;
         if ($CONF->update) {
-            my $sth_update = $DBH_UPDATE->prepare ($cmd);
+            my $sth_update = $DBH_UPDATE->prepare($cmd);
             $sth_update->execute($id, $return_number);
         }
     }
@@ -264,9 +263,9 @@ sub msg {
     my @lines = split /\n/, $msg;
     foreach my $l (@lines) {
         if ($CONF->syslog) {
-            syslog('info', uc($severity)." $l");
+            syslog('info', uc($severity) . " $l");
         } else {
-            dbg(uc($severity). " $l");
+            dbg(uc($severity) . " $l");
         }
     }
     die $msg if $severity eq 'fatal';
@@ -280,14 +279,15 @@ sub sql_datetime {
     my ($dt) = @_;
 
     if (!$dt) {
-        $dt = time
+        $dt = time;
     }
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+      = localtime($dt);
     $mon++;
     $year += 1900;
 
     return sprintf("%04d-%02d-%02d %02d:%02d:%02d",
-                   $year,$mon,$mday,$hour,$min,$sec);
+        $year,$mon,$mday,$hour,$min,$sec);
 }
 
 # ----------------------------------------------------------------------
@@ -298,9 +298,9 @@ sub sql_datetime {
 
 sub get_picture_sequence {
     my ($dt) = @_;
-    my $seq = 1;
-    my $sel = "SELECT pid FROM pictures_information WHERE date_taken = ? ";
-    my $sth = $DBH->prepare ($sel);
+    my $seq  = 1;
+    my $sel  = "SELECT pid FROM pictures_information WHERE date_taken = ? ";
+    my $sth  = $DBH->prepare($sel);
     if ($CONF->debug) {dbg($sel);}
     $sth->execute($dt);
     while (my $row = $sth->fetchrow_hashref) {
@@ -326,42 +326,34 @@ sub get_meta_data {
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
-    my ($ret{'width'},
-        $ret{'height'},
-        $ret{'size'},
-        $ret{'format'},
-        $ret{'compression'},
-        $ret{'signature'})
-        = $pic->Get('width',
-                    'height',
-                    'filesize',
-                    'format',
-                    'compression',
-                    'signature');
+    my ($ret{'width'}, $ret{'height'}, $ret{'size'}, $ret{'format'},
+        $ret{'compression'}, $ret{'signature'})
+      = $pic->Get('width', 'height', 'filesize', 'format', 'compression',
+        'signature');
     if ($CONF->debug) {
-        dbg ('      format: ' . $ret{'format'});
-        dbg (' compression: ' . $ret{'compression'});
-        dbg ('       width: ' . $ret{'width'});
-        dbg ('      height: ' . $ret{'height'});
+        dbg('      format: ' . $ret{'format'});
+        dbg(' compression: ' . $ret{'compression'});
+        dbg('       width: ' . $ret{'width'});
+        dbg('      height: ' . $ret{'height'});
     }
 
-    my $info = ImageInfo(\@blob[0]);
+    my $info                = ImageInfo(\@blob[0]);
     my $ret{'camera'}       = ${$info}{'Model'};
     my $ret{'datetime'}     = ${$info}{'CreateDate'};
     my $ret{'shutterspeed'} = ${$info}{'ShutterSpeed'};
     my $ret{'fnumber'}      = ${$info}{'FNumber'};
     my $ret{'size'}         = length $blob[0];
     if ($CONF->debug) {
-        dbg ('        size: ' . $ret{'size'});
-        dbg ('       model: ' . $ret{'camera'});
-        dbg ('    datetime: ' . $ret{'datetime'});
-        dbg ('exposuretime: ' . $ret{'shutterspeed'});
-        dbg ('     fnumber: ' . $ret{'fnumber'});
-        dbg ('EXIF Information ==============================');
+        dbg('        size: ' . $ret{'size'});
+        dbg('       model: ' . $ret{'camera'});
+        dbg('    datetime: ' . $ret{'datetime'});
+        dbg('exposuretime: ' . $ret{'shutterspeed'});
+        dbg('     fnumber: ' . $ret{'fnumber'});
+        dbg('EXIF Information ==============================');
         foreach my $t (keys %{$info}) {
             print "$t = ${$info}{$t}\n";
         }
-        dbg ('EXIF Information end ==========================');
+        dbg('EXIF Information end ==========================');
     }
 
     return %ret;
@@ -373,16 +365,15 @@ sub get_meta_data {
 sub store_meta_data {
 
     my ($pid, $meta_data_ref) = @_;
-    my %meta    = %{ $meta_data_ref };
+    my %meta    = %{$meta_data_ref};
     my $in_file = $meta{'in_file'};
-    
-    dbg (" Storing meta data for $in_file");
+
+    dbg(" Storing meta data for $in_file");
 
     # Set file paths and names
-    my $ret{'source_path'} = File::Spec->rel2abs( $in_file ) ;
-    my ($ret{'source_file'},
-        $ret{'source_dirs'},
-        $ret{'source_suffix'}) = fileparse($ret{'source_path'});
+    my $ret{'source_path'} = File::Spec->rel2abs($in_file);
+    my ($ret{'source_file'}, $ret{'source_dirs'}, $ret{'source_suffix'})
+      = fileparse($ret{'source_path'});
     my @dirs = split(/\//, $ret{'source_dirs'});
     my $ret{'picture_lot'} = @dirs[-1];
 
@@ -390,14 +381,14 @@ sub store_meta_data {
     if (!$ret{'datetime'}) {
         $ret{'datetime'} = sql_datetime();
     }
-    
+
     # Store meta data if the PID is passed
     my $sel = "SELECT pid FROM pictures_information WHERE pid=? ";
-    my $sth = $DBH->prepare ($sel);
-    if ($CONF->debug) {dbg($sel);}
+    my $sth = $DBH->prepare($sel);
+    if ($CONF->debug) { dbg($sel); }
     $sth->execute($thisPID);
     my $row_found;
-    while (my $row = $sth->fetchrow_hashref) {$row_found = 1;}
+    while (my $row = $sth->fetchrow_hashref) { $row_found = 1; }
     if ($row_found) {
         my $cmd = "UPDATE pictures_information SET ";
         $cmd .= 'picture_date = ?,';
@@ -406,20 +397,14 @@ sub store_meta_data {
         $cmd .= 'fstop = ?,';
         $cmd .= 'date_last_maint = ?,';
         $cmd .= 'WHERE pid = ?,';
-        my $sth_update = $DBH_UPDATE->prepare ($cmd);
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
         if ($CONF->debug) {dbg($cmd);}
-        $sth_update->execute(
-            $ret{'datetime'},
-            $ret{'camera'},
-            $ret{'shutter_speed'},
-            $ret{'fstop'},
-            sql_datetime(),
-            $pid
-        );
+        $sth_update->execute($ret{'datetime'}, $ret{'camera'},
+            $ret{'shutter_speed'}, $ret{'fstop'}, sql_datetime(), $pid);
     } else {
         # Get a picture sequence number
         my $picture_sequence = get_picture_sequence($ret{'datetime'});
-        my $cmd = "INSERT INTO pictures_information SET ";
+        my $cmd              = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?,';
         $cmd .= 'picture_lot = ?,';
         $cmd .= 'date_taken = ?,';
@@ -434,7 +419,7 @@ sub store_meta_data {
         $cmd .= 'public = ?,';
         $cmd .= 'date_last_maint = ?,';
         $cmd .= 'date_added = ? ';
-        my $sth_update = $DBH_UPDATE->prepare ($cmd);
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
         if ($CONF->debug) {dbg($cmd);}
         $sth_update->execute(
             $pid,
@@ -443,7 +428,7 @@ sub store_meta_data {
             $ret{'datetime'},
             $picture_sequence,
             $ret{'source_path'},
-            $ret['source_file'},
+            $ret{'source_file'},
             $ret{'camera'},
             $ret{'shutter_speed'},
             $ret{'fstop'},
@@ -463,14 +448,14 @@ sub store_meta_data {
 sub store_picture {
 
     my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
-    
-    dbg (" Processing $this_pid $this_size_id");
+
+    dbg(" Processing $this_pid $this_size_id");
 
     my $max_x;
     my $max_y;
     my $table;
     my $sel = 'SELECT * FROM picture_sizes WHERE size_id = ?';
-    my $sth = $DBH->prepare ($sel);
+    my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {dbg($sel);}
     $sth->execute($this_size_id);
     if (my $row = $sth->fetchrow_hashref) {
@@ -481,20 +466,20 @@ sub store_picture {
     if (!$max_y || !$max_x || !$table) {
         msg('fatal', "Invalid size id: $this_size_id");
     }
-    
+
     my @blob;
     $blob[0] = $this_picture;
     my $this_pic = Image::Magick->New();
     $this_pic->BlobToImage(@blob);
 
     # Set the size parameters
-    my $newPic   = $thisPic->Clone();
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = int(($x1/$width) * $height);
-    my $y2 = $max_y;
-    my $x2 = int(($y2/$height) * $width);
+    my $newPic = $thisPic->Clone();
+    my $x      = $width;
+    my $y      = $height;
+    my $x1     = $max_x;
+    my $y1     = int(($x1/$width) * $height);
+    my $y2     = $max_y;
+    my $x2     = int(($y2/$height) * $width);
     if ($x1 < $x2) {
         $x = $x1;
         $y = $y1;
@@ -502,20 +487,20 @@ sub store_picture {
         $x = $x2;
         $y = $y2;
     }
-    dbg (" Producing picture $x by $y ");
-    $newPic->Resize(width=>$x, height=>$y);
-    my @bPic  = $newPic->ImageToBlob();
-    
+    dbg(" Producing picture $x by $y ");
+    $newPic->Resize(width => $x, height => $y);
+    my @bPic = $newPic->ImageToBlob();
+
     my $sel = "SELECT pid FROM $thisTable ";
     $sel .= "WHERE pid=$thisPID ";
-    my $sth = $dbh->prepare ($sel);
+    my $sth = $dbh->prepare($sel);
     if ($opt_debug) {dbg($sel);}
     $sth->execute();
-    
+
     my $row = $sth->fetchrow_hashref;
 
     if ($row->{pid} != $this_pid && $this_pid > 0) {
-        
+
         my $cmd = "INSERT INTO $this_table (";
         $cmd .= 'pid,';
         $cmd .= 'picture_type,';
@@ -525,22 +510,15 @@ sub store_picture {
         $cmd .= 'date_last_maint,';
         $cmd .= 'date_added';
         $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
-        my $sth_update = $dbh_update->prepare ($cmd);
+        my $sth_update = $dbh_update->prepare($cmd);
         if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
-            $sth_update->execute(
-                                 $this_pid,
-                                 $this_type,
-                                 $x,
-                                 $y,
-                                 length($bPic[0]),
-                                 sql_datetime(),
-                                 sql_datetime()
-                                 );
+            $sth_update->execute($this_pid, $this_type, $x, $y,
+                length($bPic[0]), sql_datetime(), sql_datetime());
         }
-        
+
     } elsif ($thisPID > 0) {
-        
+
         my $cmd = "UPDATE $thisTable SET ";
         $cmd .= 'picture_type = ?,';
         $cmd .= 'width = ?,';
@@ -548,17 +526,11 @@ sub store_picture {
         $cmd .= 'size = ?,';
         $cmd .= 'date_last_maint = ? ';
         $cmd .= 'WHERE pid = ? ';
-        my $sth_update = $dbh_update->prepare ($cmd);
+        my $sth_update = $dbh_update->prepare($cmd);
         if ($opt_debug) {dbg($cmd);}
         if ($opt_update) {
-            $sth_update->execute(
-                                 $this_type,
-                                 $x,
-                                 $y,
-                                 length($bPic[0]),
-                                 sql_datetime(),
-                                 $this_pid,
-                                 );
+            $sth_update->execute($this_type, $x, $y, length($bPic[0]),
+                sql_datetime(), $this_pid);
         }
     }
     File::Copy($bPic[0], $path);
@@ -583,15 +555,15 @@ sub unix_seconds {
     my ($dt) = @_;
 
     my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
+    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/) {
         my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
+        my $mm   = $2;
+        my $dd   = $3;
+        my $h    = $4;
+        my $m    = $5;
+        my $s    = $6;
         $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
+        $ret = timelocal($s, $m, $h, $dd, $mm, $yyyy);
     }
     return $ret;
 }
@@ -605,7 +577,7 @@ sub _create_dir {
     if (!-e $this_root) {
         mkdir $this_root;
         if (!-d $this_root) {
-            msg ('fatal', "Problem creating directory $this_root")
+            msg('fatal', "Problem creating directory $this_root")
         }
     }
     return $this_dir;
@@ -637,9 +609,9 @@ sub create_picture_dirs {
 
 sub check_picture_size {
     my ($this_size) = @_;
-    
+
     my $sel = 'SELECT * FROM picture_sizes where max_size = ?';
-    my $sth = $DBH->prepare ($sel);
+    my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {dbg($sel);}
     $sth->execute($this_size);
     my $size_found;
@@ -653,15 +625,15 @@ sub check_picture_size {
 # get picture sizes to generate
 
 sub get_picture_sizes {
-    my @flds = ('max_height', 'max_width', 'table', 'description');
-    my $sel = 'SELECT * FROM picture_sizes';
-    my $sth = $DBH->prepare ($sel);
+    my @flds   = ('max_height', 'max_width', 'table', 'description');
+    my $sel    = 'SELECT * FROM picture_sizes';
+    my $sth    = $DBH->prepare($sel);
     my %psizes = ();
     if ($CONF->debug) {dbg($sel);}
     $sth->execute();
     while (my $row = $sth->fetchrow_hashref) {
         for my $f (@flds) {
-            $psizes{$row->{size_id}}{$f} = ${$row}{$f};
+            $psizes{ $row->{size_id} }{$f} = ${$row}{$f};
         }
     }
     return %psizes;
@@ -671,8 +643,8 @@ sub get_picture_sizes {
 # get picture types
 
 sub get_picture_types {
-    my $sel = 'SELECT * FROM picture_types';
-    my $sth = $DBH->prepare ($sel);
+    my $sel        = 'SELECT * FROM picture_types';
+    my $sth        = $DBH->prepare($sel);
     my %mime_types = ();
     if ($CONF->debug) {dbg($sel);}
     $sth->execute();
@@ -691,13 +663,13 @@ sub pid_to_path {
     if (!check_picture_size($max_size)) {
         msg('fatal', "Invalid size: $this_size");
     }
-    
+
     $type = s/[.]//xmsg;
-    
+
     my $path = $CONF->picture_root;
     $path .= "/${group}/${size}/${pid}.${type}";
     $path =~ s{//}{/}xmsg;
-    
+
     return $path;
 }
 
@@ -706,8 +678,8 @@ sub pid_to_path {
 
 sub validate_params {
     my ($name, $in_ref, $valid_ref) = @_;
-    my %in = %$in_ref;
-    my @valid = @$valid_ref;
+    my %in        = %$in_ref;
+    my @valid     = @$valid_ref;
     my %validList = ();
     foreach my $v (@valid) { $validList{$v}++; }
     foreach my $p (sort keys %in) {
