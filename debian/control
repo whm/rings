@@ -3,10 +3,18 @@ Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
 Build-Depends: debhelper (>= 8),
+ imagemagick,
  libappconfig-perl,
  libdbi-perl,
  libdbd-mysql-perl,
+ libfile-homedir-perl,
+ libfile-slurp-perl,
+ libimage-exif-perl,
+ libimage-exiftool-perl,
+ libimage-info-perl,
+ libimage-magick-perl,
  libipc-run-perl,
+ perl,
  perltidy
 Standards-Version: 3.9.4
 
@@ -20,8 +28,11 @@ Depends: apache2,
  libdbi-perl,
  libdbd-mysql-perl,
  libfile-homedir-perl,
+ libfile-slurp-perl,
  libimage-exif-perl,
  libimage-exiftool-perl,
+ libimage-info-perl,
+ libimage-magick-perl,
  libipc-run-perl,
  perl,
  ${perl:Depends}
