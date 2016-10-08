@@ -5,16 +5,17 @@
 use Test::More qw( no_plan );
 
 my $out;
-my $s = 'perl -I ../modules/ ../usr/bin/ring-db2files';
+my $s = '../usr/bin/ring-db2files';
+my $cmd = "perl -I ../modules/ $s";
 
-$out = `$s --help 2>&1`;
+$out = `$cmd --help 2>&1`;
 if (!ok($out =~ /^Usage/, 'Help Switch')) {
-    `$s --help`;
+    `$cmd --help`;
 }
 
-$out = `$s help 2>&1`;
+$out = `$cmd help 2>&1`;
 if (!ok($out =~ /^Usage/, 'Help')) {
-    `$s --help`;
+    `$cmd --help`;
 }
 
 my $t = "${s}.tdy";
