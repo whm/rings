@@ -190,9 +190,14 @@ sub get_config {
 
     # Read db preferences if they exist
     if (-e $CONF->db_credentials) {
+        $CONF->define('db_user',     { ARGCOUNT => ARGCOUNT_ONE });
+        $CONF->define('db_password', { ARGCOUNT => ARGCOUNT_ONE });
         my $db_conf = get_db_config($CONF->db_credentials);
         $CONF->db_user($db_conf->db_user);
         $CONF->db_password($db_conf->db_password);
+    } else {
+        msg('fatal',
+            'db_credentials file not found (' . $CONF->db_credentials . ')');
     }
 
     if ($CONF->syslog) {
@@ -621,14 +626,14 @@ sub create_picture_dirs {
 # valid the picure size
 
 sub check_picture_size {
-    my ($this_size) = @_;
+    my ($this_id) = @_;
 
-    my $sel = 'SELECT * FROM picture_sizes where max_size = ?';
+    my $sel = 'SELECT * FROM picture_sizes where size_id = ?';
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);
     }
-    $sth->execute($this_size);
+    $sth->execute($this_id);
     my $size_found;
     while (my $row = $sth->fetchrow_hashref) {
         $size_found++;
@@ -677,16 +682,16 @@ sub get_picture_types {
 # Return the path to a file given the pid, group, size, and type desired
 
 sub pid_to_path {
-    my ($pid, $group, $max_size, $type) = @_;
+    my ($pid, $group, $side_id, $type) = @_;
 
-    if (!check_picture_size($max_size)) {
-        msg('fatal', "Invalid size: $max_size");
+    if (!check_picture_size($side_id)) {
+        msg('fatal', "Invalid size: $side_id");
     }
 
-    $type = s/[.]//xmsg;
+    $type =~ s/[.]//xmsg;
 
     my $path = $CONF->picture_root;
-    $path .= "/${group}/${max_size}/${pid}.${type}";
+    $path .= "/${group}/${side_id}/${pid}.${type}";
     $path =~ s{//}{/}xmsg;
 
     return $path;

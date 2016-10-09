@@ -26,9 +26,9 @@ my $opt_manual;
 # Read a picture from a table and write it to disk
 
 sub export_picture {
-    my ($pid, $file, $group, $max_size, $table) = @_;
+    my ($pid, $file, $group, $size_id, $table) = @_;
 
-    create_picture_dirs($group, $max_size);
+    create_picture_dirs($group, $size_id);
 
     my $sel = "SELECT picture_types.file_type FROM $table ";
     $sel .= "JOIN picture_types ";
@@ -38,13 +38,21 @@ sub export_picture {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
 
+    my $cnt = 0;
     if (my $row = $sth->fetchrow_hashref) {
         my $type = $row->{file_type};
-        my $thisPictureFile = pid_to_path($pid, $group, $max_size, $type);
-        dbg("writing file: $thisPictureFile") if $CONF->debug;
-        open PF, ">$thisPictureFile";
-        print PF $row->{picture};
-        close PF;
+        my $out_file = pid_to_path($pid, $group, $size_id, $type);
+        print "  Writing file: $out_file\n";
+        open PF, ">$out_file"
+          or msg('fatal', "Problem opening $out_file for writing");
+        print PF $row->{picture}
+          or msg('fatal', "Problem writing to $out_file");
+        close PF
+          or msg('fatal', "Problem closing $out_file");
+        $cnt++;
+    }
+    if ($cnt == 0) {
+        msg('warn', "Picture not found for $pid in size $size_id");
     }
 
     return;
@@ -66,9 +74,10 @@ sub read_and_write {
     $sth->execute();
 
     while (my $row = $sth->fetchrow_hashref) {
+        print "Processing $row->{'pid'}\n";
         for my $s (keys %psizes) {
             export_picture($row->{pid}, $row->{file_name},
-                $row->{group_path}, $s, "pictures_$s");
+                $row->{picture_lot}, $s, $psizes{$s}{'table'});
         }
     }
 }
