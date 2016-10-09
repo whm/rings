@@ -91,8 +91,12 @@ GetOptions(
 if (@ARGV && $ARGV[0] == 'help') {
     $opt_help = 1;
 }
-pod2usage(-verbose => 0) if $opt_help;
-pod2usage(-verbose => 2) if $opt_manual;
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
 
 get_config($opt_conf);
 

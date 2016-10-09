@@ -15,7 +15,7 @@ use Pod::Usage;
 use Rings::Common;
 use Time::Local;
 
-my $CNT = 0;
+my $CNT    = 0;
 my %PSIZES = ();
 
 my $opt_conf;
@@ -55,25 +55,25 @@ sub get_file_types {
 # process the files
 
 sub save_file {
-    
+
     (my $a_file) = @_;
 
     $CNT++;
-    
+
     # Pull out the file name, the file type, and the parent directory
     my $a_fullname = File::Spec->rel2abs($a_file);
     my ($a_vol, $a_dirlist, $a_filename) = File::Spec->splitpath($a_fullname);
     my $a_filetype = '';
-    if ($a_filename =~  /^(.*?)\.(.*)/) {
+    if ($a_filename =~ /^(.*?)\.(.*)/xms) {
         $a_filename = $1;
         $a_filetype = $2;
     }
     $a_dirlist =~ s{^/}{}xms;
     $a_dirlist =~ s{/$}{}xms;
-    my @dirs = File::Spec->splitdir($a_dirlist);
+    my @dirs     = File::Spec->splitdir($a_dirlist);
     my $a_parent = $dirs[-1];
 
-    my $blob = read_file("$in_file", binmode => ':raw');
+    my $blob = read_file("$a_file", binmode => ':raw');
     my %pic = get_meta_data($blob);
 
     # Check for duplicate picture
@@ -82,22 +82,21 @@ sub save_file {
     $sql .= "AND camera = ? ";
     $sql .= "AND shutter_speed = ? ";
     $sql .= "AND fstop = ?";
-    if ($opt_debug) {dbg($sql);}
-    my $sth = $dbh_update->prepare ($sql);
-    $sth->execute(
-        $pic{size},
-        $pic{camera}, 
-        $pic{shutterspeed},
-        $pic{this_fnumber}
-    );
+    if ($opt_debug) {
+        dbg($sql);
+    }
+    my $sth = $DBH->prepare($sql);
+    $sth->execute($pic{size}, $pic{camera}, $pic{shutterspeed},
+        $pic{this_fnumber});
     my $dup_cnt = 0;
-    while ( my $row = $sth->fetchrow_hashref() ) {
+
+    while (my $row = $sth->fetchrow_hashref()) {
         $dup_cnt++;
         print "File $a_file duplicates $row->{pid}\n";
     }
     if ($dup_cnt and !$opt_force) {
         print "SKIPPING: $a_file\n";
-        return
+        return;
     }
 
     # Set the PID
@@ -107,22 +106,17 @@ sub save_file {
     }
 
     # Store the meta data
-    store_meta_pid($pid, \%pic);
+    store_meta_data($pid, \%pic);
 
     # Copy the raw picture to rings directory
     my $pic_path = create_picture_dirs($a_parent, 'raw');
     my $pic_file = "${pic_path}/${pid}.${a_filetype}";
     copy($a_file, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_path");
-        
-    dbg (" Creating elements for picture record $pid");
+
+    dbg(" Creating elements for picture record $pid");
     foreach my $s (sort keys %PSIZES) {
-        my $pic = store_meta_picture (
-            $pid,
-            $s,
-            $meta{'picture'},
-            $meta{'type'}
-        );
+        my $pic = create_picture($pid, $s, $pic{'picture'}, $pic{'type'});
         if ($s ne 'raw') {
             my $ppath = create_picture_dirs($a_parent, $s);
             my $pfile = "${ppath}/${pid}.${a_filetype}";
@@ -135,9 +129,9 @@ sub save_file {
     return;
 }
 
-# -------------
-# Main routine
-# -------------
+##############################################################################
+# Main Routine
+##############################################################################
 
 print ">>> ring-load    v:18-Sep-2016\n";
 
@@ -152,15 +146,18 @@ GetOptions(
     'update' => \$opt_update
 );
 
-get_config($opt_conf);
-
 # -- help the poor souls out
+if (@ARGV && $ARGV[0] == 'help') {
+    $opt_help = 1;
+}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
+
+get_config($opt_conf);
 
 if ($opt_debug) {
     $CONF->debug($opt_debug);
@@ -172,18 +169,18 @@ db_connect();
 %PSIZES = get_picture_sizes();
 
 if ($CONF->debug) {
-    dbg ("Initialize timer.");
+    dbg("Initialize timer.");
 }
 
-$type_list = get_type_list();
+my $type_list = get_type_list();
 
 print "Examining files that match ${opt_path}*.${type_list}\n";
 
-my @file_list = glob ($opt_path . '*');
+my @file_list = glob($opt_path . '*');
 foreach my $f (@file_list) {
-    if ( $f =~ /(.*?)\.$type_list$/i ) {
+    if ($f =~ /(.*?)\.$type_list$/xmsi) {
         if ($CONF->debug) {
-            dbg ("    Saving file: $f");
+            dbg("    Saving file: $f");
         }
         save_file($f);
     }
@@ -206,13 +203,13 @@ ring-load
               --user=mysql-username --pass=mysql-password \
               [--force] [--keyword=string] [--datetaken=string] \
               [--ppe=string] [--photographer=string] \
-              [--debug] [--help] [--manual] 
+              [--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
 
 This script reads the jpeg files in a directory and loads the rings
-database.  Most command line options can also be specified in a 
+database.  Most command line options can also be specified in a
 preferences file, ~/.rings.
 
 =head1 OPTIONS AND ARGUMENTS
@@ -285,4 +282,3 @@ Turns on debugging displays.
 Bill MacAllister <bill@macallister.grass-valley.ca.us>
 
 =cut
-
