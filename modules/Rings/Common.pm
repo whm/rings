@@ -32,6 +32,7 @@ BEGIN {
       dbg
       check_picture_size
       create_picture_dirs
+      create_picture
       get_config
       get_meta_data
       get_next_id
@@ -41,7 +42,6 @@ BEGIN {
       pid_to_path
       sql_datetime
       store_meta_data
-      store_picture
       trim
       unix_seconds
     );
@@ -54,7 +54,7 @@ our $CONF;
 our $DBH;
 our $DBH_UPDATE;
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Open up connections to the MySQL data
 
 sub db_connect {
@@ -72,7 +72,7 @@ sub db_connect {
     return;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # disconnect from database
 
 sub db_disconnect {
@@ -82,7 +82,7 @@ sub db_disconnect {
     return;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # output debugging information
 
 sub dbg {
@@ -91,7 +91,7 @@ sub dbg {
     return;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # read configuration files and get options
 
 sub get_config {
@@ -205,7 +205,7 @@ sub get_config {
     return;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Read the db configuration file
 
 sub get_db_config {
@@ -217,7 +217,7 @@ sub get_db_config {
     return $db_conf;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # get next id
 
 sub get_next_id {
@@ -255,7 +255,7 @@ sub get_next_id {
 
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Generate a useful message
 
 sub msg {
@@ -271,7 +271,7 @@ sub msg {
     die $msg if $severity eq 'fatal';
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # sql date time string from unix time stamp
 
 sub sql_datetime {
@@ -290,7 +290,7 @@ sub sql_datetime {
         $year, $mon, $mday, $hour, $min, $sec);
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Selecting the next picture in a ring requires that the date_taken
 # and the picture_sequence pair be unique. This routine searches the
 # existing picture database and returns the number of entries for a
@@ -311,7 +311,7 @@ sub get_picture_sequence {
     return $seq;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Get meta data from picture and return a hash with the data.
 
 sub get_meta_data {
@@ -363,7 +363,7 @@ sub get_meta_data {
     return %ret;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Store meta data for a picture
 
 sub store_meta_data {
@@ -371,20 +371,19 @@ sub store_meta_data {
     my ($pid, $meta_data_ref) = @_;
     my %meta    = %{$meta_data_ref};
     my $in_file = $meta{'in_file'};
-    my %ret     = ();
 
     dbg(" Storing meta data for $in_file");
 
     # Set file paths and names
-    $ret{'source_path'} = File::Spec->rel2abs($in_file);
-    ($ret{'source_file'}, $ret{'source_dirs'}, $ret{'source_suffix'})
-      = fileparse($ret{'source_path'});
-    my @dirs = split(/\//, $ret{'source_dirs'});
-    $ret{'picture_lot'} = @dirs[-1];
+    $meta{'source_path'} = File::Spec->rel2abs($in_file);
+    ($meta{'source_file'}, $meta{'source_dirs'}, $meta{'source_suffix'})
+      = fileparse($meta{'source_path'});
+    my @dirs = split(/\//, $meta{'source_dirs'});
+    $meta{'picture_lot'} = @dirs[-1];
 
     # Set default time stamp
-    if (!$ret{'datetime'}) {
-        $ret{'datetime'} = sql_datetime();
+    if (!$meta{'datetime'}) {
+        $meta{'datetime'} = sql_datetime();
     }
 
     # Store meta data if the PID is passed
@@ -409,11 +408,11 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($ret{'datetime'}, $ret{'camera'},
-            $ret{'shutter_speed'}, $ret{'fstop'}, sql_datetime(), $pid);
+        $sth_update->execute($meta{'datetime'}, $meta{'camera'},
+            $meta{'shutter_speed'}, $meta{'fstop'}, sql_datetime(), $pid);
     } else {
         # Get a picture sequence number
-        my $picture_sequence = get_picture_sequence($ret{'datetime'});
+        my $picture_sequence = get_picture_sequence($meta{'datetime'});
         my $cmd              = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?,';
         $cmd .= 'picture_lot = ?,';
@@ -435,26 +434,26 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $pid,                  $ret{'picture_lot'},
-            $ret{'datetime'},      $ret{'datetime'},
-            $picture_sequence,     $ret{'source_path'},
-            $ret{'source_file'},   $ret{'camera'},
-            $ret{'shutter_speed'}, $ret{'fstop'},
-            $CONF->default_grade,  $CONF->default_public,
-            sql_datetime(),        sql_datetime()
+            $pid,                   $meta{'picture_lot'},
+            $meta{'datetime'},      $meta{'datetime'},
+            $picture_sequence,      $meta{'source_path'},
+            $meta{'source_file'},   $meta{'camera'},
+            $meta{'shutter_speed'}, $meta{'fstop'},
+            $CONF->default_grade,   $CONF->default_public,
+            sql_datetime(),         sql_datetime()
         );
     }
 
-    return %ret;
+    return;
 }
 
-# ------------------------------------------------
-# store pictures
+# ------------------------------------------------------------------------
+# Resize a picture, store some meta data, and return the resized
+# picture
 
-sub store_picture {
+sub create_picture {
 
-    my ($this_pid, $this_group, $this_size_id, $this_picture, $this_type) = @_;
-    my $path = pid_to_path($this_pid, $this_group, $this_size_id, $this_type);
+    my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
 
     dbg(" Processing $this_pid $this_size_id");
 
@@ -548,11 +547,10 @@ sub store_picture {
         $sth_update->execute($this_type, $x, $y, length($bPic[0]),
             sql_datetime(), $this_pid);
     }
-    File::Copy($bPic[0], $path);
-    return;
+    return $bPic[0];
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # trim leading and trailing white space
 
 sub trim {
@@ -562,7 +560,7 @@ sub trim {
     return $out;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # unix time stamp from sql date time string
 
 sub unix_seconds {
@@ -583,7 +581,7 @@ sub unix_seconds {
     return $ret;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Create directories need to store a picture
 
 sub _create_dir {
@@ -598,7 +596,7 @@ sub _create_dir {
     return $this_dir;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Create directories need to store a picture
 
 sub create_picture_dirs {
@@ -619,7 +617,7 @@ sub create_picture_dirs {
     return $output_root;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # valid the picure size
 
 sub check_picture_size {
@@ -638,7 +636,7 @@ sub check_picture_size {
     return $size_found;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # get picture sizes to generate
 
 sub get_picture_sizes {
@@ -658,7 +656,7 @@ sub get_picture_sizes {
     return %psizes;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # get picture types
 
 sub get_picture_types {
@@ -675,7 +673,7 @@ sub get_picture_types {
     return %mime_types;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Return the path to a file given the pid, group, size, and type desired
 
 sub pid_to_path {
@@ -694,7 +692,7 @@ sub pid_to_path {
     return $path;
 }
 
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Make sure that the parameters passed to a routine are valid
 
 sub validate_params {
