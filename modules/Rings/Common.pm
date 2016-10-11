@@ -5,6 +5,7 @@
 package Rings::Common;
 
 use AppConfig qw(:argcount :expand);
+use Carp;
 use DBI;
 use File::Basename;
 use File::Slurp;
@@ -169,6 +170,13 @@ sub get_config {
         }
     );
     $CONF->define(
+        'default_public',
+        {
+            DEFAULT  => 'Y',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'syslog',
         {
             DEFAULT  => 'local3',
@@ -267,13 +275,13 @@ sub msg {
     my ($severity, $msg) = @_;
     my @lines = split /\n/, $msg;
     foreach my $l (@lines) {
+        print uc($severity) . " $l\n" or die "ERROR writing msg\n";
         if ($CONF->syslog) {
             syslog('info', uc($severity) . " $l");
-        } else {
-            dbg(uc($severity) . " $l");
         }
     }
-    die $msg if $severity eq 'fatal';
+    croak $msg if $severity eq 'fatal';
+    return;
 }
 
 # ------------------------------------------------------------------------
@@ -402,12 +410,12 @@ sub store_meta_data {
     while (my $row = $sth->fetchrow_hashref) { $row_found = 1; }
     if ($row_found) {
         my $cmd = "UPDATE pictures_information SET ";
-        $cmd .= 'picture_date = ?,';
-        $cmd .= 'camera = ?,';
-        $cmd .= 'shutter_speed = ?,';
-        $cmd .= 'fstop = ?,';
-        $cmd .= 'date_last_maint = ?,';
-        $cmd .= 'WHERE pid = ?,';
+        $cmd .= 'picture_date = ?, ';
+        $cmd .= 'camera = ?, ';
+        $cmd .= 'shutter_speed = ?, ';
+        $cmd .= 'fstop = ?, ';
+        $cmd .= 'date_last_maint = ?';
+        $cmd .= 'WHERE pid = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
@@ -419,19 +427,19 @@ sub store_meta_data {
         # Get a picture sequence number
         my $picture_sequence = get_picture_sequence($meta{'datetime'});
         my $cmd              = "INSERT INTO pictures_information SET ";
-        $cmd .= 'pid = ?,';
-        $cmd .= 'picture_lot = ?,';
-        $cmd .= 'date_taken = ?,';
-        $cmd .= 'picture_date = ?,';
-        $cmd .= 'picture_sequence = ?,';
-        $cmd .= 'source_file = ?,';
-        $cmd .= 'file_name = ?,';
-        $cmd .= 'camera = ?,';
-        $cmd .= 'shutter_speed = ?,';
-        $cmd .= 'fstop = ?,';
-        $cmd .= 'grade = ?,';
-        $cmd .= 'public = ?,';
-        $cmd .= 'date_last_maint = ?,';
+        $cmd .= 'pid = ?, ';
+        $cmd .= 'picture_lot = ?, ';
+        $cmd .= 'date_taken = ?, ';
+        $cmd .= 'picture_date = ?, ';
+        $cmd .= 'picture_sequence = ?, ';
+        $cmd .= 'source_file = ?, ';
+        $cmd .= 'file_name = ?, ';
+        $cmd .= 'camera = ?, ';
+        $cmd .= 'shutter_speed = ?, ';
+        $cmd .= 'fstop = ?, ';
+        $cmd .= 'grade = ?, ';
+        $cmd .= 'public = ?, ';
+        $cmd .= 'date_last_maint = ?, ';
         $cmd .= 'date_added = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
@@ -439,13 +447,13 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $pid,                   $meta{'picture_lot'},
-            $meta{'datetime'},      $meta{'datetime'},
-            $picture_sequence,      $meta{'source_path'},
-            $meta{'source_file'},   $meta{'camera'},
-            $meta{'shutter_speed'}, $meta{'fstop'},
-            $CONF->default_grade,   $CONF->default_public,
-            sql_datetime(),         sql_datetime()
+            $pid,                         $meta{'picture_lot'},
+            $meta{'datetime'},            $meta{'datetime'},
+            $picture_sequence,            $meta{'source_path'},
+            $meta{'source_file'},         $meta{'camera'},
+            $meta{'shutter_speed'},       $meta{'fstop'},
+            $CONF->default_display_grade, $CONF->default_public,
+            sql_datetime(),               sql_datetime()
         );
     }
 
@@ -476,7 +484,7 @@ sub create_picture {
         $max_x = $row->{max_width};
         $table = $row->{table};
     }
-    if (!$max_y || !$max_x || !$table) {
+    if (!$table) {
         msg('fatal', "Invalid size id: $this_size_id");
     }
 
@@ -487,24 +495,32 @@ sub create_picture {
     my $width  = $this_pic->Get('width');
     my $height = $this_pic->Get('height');
 
-    # Set the size parameters
-    my $newPic = $this_pic->Clone();
-    my $x      = $width;
-    my $y      = $height;
-    my $x1     = $max_x;
-    my $y1     = int(($x1 / $width) * $height);
-    my $y2     = $max_y;
-    my $x2     = int(($y2 / $height) * $width);
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
+    # Resize picture if requested
+    my $ret_pic;
+    if ($max_x == 0 || $max_y == 0) {
+        $ret_pic = $this_picture;
     } else {
-        $x = $x2;
-        $y = $y2;
+        my $newPic = $this_pic->Clone();
+        my $x      = $width;
+        my $y      = $height;
+        my $x1     = $max_x;
+        my $y1     = int(($x1 / $width) * $height);
+        my $y2     = $max_y;
+        my $x2     = int(($y2 / $height) * $width);
+        if ($x1 < $x2) {
+            $x = $x1;
+            $y = $y1;
+        } else {
+            $x = $x2;
+            $y = $y2;
+        }
+        $width  = int($x);
+        $height = int($y);
+        dbg("  Producing picture $width by $height");
+        $newPic->Resize(width => $x, height => $y);
+        my @bPic = $newPic->ImageToBlob();
+        $ret_pic = $bPic[0];
     }
-    dbg(" Producing picture $x by $y ");
-    $newPic->Resize(width => $x, height => $y);
-    my @bPic = $newPic->ImageToBlob();
 
     my $sel = "SELECT pid FROM $table ";
     $sel .= "WHERE pid=? ";
@@ -532,8 +548,8 @@ sub create_picture {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($this_pid, $this_type, $x, $y,
-            length($bPic[0]), sql_datetime(), sql_datetime());
+        $sth_update->execute($this_pid, $this_type, $width, $height,
+            length($ret_pic), sql_datetime(), sql_datetime());
 
     } elsif ($this_pid > 0) {
 
@@ -549,10 +565,10 @@ sub create_picture {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($this_type, $x, $y, length($bPic[0]),
+        $sth_update->execute($this_type, $width, $height, length($ret_pic),
             sql_datetime(), $this_pid);
     }
-    return $bPic[0];
+    return $ret_pic;
 }
 
 # ------------------------------------------------------------------------
