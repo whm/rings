@@ -341,36 +341,13 @@ sub get_meta_data {
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
-    $ret{'width'}       = $pic->Get('width');
-    $ret{'height'}      = $pic->Get('height');
-    $ret{'size'}        = $pic->Get('filesize');
-    $ret{'format'}      = $pic->Get('format');
-    $ret{'compression'} = $pic->Get('compression');
-    $ret{'signature'}   = $pic->Get('signature');
-    if ($CONF->debug) {
-        dbg('      format: ' . $ret{'format'});
-        dbg(' compression: ' . $ret{'compression'});
-        dbg('       width: ' . $ret{'width'});
-        dbg('      height: ' . $ret{'height'});
-    }
-
     my $info = ImageInfo(\@blob[0]);
-    $ret{'camera'}       = ${$info}{'Model'};
-    $ret{'datetime'}     = ${$info}{'CreateDate'};
-    $ret{'shutterspeed'} = ${$info}{'ShutterSpeed'};
-    $ret{'fnumber'}      = ${$info}{'FNumber'};
-    $ret{'size'}         = length $blob[0];
-    if ($CONF->debug) {
-        dbg('        size: ' . $ret{'size'});
-        dbg('       model: ' . $ret{'camera'});
-        dbg('    datetime: ' . $ret{'datetime'});
-        dbg('exposuretime: ' . $ret{'shutterspeed'});
-        dbg('     fnumber: ' . $ret{'fnumber'});
-        dbg('EXIF Information ==============================');
-        foreach my $t (keys %{$info}) {
-            print "$t = ${$info}{$t}\n";
-        }
-        dbg('EXIF Information end ==========================');
+    foreach my $t (keys %{$info}) {
+	$t =~ s/^\s+|\s+$//g;
+	$ret{$t} = ${$info}{$t};
+	if ($CONF->debug) {
+	    dbg("$t = $ret{$t}");
+	}
     }
 
     return %ret;
@@ -381,10 +358,10 @@ sub get_meta_data {
 
 sub store_meta_data {
 
-    my ($pid, $meta_data_ref) = @_;
-    my %meta    = %{$meta_data_ref};
-    my $in_file = $meta{'in_file'};
-
+    my ($pid, $in_file, $meta_data_ref) = @_;
+    my %meta = %{$meta_data_ref};
+    my $ts   = sql_datetime();
+    
     dbg(" Storing meta data for $in_file");
 
     # Set file paths and names
@@ -393,13 +370,13 @@ sub store_meta_data {
       = fileparse($meta{'source_path'});
     my @dirs = split(/\//, $meta{'source_dirs'});
     $meta{'picture_lot'} = @dirs[-1];
-
+	
     # Set default time stamp
     if (!$meta{'datetime'}) {
-        $meta{'datetime'} = sql_datetime();
+        $meta{'datetime'} = $ts;
     }
 
-    # Store meta data if the PID is passed
+    # Store summary meta data
     my $sel = "SELECT pid FROM pictures_information WHERE pid=? ";
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
@@ -411,6 +388,8 @@ sub store_meta_data {
     if ($row_found) {
         my $cmd = "UPDATE pictures_information SET ";
         $cmd .= 'picture_date = ?, ';
+        $cmd .= 'raw_picture_size = ?, ';
+        $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -421,8 +400,9 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($meta{'datetime'}, $meta{'camera'},
-            $meta{'shutter_speed'}, $meta{'fstop'}, sql_datetime(), $pid);
+        $sth_update->execute($meta{'datetime'}, $meta{'size'},
+	    $meta{'signature'}, $meta{'camera'}, $meta{'shutterspeed'},
+            $meta{'fnumber'}, $ts, $pid);
     } else {
         # Get a picture sequence number
         my $picture_sequence = get_picture_sequence($meta{'datetime'});
@@ -434,6 +414,8 @@ sub store_meta_data {
         $cmd .= 'picture_sequence = ?, ';
         $cmd .= 'source_file = ?, ';
         $cmd .= 'file_name = ?, ';
+        $cmd .= 'raw_picture_size = ?, ';
+        $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -450,13 +432,37 @@ sub store_meta_data {
             $pid,                         $meta{'picture_lot'},
             $meta{'datetime'},            $meta{'datetime'},
             $picture_sequence,            $meta{'source_path'},
-            $meta{'source_file'},         $meta{'camera'},
-            $meta{'shutter_speed'},       $meta{'fstop'},
+            $meta{'source_file'},         $meta{'size'},
+	    $meta{'signature'},           $meta{'Model'},
+            $meta{'ExposureTime'},        $meta{'FNumber'},
             $CONF->default_display_grade, $CONF->default_public,
-            sql_datetime(),               sql_datetime()
+            $ts,                          $ts
         );
     }
 
+    # Clean out any existing metadata for this picture
+    my $exif_clean_cmd = 'DELETE FROM pictures_exif where pid = ?';
+    my $exif_del = $DBH_UPDATE->prepare($exif_clean_cmd);
+    if ($CONF->debug) {
+	dbg($exif_clean_cmd);
+    }
+    $exif_del->execute($pid);
+
+    # Store all of the meta data extracted from the image
+    my $exif_insert_cmd = 'INSERT INTO pictures_exif SET ';
+    $exif_insert_cmd .= 'pid = ?, ';
+    $exif_insert_cmd .= 'exif_key = ?, ';
+    $exif_insert_cmd .= 'exif_value = ?, ';
+    $exif_insert_cmd .= 'date_last_maint = ?, ';
+    $exif_insert_cmd .= 'date_added = ? ';
+    my $exif_insert = $DBH_UPDATE->prepare($exif_insert_cmd);
+    if ($CONF->debug) {
+	dbg($exif_insert_cmd);
+    }
+    for my $k (sort keys %meta) {
+	$exif_insert->execute($pid, $k, $meta{$k}, $ts, $ts);
+    }
+ 
     return;
 }
 
@@ -467,8 +473,6 @@ sub store_meta_data {
 sub create_picture {
 
     my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
-
-    dbg(" Processing $this_pid $this_size_id");
 
     my $max_x;
     my $max_y;
