@@ -102,18 +102,17 @@ sub save_file {
     # Set the PID
     my $pid = get_next_id("pid");
 
-    # Store the meta data
-    store_meta_data($pid, \%pic);
-
-    # Copy the raw picture to rings directory
+    # Store meta-data and copy the raw picture to rings directory
     my $pic_path = create_picture_dirs($a_parent, 'raw');
     my $pic_file = "${pic_path}/${pid}.${a_filetype}";
+    $pic{'in_file'} = $pic_file;
+    store_meta_data($pid, $a_fullname, \%pic);
     copy($a_file, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_path");
 
     dbg(" Creating elements for picture record $pid");
     foreach my $s (sort keys %SIZE_IDS) {
-        my $pic = create_picture($pid, $s, $pic{'picture'}, $pic{'format'});
+        my $pic = create_picture($pid, $s, $pic{'picture'}, $pic{'MIMEType'});
         if ($s ne 'raw') {
             my $ppath = create_picture_dirs($a_parent, $s);
             my $pfile = "${ppath}/${pid}.${a_filetype}";
