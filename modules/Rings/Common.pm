@@ -192,7 +192,7 @@ sub get_config {
     if ($ENV{'HOME'}) {
         push @confs, $ENV{'HOME'} . '/.rings.conf';
     }
-    foreach my $z (@confs) {
+    for my $z (@confs) {
         $CONF->file($z) if -e $z;
     }
 
@@ -274,7 +274,7 @@ sub get_next_id {
 sub msg {
     my ($severity, $msg) = @_;
     my @lines = split /\n/, $msg;
-    foreach my $l (@lines) {
+    for my $l (@lines) {
         print uc($severity) . " $l\n" or die "ERROR writing msg\n";
         if ($CONF->syslog) {
             syslog('info', uc($severity) . " $l");
@@ -342,12 +342,12 @@ sub get_meta_data {
     $pic->BlobToImage(@blob);
 
     my $info = ImageInfo(\@blob[0]);
-    foreach my $t (keys %{$info}) {
-	$t =~ s/^\s+|\s+$//g;
-	$ret{$t} = ${$info}{$t};
-	if ($CONF->debug) {
-	    dbg("$t = $ret{$t}");
-	}
+    for my $t (keys %{$info}) {
+        $t =~ s/^\s+|\s+$//g;
+        $ret{$t} = ${$info}{$t};
+        if ($CONF->debug) {
+            dbg("$t = $ret{$t}");
+        }
     }
 
     return %ret;
@@ -361,7 +361,7 @@ sub store_meta_data {
     my ($pid, $in_file, $meta_data_ref) = @_;
     my %meta = %{$meta_data_ref};
     my $ts   = sql_datetime();
-    
+
     dbg(" Storing meta data for $in_file");
 
     # Set file paths and names
@@ -370,7 +370,7 @@ sub store_meta_data {
       = fileparse($meta{'source_path'});
     my @dirs = split(/\//, $meta{'source_dirs'});
     $meta{'picture_lot'} = @dirs[-1];
-	
+
     # Set default time stamp
     if (!$meta{'datetime'}) {
         $meta{'datetime'} = $ts;
@@ -401,7 +401,7 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute($meta{'datetime'}, $meta{'size'},
-	    $meta{'signature'}, $meta{'camera'}, $meta{'shutterspeed'},
+            $meta{'signature'}, $meta{'camera'}, $meta{'shutterspeed'},
             $meta{'fnumber'}, $ts, $pid);
     } else {
         # Get a picture sequence number
@@ -433,7 +433,7 @@ sub store_meta_data {
             $meta{'datetime'},            $meta{'datetime'},
             $picture_sequence,            $meta{'source_path'},
             $meta{'source_file'},         $meta{'size'},
-	    $meta{'signature'},           $meta{'Model'},
+            $meta{'signature'},           $meta{'Model'},
             $meta{'ExposureTime'},        $meta{'FNumber'},
             $CONF->default_display_grade, $CONF->default_public,
             $ts,                          $ts
@@ -442,9 +442,9 @@ sub store_meta_data {
 
     # Clean out any existing metadata for this picture
     my $exif_clean_cmd = 'DELETE FROM pictures_exif where pid = ?';
-    my $exif_del = $DBH_UPDATE->prepare($exif_clean_cmd);
+    my $exif_del       = $DBH_UPDATE->prepare($exif_clean_cmd);
     if ($CONF->debug) {
-	dbg($exif_clean_cmd);
+        dbg($exif_clean_cmd);
     }
     $exif_del->execute($pid);
 
@@ -457,12 +457,12 @@ sub store_meta_data {
     $exif_insert_cmd .= 'date_added = ? ';
     my $exif_insert = $DBH_UPDATE->prepare($exif_insert_cmd);
     if ($CONF->debug) {
-	dbg($exif_insert_cmd);
+        dbg($exif_insert_cmd);
     }
     for my $k (sort keys %meta) {
-	$exif_insert->execute($pid, $k, $meta{$k}, $ts, $ts);
+        $exif_insert->execute($pid, $k, $meta{$k}, $ts, $ts);
     }
- 
+
     return;
 }
 
@@ -725,8 +725,8 @@ sub validate_params {
     my %in        = %$in_ref;
     my @valid     = @$valid_ref;
     my %validList = ();
-    foreach my $v (@valid) { $validList{$v}++; }
-    foreach my $p (sort keys %in) {
+    for my $v (@valid) { $validList{$v}++; }
+    for my $p (sort keys %in) {
         if (!$validList{$p}) {
             dbg("INVALID PARAMETER $p passed to $name");
         } else {
