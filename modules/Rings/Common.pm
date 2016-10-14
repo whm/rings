@@ -341,6 +341,15 @@ sub get_meta_data {
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
+    # Make sure this data is pulled from the image
+    $ret{'width'}       = $pic->Get('width');
+    $ret{'height'}      = $pic->Get('height');
+    $ret{'size'}        = $pic->Get('filesize');
+    $ret{'format'}      = $pic->Get('format');
+    $ret{'Compression'} = $pic->Get('compression');
+    $ret{'signature'}   = $pic->Get('signature');
+
+    # Now pull the rest of the exif data
     my $info = ImageInfo(\@blob[0]);
     for my $t (keys %{$info}) {
         $t =~ s/^\s+|\s+$//g;
@@ -390,6 +399,8 @@ sub store_meta_data {
         $cmd .= 'picture_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
+        $cmd .= 'raw_format = ?, ';
+        $cmd .= 'raw_compression = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -400,9 +411,12 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($meta{'datetime'}, $meta{'size'},
-            $meta{'signature'}, $meta{'camera'}, $meta{'shutterspeed'},
-            $meta{'fnumber'}, $ts, $pid);
+        $sth_update->execute(
+            $meta{'datetime'},     $meta{'size'},        $meta{'signature'},
+            $meta{'format'},       $meta{'Compression'}, $meta{'camera'},
+            $meta{'shutterspeed'}, $meta{'fnumber'},     $ts,
+            $pid
+        );
     } else {
         # Get a picture sequence number
         my $picture_sequence = get_picture_sequence($meta{'datetime'});
@@ -416,6 +430,8 @@ sub store_meta_data {
         $cmd .= 'file_name = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
+        $cmd .= 'raw_format = ?, ';
+        $cmd .= 'raw_compression = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -433,7 +449,8 @@ sub store_meta_data {
             $meta{'datetime'},            $meta{'datetime'},
             $picture_sequence,            $meta{'source_path'},
             $meta{'source_file'},         $meta{'size'},
-            $meta{'signature'},           $meta{'Model'},
+            $meta{'signature'},           $meta{'format'},
+            $meta{'Compression'},         $meta{'Model'},
             $meta{'ExposureTime'},        $meta{'FNumber'},
             $CONF->default_display_grade, $CONF->default_public,
             $ts,                          $ts
@@ -473,6 +490,7 @@ sub store_meta_data {
 sub create_picture {
 
     my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
+    my $ts = sql_datetime();
 
     my $max_x;
     my $max_y;
@@ -496,8 +514,11 @@ sub create_picture {
     $blob[0] = $this_picture;
     my $this_pic = Image::Magick->New();
     $this_pic->BlobToImage(@blob);
-    my $width  = $this_pic->Get('width');
-    my $height = $this_pic->Get('height');
+    my $width       = $this_pic->Get('width');
+    my $height      = $this_pic->Get('height');
+    my $format      = $this_pic->Get('format');
+    my $compression = $this_pic->Get('compression');
+    my $signature   = $this_pic->Get('signature');
 
     # Resize picture if requested
     my $ret_pic;
@@ -520,7 +541,7 @@ sub create_picture {
         }
         $width  = int($x);
         $height = int($y);
-        dbg("  Producing picture $width by $height");
+        dbg("    Producing picture $width by $height");
         $newPic->Resize(width => $x, height => $y);
         my @bPic = $newPic->ImageToBlob();
         $ret_pic = $bPic[0];
@@ -538,22 +559,27 @@ sub create_picture {
 
     if ($row->{pid} != $this_pid && $this_pid > 0) {
 
-        my $cmd = "INSERT INTO $table (";
-        $cmd .= 'pid,';
-        $cmd .= 'picture_type,';
-        $cmd .= 'width,';
-        $cmd .= 'height,';
-        $cmd .= 'size,';
-        $cmd .= 'date_last_maint,';
-        $cmd .= 'date_added';
-        $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
+        my $cmd = "INSERT INTO $table SET ";
+        $cmd .= 'pid = ?, ';
+        $cmd .= 'picture_type = ?, ';
+        $cmd .= 'width = ?, ';
+        $cmd .= 'height = ?, ';
+        $cmd .= 'size = ?, ';
+        $cmd .= 'signature = ?, ';
+        $cmd .= 'format = ?, ';
+        $cmd .= 'compression = ?, ';
+        $cmd .= 'date_last_maint = ?, ';
+        $cmd .= 'date_added = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($this_pid, $this_type, $width, $height,
-            length($ret_pic), sql_datetime(), sql_datetime());
+        $sth_update->execute(
+            $this_pid,        $this_type, $width,  $height,
+            length($ret_pic), $signature, $format, $compression,
+            $ts,              $ts
+        );
 
     } elsif ($this_pid > 0) {
 
@@ -562,6 +588,9 @@ sub create_picture {
         $cmd .= 'width = ?,';
         $cmd .= 'height = ?,';
         $cmd .= 'size = ?,';
+        $cmd .= 'signature = ?, ';
+        $cmd .= 'format = ?, ';
+        $cmd .= 'compression = ?, ';
         $cmd .= 'date_last_maint = ? ';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
@@ -569,8 +598,11 @@ sub create_picture {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($this_type, $width, $height, length($ret_pic),
-            sql_datetime(), $this_pid);
+        $sth_update->execute(
+            $this_type,       $width,     $height,
+            length($ret_pic), $signature, $format,
+            $compression,     $ts,        $this_pid
+        );
     }
     return $ret_pic;
 }

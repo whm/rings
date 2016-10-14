@@ -110,7 +110,7 @@ sub save_file {
     copy($a_file, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_path");
 
-    dbg(" Creating elements for picture record $pid");
+    dbg("  Creating elements for picture record $pid");
     foreach my $s (sort keys %SIZE_IDS) {
         my $pic = create_picture($pid, $s, $pic{'picture'}, $pic{'MIMEType'});
         if ($s ne 'raw') {
