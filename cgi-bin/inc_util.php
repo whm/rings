@@ -80,6 +80,10 @@ function read_conf ($conf_file = '/etc/rings/rings.conf') {
     # Open the file and read it line by line
     $this_conf = array();
     $fh = fopen($conf_file, 'r');
+    if (!$fh) {
+        syslog(LOG_ERR, "ERROR: reading $conf_file");
+        exit("Problem opening $conf_file");
+    }
     while (($line = fgets($fh)) != false) {
         if (substr($line, 0, 1) == '#') {
             continue;

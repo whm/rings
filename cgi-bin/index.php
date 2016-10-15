@@ -216,7 +216,10 @@ if (empty($in_group_id)) {
 }
 
 $sel = "SELECT * FROM groups ORDER BY group_name ";
-if (  $result = $DBH->query($sel) ) {
+if ($CONF['debug']) {
+    syslog(LOG_DEBUG, $sel);
+}
+if ($result = $DBH->query($sel)) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $s = '';
         if ($_SESSION['group_id'] == $row['group_id']) {
@@ -376,6 +379,9 @@ if (!empty($in_group_id)) {
         $sel .= "$vis_sel) ";
         $sel .= "GROUP BY det.uid ";
         $sel .= "ORDER BY det.uid ";
+    }
+    if ($CONF['debug']) {
+        syslog(LOG_DEBUG, $sel);
     }
     $result = $DBH->query($sel);
     $pp_list = array();
