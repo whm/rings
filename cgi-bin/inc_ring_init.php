@@ -21,17 +21,20 @@ if (empty($CONF['db_name'])) {
 if (empty($CONF['db_secret'])) {
     $CONF['db_secret'] = '/etc/rings/rings_db.conf';
 }
+if (empty($CONF['default_size'])) {
+    $CONF['default_size'] = 'raw';
+}
+if (empty($CONF['maint_size'])) {
+    $CONF['maint_size'] = '640x480';
+}
 if (empty($CONF['ring_admin'])) {
     $CONF['ring_admin'] = 'ring_admin';
 }
-if (empty($CONF['ring_root'])) {
-    $CONF['ring_root'] = '/srv/rings';
+if (empty($CONF['ring_id'])) {
+    $CONF['ring_id'] = 'rings';
 }
 if (empty($CONF['ring_root'])) {
     $CONF['ring_root'] = '/srv/rings';
-}
-if (empty($CONF['default_size'])) {
-    $CONF['default_size'] = 'pictures_raw';
 }
 if (empty($CONF['debug'])) {
     $CONF['debug'] = 0;

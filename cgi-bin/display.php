@@ -8,7 +8,7 @@
 function pic_not_found () {
     echo "<html>\n";
     echo "<head>\n";
-    echo "<title>Ring Select</title>\n";
+    echo "<title>Ring Display</title>\n";
     require('inc_page_head.php');
     echo '<LINK href="/rings-styles/ring_style.css '
         . 'rel="stylesheet" '
@@ -53,6 +53,9 @@ if ($display_warning > 0) {
 }
 
 $sel = 'SELECT picture_lot FROM pictures_information WHERE pid=?';
+if ($CONF['debug']) {
+    syslog(LOG_DEBUG, $sel);
+}
 if (!$stmt = $DBH->prepare($sel)) {
     $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
     syslog(LOG_ERR, $m);
@@ -71,11 +74,13 @@ if (empty($picture_lot)) {
     pic_not_found();
 }
 
-$pic_path = $CONF['ring_root']
+$pic_path = $CONF['picture_root']
     . '/' . $picture_lot
     . '/' . $in_size
     . '/' . $in_pid . '.jpg';
-syslog(LOG_INFO, "Opening file $pic_path");
+if ($CONF['debug']) {
+    syslog(LOG_INFO, "Opening file $pic_path");
+}
 if (file_exists($pic_path)) {
     header("Content-type: $type");
     readfile($pic_path);

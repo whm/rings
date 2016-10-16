@@ -4,24 +4,27 @@
 // Look up people and see if any are invisible.
 function auth_picture_invisible ($pid) {
     global $DBH;
-    if (isset($_SERVER['REMOTE_USER'])) {
+    global $CONF;
+    $hide_picture = 1;
+    if (!empty($_SERVER['REMOTE_USER'])) {
         $hide_picture = 0;
     } else {
         $sel = "SELECT count(*) hidden_count FROM picture_details pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pid=$pid ";
         $sel .= "AND pop.visibility = 'INVISIBLE' ";
+        if ($CONF['debug']) {
+            syslog(LOG_DEBUG, $sel);
+        }
         $result = $DBH->query($sel);
         if (!$result) {
-            $_SESSION['msg'] .= 'ERROR: ' . $result->error . "<br>\n";
-            $_SESSION['msg'] .= "SQL: $sel<br>\n";
-            $hide_picture = 1;
+            syslog(LOG_ERROR, 'ERROR: ' . $result->error);
+            syslog(LOG_INFO, "Problem SQL:$sql");
         } else {
-            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                if ($row['hidden_count'] > 0) {
-                    $hide_picture = 1;
+            if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+                if ($row['hidden_count'] == 0) {
+                    $hide_picture = 0;
                 }
-                break;
             }
         }
     }
@@ -31,7 +34,7 @@ function auth_picture_invisible ($pid) {
 // Look up a person and see if they are to be displayed.
 function auth_person_hidden ($uid) {
     global $DBH;
-    if (isset($_SERVER['REMOTE_USER'])) {
+    if (!empty($_SERVER['REMOTE_USER'])) {
         $hide_person = 0;
     } else {
         $hide_person = 0;
@@ -39,10 +42,13 @@ function auth_person_hidden ($uid) {
         $sel .= "WHERE uid='$uid' ";
         $sel .= "AND (visibility = 'INVISIBLE' ";
         $sel .=      "OR visibility = 'HIDDEN') ";
+        if ($CONF['debug']) {
+            syslog(LOG_DEBUG, $sel);
+        }
         $result = $DBH->query($sel);
         if (!$result) {
-            $_SESSION['msg'] .= 'ERROR: ' . $result->error . "<br>\n";
-            $_SESSION['msg'] .= "SQL: $sel<br>\n";
+            syslog(LOG_ERROR, 'ERROR: ' . $result->error);
+            syslog(LOG_INFO, "Problem SQL:$sql");
             $hide_picture = 1;
         } else {
             while ($row = $result->fetch_array(MYSQLI_ASSOC)) {

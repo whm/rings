@@ -64,7 +64,7 @@ function increment_time ($a_datetime) {
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-if (isset($in_pid)) {
+if (!empty($in_pid)) {
     if ($in_pid=='CLEARFORM') {
         $add_flag = 1;
         $in_pid = '';
@@ -73,30 +73,43 @@ if (isset($in_pid)) {
     $in_pid = '';
 }
 
-// Find the next or the previous picture.  Don't look too far.
-$loop_limit = 30;
-$loop_incre = 1;
-if (isset($in_button_next) || isset($in_button_prev)) {
-    if (isset($in_button_prev)) {
-        $loop_incre = -1;
-    }
-    $loop_cnt = 0;
-    for ($i=0; $i<$loop_limit; $i++) {
-        $in_pid = $in_pid + $loop_incre;
-        $sel = "SELECT pid ";
-        $sel .= "FROM pictures_information ";
-        $sel .= "WHERE pid = '$in_pid' ";
-        $result = $DBH->query ($sel);
-        if ($result) {
-            if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                if (isset($row['pid'])) {
-                    break;
-                }
-            }
+// Find the next or the previous picture.
+$sel_pid = empty($in_pid) ? 0 : $in_pid;
+$base_sel = 'SELECT pid FROM pictures_information ';
+$prev_sel = "WHERE pid < $sel_pid ORDER BY pid DESC ";
+$next_sel = "WHERE pid > $sel_pid ORDER BY pid ";
+
+$sel = "$base_sel $prev_sel LIMIT 0,1 ";
+if ($CONF['debug']) {
+    syslog(LOG_DEBUG, $sel);
+}
+$result = $DBH->query ($sel);
+if ($result) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        if (!empty($row['pid'])) {
+            $prev_pid = $row['pid'];
         }
     }
 }
-if (isset($_SESSION['maint_last_datetime'])) {
+$sel = "$base_sel $next_sel LIMIT 0,1 ";
+if ($CONF['debug']) {
+    syslog(LOG_DEBUG, $sel);
+}
+$result = $DBH->query ($sel);
+if ($result) {
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        if (!empty($row['pid'])) {
+            $next_pid = $row['pid'];
+        }
+    }
+}
+if (!empty($in_button_next)) {
+    $in_pid = $next_pid;
+} elseif (!empty($in_button_prev)) {
+    $in_pid = $prev_pid;
+}
+
+if (!empty($_SESSION['maint_last_datetime'])) {
     $next_datetime = increment_time($_SESSION['maint_last_datetime']);
 }
 
@@ -109,13 +122,13 @@ if ($result) {
     if (!isset($row['picture_date']) || strlen($row['picture_date']) == 0) {
         $row['picture_date'] = $row['date_taken'];
     }
-    if (isset($row['pid']) && strlen($row['pid'])>0) {
+    if (!empty($row['pid']) && strlen($row['pid'])>0) {
         foreach ($row as $fld => $val) {
             $row[$fld] = trim($val);
         }
     }
 }
-if ( isset($in_pid) && !isset($row["pid"]) ) {
+if (!empty($in_pid) && empty($row["pid"]) ) {
     $_SESSION['msg'] .= "Picture '$in_pid' not found.\n";
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
@@ -124,14 +137,14 @@ if ( isset($in_pid) && !isset($row["pid"]) ) {
 }
 
 // Check to see if the raw image exists
-if (isset($in_pid) && strlen($in_pid) > 0) {
+if (!empty($in_pid) && strlen($in_pid) > 0) {
     $sel = "SELECT pid ";
     $sel .= "FROM pictures_raw ";
     $sel .= "WHERE pid = '$in_pid' ";
     $result = $DBH->query ($sel);
     if ($result) {
         $raw_row = $result->fetch_array(MYSQLI_ASSOC);
-        if (!isset($raw_row['pid'])) {
+        if (empty($raw_row['pid'])) {
             $_SESSION['msg'] .= "Raw image is missing for '$in_pid'.\n";
         }
     }
@@ -212,12 +225,21 @@ require ('page_top.php');
 </tr>
 <tr>
   <td align="center" colspan="2">
+<?php if (!empty($prev_pid)) { ?>
   <input type="submit" name="in_button_prev" value="Back">
+<?php } ?>
   <input type="submit" name="in_button_find" value="Find">
+<?php if (!empty($next_pid)) { ?>
   <input type="submit" name="in_button_next" value="Next">
+<?php } ?>
   </td>
 </tr>
 </table>
+<?php
+if (!empty($in_pid)) {
+    echo "<input type=\"hidden\" name=\"in_pid\" value=\"$in_pid\">\n";
+}
+?>
 </form>
 
 <p>
@@ -267,12 +289,12 @@ require ('page_top.php');
 <tr>
  <td align="right">Picture ID:</td>
  <td><?php
-    if (isset($row['pid'])) {
+    if (!empty($row['pid'])) {
         $pic_info = $row["pid"];
-        if (isset($row['file_name'])) {
+        if (!empty($row['file_name'])) {
             $pic_info .= ' File:' . $row['file_name'];
         }
-        if (isset($row['group_path'])) {
+        if (!empty($row['group_path'])) {
             $pic_info .= ' Group:' . $row['group_path'];
         }
         $pic_info .= ' <a href="picture_reload.php?in_pid=' . $in_pid . '" '
@@ -293,7 +315,7 @@ require ('page_top.php');
  <td> <input type="text" name="in_picture_date" size="30"
              value="<?php print $row["picture_date"]; ?>">
 
-      <?php if (isset($next_datetime)) { ?>
+      <?php if (!empty($next_datetime)) { ?>
       <input type="hidden"
              name="next_datetime"
              value="<?php echo $next_datetime;?>">
@@ -411,10 +433,10 @@ $result = $DBH->query ($cmd);
 if ($result) {
     while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
         $a_uid = $person_row["uid"];
-        if (isset($found["$a_uid"])) {continue;}
+        if (!empty($found["$a_uid"])) {continue;}
         $uid_list[$a_uid] = $person_row['display_name'];
         $thisWeight = 32767;
-        if (isset($_SESSION['s_uid_weight'][$a_uid])) {
+        if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
             $thisWeight = 30
                 * intval ((32000-$_SESSION['s_uid_weight'][$a_uid]) / 30);
         }
@@ -464,7 +486,7 @@ if (is_array($uid_sort)) {
 
  <td colspan="2" align="center" valign="top">
 <?php
-if (isset($_SESSION['msg'])) {
+if (!empty($_SESSION['msg'])) {
 ?>
 <span bgcolor="#ffffff" align="center">
     <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
@@ -488,9 +510,15 @@ if (isset($_SESSION['msg'])) {
 
 <p>
 
-<?php if ( $row["pid"] > 0 ) { ?>
-   <img src="/rings/display.php?in_pid=<?php print $row["pid"];?>&in_size=large">  <br>
-<?php } ?>
+<?php
+if (!empty($row['pid']) && $row["pid"]>0) {
+    echo '<img src="display.php';
+    echo '?in_pid=' . $row["pid"];
+    echo '&in_size=' . $CONF['maint_size'];
+    echo '">' . "\n";
+    echo "<br/>\n";
+}
+?>
 
 <?php
 # Picture matching code
@@ -505,10 +533,10 @@ if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $this_path = $row['file_path'];
         $this_sig  = $row['signature'];
-        echo '<img src="/rings/display_file.php?in_signature=';
+        echo '<img src="display_file.php?in_signature=';
         echo $this_sig;
         echo '">' . "\n";
-        echo "<br>\n";
+        echo "<br/>\n";
         echo $row['file_path'] . "<br>\n";
     }
 }
