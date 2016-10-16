@@ -119,7 +119,7 @@ $warn = 'color="#330000"';
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
-if ( isset($in_button_update) ) {
+if (!empty($in_button_update)) {
 
     // Try and get the old user record
     $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
@@ -131,7 +131,7 @@ if ( isset($in_button_update) ) {
     }
     $update_flag = 1;
     $add_flag = 0;
-    if (!isset($this_picture)) {
+    if (empty($this_picture)) {
         // no old record, they must want a new one for this id
         $add_flag = 1;
         $update_flag = 0;
@@ -195,7 +195,7 @@ if ( $update_flag ) {
     // delete picture details
     for ($i=0; $i<get_request('in_del_cnt', 0); $i++) {
         $a_flag = get_request("in_del_$i");
-        if (isset($a_flag)) {
+        if (!empty($a_flag)) {
             $a_uid = get_request("in_del_uid_$i");
             $cmd = "DELETE FROM picture_details ";
             $cmd .= "WHERE uid = '$a_uid' ";
@@ -205,7 +205,7 @@ if ( $update_flag ) {
                 $update_cnt++;
                 $_SESSION['msg'] .= "<font $ok>"
                     . "Deleted $a_uid from picture. </font><br>";
-                if (isset($_SESSION['s_uid_weight'][$a_uid])) {
+                if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
                     $_SESSION['s_uid_weight'][$a_uid]--;
                     if ($_SESSION['s_uid_weight'][$a_uid] < 0) {
                         $_SESSION['s_uid_weight'][$a_uid] = 0;
@@ -221,7 +221,7 @@ if ( $update_flag ) {
     // add picture details
     for ($i=0; $i<get_request('in_add_cnt'); $i++) {
         $a_uid = '';
-        if (isset($in_newuids[$i])) {$a_uid = $in_newuids[$i];}
+        if (!empty($in_newuids[$i])) {$a_uid = $in_newuids[$i];}
         if (strlen($a_uid) > 0) {
             $flds = '';
             $vals = '';
@@ -232,7 +232,7 @@ if ( $update_flag ) {
             if ($add_result) {
                 $update_cnt++;
                 $_SESSION['msg'] .= "<font $ok>$a_uid added.</font><br>";
-                if (isset($_SESSION['s_uid_weight'][$a_uid]) {
+                if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
                     $_SESSION['s_uid_weight'][$a_uid]++;
                     if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
                         $_SESSION['s_uid_weight'][$a_uid] = 32767;
@@ -250,7 +250,7 @@ if ( $update_flag ) {
         $_SESSION['msg'] .= "No changes found.<br>";
     }
 
-} elseif ( isset($in_button_del) ) {
+} elseif ( !empty($in_button_del) ) {
 
     // -- Delete a record -------------------------------
 
@@ -276,13 +276,13 @@ if ( $update_flag ) {
 
     $next_uid = 'CLEARFORM';
 
-} elseif ( isset($in_button_rotate_right) || isset($in_button_rotate_left) ) {
+} elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {
 
     $sh_cmd = "/usr/bin/ring-rotate";
     $sh_cmd .= " --start=$in_pid";
     $sh_cmd .= " --end=$in_pid";
     $sh_cmd .= " --update";
-    if (isset($in_button_rotate_right)) {
+    if (!empty($in_button_rotate_right)) {
         $sh_cmd .= " --right";
     } else {
         $sh_cmf .= " --left";

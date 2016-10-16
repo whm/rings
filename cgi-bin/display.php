@@ -4,38 +4,14 @@
 ##############################################################################
 # Subroutines
 ##############################################################################
-
-function pic_not_found () {
-    echo "<html>\n";
-    echo "<head>\n";
-    echo "<title>Ring Display</title>\n";
-    require('inc_page_head.php');
-    echo '<LINK href="/rings-styles/ring_style.css '
-        . 'rel="stylesheet" '
-        . 'type="text/css">' . "\n";
-    echo "<h1>Picture not available</h1>\n";
-    echo "</head>\n";
-    echo "</html>\n";
-    exit;
-}
-
-// Open a session, connect to the database, load convenience routines,
-// and initialize the message area.
-require('inc_ring_init.php');
-
-// Form or URL inputs
-$in_pid  = get_request('in_pid');
-$in_size = validate_size(get_request('in_size'));
-
-$display_warning = auth_picture_invisible($in_pid);
-if ($display_warning > 0) {
+    
+function no_picture ($t, $flag) {
     // display suppressed.  Give the user a message
-    if ($in_size == 'small') {
+    if ($flag == 'small') {
         $t = ' ';
         $width = 1;
         $inwidth = 1;
     } else {
-        $t = 'You must login to view this picture.';
         $width = 256;
         $inwidth = strlen($t)*8;
     }
@@ -51,6 +27,62 @@ if ($display_warning > 0) {
     flush();
     exit;
 }
+
+function get_picture_type ($pid, $size_id) {
+
+    $sel = 'SELECT table FROM picture_sizes WHERE size_id = ? ';
+    if ($CONF['debug']) {
+        syslog(LOG_DEBUG, $sel);
+    }
+    if (!$stmt = $DBH->prepare($sel)) {
+        $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+        syslog(LOG_ERR, $m);
+        syslog(LOG_INFO, "Problem statement: $sel");
+    }
+    $stmt->bind_param('s', $size_id);
+    $stmt->execute();
+    $stmt->bind_result($z);
+    if ($stmt->fetch()) {
+        $table = $z;
+    }
+    $stmt->close();
+    if (!empty($table)) {
+        $sel = 'SELECT picture_type FROM $TABLE WHERE pid = ? ';
+        if ($CONF['debug']) {
+            syslog(LOG_DEBUG, $sel);
+        }
+        if (!$stmt = $DBH->prepare($sel)) {
+            $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+            syslog(LOG_ERR, $m);
+            syslog(LOG_INFO, "Problem statement: $sel");
+        }
+        $stmt->bind_param('i', $pid);
+        $stmt->execute();
+        $stmt->bind_result($z);
+        if ($stmt->fetch()) {
+            $type = $z;
+        }
+        $stmt->close();
+    }
+    if ($empty($type)) {
+        $type = 'application/octet-stream';
+    }
+    return $type;
+}
+
+##############################################################################
+# Main routine
+##############################################################################
+
+require('inc_ring_init.php');
+
+// Form or URL inputs
+$in_pid  = get_request('in_pid');
+$in_size = get_request('in_size');
+if (auth_picture_invisible($in_pid)>0) {
+    no_picture('You must login to view this picture.', $in_size);
+}
+$in_size = validate_size($in_size);
 
 $sel = 'SELECT picture_lot FROM pictures_information WHERE pid=?';
 if ($CONF['debug']) {
@@ -71,8 +103,10 @@ $stmt->close();
 
 if (empty($picture_lot)) {
     syslog(LOG_ERR, "Picture lot was not returned for pid: $in_pid");
-    pic_not_found();
+    no_picture('Picture not available. (picture_log not found');
 }
+
+$type = get_picture_type($in_pid, $in_size);
 
 $pic_path = $CONF['picture_root']
     . '/' . $picture_lot
@@ -86,6 +120,6 @@ if (file_exists($pic_path)) {
     readfile($pic_path);
     flush();
 } else {
-    pic_not_found();
+    no_picture('Picture not available. (file not found');
 }
 ?>

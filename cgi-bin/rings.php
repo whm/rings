@@ -24,7 +24,7 @@ $in_ring_pid = get_request('in_ring_pid');
 <?php
 $next_links = array();
 
-if (isset($in_ring_pid)) {
+if (!empty($in_ring_pid)) {
 
   // display picture and links
 
@@ -65,7 +65,7 @@ if (isset($in_ring_pid)) {
                         $next_links[$this_display_name] = $new_pid;
                     } else {
                         $nxt_sel = 'SELECT p.pid pid ';
-                        $nxt_sel .= 'FROM picture_details det, '
+                        $nxt_sel .= 'FROM picture_details det, ';
                         $nxt_sel .= 'pictures_information p ';
                         $nxt_sel .= 'WHERE det.pid = p.pid ';
                         $nxt_sel .= 'AND det.uid = "$this_uid" ';
@@ -118,8 +118,8 @@ if ($display_rings>0) {
             $nxt_sel .= "LIMIT 1 ";
             $nxt_result = $DBH->query($nxt_sel);
             if ($nxt_result) {
-                $nxt_row = $nxt_result->fetch_array(MYSQLI_ASSOC)
-                    $new_pid = $nxt_row["pid"];
+                $nxt_row = $nxt_result->fetch_array(MYSQLI_ASSOC);
+                $new_pid = $nxt_row["pid"];
                 if (strlen($new_pid) > 0) {
                     echo "<tr bgcolor=\"#000066\">\n";
                     echo '  <td colspan="2">'
@@ -164,7 +164,7 @@ if ($display_rings>0) {
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
     echo "<a href=\"/rings/display.php?in_pid=$this_pid\" ";
     echo "target=\"_blank\">Image Full Size ($this_fullbytes Kbytes)</a>\n";
-    if (isset[$_SERVER['REMOTE_USER'])) {
+    if (!empty($_SERVER['REMOTE_USER'])) {
         echo "<p>\n";
         echo "<h5><a href=\"picture_maint?in_pid=$this_pid\" ";
         echo "target=\"_blank\">$this_pid</a> ";
