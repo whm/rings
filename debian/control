@@ -15,7 +15,8 @@ Build-Depends: debhelper (>= 8),
  libimage-magick-perl,
  libipc-run-perl,
  perl,
- perltidy
+ perltidy,
+ php-cli
 Standards-Version: 3.9.4
 
 Package: picture-rings
