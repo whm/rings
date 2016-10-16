@@ -75,8 +75,8 @@ function validate_size ($id) {
 
     global $DBH;
     global $CONF;
-    
-    $sel = 'SELECT size_id,description FROM picure_sizes WHERE size_id=? ';
+
+    $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id=? ';
     if (!$stmt = $DBH->prepare($sel)) {
         $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
         syslog(LOG_ERR, $m);
@@ -87,10 +87,11 @@ function validate_size ($id) {
     $stmt->bind_result($p1, $p2);
     if ($stmt->fetch()) {
         $this_size = $p1;
-    } else {
-        $this_size = $CONF['raw_id'];
     }
     $stmt->close();
+    if (empty($this_size)) {
+        $this_size = $CONF['raw_id'];
+    }
 
     return $this_size;
 }
