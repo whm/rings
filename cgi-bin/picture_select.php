@@ -219,12 +219,9 @@ if (!empty($in_ring_pid)) {
         exit;
     }
 
-    $thisSize = $_SESSION['display_size'];
-    if (!($thisSize=='large'
-          || $thisSize=='larger'
-          || $thisSize=='1280_1024'
-          || $thisSize == 'raw')) {
-        $thisSize = 'larger';
+    $this_size = $_SESSION['display_size'];
+    if (empty($this_size)) {
+        $this_size = $CONF['display_size'];
     }
 
     // Get data
@@ -245,7 +242,7 @@ if (!empty($in_ring_pid)) {
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
         $image_reference   .= "<img src=\"display.php";
         $image_reference   .= "?in_pid=$this_pid";
-        $image_reference   .= "&in_size=$thisSize\">\n";
+        $image_reference   .= "&in_size=$this_size\">\n";
         if (!empty($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";

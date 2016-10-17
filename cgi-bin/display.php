@@ -84,7 +84,18 @@ $in_size = get_request('in_size');
 if (auth_picture_invisible($in_pid)>0) {
     no_picture('You must login to view this picture.', $in_size);
 }
-$in_size = validate_size($in_size);
+if (empty($in_size)) {
+    $in_size = $CONF['display_size'];
+} else {
+    $valid_size = validate_size($in_size);
+    if (empty($valid_size)) {
+        syslog(LOG_WARN, "Invalid picture size $in_size");
+        $in_size = $CONF['display_size'];
+        syslog(LOG_INFO, "Setting size to $in_size");
+    } else {
+        $in_size = $valid_size;
+    }
+}
 
 $sel = 'SELECT picture_lot FROM pictures_information WHERE pid=?';
 if ($CONF['debug']) {
