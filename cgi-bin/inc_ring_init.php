@@ -21,7 +21,7 @@ if (empty($CONF['db_name'])) {
 if (empty($CONF['db_secret'])) {
     $CONF['db_secret'] = '/etc/rings/rings_db.conf';
 }
-if (empty($CONF['default_size'])) {
+if (empty($CONF['display_size'])) {
     $CONF['default_size'] = 'raw';
 }
 if (empty($CONF['maint_size'])) {
@@ -39,8 +39,8 @@ if (empty($CONF['ring_root'])) {
 if (empty($CONF['debug'])) {
     $CONF['debug'] = 0;
 }
-if (empty($CONF['default_index_size'])) {
-    $CONF['default_index_size'] = 'pictures_small';
+if (empty($CONF['index_size'])) {
+    $CONF['index_size'] = '125x125';
 }
 if (empty($CONF['cookie_id'])) {
     $CONF['cookie_id'] = 'rings-' . $CONF['ring_id'];
