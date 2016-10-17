@@ -32,12 +32,12 @@ function get_picture_type ($pid, $size_id) {
     global $DBH;
     global $CONF;
 
-    $sel = 'SELECT table FROM picture_sizes WHERE size_id = ? ';
+    $sel = 'SELECT picture_table FROM picture_sizes WHERE size_id = ? ';
     if ($CONF['debug']) {
         syslog(LOG_DEBUG, $sel);
     }
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
         syslog(LOG_ERR, $m);
         syslog(LOG_INFO, "Problem statement: $sel");
     }
@@ -45,16 +45,16 @@ function get_picture_type ($pid, $size_id) {
     $stmt->execute();
     $stmt->bind_result($z);
     if ($stmt->fetch()) {
-        $table = $z;
+        $picture_table = $z;
     }
     $stmt->close();
-    if (!empty($table)) {
-        $sel = 'SELECT picture_type FROM $TABLE WHERE pid = ? ';
+    if (!empty($picture_table)) {
+        $sel = "SELECT picture_type FROM $picture_table WHERE pid = ? ";
         if ($CONF['debug']) {
             syslog(LOG_DEBUG, $sel);
         }
         if (!$stmt = $DBH->prepare($sel)) {
-            $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
             syslog(LOG_ERR, $m);
             syslog(LOG_INFO, "Problem statement: $sel");
         }
@@ -66,7 +66,7 @@ function get_picture_type ($pid, $size_id) {
         }
         $stmt->close();
     }
-    if ($empty($type)) {
+    if (empty($type)) {
         $type = 'application/octet-stream';
     }
     return $type;
@@ -91,7 +91,7 @@ if ($CONF['debug']) {
     syslog(LOG_DEBUG, $sel);
 }
 if (!$stmt = $DBH->prepare($sel)) {
-    $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+    $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
     syslog(LOG_ERR, $m);
     syslog(LOG_INFO, "Problem statement: $sel");
 }

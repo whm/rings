@@ -77,7 +77,7 @@ sub read_and_write {
         print "Processing $row->{'pid'}\n";
         for my $s (keys %psizes) {
             export_picture($row->{pid}, $row->{file_name},
-                $row->{picture_lot}, $s, $psizes{$s}{'table'});
+                $row->{picture_lot}, $s, $psizes{$s}{'picture_table'});
         }
     }
 }
