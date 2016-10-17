@@ -78,7 +78,7 @@ function validate_size ($id) {
 
     $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id=? ';
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $mysqli->errno . ') ' . $mysqli->error;
+        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
         syslog(LOG_ERR, $m);
         syslog(LOG_INFO, "Problem statement: $sel");
     }
