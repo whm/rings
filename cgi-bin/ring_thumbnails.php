@@ -40,17 +40,17 @@ function back_to_index () {
 // ============
 // Main routine 
 
-if (!isset($_SESSION['display_grade'])) {
+if (empty($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
 $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
-if (strlen($in_start) == 0) {$in_start = 0;}
+$in_start = empty($in_start) ? 0 : $in_start;
 
 if ($in_number == 0) {
-    if (isset($_SESSION['s_thumbs_per_page'])) {
+    if (!empty($_SESSION['s_thumbs_per_page'])) {
         $in_number = $_SESSION['s_thumbs_per_page'];
     } else {
         $in_number = 10 * 7;
@@ -58,13 +58,13 @@ if ($in_number == 0) {
 }
 $_SESSION['s_thumbs_per_page'] = $in_number;
 
-if (strlen($in_uid) == 0) {
+if (empty($in_uid)) {
     $in_uid = $_SESSION['s_uid'];
 } else {
     $_SESSION['s_uid'] = $in_uid;
 }
 
-if (!isset($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
+if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
     back_to_index();
 }
 
@@ -78,7 +78,7 @@ if ($result) {
         $thisPerson = $row['display_name'];
     }
 }
-if (strlen($row['display_name']) < 1) {
+if (empty($row['display_name'])) {
     back_to_index();
 }
 
@@ -96,7 +96,7 @@ if ($result) {
         $thisCount = $row['cnt'];
     }
 }
-if (strlen($in_start_date) > 0) {
+if (!empty($in_start_date)) {
     $sel = "SELECT count(*) cnt ";
     $sel .= "FROM picture_details d ";
     $sel .= "JOIN pictures_information p ";
@@ -104,7 +104,7 @@ if (strlen($in_start_date) > 0) {
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.picture_date>'$in_start_date' ";
     $sel .= "AND $grade_sel ";
-    if (!isset($_SERVER['REMOTE_USER'])) {
+    if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
@@ -158,7 +158,7 @@ $sel = "SELECT p.picture_date, d.pid ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
-if (!isset($_SERVER['REMOTE_USER'])) {
+if (empty($_SERVER['REMOTE_USER'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
@@ -228,7 +228,7 @@ if (!$result) {
             . 'target="_blank">';
         $thumb = '<img src="display.php'
             . '?in_pid=' . $pid
-            . '&in_size=' . $CONF['default_index_size'] . '" '
+            . '&in_size=' . $CONF['index_size'] . '" '
             . 'border="0">';
         echo $pic_href . $thumb . "</a>\n";
         $cnt++;
@@ -242,7 +242,7 @@ if (!$result) {
        alt="Pick a New Ring"
        border="0"></a>
 <?php 
-if (isset($_SESSION['msg'])) {
+if (!empty($_SESSION['msg'])) {
     echo "<p>\n";
     echo $_SESSION['msg'];
     $_SESSION['msg'] = '';

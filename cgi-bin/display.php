@@ -29,6 +29,8 @@ function no_picture ($t, $flag) {
 }
 
 function get_picture_type ($pid, $size_id) {
+    global $DBH;
+    global $CONF;
 
     $sel = 'SELECT table FROM picture_sizes WHERE size_id = ? ';
     if ($CONF['debug']) {
