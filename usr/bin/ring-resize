@@ -1,84 +1,31 @@
 #!/usr/bin/perl
 
+# File: ring-resize
+# Author: Bill MacAllister
+
 use strict;
 use Cwd;
 use DBI;
 use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
 use Image::Magick;
 use Pod::Usage;
-use Time::Local;
+use Rings::Common;
 
-our %prefs;
-our %tableList;
-our $dbh;
-our $dbh_update;
-our $debug;
-our $debug_time;
-our $opt_db;
+my %SIZE_IDS   = ();
+
+our $opt_conf;
 our $opt_dateupdate;
 our $opt_debug;
 our $opt_end;
-our $opt_host;
 our $opt_help;
 our $opt_manual;
-our $opt_pass;
 our $opt_start;
-our $opt_table;
-our $opt_user;
 our $opt_update;
 
-# ------------------------------------------------
-# output debugging information
-
-sub dbg {
-    
-    (my $tmp) = @_;
-    
-    my $now = time;
-    my $elapsed = $now - $debug_time;
-    print "$now ($elapsed) $tmp \n";
-    $debug_time = $now;
-    return;
-    
-}
-
-# ------------------------------------------------
-# sql date time string from unix time stamp
-
-sub sql_datetime {
-    
-    my ($dt) = @_;
-    
-    if (length($dt)==0) {$dt = time}
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
-    $mon++;
-    $year += 1900;
-    
-    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
-    $year,$mon,$mday,$hour,$min,$sec;
-}
-
-# ------------------------------------------------
-# unix time stamp from sql date time string
-
-sub unix_seconds {
-    
-    my ($dt) = @_;
-    
-    my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
-        my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
-        $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
-    }
-    return $ret;
-}
-
+##############################################################################
+# Subroutines
+##############################################################################
 # ------------------------------------------------
 # store pictures
 
@@ -247,7 +194,7 @@ sub store_picture {
 
 sub read_and_update {
     
-    my %pidList;
+    my %pid_list;
     
     # get a list of pids first
 
@@ -265,16 +212,36 @@ sub read_and_update {
     my $cnt = 0;
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
-        $pidList{$row->{pid}} = $row->{file_name};
+        $pid_list{$row->{pid}} = $row->{picture_lot};
     }
     dbg ("$cnt pictures to process");
     
     # process the pictures
 
     my $cnt = 0;
-    foreach my $i (sort keys %pidList) {
-        dbg ("Processing $pidList{$i}...");
+    foreach my $i (sort keys %pid_list) {
+        dbg ("Processing $pid_list{$i} $i ...");
+
+        # Get the raw picture
+        my $pic_path = $CONF->picture_root . '/' . $pid_list{$i}
+          . "/raw/${i}.jpg";
+        my $raw = read_file("$a_file", binmode => ':raw');
         
+        foreach my $s (sort keys %SIZE_IDS) {
+            if ($s ne 'raw') {
+                my $pic = create_picture($pid, $s, $raw, $pic{'MIMEType'});
+                my $ppath = create_picture_dirs($pid_list{$i}, $s);
+                my $pfile = "${ppath}/${pid}.${a_filetype}";
+                if (!-e $pfile || $opt_force) {
+                    open(my $fh, '>', $pfile);
+                    print $fh $pic;
+                    close $fh;
+                }
+            }
+        }
+
+        my $pic_path = create_picture_dirs($pid_list{$i}, $size_id);
+        my $raw_file = $CONF->
         my $sel = "SELECT ";
         $sel .= "picture_type,";
         $sel .= "picture ";
@@ -310,119 +277,50 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-resize     v:21-Oct-2010\n";
+print ">>> ring-resize     v:23-Oct-2016\n";
 
 # -- get options
 GetOptions(
-           'db=s'           => \$opt_db,
            'debug'          => \$opt_debug,
            'dateupdate'     => \$opt_dateupdate,
            'end=i'          => \$opt_end,
            'help'           => \$opt_help,
-           'host=s'         => \$opt_host,
            'manual'         => \$opt_manual,
-           'pass=s'         => \$opt_pass,
            'start=i'        => \$opt_start,
-           'table=s'        => \$opt_table,
-           'user=s'         => \$opt_user,
            'update'         => \$opt_update
            );
 
 # -- help the poor souls out
+if (@ARGV && $ARGV[0] == 'help') {
+    $opt_help = 1;
+}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
-# -- read preferences from ./rings
-my $pref_file = $ARGV[0];
+get_config($opt_conf);
 
-$pref_file = $ENV{'HOME'}.'/.rings'   unless $pref_file;
-$pref_file = ''                       unless -e $pref_file;
-
-$pref_file = '/etc/whm/rings_db.conf' unless $pref_file;
-$pref_file = ''                       unless -e $pref_file;
-
-if ( -e $pref_file) {
-    if ($opt_debug) {dbg("Reading $pref_file file");}
-    open (pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {dbg("inline:$inline");}
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)\s*=\s*(.*)/i) {
-                my $attr = lc($1);
-                my $val = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {dbg("attr:$attr val:$val");}
-            }
-        }
-    }
-    close pref;
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
 }
-
-$opt_host = $prefs{'host'} unless $opt_host;
-$opt_host = 'localhost'    unless $opt_host;
-
-$opt_db = $prefs{'db'} unless $opt_db;
-$opt_db = 'rings'      unless $opt_db;
-
-$opt_pass = $prefs{'pass'} unless $opt_pass;
-$opt_user = $prefs{'user'} unless $opt_user;
-
-if (length($opt_start) == 0) {
-    print "%MAC-F-STARTREQ, Starting number required.  Try 1.\n";
-    pod2usage(-verbose => 0);
+if ($CONF->debug) {
+    dbg("Initialize timer.");
 }
-
-if (length($opt_pass) == 0) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-if (length($opt_user) == 0) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-
-%tableList = ('pictures_small' => 1,
-              'pictures_large' => 1,
-              'pictures_larger' => 1,
-              'pictures_1280_1024' =>1);
-
-if (length($opt_table) > 0 && $tableList{$opt_table} == 0) {
-    print "%MAC-F-INVALIDTBL, Invalid table name\n";
-    print "%MAC-I-VALIDTBL, Valid table names: ";
-    foreach my $t (sort keys %tableList) {print "$t ";}
-    print "\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-
-if ($opt_debug) {dbg ("Initialize timer.");}
 
 # -- Open up connections to the MySQL data
+db_connect();
 
-my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
-$dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 10000000;
-$dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
+if (length($opt_start) == 0) {
+    msg('fatal', 'Starting number required.  Try 1.');
+    pod2usage(-verbose => 0);
+}
+
+%SIZE_IDS = get_picture_sizes();
 
 read_and_update();
-
-$dbh->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
-$dbh_update->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (update)";
 
 exit;
 
