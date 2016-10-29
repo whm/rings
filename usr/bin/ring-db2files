@@ -30,7 +30,7 @@ sub export_picture {
 
     create_picture_dirs($group, $size_id);
 
-    my $sel = "SELECT picture_types.file_type FROM $table ";
+    my $sel = "SELECT ${table}.picture, picture_types.file_type FROM $table ";
     $sel .= "JOIN picture_types ";
     $sel .= "ON (picture_types.mime_type = ${table}.picture_type) ";
     $sel .= "WHERE pid = ? ";
