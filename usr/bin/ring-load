@@ -14,7 +14,6 @@ use Image::ExifTool 'ImageInfo';
 use Image::Magick;
 use Pod::Usage;
 use Rings::Common;
-use Time::Local;
 
 my $CNT        = 0;
 my %MIME_TYPES = ();
