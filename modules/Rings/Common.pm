@@ -697,7 +697,7 @@ sub check_picture_size {
 # get picture sizes to generate
 
 sub get_picture_sizes {
-    my @flds   = ('max_height', 'max_width', 'table', 'description');
+    my @flds   = ('max_height', 'max_width', 'picture_table', 'description');
     my $sel    = 'SELECT * FROM picture_sizes';
     my $sth    = $DBH->prepare($sel);
     my %psizes = ();
