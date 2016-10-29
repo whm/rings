@@ -15,195 +15,29 @@ use Rings::Common;
 my %SIZE_IDS   = ();
 
 our $opt_conf;
-our $opt_dateupdate;
 our $opt_debug;
-our $opt_end;
 our $opt_help;
 our $opt_manual;
-our $opt_start;
-our $opt_update;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
-# ------------------------------------------------
-# store pictures
 
-sub store_picture {
-
-    my ($thisPID, 
-        $thisSeq,
-        $thisTable, 
-        $thisPicture,
-        $thisType) = @_;
-    
-    dbg (" Processing $thisPID $thisTable");
-    
-    my @blob;
-    $blob[0] = $thisPicture;
-    my $thisPic = Image::Magick->New();
-    $thisPic->BlobToImage(@blob);
-    
-    my ($width, 
-        $height, 
-        $size, 
-        $format, 
-        $compression,
-        $camera,
-        $this_datetime,
-        $this_shutterspeed,
-        $this_fnumber) 
-        = $thisPic->Get('width',
-                        'height',
-                        'filesize',
-                        'format',
-                        'compression',
-                        '%[EXIF:Model]',
-                        '%[EXIF:DateTime]',
-                        '%[EXIF:ExposureTime]',
-                        '%[EXIF:FNumber]');
-    
-    if ($width==0 || $height==0) {
-        dbg ("      width: $width");
-        dbg ("     height: $height");
-        dbg (" Skipping image");
-        return;
-    }
-
-    # update date and time from the camera and the size 
-    # of the raw image
-    if ($opt_dateupdate && 
-        $this_datetime =~ /(\d{4,4}).(\d{1,2}).(\d{1,2})\s+(.*)/) {
-        my $pic_datetime = $1.'-'.$2.'-'.$3.' '.$4;
-        my $cmd = 'UPDATE pictures_information SET ';
-        $cmd .= "date_taken = ?,";
-        $cmd .= 'picture_date=?,';
-        $cmd .= 'picture_sequence=?, ';
-        $cmd .= 'raw_picture_size=?,';
-        $cmd .= 'date_last_maint=?';
-        $cmd .= 'WHERE pid=? ';
-        my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {dbg($cmd);}
-        if ($opt_update) {
-            $sth_update->execute($this_datetime,
-                                 $pic_datetime,
-                                 $thisSeq, 
-                                 length($thisPicture),
-                                 sql_datetime(),
-                                 $thisPID
-                                 );
-        }
-    }
-
-    # default to moderate
-    my $max_x = 640;
-    my $max_y = 480;
-
-    if ($thisTable eq 'pictures_large') {
-        $max_x = 640;
-        $max_y = 480;
-    } elsif ($thisTable eq 'pictures_larger') {
-        $max_x = 800;
-        $max_y = 600;
-    } elsif ($thisTable eq 'pictures_1280_1024') {
-        $max_x = 1280;
-        $max_y = 1024;
-    } elsif ($thisTable eq 'pictures_small') {
-        $max_x = 125;
-        $max_y = 125;
-    }
-    
-    my $newPic   = $thisPic->Clone();
-    my $x = $width;
-    my $y = $height;
-    my $x1 = $max_x;
-    my $y1 = ($x1/$width) * $height;
-    my $y2 = $max_y;
-    my $x2 = ($y2/$height) * $width;
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
-    }
-    dbg (" Producing picture $x by $y ");
-    $newPic->Resize(width=>$x, height=>$y);
-    my @bPic  = $newPic->ImageToBlob();
-    
-    my $sel = "SELECT pid FROM $thisTable ";
-    $sel .= "WHERE pid=$thisPID ";
-    my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
-    $sth->execute();
-    
-    my $row = $sth->fetchrow_hashref;
-
-    if ($row->{pid} != $thisPID && $thisPID > 0) {
-        
-        my $cmd = "INSERT INTO $thisTable (";
-        $cmd .= 'pid,';
-        $cmd .= 'picture_type,';
-        $cmd .= 'width,';
-        $cmd .= 'height,';
-        $cmd .= 'picture,';
-        $cmd .= 'date_last_maint,';
-        $cmd .= 'date_added';
-        $cmd .= ') VALUES (?,?,?,?,?,?,?) ';
-        my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {dbg($cmd);}
-        if ($opt_update) {
-            $sth_update->execute(
-                                 $thisPID,
-                                 $thisType,
-                                 $width,
-                                 $height,
-                                 $bPic[0],
-                                 sql_datetime(),
-                                 sql_datetime()
-                                 );
-        }
-        
-    } elsif ($thisPID > 0) {
-        
-        my $cmd = "UPDATE $thisTable SET ";
-        $cmd .= 'picture_type = ?,';
-        $cmd .= 'width = ?,';
-        $cmd .= 'height = ?,';
-        $cmd .= 'picture = ?,';
-        $cmd .= 'date_last_maint = ? ';
-        $cmd .= 'WHERE pid = ? ';
-        my $sth_update = $dbh_update->prepare ($cmd);
-        if ($opt_debug) {dbg($cmd);}
-        if ($opt_update) {
-            $sth_update->execute(
-                                 $thisType,
-                                 $width,
-                                 $height,
-                                 $bPic[0],
-                                 sql_datetime(),
-                                 $thisPID,
-                                 );
-        }
-    }
-    
-}
-
-# ------------------------------------------------
-# process the files
+# ------------------------------------------------------------------------
+# Read the raw file, scale the pictures, store the results
 
 sub read_and_update {
-    
+    my ($pid_start, $pid_end) = @_;
+
     my %pid_list;
-    
+
     # get a list of pids first
 
-    my $sel = "SELECT pid,";
-    $sel .= "file_name ";
+    my $sel = "SELECT pid, picture_lot ";
     $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $opt_start ";
-    if ($opt_end >= $opt_start) {
-        $sel .= "AND pid <= $opt_end ";
+    $sel .= "WHERE pid >= $pid_start ";
+    if ($pid_end >= $pid_start) {
+        $sel .= "AND pid <= $pid_end ";
     }
     $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
@@ -215,7 +49,7 @@ sub read_and_update {
         $pid_list{$row->{pid}} = $row->{picture_lot};
     }
     dbg ("$cnt pictures to process");
-    
+
     # process the pictures
 
     my $cnt = 0;
@@ -223,10 +57,17 @@ sub read_and_update {
         dbg ("Processing $pid_list{$i} $i ...");
 
         # Get the raw picture
-        my $pic_path = $CONF->picture_root . '/' . $pid_list{$i}
+        my $pic_path
+          = $CONF->picture_root . '/' . $pid_list{$i}
+          . '/' . $pid_list{$i}
           . "/raw/${i}.jpg";
+        if (!-e $pic_path) {
+            msg('error', "Raw picture not found for $i");
+            next;
+        }
+
         my $raw = read_file("$a_file", binmode => ':raw');
-        
+
         foreach my $s (sort keys %SIZE_IDS) {
             if ($s ne 'raw') {
                 my $pic = create_picture($pid, $s, $raw, $pic{'MIMEType'});
@@ -239,40 +80,10 @@ sub read_and_update {
                 }
             }
         }
-
-        my $pic_path = create_picture_dirs($pid_list{$i}, $size_id);
-        my $raw_file = $CONF->
-        my $sel = "SELECT ";
-        $sel .= "picture_type,";
-        $sel .= "picture ";
-        $sel .= "FROM pictures_raw ";
-        $sel .= "WHERE pid = $i ";
-        my $sth = $dbh->prepare ($sel);
-        if ($opt_debug) {dbg($sel);}
-        $sth->execute();
-        
-        if (my $row = $sth->fetchrow_hashref) {
-            
-            if (length($opt_table) > 0) {
-                store_picture ($i,
-                               $cnt,
-                               $opt_table, 
-                               $row->{picture}, 
-                               $row->{picture_type});
-            } else {
-                foreach my $t (sort keys %tableList) {
-                    store_picture ($i, 
-                                   $cnt,
-                                   $t,
-                                   $row->{picture}, 
-                                   $row->{picture_type});
-                }
-            }
-            
-        }
     }
+    return;
 }
-    
+
 # -------------
 # Main routine
 # -------------
@@ -281,17 +92,14 @@ print ">>> ring-resize     v:23-Oct-2016\n";
 
 # -- get options
 GetOptions(
-           'debug'          => \$opt_debug,
-           'dateupdate'     => \$opt_dateupdate,
-           'end=i'          => \$opt_end,
-           'help'           => \$opt_help,
-           'manual'         => \$opt_manual,
-           'start=i'        => \$opt_start,
-           'update'         => \$opt_update
-           );
+    'conf=s'     => \$opt_conf,
+    'debug'      => \$opt_debug,
+    'help'       => \$opt_help,
+    'manual'     => \$opt_manual
+);
 
 # -- help the poor souls out
-if (@ARGV && $ARGV[0] == 'help') {
+if (!@ARGV || $ARGV[0] == 'help') {
     $opt_help = 1;
 }
 if ($opt_help) {
@@ -301,8 +109,18 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-get_config($opt_conf);
+# Set the picture range to process from the command line
+my $pid_start = $ARGV[0];
+if ($pid_start < 1) {
+    pod2usage(-verbose => 0);
+}
+my $pid_end = $pid_start;
+if ($ARGV[1]) {
+    $pid_end = $ARGV[1];
+}
 
+# Get configuration settings and initial debugging if requested.
+get_config($opt_conf);
 if ($opt_debug) {
     $CONF->debug($opt_debug);
 }
@@ -310,17 +128,11 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
-# -- Open up connections to the MySQL data
+# Open up connections to the MySQL data
 db_connect();
-
-if (length($opt_start) == 0) {
-    msg('fatal', 'Starting number required.  Try 1.');
-    pod2usage(-verbose => 0);
-}
-
 %SIZE_IDS = get_picture_sizes();
 
-read_and_update();
+read_and_update($pid_start, $pid_end);
 
 exit;
 
@@ -332,11 +144,7 @@ ring-resize
 
 =head1 SYNOPSIS
 
- ring-resize --start=int [--end=int] [--update] [--dateupdate] \
-              [--host=mysql-host] [--db=databasename] \
-              --user=mysql-username --pass=mysql-password 
-              [--debug] [--help] [--manual] 
-
+ring-resize <start pid> [<end pid>] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -398,4 +206,3 @@ Turns on debugging displays.
 Bill MacAllister <bill@macallister.grass-valley.ca.us>
 
 =cut
-
