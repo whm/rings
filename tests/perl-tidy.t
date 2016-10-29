@@ -43,9 +43,7 @@ for my $s (@perl_list) {
     system(@cmd);
 
     @cmd = ('diff', '-u', $s, $t);
-    system(@cmd) == 0
-        or die "$s is UNTIDY\n";
-
-    ok ('success', 'Tidy');
+    my $stat = system(@cmd);
+    ok($stat == 0, "Tidy $s");
     unlink $t;
 }
