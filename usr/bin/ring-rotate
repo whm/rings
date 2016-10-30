@@ -1,85 +1,30 @@
 #!/usr/bin/perl
+#
+# ring-rotate - rotate a picture in the database
 
 use strict;
 use Cwd;
 use DBI;
+use File::Copy;
 use Getopt::Long;
 use Image::Magick;
 use Pod::Usage;
-use Time::Local;
+use Rings::Common;
 
-our %prefs;
-our %tableList;
-our $dbh;
-our $dbh_update;
-our $debug;
-our $debug_time;
-our $opt_db;
-our $opt_debug;
-our $opt_end;
-our $opt_host;
-our $opt_help;
-our $opt_left;
-our $opt_manual;
-our $opt_pass;
-our $opt_right;
-our $opt_start;
-our $opt_user;
-our $opt_update;
+my %prefs;
+my %tableList;
 
-# ------------------------------------------------
-# output debugging information
+my $opt_debug;
+my $opt_help;
+my $opt_left;
+my $opt_manual;
+my $opt_right;
 
-sub dbg {
-    
-    (my $tmp) = @_;
-    
-    my $now = time;
-    my $elapsed = $now - $debug_time;
-    print "$now ($elapsed) $tmp \n";
-    $debug_time = $now;
-    return;
-    
-}
+##############################################################################
+# Subroutines
+##############################################################################
 
-# ------------------------------------------------
-# sql date time string from unix time stamp
-
-sub sql_datetime {
-    
-    my ($dt) = @_;
-    
-    if (length($dt)==0) {$dt = time}
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
-    $mon++;
-    $year += 1900;
-    
-    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
-    $year,$mon,$mday,$hour,$min,$sec;
-}
-
-# ------------------------------------------------
-# unix time stamp from sql date time string
-
-sub unix_seconds {
-    
-    my ($dt) = @_;
-    
-    my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
-        my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
-        $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
-    }
-    return $ret;
-}
-
-# ------------------------------------------------
+# ------------------------------------------------------------------------
 # rotate a picture
 
 sub rotate_picture {
@@ -131,23 +76,23 @@ sub rotate_picture {
     $cmd .= 'WHERE pid = ? ';
     my $sth_update = $dbh_update->prepare ($cmd);
     if ($opt_debug) {dbg($cmd);}
-    if ($opt_update) {
-        $sth_update->execute(
-                             $thisType,
-                             $height,
-                             $width,
-                             $bPic[0],
-                             sql_datetime(),
-                             $thisPID,
-                            );
+    $sth_update->execute(
+        $thisType,
+        $height,
+        $width,
+        $bPic[0],
+        sql_datetime(),
+        $thisPID,
+        );
     }
-    
+    return;
 }
 
 # ------------------------------------------------
 # process the files
 
 sub read_and_update {
+    my ($pid_start, $pid_end) = @_;
     
     my %pidList;
     
@@ -156,10 +101,7 @@ sub read_and_update {
     my $sel = "SELECT pid,";
     $sel .= "file_name ";
     $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $opt_start ";
-    if ($opt_end >= $opt_start) {
-        $sel .= "AND pid <= $opt_end ";
-    }
+    $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
     $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {dbg($sel);}
@@ -199,117 +141,51 @@ sub read_and_update {
 # Main routine
 # -------------
 
-print ">>> ring-rotate    v:08-Oct-2011\n";
+print ">>> ring-rotate    v:29-Oct-2016\n";
 
 # -- get options
 GetOptions(
-           'db=s'    => \$opt_db,
-           'debug'   => \$opt_debug,
-           'end=i'   => \$opt_end,
-           'help'    => \$opt_help,
-           'host=s'  => \$opt_host,
-           'left'    => \$opt_left,
-           'manual'  => \$opt_manual,
-           'pass=s'  => \$opt_pass,
-           'right'   => \$opt_right,
-           'start=i' => \$opt_start,
-           'user=s'  => \$opt_user,
-           'update'  => \$opt_update
-           );
+    'debug'  => \$opt_debug,
+    'help'   => \$opt_help,
+    'left'   => \$opt_left,
+    'manual' => \$opt_manual,
+    'right'  => \$opt_right
+);
 
-# -- help the poor souls out
+# help the poor souls out
+if (@ARGV && $ARGV[0] == 'help') {
+    $opt_help = 1;
+}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
-# -- read preferences from ./rings
-my $pref_file = $ARGV[0];
+get_config($opt_conf);
 
-$pref_file = $ENV{'HOME'}.'/.rings'   unless $pref_file;
-$pref_file = ''                       unless -e $pref_file;
-
-$pref_file = '/etc/whm/rings_db.conf' unless $pref_file;
-$pref_file = ''                       unless -e $pref_file;
-
-if ( -e $pref_file) {
-    if ($opt_debug) {dbg("Reading $pref_file file");}
-    open (pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {dbg("inline:$inline");}
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)\s*=\s*(.*)/i) {
-                my $attr = lc($1);
-                my $val = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {dbg("attr:$attr val:$val");}
-            }
-        }
-    }
-    close pref;
-}
-
-foreach my $a (sort keys %prefs) {print "$a -> $prefs{$a}\n";}
-
-$opt_host = $prefs{'host'} unless $opt_host;
-$opt_host = 'localhost'    unless $opt_host;
-
-$opt_db = $prefs{'db'} unless $opt_db;
-$opt_db = 'rings'      unless $opt_db;
-
-$opt_pass = $prefs{'pass'} unless $opt_pass;
-$opt_user = $prefs{'user'} unless $opt_user;
-
-if (length($opt_start) == 0) {
-    print "%MAC-F-STARTREQ, Starting number required.  Try 1.\n";
+# Set the picture range to process from the command line
+my $pid_start = $ARGV[0];
+if ($pid_start < 1) {
     pod2usage(-verbose => 0);
 }
-
-if (length($opt_pass) == 0) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-if (length($opt_user) == 0) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 0);
-    exit;
+my $pid_end = $pid_start;
+if ($ARGV[1]) {
+    $pid_end = $ARGV[1];
 }
 
-%tableList = ('pictures_small' => 1,
-              'pictures_large' => 1,
-              'pictures_larger' => 1,
-              'pictures_1280_1024' =>1);
-
-if ($opt_debug) {dbg ("Initialize timer.");}
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
+}
 
 # -- Open up connections to the MySQL data
+db_connect();
 
-print "$opt_host\n";
-print "$opt_db\n";
-print "$opt_user\n";
-print "$opt_pass\n";
-
-my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
-$dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 10000000;
-$dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
-
-read_and_update();
-
-$dbh->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
-$dbh_update->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (update)";
+read_and_update($pid_start, $pid_end);
 
 exit;
 
@@ -321,10 +197,7 @@ ring-rotate
 
 =head1 SYNOPSIS
 
-ring-rotate [--right] [--left] [--update] [--host=mysql-host]
-[--db=databasename] --user=mysql-username --pass=mysql-password
-[--debug] [--help] [--manual]
-
+ring-rotate [--right] [--left] [--debug] [--help] [--manual] <pid>
 
 =head1 DESCRIPTION
 
@@ -341,31 +214,6 @@ Rotate the picture 90 degrees.
 =item --left
 
 Rotate the picture -90 degrees
-
-=item --host=mysql-hostname
-
-MySQL host name.  If not specified then localhost is used.
-
-=item --db=databasename
-
-The name of the MySQL database.  If not specified then rings is used.
-
-=item --user=mysql-username
-
-MySQL username.  Required.
-
-=item --host=mysql-password
-
-MySQL password.  Required.
-
-=item --update
-
-Actually load the data into the rings database.
-
-=item --dateupdate
-
-Update the date taken and picture size in the data base if they
-are available in the image.
 
 =item --help
 
