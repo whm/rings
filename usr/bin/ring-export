@@ -9,12 +9,9 @@ use DBI;
 use File::HomeDir;
 use Getopt::Long;
 use Pod::Usage;
-use Time::Local;
+use Rings::Common;
 
 my %PROPS;
-my $DBH;
-my $DEBUG;
-my $DEBUG_TIME;
 my $opt_debug;
 my $opt_example;
 my $opt_help;
@@ -54,23 +51,22 @@ sub display_example {
     print "#  pid\n";
     print "#\n";
     print "# pictures_information p\n";
-    print "# pid\n";
-    print "# group_path\n";
-    print "# key_words\n";
-    print "# file_name\n";
-    print "# date_taken\n";
-    print "# picture_date\n";
-    print "# picture_sequence\n";
-    print "# taken_by\n";
-    print "# description\n";
-    print "# grade\n";
-    print "# public\n";
-    print "# raw_picture_size\n";
-    print "# camera\n";
-    print "# shutter_speed\n";
-    print "# fstop\n";
-    print "# date_last_maint\n";
-    print "# date_added\n";
+    print "#  pid\n";
+    print "#  source_file\n";
+    print "#  key_words\n";
+    print "#  file_name\n";
+    print "#  date_taken\n";
+    print "#  picture_date\n";
+    print "#  picture_sequence\n";
+    print "#  taken_by\n";
+    print "#  description\n";
+    print "#  grade\n";
+    print "#  public\n";
+    print "#  camera\n";
+    print "#  shutter_speed\n";
+    print "#  fstop\n";
+    print "#  date_last_maint\n";
+    print "#  date_added\n";
     print "#\n";
     print "selection = uid='zid-1969-macallister-slides-1'\n";
 
@@ -104,32 +100,7 @@ sub display_example {
     print "#\n";
     print "largest = 1\n";
 
-    print "#\n";
-    print "# Data base credentials\n";
-    print "#\n";
-    print "host = localhost.domain.com\n";
-    print "database = rings\n";
-    print "user = username\n";
-    print "pass = password\n";
-
     return;
-
-}
-
-# ------------------------------------------------
-# sql date time string from unix time stamp
-
-sub sql_datetime {
-
-    my ($dt) = @_;
-
-    if (length($dt)==0) {$dt = time}
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
-    $mon++;
-    $year += 1900;
-
-    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
-                    $year,$mon,$mday,$hour,$min,$sec;
 }
 
 # ------------------------------------------------
@@ -153,27 +124,6 @@ sub test_boolean {
 
     return $result;
 
-}
-
-# ------------------------------------------------
-# unix time stamp from sql date time string
-
-sub unix_seconds {
-
-    my ($dt) = @_;
-
-    my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
-        my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
-        $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
-    }
-    return $ret;
 }
 
 # ------------------------------------------------
@@ -397,7 +347,7 @@ sub read_and_write {
     $sel .= "FROM picture_details d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON d.pid=p.pid ";
-    $sel .= "WHERE ".$PROPS{'selection'}." ";
+    $sel .= "WHERE " . $PROPS{'selection'}." ";
     my $sth = $DBH->prepare ($sel);
     if ($opt_debug) {dbg($sel);}
     $sth->execute();
@@ -670,48 +620,43 @@ GetOptions(
     );
 
 # -- help the poor souls out
+if (@ARGV && $ARGV[0] == 'help') {
+    $opt_help = 1;
+}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
-}
-if ($opt_example) {
-    display_example();
-    exit 1;
+    pod2usage(-verbose => 2);
 }
 
-if (length($opt_properties) == 0) {
-    print "%MAC-F-PROPREQ, a properties file is required\n";
-    pod2usage(-verbose => 0);
-}
-
-if ($opt_debug) {debug_output ("Initialize timer.");}
-
-# -- read the properties
-
-my $rfile = File::HomeDir->my_home . '/.rings';
-read_properties($rfile);
-read_properties($opt_properties);
+get_config($opt_conf);
 
 if ($opt_debug) {
-    foreach my $a (sort keys %PROPS) {
-        print "property $a = $PROPS{$a}\n";
-    }
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
 }
 
 # -- Open up connections to the MySQL data
+db_connect();
 
-my $dbi = "dbi:mysql:host=".$PROPS{'host'}.";database=rings";
-$DBH = DBI->connect ($dbi, $PROPS{'user'}, $PROPS{'pass'})
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$DBH->{LongTruncOk} = 1;
-$DBH->{LongReadLen} = 10000000;
+if (!-e $opt_properties) {
+    msg('fatal', 'a properties file is required';
+    pod2usage(-verbose => 0);
+}
+
+# -- read the properties
+
+read_properties($opt_properties);
+if ($opt_debug) {
+    foreach my $a (sort keys %PROPS) {
+        dbg("property $a = $PROPS{$a}");
+    }
+}
 
 read_and_write();
-
-$DBH->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
 
 exit;
 
@@ -719,7 +664,7 @@ __END__
 
 =head1 NAME
 
-ring_export.pl
+ring_export
 
 =head1 SYNOPSIS
 
@@ -738,9 +683,6 @@ Write a ring to disk for use on non-php web site.
 The filename that has properties.  Properties are in attribute=value
 format.  Valid attributes are:
 
-  host = mysql host name
-  user = mysql user name
-  pass = mysql password
   selection = sql selection clause
   path = file-path used as prefix to all file created
   html = true|false

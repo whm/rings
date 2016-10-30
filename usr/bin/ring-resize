@@ -35,10 +35,7 @@ sub read_and_update {
 
     my $sel = "SELECT pid, picture_lot ";
     $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $pid_start ";
-    if ($pid_end >= $pid_start) {
-        $sel .= "AND pid <= $pid_end ";
-    }
+    $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
     $sel .= "ORDER BY pid ";
     my $sth = $dbh->prepare ($sel);
     if ($opt_debug) {dbg($sel);}

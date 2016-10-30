@@ -140,7 +140,7 @@ GetOptions(
     'path=s' => \$opt_path,
 );
 
-# -- help the poor souls out
+# help the poor souls out
 if (@ARGV && $ARGV[0] == 'help') {
     $opt_help = 1;
 }
