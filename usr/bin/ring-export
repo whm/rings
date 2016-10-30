@@ -13,25 +13,15 @@ use Rings::Common;
 
 my %PROPS;
 my $opt_debug;
+my $opt_conf;
 my $opt_example;
 my $opt_help;
 my $opt_manual;
 my $opt_properties;
 
-# ------------------------------------------------
-# output debugging information
-
-sub dbg {
-
-    (my $tmp) = @_;
-
-    my $now = time;
-    my $elapsed = $now - $DEBUG_TIME;
-    print "$now ($elapsed) $tmp \n";
-    $DEBUG_TIME = $now;
-    return;
-
-}
+##############################################################################
+# Subroutines
+##############################################################################
 
 # ------------------------------------------------
 # Print an example properties file
@@ -115,7 +105,9 @@ sub test_boolean {
     my $result = 0;
 
     if ($in =~ /^(\d+)$/) {
-        if ($1 != 0) {$result = 1;}
+        if ($1 != 0) {
+            $result = 1;
+        }
     } elsif ($in =~ /^true$/) {
         $result = 1;
     } elsif ($in =~ /^yes$/) {
@@ -142,12 +134,12 @@ sub read_properties {
         dbg("Reading properties file: $pfile");
     }
 
-    open (f, '<', $pfile);
+    open(f, '<', $pfile);
     while (<f>) {
         if (!/^\#/) {
             if (/^\s*(.*?)\=(.*)$/) {
                 my $attr = $1;
-                my $val = $2;
+                my $val  = $2;
                 $attr =~ s/^\s+//;
                 $attr =~ s/\s+$//;
                 $val =~ s/^\s+//;
@@ -166,8 +158,10 @@ sub read_properties {
 sub write_file {
 
     my ($f, $c) = @_;
-    if ($opt_debug) {dbg ("writing file:$f");}
-    open (outfile, '>', $PROPS{'path'} . $f);
+    if ($opt_debug) {
+        dbg("writing file:$f");
+    }
+    open(outfile, '>', $PROPS{'path'} . $f);
     print outfile $c;
     close outfile;
 }
@@ -177,18 +171,10 @@ sub write_file {
 
 sub write_html {
 
-    my ($last_f,
-        $this_f,
-        $this_i,
-        $next_f,
-        $lfile,
-        $ltitle,
-        $mfile,
-        $mtitle,
-        $rfile,
-        $rtitle,
-        $desc,
-        $pid) = @_;
+    my (
+        $last_f, $this_f, $this_i, $next_f, $lfile, $ltitle,
+        $mfile,  $mtitle, $rfile,  $rtitle, $desc,  $pid
+    ) = @_;
 
     # -- get list of people, places
     my $sel = "SELECT ";
@@ -199,18 +185,22 @@ sub write_html {
     $sel .= "WHERE d.pid='$pid' ";
     $sel .= "AND p.display_name NOT LIKE 'ZID%' ";
     $sel .= "ORDER BY p.display_name ";
-    my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
+    if ($opt_debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
     $sth->execute();
     my @names;
     my $name_cnt = 0;
+
     while (my $row = $sth->fetchrow_hashref) {
         push @names, $row->{display_name};
         $name_cnt++;
     }
 
     # -- Create HTML
-    open (f, '>', $PROPS{'path'} . $this_f);
+    open(f, '>', $PROPS{'path'} . $this_f);
     print f "<html>\n";
     print f "<head>\n";
     print f "<title>Picture Show</title>\n";
@@ -347,9 +337,12 @@ sub read_and_write {
     $sel .= "FROM picture_details d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON d.pid=p.pid ";
-    $sel .= "WHERE " . $PROPS{'selection'}." ";
-    my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
+    $sel .= "WHERE " . $PROPS{'selection'} . " ";
+    if ($opt_debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
     $sth->execute();
     $sth->finish();
 
@@ -363,12 +356,15 @@ sub read_and_write {
     $sel .= "JOIN tmp_picture_list tmp ";
     $sel .= "ON (tmp.pid = pic.pid) ";
     $sel .= "ORDER BY pic.picture_date ";
-    my $sth = $DBH->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
+    if ($opt_debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
     $sth->execute();
 
     my $hfile_index = 'index.html';
-    my $index_html ='';
+    my $index_html  = '';
 
     # -- create the thumbnail index
     $index_html .= "<html>\n";
@@ -409,7 +405,7 @@ sub read_and_write {
 
     while (my $row = $sth->fetchrow_hashref) {
 
-        dbg ("Processing $row->{pid} $row->{picture_date}");
+        dbg("Processing $row->{pid} $row->{picture_date}");
 
         my $img_sel = "SELECT ";
         $img_sel .= "rw.picture raw, ";
@@ -427,13 +423,16 @@ sub read_and_write {
         $img_sel .= "JOIN pictures_small sm ";
         $img_sel .= "ON (sm.pid = rw.pid) ";
         $img_sel .= "WHERE rw.pid = '$row->{pid}' ";
-        my $img_sth = $DBH->prepare ($img_sel);
-        if ($opt_debug) {dbg($img_sel);}
+        if ($opt_debug) {
+            dbg($img_sel);
+        }
+
+        my $img_sth = $DBH->prepare($img_sel);
         $img_sth->execute();
 
         if (my $img_row = $img_sth->fetchrow_hashref) {
 
-            my $pic_root = 'PIC-'.$row->{picture_date}.'-'.$row->{pid};
+            my $pic_root = 'PIC-' . $row->{picture_date} . '-' . $row->{pid};
             $pic_root =~ s/\s+//g;
             $pic_root =~ s/://g;
 
@@ -447,42 +446,38 @@ sub read_and_write {
 
                 # -- write the previous html file
                 if (length($this_hfile) > 0) {
-                    write_html ($last_hfile,
-                                $this_hfile,
-                                $pfile,
-                                $next_hfile,
-                                $this_hfile_large,   'Large',
-                                $this_hfile_larger,  "Larger",
-                                $this_hfile_largest, "Largest",
-                                $this_desc,
-                                $this_pid);
-                    write_html ($last_hfile_large,
-                                $this_hfile_large,
-                                $pfile_large,
-                                $next_hfile_large,
-                                $this_hfile,         'Raw',
-                                $this_hfile_larger,  "Larger",
-                                $this_hfile_largest, "Largest",
-                                $this_desc,
-                                $this_pid);
-                    write_html ($last_hfile_larger,
-                                $this_hfile_larger,
-                                $pfile_larger,
-                                $next_hfile_larger,
-                                $this_hfile,         'Raw',
-                                $this_hfile_large,   "Large",
-                                $this_hfile_largest, "Largest",
-                                $this_desc,
-                                $this_pid);
-                    write_html ($last_hfile_largest,
-                                $this_hfile_largest,
-                                $pfile_largest,
-                                $next_hfile_largest,
-                                $this_hfile,        'Raw',
-                                $this_hfile_large,  "Large",
-                                $this_hfile_larger, "Larger",
-                                $this_desc,
-                                $this_pid);
+                    write_html(
+                        $last_hfile,         $this_hfile,
+                        $pfile,              $next_hfile,
+                        $this_hfile_large,   'Large',
+                        $this_hfile_larger,  "Larger",
+                        $this_hfile_largest, "Largest",
+                        $this_desc,          $this_pid
+                    );
+                    write_html(
+                        $last_hfile_large,   $this_hfile_large,
+                        $pfile_large,        $next_hfile_large,
+                        $this_hfile,         'Raw',
+                        $this_hfile_larger,  "Larger",
+                        $this_hfile_largest, "Largest",
+                        $this_desc,          $this_pid
+                    );
+                    write_html(
+                        $last_hfile_larger,  $this_hfile_larger,
+                        $pfile_larger,       $next_hfile_larger,
+                        $this_hfile,         'Raw',
+                        $this_hfile_large,   "Large",
+                        $this_hfile_largest, "Largest",
+                        $this_desc,          $this_pid
+                    );
+                    write_html(
+                        $last_hfile_largest, $this_hfile_largest,
+                        $pfile_largest,      $next_hfile_largest,
+                        $this_hfile,         'Raw',
+                        $this_hfile_large,   "Large",
+                        $this_hfile_larger,  "Larger",
+                        $this_desc,          $this_pid
+                    );
                 }
                 $last_hfile         = $this_hfile;
                 $last_hfile_large   = $this_hfile_large;
@@ -492,8 +487,8 @@ sub read_and_write {
                 $this_hfile_large   = $next_hfile_large;
                 $this_hfile_larger  = $next_hfile_larger;
                 $this_hfile_largest = $next_hfile_largest;
-                $this_desc = $row->{description};
-                $this_pid = $row->{pid};
+                $this_desc          = $row->{description};
+                $this_pid           = $row->{pid};
 
                 # -- image file names
                 $pfile         = $pic_root . '-raw.jpg';
@@ -503,11 +498,11 @@ sub read_and_write {
                 $pfile_largest = $pic_root . '-largest.jpg';
 
                 # -- write the image files
-                write_file ($pfile,         $img_row->{raw});
-                write_file ($pfile_small,   $img_row->{sm});
-                write_file ($pfile_large,   $img_row->{lg});
-                write_file ($pfile_larger,  $img_row->{lgr});
-                write_file ($pfile_largest, $img_row->{lgst});
+                write_file($pfile,         $img_row->{raw});
+                write_file($pfile_small,   $img_row->{sm});
+                write_file($pfile_large,   $img_row->{lg});
+                write_file($pfile_larger,  $img_row->{lgr});
+                write_file($pfile_largest, $img_row->{lgst});
 
                 # -- generate index html
                 if ($i_cnt == 0) {
@@ -521,7 +516,9 @@ sub read_and_write {
                 $index_html .= "<img src=\"$pfile_small\" border=\"0\">";
                 $index_html .= "</a>\n";
                 $i_cnt++;
-                if ($i_cnt >= $i_per) {$i_cnt = 0;}
+                if ($i_cnt >= $i_per) {
+                    $i_cnt = 0;
+                }
             } else {
 
                 # -- image file names
@@ -533,19 +530,19 @@ sub read_and_write {
 
                 # -- write the image files
                 if (test_boolean($PROPS{'raw'})) {
-                    write_file ($pfile, $img_row->{raw});
+                    write_file($pfile, $img_row->{raw});
                 }
                 if (test_boolean($PROPS{'thumb'})) {
-                    write_file ($pfile_small,  $img_row->{sm});
+                    write_file($pfile_small, $img_row->{sm});
                 }
                 if (test_boolean($PROPS{'large'})) {
-                    write_file ($pfile_large,  $img_row->{lg});
+                    write_file($pfile_large, $img_row->{lg});
                 }
                 if (test_boolean($PROPS{'larger'})) {
-                    write_file ($pfile_larger, $img_row->{lgr});
+                    write_file($pfile_larger, $img_row->{lgr});
                 }
                 if (test_boolean($PROPS{'largest'})) {
-                    write_file ($pfile_largest, $img_row->{lgst});
+                    write_file($pfile_largest, $img_row->{lgst});
                 }
             }
         }
@@ -554,42 +551,38 @@ sub read_and_write {
     if (test_boolean($PROPS{'html'})) {
         # -- write last html file
         if (length($this_hfile) > 0) {
-            write_html ($last_hfile,
-                        $this_hfile,
-                        $pfile,
-                        '',
-                        $this_hfile_large,   'Large',
-                        $this_hfile_larger,  "Larger",
-                        $this_hfile_largest, "Largest",
-                        $this_desc,
-                        $this_pid);
-            write_html ($last_hfile_large,
-                        $this_hfile_large,
-                        $pfile_large,
-                        '',
-                        $this_hfile,         'Raw',
-                        $this_hfile_larger,  "Larger",
-                        $this_hfile_largest, "Largest",
-                        $this_desc,
-                        $this_pid);
-            write_html ($last_hfile_larger,
-                        $this_hfile_larger,
-                        $pfile_larger,
-                        '',
-                        $this_hfile,         'Raw',
-                        $this_hfile_large,   "Large",
-                        $this_hfile_largest, "Largest",
-                        $this_desc,
-                        $this_pid);
-            write_html ($last_hfile_largest,
-                        $this_hfile_largest,
-                        $pfile_largest,
-                        '',
-                        $this_hfile,        'Raw',
-                        $this_hfile_large,  "Large",
-                        $this_hfile_larger, "Larger",
-                        $this_desc,
-                        $this_pid);
+            write_html(
+                $last_hfile,         $this_hfile,
+                $pfile,              '',
+                $this_hfile_large,   'Large',
+                $this_hfile_larger,  "Larger",
+                $this_hfile_largest, "Largest",
+                $this_desc,          $this_pid
+            );
+            write_html(
+                $last_hfile_large,   $this_hfile_large,
+                $pfile_large,        '',
+                $this_hfile,         'Raw',
+                $this_hfile_larger,  "Larger",
+                $this_hfile_largest, "Largest",
+                $this_desc,          $this_pid
+            );
+            write_html(
+                $last_hfile_larger,  $this_hfile_larger,
+                $pfile_larger,       '',
+                $this_hfile,         'Raw',
+                $this_hfile_large,   "Large",
+                $this_hfile_largest, "Largest",
+                $this_desc,          $this_pid
+            );
+            write_html(
+                $last_hfile_largest, $this_hfile_largest,
+                $pfile_largest,      '',
+                $this_hfile,         'Raw',
+                $this_hfile_large,   "Large",
+                $this_hfile_larger,  "Larger",
+                $this_desc,          $this_pid
+            );
         }
 
         # -- finish off the index
@@ -599,28 +592,29 @@ sub read_and_write {
         $index_html .= "\n";
         $index_html .= "</body>\n";
         $index_html .= "</html>\n";
-        write_file ($hfile_index, $index_html);
-        write_file ('aaa'.$hfile_index, $index_html);
+        write_file($hfile_index,         $index_html);
+        write_file('aaa' . $hfile_index, $index_html);
     }
 }
 
-# -------------
-# Main routine
-# -------------
+##############################################################################
+# Main Routine
+##############################################################################
 
 print ">>> ring-export\n";
 
 # -- get options
 GetOptions(
     'debug'        => \$opt_debug,
+    'conf=s'       => \$opt_conf,
     'example'      => \$opt_example,
     'help'         => \$opt_help,
     'manual'       => \$opt_manual,
     'properties=s' => \$opt_properties
-    );
+);
 
-# -- help the poor souls out
-if (@ARGV && $ARGV[0] == 'help') {
+# help the poor souls out
+if (!@ARGV || $ARGV[0] == 'help') {
     $opt_help = 1;
 }
 if ($opt_help) {
@@ -630,8 +624,18 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-get_config($opt_conf);
+# Set the picture range to process from the command line
+my $pid_start = $ARGV[0];
+if ($pid_start < 1) {
+    pod2usage(-verbose => 0);
+}
+my $pid_end = $pid_start;
+if ($ARGV[1]) {
+    $pid_end = $ARGV[1];
+}
 
+# Get configuration settings and initial debugging if requested.
+get_config($opt_conf);
 if ($opt_debug) {
     $CONF->debug($opt_debug);
 }
@@ -639,11 +643,11 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
-# -- Open up connections to the MySQL data
+# Open up connections to the MySQL data
 db_connect();
 
 if (!-e $opt_properties) {
-    msg('fatal', 'a properties file is required';
+    msg('fatal', 'a properties file is required');
     pod2usage(-verbose => 0);
 }
 
@@ -656,7 +660,7 @@ if ($opt_debug) {
     }
 }
 
-read_and_write();
+read_and_write($pid_start, $pid_end);
 
 exit;
 

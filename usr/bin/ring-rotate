@@ -14,6 +14,7 @@ use Rings::Common;
 my %prefs;
 my %tableList;
 
+my $opt_conf;
 my $opt_debug;
 my $opt_help;
 my $opt_left;
@@ -29,44 +30,35 @@ my $opt_right;
 
 sub rotate_picture {
 
-    my ($thisPID, 
-        $thisSeq,
-        $thisPicture,
-        $thisType) = @_;
-    
-    dbg (" Processing $thisPID");
-    
+    my ($thisPID, $thisSeq, $thisPicture, $thisType) = @_;
+
+    dbg(" Processing $thisPID");
+
     my @blob;
     $blob[0] = $thisPicture;
     my $thisPic = Image::Magick->New();
     $thisPic->BlobToImage(@blob);
-    my ($width, 
-        $height, 
-        $size, 
-        $format, 
-        $compression,
-        $camera,
-        $this_datetime,
-        $this_shutterspeed,
-        $this_fnumber) 
-        = $thisPic->Get('width',
-                        'height',
-                        'filesize',
-                        'format',
-                        'compression',
-                        '%[EXIF:Model]',
-                        '%[EXIF:DateTime]',
-                        '%[EXIF:ExposureTime]',
-                        '%[EXIF:FNumber]');
-    
+    my (
+        $width,         $height,            $size,
+        $format,        $compression,       $camera,
+        $this_datetime, $this_shutterspeed, $this_fnumber
+      )
+      = $thisPic->Get(
+        'width',            'height',
+        'filesize',         'format',
+        'compression',      '%[EXIF:Model]',
+        '%[EXIF:DateTime]', '%[EXIF:ExposureTime]',
+        '%[EXIF:FNumber]'
+      );
+
     # Rotate the image and create the blob to store
     if ($opt_right) {
         $thisPic->Rotate(degrees => 90);
     } else {
         $thisPic->Rotate(degrees => -90);
     }
-    my @bPic  = $thisPic->ImageToBlob();
-    
+    my @bPic = $thisPic->ImageToBlob();
+
     my $cmd = "UPDATE pictures_raw SET ";
     $cmd .= 'picture_type = ?,';
     $cmd .= 'width = ?,';
@@ -74,17 +66,13 @@ sub rotate_picture {
     $cmd .= 'picture = ?,';
     $cmd .= 'date_last_maint = ? ';
     $cmd .= 'WHERE pid = ? ';
-    my $sth_update = $dbh_update->prepare ($cmd);
-    if ($opt_debug) {dbg($cmd);}
-    $sth_update->execute(
-        $thisType,
-        $height,
-        $width,
-        $bPic[0],
-        sql_datetime(),
-        $thisPID,
-        );
+    if ($opt_debug) {
+        dbg($cmd);
     }
+
+    my $sth_update = $DBH_UPDATE->prepare($cmd);
+    $sth_update->execute($thisType, $height, $width, $bPic[0], sql_datetime(),
+        $thisPID);
     return;
 }
 
@@ -93,9 +81,9 @@ sub rotate_picture {
 
 sub read_and_update {
     my ($pid_start, $pid_end) = @_;
-    
+
     my %pidList;
-    
+
     # get a list of pids first
 
     my $sel = "SELECT pid,";
@@ -103,40 +91,42 @@ sub read_and_update {
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
     $sel .= "ORDER BY pid ";
-    my $sth = $dbh->prepare ($sel);
-    if ($opt_debug) {dbg($sel);}
+    if ($opt_debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
     $sth->execute();
     my $cnt = 0;
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
-        $pidList{$row->{pid}} = $row->{file_name};
+        $pidList{ $row->{pid} } = $row->{file_name};
     }
-    dbg ("$cnt pictures to process");
-    
+    dbg("$cnt pictures to process");
+
     # process the pictures
 
     my $cnt = 0;
-    foreach my $i (sort keys %pidList) {
-        dbg ("Processing $pidList{$i}...");
-        
+    for my $i (sort keys %pidList) {
+        dbg("Processing $pidList{$i}...");
+
         my $sel = "SELECT ";
         $sel .= "picture_type,";
         $sel .= "picture ";
         $sel .= "FROM pictures_raw ";
         $sel .= "WHERE pid = $i ";
-        my $sth = $dbh->prepare ($sel);
-        if ($opt_debug) {dbg($sel);}
+        if ($opt_debug) {
+            dbg($sel);
+        }
+
+        my $sth = $DBH->prepare($sel);
         $sth->execute();
-        
         if (my $row = $sth->fetchrow_hashref) {
-            rotate_picture ($i,
-                            $cnt,
-                            $row->{picture}, 
-                            $row->{picture_type});
+            rotate_picture($i, $cnt, $row->{picture}, $row->{picture_type});
         }
     }
 }
-    
+
 # -------------
 # Main routine
 # -------------
@@ -145,6 +135,7 @@ print ">>> ring-rotate    v:29-Oct-2016\n";
 
 # -- get options
 GetOptions(
+    'conf=s' => \$opt_conf,
     'debug'  => \$opt_debug,
     'help'   => \$opt_help,
     'left'   => \$opt_left,
@@ -234,4 +225,3 @@ Turns on debugging displays.
 Bill MacAllister <bill@macallister.grass-valley.ca.us>
 
 =cut
-
