@@ -26,7 +26,7 @@ for my $s (@perl_list) {
 
     $out = `$cmd --help 2>&1`;
     if (!ok($out =~ /^Usage/, "Help Switch ($s)")) {
-        `$cmd --help`;
+        print $out
     }
 
     my $t = "${s}.tdy";

@@ -5,167 +5,68 @@ use DBI;
 use Getopt::Long;
 use Pod::Usage;
 use Time::Local;
+use Rings::Common;
 
-our %prefs;
-our $dbh;
-our $dbh_update;
-our $debug;
-our $debug_time;
-our $opt_db;
-our $opt_debug;
-our $opt_help;
-our $opt_manual;
-our $opt_host;
-our $opt_user;
-our $opt_pass;
+my $opt_conf;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
 
-# ------------------------------------------------
-# output debugging information
+##############################################################################
+# Main Routine
+##############################################################################
 
-sub dbg {
-    
-    (my $tmp) = @_;
-    
-    my $now = time;
-    my $elapsed = $now - $debug_time;
-    print "$now ($elapsed) $tmp \n";
-    $debug_time = $now;
-    return;
-    
-}
-
-# ------------------------------------------------
-# sql date time string from unix time stamp
-
-sub sql_datetime {
-    
-    my ($dt) = @_;
-    
-    if (length($dt)==0) {$dt = time}
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($dt);
-    $mon++;
-    $year += 1900;
-    
-    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
-    $year,$mon,$mday,$hour,$min,$sec;
-}
-
-# ------------------------------------------------
-# unix time stamp from sql date time string
-
-sub unix_seconds {
-    
-    my ($dt) = @_;
-    
-    my $ret = time;
-    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/ ) {
-        my $yyyy = $1;
-        my $mm = $2;
-        my $dd = $3;
-        my $h = $4;
-        my $m = $5;
-        my $s = $6;
-        $mm--;
-        $ret = timelocal ($s, $m, $h, $dd, $mm, $yyyy);
-    }
-    return $ret;
-}
-
-# -------------
-# Main routine
-# -------------
-
-print ">>> ring-set-new                    v:30-Oct-2006\n";
+print ">>> ring-set-new   v:30-Oct-2016\n";
 
 # -- get options
 GetOptions(
-           'db=s'           => \$opt_db,
-           'debug'          => \$opt_debug,
-           'help'           => \$opt_help,
-           'host=s'         => \$opt_host,
-           'manual'         => \$opt_manual,
-           'pass=s'         => \$opt_pass,
-           'user=s'         => \$opt_user
-           );
+    'debug'  => \$opt_debug,
+    'help'   => \$opt_help,
+    'manual' => \$opt_manual
+);
 
 # -- help the poor souls out
+if (!@ARGV || $ARGV[0] == 'help') {
+    $opt_help = 1;
+}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 if ($opt_manual) {
-    pod2usage(-verbose => 1);
+    pod2usage(-verbose => 2);
 }
 
-# -- read preferences from ./rings
-my $pref_file = $ENV{'HOME'}.'/.rings';
-if ( -e $pref_file) {
-    if ($opt_debug) {dbg("Reading $pref_file file");}
-    open (pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {dbg("inline:$inline");}
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
-                my $attr = lc($1);
-                my $val = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {dbg("attr:$attr val:$val");}
-            }
-        }
-    }
-    close pref;
-}
-
-if (length($opt_host) == 0)    {$opt_host = $prefs{'host'};}
-if (length($opt_db) == 0)      {$opt_db = $prefs{'db'};}
-if (length($opt_pass) == 0)    {$opt_pass = $prefs{'pass'};}
-if (length($opt_user) == 0)    {$opt_user = $prefs{'user'};}
-
-if (length($opt_host) == 0) {
-    print "%MAC-F-HOSTREQ, a MySQL host is required\n";
+# Set the picture range to process from the command line
+my $pid_start = $ARGV[0];
+if ($pid_start < 1) {
     pod2usage(-verbose => 0);
-    exit;
+}
+my $pid_end = $pid_start;
+if ($ARGV[1]) {
+    $pid_end = $ARGV[1];
 }
 
-if (length($opt_db) == 0) {
-    print "%MAC-F-DBREQ, a MySQL database is required\n";
-    pod2usage(-verbose => 0);
-    exit;
+# Get configuration settings and initial debugging if requested.
+get_config($opt_conf);
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
 }
 
-if (length($opt_pass) == 0) {
-    print "%MAC-F-PASSREQ, a MySQL password is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-if (length($opt_user) == 0) {
-    print "%MAC-F-USERREQ, a MySQL username is required\n";
-    pod2usage(-verbose => 0);
-    exit;
-}
-
-if ($opt_debug) {dbg ("Initialize timer.");}
-
-# -- Open up connections to the MySQL data
-
-my $dbi = "dbi:mysql:host=$opt_host;database=$opt_db";
-$dbh = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for read\n";
-$dbh->{LongTruncOk} = 1;
-$dbh->{LongReadLen} = 10000000;
-$dbh_update = DBI->connect ($dbi, $opt_user, $opt_pass)
-    or die "%MAC-F-CANTCONN, Can't connect to database $dbi for update\n";
+# Open up connections to the MySQL data
+db_connect();
 
 my $sel = "SELECT i.pid pid ";
 $sel .= "FROM pictures_information i ";
 $sel .= "LEFT OUTER JOIN picture_details d ";
 $sel .= "ON (i.pid = d.pid) ";
 $sel .= "WHERE d.pid IS NULL ";
-my $sth = $dbh->prepare ($sel);
-if ($opt_debug) {dbg($sel);}
+my $sth = $DBH->prepare($sel);
+if ($opt_debug) {
+    dbg($sel);
+}
 $sth->execute();
 
 my @pidList;
@@ -175,17 +76,14 @@ while (my $row = $sth->fetchrow_hashref) {
 
 my $cmd = "INSERT INTO picture_details ";
 $cmd .= "(uid, pid) VALUES (?, ?) ";
-if ($opt_debug) {dbg($cmd);}
-my $sth_update = $dbh_update->prepare ($cmd);
+if ($opt_debug) {
+    dbg($cmd);
+}
+my $sth_update = $DBH_UPDATE->prepare($cmd);
 
 foreach my $i (@pidList) {
-    $sth_update->execute('new',$i);
+    $sth_update->execute('new', $i);
 }
-
-$dbh->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (read)";
-$dbh_update->disconnect
-    or die "MAC-F-DISCFAIL, Disconnect failed for $dbi (update)";
 
 exit;
 
@@ -197,10 +95,7 @@ ring-set-net
 
 =head1 SYNOPSIS
 
- ring-set-new \
-              --host=mysql-host --db=databasename \
-              --user=mysql-username --pass=mysql-password 
-              [--debug] [--help] [--manual] 
+ring-set-new [--conf=<configuration file>][--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
@@ -211,22 +106,9 @@ Set a UID of new for any picture that does not have at least one UID.
 
 =over 4
 
-=item --host=mysql-hostname
+=item --conf=<configuration file>
 
-MySQL host name.  Value from ~/.rings will be used if available.
-
-=item --db=databasename
-
-The name of the MySQL database.  Value from ~/.rings will be used if
-available.
-
-=item --user=mysql-username
-
-MySQL username.  Value from ~/.rings will be used if available.
-
-=item --host=mysql-password
-
-MySQL password.  Value from ~/.rings will be used if available.
+The name a Rings configuration file.
 
 =item --help
 
@@ -244,7 +126,6 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill@macallister.grass-valley.ca.us>
+Bill MacAllister <bill@ca-zephyr.org>
 
 =cut
-
