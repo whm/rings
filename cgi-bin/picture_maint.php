@@ -291,13 +291,12 @@ if (!empty($in_pid)) {
  <td><?php
     if (!empty($row['pid'])) {
         $pic_info = $row["pid"];
+        $pic_info .= '<br/> Lot:' . $row['picture_lot'];
         if (!empty($row['file_name'])) {
-            $pic_info .= ' File:' . $row['file_name'];
+            $pic_info .= '<br/> File:' . $row['file_name'];
         }
-        if (!empty($row['group_path'])) {
-            $pic_info .= ' Group:' . $row['group_path'];
-        }
-        $pic_info .= ' <a href="picture_reload.php?in_pid=' . $in_pid . '" '
+        $pic_info .= '<br/>'
+            . '<a href="picture_reload.php?in_pid=' . $in_pid . '" '
             . 'target="_blank">Reload</a>'
             . "\n";
         print $pic_info;
