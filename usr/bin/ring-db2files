@@ -75,10 +75,9 @@ sub read_and_write {
 
     while (my $row = $sth->fetchrow_hashref) {
         print "Processing $row->{'pid'}\n";
-        for my $s (keys %psizes) {
-            export_picture($row->{pid}, $row->{file_name},
-                $row->{picture_lot}, $s, $psizes{$s}{'picture_table'});
-        }
+        export_picture($row->{pid}, $row->{file_name}, $row->{picture_lot},
+            'raw', $psizes{'raw'}{'picture_table'});
+        queue_status_set($row->{pid});
     }
 }
 

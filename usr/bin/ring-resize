@@ -71,25 +71,6 @@ sub get_pids {
 }
 
 # ------------------------------------------------------------------------
-# Look up a list of pids to process and run a hash of pids and
-# picture_lots.
-
-sub update_queue_status {
-    my ($pid) = @_;
-
-    my $sel = 'DELETE FROM picture_resize_queue ';
-    $sel .= 'WHERE pid = ? ';
-    if ($opt_debug) {
-        dbg($sel);
-    }
-
-    my $sth = $DBH->prepare($sel);
-    $sth->execute($pid);
-
-    return;
-}
-
-# ------------------------------------------------------------------------
 # Read the raw file, scale the pictures, store the results
 
 sub read_and_update {
@@ -127,7 +108,7 @@ sub read_and_update {
                 }
             }
         }
-        update_queue_status($pid);
+        queue_status_reset($pid);
     }
     return;
 }

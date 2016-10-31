@@ -41,6 +41,8 @@ BEGIN {
       get_picture_types
       msg
       pid_to_path
+      queue_status_reset
+      queue_status_set
       sql_datetime
       store_meta_data
       trim
@@ -747,6 +749,42 @@ sub pid_to_path {
     $path =~ s{//}{/}xmsg;
 
     return $path;
+}
+
+# ------------------------------------------------------------------------
+# Set the picture queue status to pending
+
+sub queue_status_set {
+    my ($pid) = @_;
+
+    my $sel = 'INSERT INTO picture_resize_queue SET status = ? ';
+    $sel .= 'WHERE pid = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute('PENDING', $pid);
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Reset the picture queue status by deleting the entry in the table
+
+sub queue_status_reset {
+    my ($pid) = @_;
+
+    my $sel = 'DELETE FROM picture_resize_queue ';
+    $sel .= 'WHERE pid = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($pid);
+
+    return;
 }
 
 # ------------------------------------------------------------------------
