@@ -19,51 +19,96 @@ my $opt_debug;
 my $opt_force;
 my $opt_help;
 my $opt_manual;
+my $opt_sleep;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
 
 # ------------------------------------------------------------------------
-# Read the raw file, scale the pictures, store the results
+# Look up a list of pids to process and run a hash of pids and
+# picture_lots.
 
-sub read_and_update {
+sub get_pids {
     my ($pid_start, $pid_end) = @_;
 
-    my %pid_list;
+    my %pid_list = ();
 
-    # get a list of pids first
+    if ($pid_start == 'pending') {
+        my $sel = 'SELECT pictures_information.pid, ';
+        $sel .= 'pictures_information.picture_lot ';
+        $sel .= 'FROM pictures_information ';
+        $sel .= 'JOIN picture_resize_queue ';
+        $sel .= 'ON (picture_resize_queue.pid = pictures_information.pid) ';
+        $sel .= "WHERE picture_resize_queue.pid = 'PENDING' ";
+        $sel .= 'ORDER BY pid ';
+        if ($opt_debug) {
+            dbg($sel);
+        }
 
-    my $sel = "SELECT pid, picture_lot ";
-    $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
-    $sel .= "ORDER BY pid ";
-    my $sth = $DBH->prepare($sel);
+        my $sth = $DBH->prepare($sel);
+        $sth->execute();
+        while (my $row = $sth->fetchrow_hashref) {
+            $pid_list{ $row->{pid} } = $row->{picture_lot};
+        }
+    } else {
+        my $sel = 'SELECT pid, picture_lot ';
+        $sel .= 'FROM pictures_information ';
+        $sel .= 'WHERE pid >= ? AND pid <= ? ';
+        $sel .= 'ORDER BY pid ';
+        if ($opt_debug) {
+            dbg($sel);
+        }
+
+        my $sth = $DBH->prepare($sel);
+        $sth->execute($pid_start, $pid_end);
+        while (my $row = $sth->fetchrow_hashref) {
+            $pid_list{ $row->{pid} } = $row->{picture_lot};
+        }
+    }
+
+    return %pid_list;
+}
+
+# ------------------------------------------------------------------------
+# Look up a list of pids to process and run a hash of pids and
+# picture_lots.
+
+sub update_queue_status {
+    my ($pid) = @_;
+
+    my $sel = 'DELETE FROM picture_resize_queue ';
+    $sel .= 'WHERE pid = ? ';
     if ($opt_debug) {
         dbg($sel);
     }
-    $sth->execute();
-    my $cnt = 0;
-    while (my $row = $sth->fetchrow_hashref) {
-        $cnt++;
-        $pid_list{ $row->{pid} } = $row->{picture_lot};
-    }
-    dbg("$cnt pictures to process");
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($pid);
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Read the raw file, scale the pictures, store the results
+
+sub read_and_update {
+    my %pid_list = @_;
 
     # process the pictures
 
     my $cnt = 0;
-    foreach my $i (sort keys %pid_list) {
-        dbg("Processing $pid_list{$i} $i ...");
+    foreach my $pid (sort keys %pid_list) {
+        dbg("Processing $pid_list{$pid} $pid ...");
 
         # Get the raw picture
         my $pic_path
           = $CONF->picture_root . '/'
-          . $pid_list{$i} . '/'
-          . $pid_list{$i}
-          . "/raw/${i}.jpg";
+          . $pid_list{$pid} . '/'
+          . $pid_list{$pid}
+          . "/raw/${pid}.jpg";
         if (!-e $pic_path) {
-            msg('error', "Raw picture not found for $i");
+            msg('error', "Raw picture not found for $pid");
             next;
         }
 
@@ -72,9 +117,9 @@ sub read_and_update {
         my $file_type = '.jpg';
         foreach my $s (sort keys %SIZE_IDS) {
             if ($s ne 'raw') {
-                my $pic = create_picture($i, $s, $raw, $mime_type);
-                my $ppath = create_picture_dirs($pid_list{$i}, $s);
-                my $pfile = "${ppath}/${i}.${file_type}";
+                my $pic = create_picture($pid, $s, $raw, $mime_type);
+                my $ppath = create_picture_dirs($pid_list{$pid}, $s);
+                my $pfile = "${ppath}/${pid}.${file_type}";
                 if (!-e $pfile || $opt_force) {
                     open(my $fh, '>', $pfile);
                     print $fh $pic;
@@ -82,23 +127,25 @@ sub read_and_update {
                 }
             }
         }
+        update_queue_status($pid);
     }
     return;
 }
 
-# -------------
-# Main routine
-# -------------
+##############################################################################
+# Main Routine
+##############################################################################
 
-print ">>> ring-resize     v:23-Oct-2016\n";
+print ">>> ring-resize  v:23-Oct-2016\n";
 
 # -- get options
 GetOptions(
-    'conf=s' => \$opt_conf,
-    'debug'  => \$opt_debug,
-    'force'  => \$opt_force,
-    'help'   => \$opt_help,
-    'manual' => \$opt_manual
+    'conf=s'  => \$opt_conf,
+    'debug'   => \$opt_debug,
+    'force'   => \$opt_force,
+    'help'    => \$opt_help,
+    'manual'  => \$opt_manual,
+    'sleep=i' => \$opt_sleep
 );
 
 # help the poor souls out
@@ -113,9 +160,12 @@ if ($opt_manual) {
 }
 
 # Set the picture range to process from the command line
-my $pid_start = $ARGV[0];
-if ($pid_start < 1) {
-    pod2usage(-verbose => 0);
+my $pid_start = 'pending';
+if ($ARGV[0]) {
+    $pid_start = $ARGV[0];
+    if ($pid_start < 1 && $pid_start ne 'pending') {
+        pod2usage(-verbose => 0);
+    }
 }
 my $pid_end = $pid_start;
 if ($ARGV[1]) {
@@ -135,7 +185,20 @@ if ($CONF->debug) {
 db_connect();
 %SIZE_IDS = get_picture_sizes();
 
-read_and_update($pid_start, $pid_end);
+my $loop = 1;
+while ($loop) {
+    if (!$opt_sleep) {
+        $loop = 0;
+    }
+    my %pid_list = get_pids($pid_start, $pid_end);
+    if (keys %pid_list > 0) {
+        read_and_update(%pid_list);
+    } else {
+        sleep $opt_sleep;
+    }
+}
+
+db_disconnect();
 
 exit;
 
@@ -147,7 +210,7 @@ ring-resize
 
 =head1 SYNOPSIS
 
-ring-resize <start pid> [<end pid>] [--debug] [--help] [--manual]
+ring-resize <start pid>|pending [<end pid>] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
