@@ -6,6 +6,7 @@
 use strict;
 use Cwd;
 use DBI;
+use File::Slurp;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
@@ -35,14 +36,14 @@ sub get_pids {
     my %pid_list = ();
 
     if ($pid_start == 'pending') {
-        my $sel = 'SELECT pictures_information.pid, ';
+        my $sel = 'SELECT picture_resize_queue.pid, ';
         $sel .= 'pictures_information.picture_lot ';
-        $sel .= 'FROM pictures_information ';
-        $sel .= 'JOIN picture_resize_queue ';
-        $sel .= 'ON (picture_resize_queue.pid = pictures_information.pid) ';
-        $sel .= "WHERE picture_resize_queue.pid = 'PENDING' ";
+        $sel .= 'FROM picture_resize_queue ';
+        $sel .= 'JOIN pictures_information ';
+        $sel .= 'ON (pictures_information.pid = picture_resize_queue.pid) ';
+        $sel .= "WHERE picture_resize_queue.status = 'PENDING' ";
         $sel .= 'ORDER BY pid ';
-        if ($opt_debug) {
+        if ($CONF->debug) {
             dbg($sel);
         }
 
@@ -56,7 +57,7 @@ sub get_pids {
         $sel .= 'FROM pictures_information ';
         $sel .= 'WHERE pid >= ? AND pid <= ? ';
         $sel .= 'ORDER BY pid ';
-        if ($opt_debug) {
+        if ($CONF->debug) {
             dbg($sel);
         }
 
@@ -86,10 +87,9 @@ sub read_and_update {
         my $pic_path
           = $CONF->picture_root . '/'
           . $pid_list{$pid} . '/'
-          . $pid_list{$pid}
           . "/raw/${pid}.jpg";
         if (!-e $pic_path) {
-            msg('error', "Raw picture not found for $pid");
+            msg('error', "Raw picture not found for $pid ($pic_path)");
             next;
         }
 
@@ -130,7 +130,7 @@ GetOptions(
 );
 
 # help the poor souls out
-if (!@ARGV || $ARGV[0] == 'help') {
+if (@ARGV && $ARGV[0] == 'help') {
     $opt_help = 1;
 }
 if ($opt_help) {
@@ -145,6 +145,7 @@ my $pid_start = 'pending';
 if ($ARGV[0]) {
     $pid_start = $ARGV[0];
     if ($pid_start < 1 && $pid_start ne 'pending') {
+        msg('info', 'ERROR: a starting pid or "pending" is required');
         pod2usage(-verbose => 0);
     }
 }
