@@ -506,7 +506,7 @@ sub create_picture {
     if (my $row = $sth->fetchrow_hashref) {
         $max_y = $row->{max_height};
         $max_x = $row->{max_width};
-        $table = $row->{table};
+        $table = $row->{picture_table};
     }
     if (!$table) {
         msg('fatal', "Invalid size id: $this_size_id");
