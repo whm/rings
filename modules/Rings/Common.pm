@@ -757,7 +757,7 @@ sub pid_to_path {
 sub queue_status_set {
     my ($pid) = @_;
 
-    my $dt = sql_datetime();
+    my $dt  = sql_datetime();
     my $sel = 'INSERT INTO picture_resize_queue SET pid = ?, ';
     $sel .= 'status = ?, ';
     $sel .= 'date_last_maint = ?, ';

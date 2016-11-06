@@ -24,7 +24,6 @@ my $opt_debug;
 my $opt_force;
 my $opt_help;
 my $opt_manual;
-my $opt_path = './';
 
 ##############################################################################
 # Subroutines
@@ -126,8 +125,7 @@ GetOptions(
     'debug'  => \$opt_debug,
     'force'  => \$opt_force,
     'help'   => \$opt_help,
-    'manual' => \$opt_manual,
-    'path=s' => \$opt_path,
+    'manual' => \$opt_manual
 );
 
 # help the poor souls out
@@ -140,6 +138,11 @@ if ($opt_help) {
 if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
+if (!@ARGV) {
+    msg('ERROR: directory specification required');
+    pod2usage(-verbose => 0);
+}
+my @dir_list = @ARGV;
 
 get_config($opt_conf);
 
@@ -158,15 +161,23 @@ my $type_list = get_file_types();
 
 %SIZE_IDS = get_picture_sizes();
 
-print "Examining files that match ${opt_path}*.${type_list}\n";
-
-my @file_list = glob($opt_path . '*');
-foreach my $f (@file_list) {
-    if ($f =~ /(.*?)\.$type_list$/xmsi) {
-        if ($CONF->debug) {
-            dbg("    Saving file: $f");
+for my $this_dir (@dir_list) {
+    if (!-d $this_dir) {
+        msg('INFO: $this_dir not found ... skipping');
+        next;
+    }
+    $this_dir =~ s{/$}{}xms;
+    msg("Examining files that match *.${type_list} in ${this_dir}");
+    opendir(my $dh, $this_dir) || die "ERROR: problem opening $this_dir\n";
+    while ($this_dir) {
+        my $f = $_;
+        if ($f =~ /(.*?)\.$type_list$/xmsi) {
+            if ($CONF->debug) {
+                dbg("    Saving file: $f");
+            }
+            my $full_path = "$this_dir/$f";
+            save_file($full_path);
         }
-        save_file($f);
     }
 }
 
@@ -182,70 +193,22 @@ ring-load
 
 =head1 SYNOPSIS
 
- ring=load [--path=directory-path] [--update] \
-              [--host=mysql-host] [--db=dbname] \
-              --user=mysql-username --pass=mysql-password \
-              [--force] [--keyword=string] [--datetaken=string] \
-              [--ppe=string] [--photographer=string] \
-              [--debug] [--help] [--manual]
+ring=load <directory1> [<directory2> ...] [--conf=<configuration>]
+[--force] [--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
 
 This script reads the jpeg files in a directory and loads the rings
-database.  Most command line options can also be specified in a
-preferences file, ~/.rings.
+database.  At least one directory specification is required.
 
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
 
-=item --path=directory-path
-
-An optional parameter.  If no directory path is specified then . is
-used.
-
-=item --host=mysql-hostname
-
-MySQL host name.  If not specified then localhost is used.
-
-=item --db=database-name
-
-MySQL database name.  If not specified then rings is used.
-
-=item --user=mysql-username
-
-MySQL username.  Required.
-
-=item --host=mysql-password
-
-MySQL password.  Required.
-
 =item --force
 
-Override duplicate detection and sort the pictures anyway.
-
-=item --keyword=string
-
-A string of keywords.  If not is specified then "NEW" is used.
-
-=item --datetaken=string
-
-A string representing the starting date and time.  If not is specified
-the current date and time is used as a starting point and incremented
-by 1 second for each picture.
-
-=item --photographer=string
-
-The photograper's name.  If none is specified then null.
-
-=item --ppe=string
-
-Picture, place or event.
-
-=item --update
-
-Actually load the data into the rings database.
+Override duplicate detection and store the pictures anyway.
 
 =item --help
 
@@ -263,6 +226,6 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill@macallister.grass-valley.ca.us>
+Bill MacAllister <bill@ca-zephyr.org>
 
 =cut
