@@ -757,14 +757,13 @@ sub pid_to_path {
 sub queue_status_set {
     my ($pid) = @_;
 
-    my $sel = 'INSERT INTO picture_resize_queue SET status = ? ';
-    $sel .= 'WHERE pid = ? ';
+    my $sel = 'INSERT INTO picture_resize_queue SET pid = ?, status = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute('PENDING', $pid);
+    $sth->execute($pid, 'PENDING');
 
     return;
 }
