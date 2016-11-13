@@ -81,7 +81,6 @@ sub read_and_write {
         print "Processing $row->{'pid'}\n";
         export_picture($row->{pid}, $row->{file_name}, $row->{picture_lot},
             'raw', $psizes{'raw'}{'picture_table'});
-        queue_status_set($row->{pid});
     }
 }
 
