@@ -550,7 +550,7 @@ sub create_picture {
     }
 
     my $sel = "SELECT pid FROM $table ";
-    $sel .= "WHERE pid=? ";
+    $sel .= 'WHERE pid=? ';
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);
@@ -752,22 +752,45 @@ sub pid_to_path {
 }
 
 # ------------------------------------------------------------------------
+# Save the processing error text
+
+sub queue_error_text {
+    my ($pid, $msg) = @_;
+
+    my $dt  = sql_datetime();
+    my $sel = 'INSERT INTO picture_resize_queue ';
+    $sel .= '(pid, status, error_text, date_last_maint, date_added) ';
+    $sel .= 'VALUES (?, ?, ?, ?, ?) ';
+    $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
+    $sel .= 'date_last_maint = ? ';
+    $sel .= 'WHERE pid = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($pid, 'PENDING', $msg, $dt, $dt, $msg, $dt, $pid);
+    return;
+}
+
+# ------------------------------------------------------------------------
 # Set the picture queue status to pending
 
 sub queue_status_set {
     my ($pid) = @_;
 
     my $dt  = sql_datetime();
-    my $sel = 'INSERT INTO picture_resize_queue SET pid = ?, ';
-    $sel .= 'status = ?, ';
-    $sel .= 'date_last_maint = ?, ';
-    $sel .= 'date_added = ? ';
+    my $sel = 'INSERT INTO picture_resize_queue ';
+    $sel .= '(pid, status, date_last_maint, date_added) ';
+    $sel .= 'VALUES (?, ?, ?, ?) ';
+    $sel .= 'ON DUPLICATE KEY UPDATE date_last_maint = ? ';
+    $sel .= 'WHERE pid = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'PENDING', $dt, $dt);
+    $sth->execute($pid, 'PENDING', $dt, $dt, $dt, $pid);
 
     return;
 }
