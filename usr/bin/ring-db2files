@@ -52,8 +52,8 @@ sub export_picture {
             close PF
               or msg('fatal', "Problem closing $out_file");
             queue_status_set($pid);
-            $cnt++;
         }
+        $cnt++;
     }
     if ($cnt == 0) {
         msg('warn', "Picture not found for $pid in size $size_id");
