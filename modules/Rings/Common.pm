@@ -41,6 +41,7 @@ BEGIN {
       get_picture_types
       msg
       pid_to_path
+      queue_error_text
       queue_status_reset
       queue_status_set
       sql_datetime
