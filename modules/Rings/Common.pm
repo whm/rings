@@ -683,7 +683,7 @@ sub create_picture_dirs {
 sub check_picture_size {
     my ($this_id) = @_;
 
-    my $sel = 'SELECT * FROM picture_sizes where size_id = ?';
+    my $sel = 'SELECT * FROM picture_sizes WHERE size_id = ?';
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);
@@ -764,13 +764,12 @@ sub queue_error_text {
     $sel .= 'VALUES (?, ?, ?, ?, ?) ';
     $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
     $sel .= 'date_last_maint = ? ';
-    $sel .= 'WHERE pid = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'PENDING', $msg, $dt, $dt, $msg, $dt, $pid);
+    $sth->execute($pid, 'PENDING', $msg, $dt, $dt, $msg, $dt);
     return;
 }
 
@@ -785,13 +784,12 @@ sub queue_status_set {
     $sel .= '(pid, status, date_last_maint, date_added) ';
     $sel .= 'VALUES (?, ?, ?, ?) ';
     $sel .= 'ON DUPLICATE KEY UPDATE date_last_maint = ? ';
-    $sel .= 'WHERE pid = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'PENDING', $dt, $dt, $dt, $pid);
+    $sth->execute($pid, 'PENDING', $dt, $dt, $dt);
 
     return;
 }
