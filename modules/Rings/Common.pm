@@ -491,10 +491,15 @@ sub store_meta_data {
 # picture
 
 sub create_picture {
-
     my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
-    my $ts = sql_datetime();
 
+    if ($this_pid == 0) {
+        my $msg = "PID is server.  Skipping create_picture for $this_size_id";
+        msg('error', $msg);
+        return;
+    }
+
+    my $ts = sql_datetime();
     my $max_x;
     my $max_y;
     my $table;
@@ -549,64 +554,40 @@ sub create_picture {
         my @bPic = $newPic->ImageToBlob();
         $ret_pic = $bPic[0];
     }
+    my $ret_size = length($ret_pic);
 
-    my $sel = "SELECT pid FROM $table ";
-    $sel .= 'WHERE pid=? ';
-    my $sth = $DBH->prepare($sel);
+    my $cmd = "INSERT INTO $table SET ";
+    $cmd .= 'pid = ?, ';
+    $cmd .= 'picture_type = ?, ';
+    $cmd .= 'width = ?, ';
+    $cmd .= 'height = ?, ';
+    $cmd .= 'size = ?, ';
+    $cmd .= 'signature = ?, ';
+    $cmd .= 'format = ?, ';
+    $cmd .= 'compression = ?, ';
+    $cmd .= 'date_last_maint = ?, ';
+    $cmd .= 'date_added = ? ';
+    $cmd .= 'ON DUPLICATE KEY UPDATE ';
+    $cmd .= 'picture_type = ?, ';
+    $cmd .= 'width = ?, ';
+    $cmd .= 'height = ?, ';
+    $cmd .= 'size = ?, ';
+    $cmd .= 'signature = ?, ';
+    $cmd .= 'format = ?, ';
+    $cmd .= 'compression = ?, ';
+    $cmd .= 'date_last_maint = ? ';
+    my $sth_update = $DBH_UPDATE->prepare($cmd);
+
     if ($CONF->debug) {
-        dbg($sel);
+        dbg($cmd);
     }
-    $sth->execute($this_pid);
+    $sth_update->execute(
+        $this_pid,  $this_type,   $width,       $height,   $ret_size,
+        $signature, $format,      $compression, $ts,       $ts,
+        $this_type, $width,       $height,      $ret_size, $signature,
+        $format,    $compression, $ts
+    );
 
-    my $row = $sth->fetchrow_hashref;
-
-    if ($row->{pid} != $this_pid && $this_pid > 0) {
-
-        my $cmd = "INSERT INTO $table SET ";
-        $cmd .= 'pid = ?, ';
-        $cmd .= 'picture_type = ?, ';
-        $cmd .= 'width = ?, ';
-        $cmd .= 'height = ?, ';
-        $cmd .= 'size = ?, ';
-        $cmd .= 'signature = ?, ';
-        $cmd .= 'format = ?, ';
-        $cmd .= 'compression = ?, ';
-        $cmd .= 'date_last_maint = ?, ';
-        $cmd .= 'date_added = ? ';
-        my $sth_update = $DBH_UPDATE->prepare($cmd);
-
-        if ($CONF->debug) {
-            dbg($cmd);
-        }
-        $sth_update->execute(
-            $this_pid,        $this_type, $width,  $height,
-            length($ret_pic), $signature, $format, $compression,
-            $ts,              $ts
-        );
-
-    } elsif ($this_pid > 0) {
-
-        my $cmd = "UPDATE $table SET ";
-        $cmd .= 'picture_type = ?,';
-        $cmd .= 'width = ?,';
-        $cmd .= 'height = ?,';
-        $cmd .= 'size = ?,';
-        $cmd .= 'signature = ?, ';
-        $cmd .= 'format = ?, ';
-        $cmd .= 'compression = ?, ';
-        $cmd .= 'date_last_maint = ? ';
-        $cmd .= 'WHERE pid = ? ';
-        my $sth_update = $DBH_UPDATE->prepare($cmd);
-
-        if ($CONF->debug) {
-            dbg($cmd);
-        }
-        $sth_update->execute(
-            $this_type,       $width,     $height,
-            length($ret_pic), $signature, $format,
-            $compression,     $ts,        $this_pid
-        );
-    }
     return $ret_pic;
 }
 
