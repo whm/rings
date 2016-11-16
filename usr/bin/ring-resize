@@ -104,13 +104,13 @@ sub read_and_update {
 
         my $raw       = read_file("$pic_path", binmode => ':raw');
         my $mime_type = 'image/jpeg';
-        my $file_type = '.jpg';
+        my $file_type = 'jpg';
         foreach my $s (sort keys %SIZE_IDS) {
             if ($s ne 'raw') {
                 my $pic = create_picture($pid, $s, $raw, $mime_type);
                 my $ppath = create_picture_dirs($pid_list{$pid}, $s);
                 my $pfile = "${ppath}/${pid}.${file_type}";
-                if (!-e $pfile || $opt_force) {
+                if (!-e $pfile || -s $pfile == 0 || $opt_force) {
                     open(my $fh, '>', $pfile);
                     print $fh $pic;
                     close $fh;
