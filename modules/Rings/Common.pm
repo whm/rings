@@ -41,7 +41,7 @@ BEGIN {
       get_picture_types
       msg
       pid_to_path
-      queue_error_text
+      queue_error
       queue_status_reset
       queue_status_set
       sql_datetime
@@ -736,7 +736,7 @@ sub pid_to_path {
 # ------------------------------------------------------------------------
 # Save the processing error text
 
-sub queue_error_text {
+sub queue_error {
     my ($pid, $msg) = @_;
 
     my $dt  = sql_datetime();
@@ -750,7 +750,7 @@ sub queue_error_text {
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'PENDING', $msg, $dt, $dt, $msg, $dt);
+    $sth->execute($pid, 'ERROR', $msg, $dt, $dt, $msg, $dt);
     return;
 }
 

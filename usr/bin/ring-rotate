@@ -6,6 +6,7 @@ use strict;
 use Cwd;
 use DBI;
 use File::Copy;
+use File::Slurp;
 use Getopt::Long;
 use Image::Magick;
 use Pod::Usage;
@@ -25,113 +26,89 @@ my $opt_right;
 # Subroutines
 ##############################################################################
 
-# ------------------------------------------------------------------------
-# rotate a picture
-
-sub rotate_picture {
-
-    my ($thisPID, $thisSeq, $thisPicture, $thisType) = @_;
-
-    dbg(" Processing $thisPID");
-
-    my @blob;
-    $blob[0] = $thisPicture;
-    my $thisPic = Image::Magick->New();
-    $thisPic->BlobToImage(@blob);
-    my (
-        $width,         $height,            $size,
-        $format,        $compression,       $camera,
-        $this_datetime, $this_shutterspeed, $this_fnumber
-      )
-      = $thisPic->Get(
-        'width',            'height',
-        'filesize',         'format',
-        'compression',      '%[EXIF:Model]',
-        '%[EXIF:DateTime]', '%[EXIF:ExposureTime]',
-        '%[EXIF:FNumber]'
-      );
-
-    # Rotate the image and create the blob to store
-    if ($opt_right) {
-        $thisPic->Rotate(degrees => 90);
-    } else {
-        $thisPic->Rotate(degrees => -90);
-    }
-    my @bPic = $thisPic->ImageToBlob();
-
-    my $cmd = "UPDATE pictures_raw SET ";
-    $cmd .= 'picture_type = ?,';
-    $cmd .= 'width = ?,';
-    $cmd .= 'height = ?,';
-    $cmd .= 'picture = ?,';
-    $cmd .= 'date_last_maint = ? ';
-    $cmd .= 'WHERE pid = ? ';
-    if ($opt_debug) {
-        dbg($cmd);
-    }
-
-    my $sth_update = $DBH_UPDATE->prepare($cmd);
-    $sth_update->execute($thisType, $height, $width, $bPic[0], sql_datetime(),
-        $thisPID);
-    return;
-}
-
 # ------------------------------------------------
-# process the files
+# Rotate the pictures
 
 sub read_and_update {
     my ($pid_start, $pid_end) = @_;
 
-    my %pidList;
-
-    # get a list of pids first
-
-    my $sel = "SELECT pid,";
-    $sel .= "file_name ";
-    $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
-    $sel .= "ORDER BY pid ";
+    my $sel = 'SELECT pid, picture_lot ';
+    $sel .= 'FROM pictures_information ';
+    $sel .= 'WHERE pid >= ? AND pid <= ? ';
+    $sel .= 'ORDER BY pid ';
     if ($opt_debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute();
-    my $cnt = 0;
+    $sth->execute($pid_start, $pid_end);
     while (my $row = $sth->fetchrow_hashref) {
-        $cnt++;
-        $pidList{ $row->{pid} } = $row->{file_name};
-    }
-    dbg("$cnt pictures to process");
+        my $pid = $row->{pid};
+        my $lot = $row->{picture_lot};
+        my $pic_path = create_picture_dirs($lot, 'raw');
+        my $pic_file = "${pic_path}/${pid}.${a_filetype}";
 
-    # process the pictures
-
-    my $cnt = 0;
-    for my $i (sort keys %pidList) {
-        dbg("Processing $pidList{$i}...");
-
-        my $sel = "SELECT ";
-        $sel .= "picture_type,";
-        $sel .= "picture ";
-        $sel .= "FROM pictures_raw ";
-        $sel .= "WHERE pid = $i ";
-        if ($opt_debug) {
-            dbg($sel);
+        my $old_blob = read_file("$a_file", binmode => ':raw');
+        my @blob;
+        $blob[0] = $old_blob;
+        my $this_pic = Image::Magick->New();
+        $this_pic->BlobToImage(@blob);
+        if ($opt_right) {
+            msg('info', "Rotating $pid right");
+            $this_pic->Rotate(degrees => 90);
+        } else {
+            msg('info', "Rotating $pid left");
+            $this_pic->Rotate(degrees => -90);
         }
+        my @new_pic = $this_pic->ImageToBlob();
+        $width       = $new_pic->Get('width');
+        $height      = $new_pic->Get('height');
+        $size        = $new_pic->Get('filesize');
+        $format      = $new_pic->Get('format');
+        $compression = $new_pic->Get('compression');
+        $signature   = $new_pic->Get('signature');
 
-        my $sth = $DBH->prepare($sel);
-        $sth->execute();
-        if (my $row = $sth->fetchrow_hashref) {
-            rotate_picture($i, $cnt, $row->{picture}, $row->{picture_type});
+        # update size and signature in pictures_information
+        my $cmd = 'INSERT INTO pictures_information SET ';
+        $cmd .= 'raw_size = ?, raw_signature = ?, date_last_maint = NOW() ';
+        $cmd .= 'WHERE pid = ? ';
+        if ($CONF->debug) {
+            dbg($cmd);
         }
+        my $sth_update = $DBH->prepare($cmd);
+        $sth_update->execute($size, $signature, $pid);
+
+        # Update signature, width, height, size, format, compression
+        # in pictures_raw
+        $cmd = 'INSERT INTO pictures_raw SET ';
+        $cmd .= 'signature = ?, width = ?, height = ?, size = ?, format = ?, ';
+        $cmd .= 'compression = ?, date_last_maint = NOW() ';
+        $cmd .= 'WHERE pid = ? ';
+        if ($CONF->debug) {
+            dbg($cmd);
+        }
+        my $sth_update = $DBH->prepare($cmd);
+        $sth_update->execute($signature, $width, $height, $size, $format,
+                             $compression, $pid);
+    
+        # copy a backup just in case
+        
+        # store the file
+        open(my $fh, '>', $pic_file) or die("ERROR: problem opening $pic_file");
+        print $fh $new_pic[0];
+        close $fh;
+
+        # Restore backup file is new file is zero length
+
+        # That the associated pictures be regenerated.
+        queue_status_set($pid);
     }
+    return;
 }
 
-# -------------
-# Main routine
-# -------------
-
-print ">>> ring-rotate    v:29-Oct-2016\n";
+##############################################################################
+# Main Routine
+##############################################################################
 
 # -- get options
 GetOptions(
