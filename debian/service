@@ -1,0 +1,8 @@
+[Unit]
+Description=Ring Resize
+
+[Service]
+ExecStart=/usr/bin/ring-resize pending --loop
+
+[Install]
+WantedBy=multi-user.target
