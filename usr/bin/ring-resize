@@ -81,13 +81,34 @@ sub read_and_update {
 
     my $cnt = 0;
     foreach my $pid (sort keys %pid_list) {
-        dbg("Processing $pid_list{$pid} $pid ...");
+        msg('info', "Resizing $pid");
+        my $sel = 'SELECT pictures_raw.picture_file, ';
+        $sel .= 'pictures_information.picture_lot ';
+        $sel .= 'FROM pictures_raw ';
+        $sel .= 'JOIN pictures_information ';
+        $sel .= 'ON (pictures_information.pid = pictures_raw.pid) ';
+        $sel .= 'WHERE pictures_raw.pid = ? ';
+        if ($CONF->debug) {
+            dbg($sel);
+        }
+
+        my $sth = $DBH->prepare($sel);
+        $sth->execute($pid);
+        my $pic_lot;
+        my $raw_file;
+        if (my $row = $sth->fetchrow_hashref) {
+            $pic_lot  = $row->{picture_lot};
+            $raw_file = $row->{picture_file};
+        } else {
+            msg('error', "PROBLEM SQL: $sel");
+            my $msg = "Problems getting raw_picture information for $pid";
+            msg('error', $msg);
+            queue_error($pid, $msg);
+            next;
+        }
 
         # Get the raw picture
-        my $pic_path
-          = $CONF->picture_root . '/'
-          . $pid_list{$pid} . '/'
-          . "/raw/${pid}.jpg";
+        my $pic_path = $CONF->picture_root . "/$pic_lot/raw/$raw_file";
         if (!-e $pic_path) {
             my $msg = "Raw picture not found for $pid ($pic_path)";
             msg('error', $msg);
@@ -107,9 +128,10 @@ sub read_and_update {
         my $file_type = 'jpg';
         foreach my $s (sort keys %SIZE_IDS) {
             if ($s ne 'raw') {
-                my $pic = create_picture($pid, $s, $raw, $mime_type);
                 my $ppath = create_picture_dirs($pid_list{$pid}, $s);
-                my $pfile = "${ppath}/${pid}.${file_type}";
+                my $pbase = "${pid}.${file_type}";
+                my $pfile = "${ppath}/${pbase}";
+                my $pic   = create_picture($pid, $s, $raw, $pbase, $mime_type);
                 if (!-e $pfile || -s $pfile == 0 || $opt_force) {
                     open(my $fh, '>', $pfile);
                     print $fh $pic;

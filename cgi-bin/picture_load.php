@@ -151,7 +151,7 @@ if (!isset($in_upload)) {
 
         $flds = $vals = '';
         mkin ('pid',             $pid,               'n');
-        mkin ('picture_type',    $content_type,      's');
+        mkin ('mime_type',       $content_type,      's');
         mkin ('picture',         $the_file_contents, 's');
         mkin ('date_last_maint', $a_date,            'd');
         mkin ('date_added',      $a_date,            'd');

@@ -106,7 +106,7 @@ if (isset($in_button_send)) {
 
             $row = $result->fetch_array(MYSQLI_ASSOC);
             $thisPicture = $row['picture'];
-            $thisFiletype = $row['picture_type'];
+            $thisFiletype = $row['mime_type'];
 
             $msg .= "$ok Picture size " . strlen($thisPicture) . "$mend";
 

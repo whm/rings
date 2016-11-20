@@ -7,6 +7,7 @@ use Cwd;
 use DBI;
 use File::Copy;
 use File::Slurp;
+use File::Temp;
 use Getopt::Long;
 use Image::Magick;
 use Pod::Usage;
@@ -32,10 +33,15 @@ my $opt_right;
 sub read_and_update {
     my ($pid_start, $pid_end) = @_;
 
-    my $sel = 'SELECT pid, picture_lot ';
+    my $sel = 'SELECT pictures_information.pid, ';
+    $sel .= 'pictures_information.picture_lot, ';
+    $sel .= 'pictures_raw.picture_file ';
     $sel .= 'FROM pictures_information ';
-    $sel .= 'WHERE pid >= ? AND pid <= ? ';
-    $sel .= 'ORDER BY pid ';
+    $sel .= 'JOIN pictures_raw ';
+    $sel .= 'ON pictures_raw.pid = pictures_information.pid, ';
+    $sel .= 'WHERE pictures_information.pid >= ? ';
+    $sel .= 'AND pictures_information.pid <= ? ';
+    $sel .= 'ORDER BY pictures_information.pid ';
     if ($opt_debug) {
         dbg($sel);
     }
@@ -43,12 +49,12 @@ sub read_and_update {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid_start, $pid_end);
     while (my $row = $sth->fetchrow_hashref) {
-        my $pid = $row->{pid};
-        my $lot = $row->{picture_lot};
-        my $pic_path = create_picture_dirs($lot, 'raw');
-        my $pic_file = "${pic_path}/${pid}.${a_filetype}";
+        my $pid      = $row->{pid};
+        my $lot      = $row->{picture_lot};
+        my $pic_file = $row->{picture_file};
+        my $pic_path = get_picture_path($row->{picture_lot}, $pic_file);
 
-        my $old_blob = read_file("$a_file", binmode => ':raw');
+        my $old_blob = read_file($pic_path, binmode => ':raw');
         my @blob;
         $blob[0] = $old_blob;
         my $this_pic = Image::Magick->New();
@@ -60,13 +66,13 @@ sub read_and_update {
             msg('info', "Rotating $pid left");
             $this_pic->Rotate(degrees => -90);
         }
-        my @new_pic = $this_pic->ImageToBlob();
-        $width       = $new_pic->Get('width');
-        $height      = $new_pic->Get('height');
-        $size        = $new_pic->Get('filesize');
-        $format      = $new_pic->Get('format');
-        $compression = $new_pic->Get('compression');
-        $signature   = $new_pic->Get('signature');
+        my @new_pic     = $this_pic->ImageToBlob();
+        my $width       = $this_pic->Get('width');
+        my $height      = $this_pic->Get('height');
+        my $size        = $this_pic->Get('filesize');
+        my $format      = $this_pic->Get('format');
+        my $compression = $this_pic->Get('compression');
+        my $signature   = $this_pic->Get('signature');
 
         # update size and signature in pictures_information
         my $cmd = 'INSERT INTO pictures_information SET ';
@@ -80,7 +86,7 @@ sub read_and_update {
 
         # Update signature, width, height, size, format, compression
         # in pictures_raw
-        $cmd = 'INSERT INTO pictures_raw SET ';
+        $cmd = 'UPDATE pictures_raw SET ';
         $cmd .= 'signature = ?, width = ?, height = ?, size = ?, format = ?, ';
         $cmd .= 'compression = ?, date_last_maint = NOW() ';
         $cmd .= 'WHERE pid = ? ';
@@ -89,19 +95,25 @@ sub read_and_update {
         }
         my $sth_update = $DBH->prepare($cmd);
         $sth_update->execute($signature, $width, $height, $size, $format,
-                             $compression, $pid);
-    
+            $compression, $pid);
+
         # copy a backup just in case
-        
+        my $pic_tmp = File::Temp::tempnam('/tmp', $pic_file . 'XXXXXXX');
+        copy($pic_file, $pic_tmp) or die("ERROR: problem creating $pic_tmp");
+
         # store the file
-        open(my $fh, '>', $pic_file) or die("ERROR: problem opening $pic_file");
+        open(my $fh, '>', $pic_file)
+          or die("ERROR: problem opening $pic_file");
         print $fh $new_pic[0];
         close $fh;
 
-        # Restore backup file is new file is zero length
-
         # That the associated pictures be regenerated.
         queue_status_set($pid);
+
+        # delete the tmp file is we thing everything is okay
+        if (-e $pic_file) {
+            unlink $pic_tmp;
+        }
     }
     return;
 }

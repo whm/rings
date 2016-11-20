@@ -49,7 +49,7 @@ function get_picture_type ($pid, $size_id) {
     }
     $stmt->close();
     if (!empty($picture_table)) {
-        $sel = "SELECT picture_type FROM $picture_table WHERE pid = ? ";
+        $sel = "SELECT mime_type FROM $picture_table WHERE pid = ? ";
         if ($CONF['debug']) {
             syslog(LOG_DEBUG, $sel);
         }

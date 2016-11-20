@@ -7,6 +7,7 @@
 # Copyright Bill MacAllister 2016
 
 use DBI;
+use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
 use strict;
@@ -24,39 +25,58 @@ my $opt_manual;
 ##############################################################################
 
 # ----------------------------------------------------------------------
+# Set the file name in the pictures_raw table for a picture
+
+sub update_raw_filename {
+    my ($pid, $path) = @_;
+    my ($filename, $dirs, $suffix) = fileparse($path);
+    my $sel = 'UPDATE pictures_raw SET picture_file = ?, ';
+    $sel .= 'date_last_maint = NOW() ';
+    $sel .= 'WHERE pid = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($filename, $pid);
+    return;
+}
+
+# ----------------------------------------------------------------------
 # Read a picture from a table and write it to disk
 
 sub export_picture {
-    my ($pid, $file, $group, $size_id, $table) = @_;
+    my ($pid, $group) = @_;
 
-    create_picture_dirs($group, $size_id);
+    create_picture_dirs($group, 'raw');
 
-    my $sel = "SELECT ${table}.picture, picture_types.file_type FROM $table ";
-    $sel .= "JOIN picture_types ";
-    $sel .= "ON (picture_types.mime_type = ${table}.picture_type) ";
-    $sel .= "WHERE pid = ? ";
+    my $sel = 'SELECT pictures_raw.picture, picture_types.file_type ';
+    $sel .= 'FROM pictures_raw ';
+    $sel .= 'JOIN picture_types ';
+    $sel .= 'ON (picture_types.mime_type = pictures_raw.mime_type) ';
+    $sel .= 'WHERE pid = ? ';
     dbg($sel) if $CONF->debug;
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
 
     my $cnt = 0;
     if (my $row = $sth->fetchrow_hashref) {
-        my $type = $row->{file_type};
-        my $out_file = pid_to_path($pid, $group, $size_id, $type);
-        if ($opt_force || !-e $out_file) {
-            print "  Writing file: $out_file\n";
-            open PF, '>', $out_file
-              or msg('fatal', "Problem opening $out_file for writing");
+        my $file_type = $row->{file_type};
+        my $out_path = pid_to_path($pid, $group, 'raw', $file_type);
+        if ($opt_force || !-e $out_path) {
+            print "  Writing file: $out_path\n";
+            open PF, '>', $out_path
+              or msg('fatal', "Problem opening $out_path for writing");
             print PF $row->{picture}
-              or msg('fatal', "Problem writing to $out_file");
+              or msg('fatal', "Problem writing to $out_path");
             close PF
-              or msg('fatal', "Problem closing $out_file");
+              or msg('fatal', "Problem closing $out_path");
+            update_raw_filename($pid, $out_path);
             queue_status_set($pid);
         }
         $cnt++;
     }
     if ($cnt == 0) {
-        msg('warn', "Picture not found for $pid in size $size_id");
+        msg('warn', "Picture not found for $pid in size raw");
     }
 
     return;
@@ -66,6 +86,8 @@ sub export_picture {
 # process the files
 
 sub read_and_write {
+    my ($start, $end) = @_;
+    my @sql_params = ();
 
     # Get sizes to write
     my %psizes = get_picture_sizes();
@@ -73,14 +95,20 @@ sub read_and_write {
     # -- get a list of picture ids
 
     my $sel = "SELECT * FROM pictures_information ";
+    if ($start && $end) {
+        $sel .= 'WHERE pid >= ? AND pid <= ? ';
+        @sql_params = ($start, $end);
+    }
     my $sth = $DBH->prepare($sel);
-    dbg($sel) if $CONF->debug;
-    $sth->execute();
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    $sth->execute(@sql_params);
 
     while (my $row = $sth->fetchrow_hashref) {
         print "Processing $row->{'pid'}\n";
-        export_picture($row->{pid}, $row->{file_name}, $row->{picture_lot},
-            'raw', $psizes{'raw'}{'picture_table'});
+        export_picture($row->{pid}, $row->{picture_lot});
     }
 }
 
@@ -119,7 +147,17 @@ if ($opt_debug) {
 # -- Open up connections to the MySQL data
 db_connect();
 
-read_and_write();
+my $start = $ARGV[0];
+my $end   = $ARGV[1];
+if ($start < 1) {
+    $start = '';
+    $end   = '';
+}
+if ($start && !$end) {
+    $end = $start;
+}
+
+read_and_write($start, $end);
 
 db_disconnect;
 
