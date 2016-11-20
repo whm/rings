@@ -135,12 +135,12 @@ if ($in_pid > 0) {
 
             $cmd = "INSERT INTO pictures_raw SET ";
             $cmd .= "pid = ?, ";
-            $cmd .= "picture_type = ?, ";
+            $cmd .= "mime_type = ?, ";
             $cmd .= "picture = ?, ";
             $cmd .= "date_last_maint = NOW(), ";
             $cmd .= "date_added = NOW() ";
             $cmd .= "ON DUPLICATE KEY UPDATE ";
-            $cmd .= "picture_type = ?, ";
+            $cmd .= "mime_type = ?, ";
             $cmd .= "picture = ?, ";
             $cmd .= "date_last_maint = NOW() ";
             $sth = $DBH->prepare($cmd);

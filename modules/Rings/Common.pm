@@ -37,6 +37,7 @@ BEGIN {
       get_config
       get_meta_data
       get_next_id
+      get_picture_path
       get_picture_sizes
       get_picture_types
       msg
@@ -491,7 +492,7 @@ sub store_meta_data {
 # picture
 
 sub create_picture {
-    my ($this_pid, $this_size_id, $this_picture, $this_type) = @_;
+    my ($this_pid, $this_size_id, $this_picture, $this_file, $this_type) = @_;
 
     if ($this_pid == 0) {
         my $msg = "PID is server.  Skipping create_picture for $this_size_id";
@@ -558,7 +559,8 @@ sub create_picture {
 
     my $cmd = "INSERT INTO $table SET ";
     $cmd .= 'pid = ?, ';
-    $cmd .= 'picture_type = ?, ';
+    $cmd .= 'mime_type = ?, ';
+    $cmd .= 'picture_file = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
@@ -568,7 +570,8 @@ sub create_picture {
     $cmd .= 'date_last_maint = ?, ';
     $cmd .= 'date_added = ? ';
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
-    $cmd .= 'picture_type = ?, ';
+    $cmd .= 'mime_type = ?, ';
+    $cmd .= 'picture_file = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
@@ -582,10 +585,10 @@ sub create_picture {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_pid,  $this_type,   $width,       $height,   $ret_size,
-        $signature, $format,      $compression, $ts,       $ts,
-        $this_type, $width,       $height,      $ret_size, $signature,
-        $format,    $compression, $ts
+        $this_pid, $this_type, $this_file, $width,       $height,
+        $ret_size, $signature, $format,    $compression, $ts,
+        $ts,       $this_type, $this_file, $width,       $height,
+        $ret_size, $signature, $format,    $compression, $ts
     );
 
     return $ret_pic;
@@ -675,6 +678,16 @@ sub check_picture_size {
         $size_found++;
     }
     return $size_found;
+}
+
+# ------------------------------------------------------------------------
+# Return a full path to a picture file
+
+sub get_picture_patch {
+    my ($a_lot, $a_file) = @_;
+    my $this_path = $CONF->picture_root . '/' . $a_lot . '/' . $a_file;
+    $this_path =~ s{//}{/}xmsg;
+    return $this_path;
 }
 
 # ------------------------------------------------------------------------
