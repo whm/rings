@@ -167,6 +167,13 @@ sub get_config {
         }
     );
     $CONF->define(
+        'default_public',
+        {
+            DEFAULT  => 'Y',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'picture_root',
         {
             DEFAULT  => '/srv/rings',
@@ -174,9 +181,9 @@ sub get_config {
         }
     );
     $CONF->define(
-        'default_public',
+        'queue_sleep',
         {
-            DEFAULT  => 'Y',
+            DEFAULT  => '60',
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
@@ -757,13 +764,14 @@ sub queue_error {
     $sel .= '(pid, status, error_text, date_last_maint, date_added) ';
     $sel .= 'VALUES (?, ?, ?, ?, ?) ';
     $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
+    $sel .= 'status = ?, ';
     $sel .= 'date_last_maint = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'ERROR', $msg, $dt, $dt, $msg, $dt);
+    $sth->execute($pid, 'ERROR', $msg, $dt, $dt, $msg, 'ERROR', $dt);
     return;
 }
 
