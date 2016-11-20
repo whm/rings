@@ -35,7 +35,7 @@ sub read_and_update {
 
     my $sel = 'SELECT pictures_information.pid, ';
     $sel .= 'pictures_information.picture_lot, ';
-    $sel .= 'pictures_raw.picture_file ';
+    $sel .= 'pictures_raw.filename ';
     $sel .= 'FROM pictures_information ';
     $sel .= 'JOIN pictures_raw ';
     $sel .= 'ON pictures_raw.pid = pictures_information.pid, ';
@@ -51,7 +51,7 @@ sub read_and_update {
     while (my $row = $sth->fetchrow_hashref) {
         my $pid      = $row->{pid};
         my $lot      = $row->{picture_lot};
-        my $pic_file = $row->{picture_file};
+        my $pic_file = $row->{filename};
         my $pic_path = get_picture_path($row->{picture_lot}, $pic_file);
 
         my $old_blob = read_file($pic_path, binmode => ':raw');

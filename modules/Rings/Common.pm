@@ -560,7 +560,7 @@ sub create_picture {
     my $cmd = "INSERT INTO $table SET ";
     $cmd .= 'pid = ?, ';
     $cmd .= 'mime_type = ?, ';
-    $cmd .= 'picture_file = ?, ';
+    $cmd .= 'filename = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
@@ -571,7 +571,7 @@ sub create_picture {
     $cmd .= 'date_added = ? ';
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'mime_type = ?, ';
-    $cmd .= 'picture_file = ?, ';
+    $cmd .= 'filename = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';

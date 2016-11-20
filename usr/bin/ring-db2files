@@ -30,7 +30,7 @@ my $opt_manual;
 sub update_raw_filename {
     my ($pid, $path) = @_;
     my ($filename, $dirs, $suffix) = fileparse($path);
-    my $sel = 'UPDATE pictures_raw SET picture_file = ?, ';
+    my $sel = 'UPDATE pictures_raw SET filename = ?, ';
     $sel .= 'date_last_maint = NOW() ';
     $sel .= 'WHERE pid = ? ';
     if ($CONF->debug) {
