@@ -2,7 +2,7 @@
 Description=Ring Resize
 
 [Service]
-ExecStart=/usr/bin/ring-resize pending --sleep=60
+ExecStart=/usr/bin/ring-resize pending
 
 [Install]
 WantedBy=multi-user.target

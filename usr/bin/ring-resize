@@ -20,7 +20,7 @@ my $opt_debug;
 my $opt_force;
 my $opt_help;
 my $opt_manual;
-my $opt_sleep;
+my $opt_oneshot;
 
 ##############################################################################
 # Subroutines
@@ -157,7 +157,7 @@ GetOptions(
     'force'   => \$opt_force,
     'help'    => \$opt_help,
     'manual'  => \$opt_manual,
-    'sleep=i' => \$opt_sleep
+    'oneshot' => \$opt_oneshot
 );
 
 # help the poor souls out
@@ -200,14 +200,14 @@ db_connect();
 
 my $loop = 1;
 while ($loop) {
-    if (!$opt_sleep) {
+    if ($opt_oneshot || $pid_start > 0) {
         $loop = 0;
     }
     my %pid_list = get_pids($pid_start, $pid_end);
     if (keys %pid_list > 0) {
         read_and_update(%pid_list);
     } else {
-        sleep $opt_sleep;
+        sleep $CONF->queue_sleep;
     }
 }
 
@@ -223,11 +223,21 @@ ring-resize
 
 =head1 SYNOPSIS
 
-ring-resize <start pid>|pending [<end pid>] [--debug] [--help] [--manual]
+ring-resize <start pid>|pending [<end pid>] [--oneshot] [--debug]
+[--help] [--manual]
 
 =head1 DESCRIPTION
 
-Resize pictures in the rings database.
+Resize pictures in the rings database.  This script will regenerate
+all picture sizes.  If pending the script will processing the entries
+in the picture_resize_queue table continuously, sleeping when there
+are no entries in the queue.  If --oneshot is specified with pending
+then the queue table is read once and the script exits after
+processing the queue entries read.
+
+If there are problems with a queue entry its status is set to ERROR
+and an error message is stored in the picture_resize_queue table.
+This effectively removes the entry from resize processing.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -237,34 +247,13 @@ Resize pictures in the rings database.
 
 The picture id to start at.  Required.
 
-=item --send=int
+=item --end=int
 
 The picture id to end at.
 
-=item --host=mysql-hostname
+=item --oneshot
 
-MySQL host name.  If not specified then localhost is used.
-
-=item --db=databasename
-
-The name of the MySQL database.  If not specified then rings is used.
-
-=item --user=mysql-username
-
-MySQL username.  Required.
-
-=item --host=mysql-password
-
-MySQL password.  Required.
-
-=item --update
-
-Actually load the data into the rings database.
-
-=item --dateupdate
-
-Update the date taken and picture size in the data base if they
-are available in the image.
+Process the pending queue entries once and then exit.
 
 =item --help
 
@@ -282,6 +271,6 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill@macallister.grass-valley.ca.us>
+Bill MacAllister <bill@ca-zephyr.org>
 
 =cut
