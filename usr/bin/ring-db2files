@@ -107,7 +107,7 @@ sub read_and_write {
     $sth->execute(@sql_params);
 
     while (my $row = $sth->fetchrow_hashref) {
-        print "Processing $row->{'pid'}\n";
+        print "Processing $row->{'picture_lot'} $row->{'pid'}\n";
         export_picture($row->{pid}, $row->{picture_lot});
     }
 }
