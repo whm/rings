@@ -82,7 +82,7 @@ sub read_and_update {
     my $cnt = 0;
     foreach my $pid (sort keys %pid_list) {
         msg('info', "Resizing $pid");
-        my $sel = 'SELECT pictures_raw.picture_file, ';
+        my $sel = 'SELECT pictures_raw.filename, ';
         $sel .= 'pictures_information.picture_lot ';
         $sel .= 'FROM pictures_raw ';
         $sel .= 'JOIN pictures_information ';
@@ -98,7 +98,7 @@ sub read_and_update {
         my $raw_file;
         if (my $row = $sth->fetchrow_hashref) {
             $pic_lot  = $row->{picture_lot};
-            $raw_file = $row->{picture_file};
+            $raw_file = $row->{filename};
         } else {
             msg('error', "PROBLEM SQL: $sel");
             my $msg = "Problems getting raw_picture information for $pid";
