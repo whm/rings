@@ -5,6 +5,11 @@
 // Functions defined here should be completely self-contained and
 // not depends on any variables or functions outside of this file.
 
+// Some global constants
+$sys_msg_ok   = '<font color="green">';
+$sys_msg_warn = '<font color="red">';
+$sys_msg_end  = "</font><br>\n";
+
 //-------------------------------------------------------------
 // get a value from the REQUEST array if it exists
 
@@ -96,4 +101,23 @@ function read_conf ($conf_file = '/etc/rings/rings.conf') {
     return $this_conf;
 }
 
+// ------------------------------------------------------------------------
+// Message helper routines
+
+function sys_msg ($txt) {
+    global $sys_msg_ok;
+    global $sys_msg_end;
+    $_SESSION['msg'] .= "${sys_msg_ok}${txt}${sys_msg_end}";
+    syslog(LOG_INFO, $txt);
+    return;
+}
+    
+function sys_err ($txt) {
+    global $sys_msg_warn;
+    global $sys_msg_end;
+    $_SESSION['msg'] .= "${sys_msg_warn}ERROR: ${txt}${sys_msg_end}";
+    syslog(LOG_ERROR, $txt);
+    return;
+}
+    
 ?>

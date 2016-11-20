@@ -10,6 +10,7 @@ use DBI;
 use File::Basename;
 use File::Slurp;
 use File::Spec;
+use File::Type;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
@@ -49,6 +50,7 @@ BEGIN {
       store_meta_data
       trim
       unix_seconds
+      validate_mime_type
     );
 
     our $VERSION = '1.1';
@@ -831,6 +833,30 @@ sub validate_params {
         }
     }
     return;
+}
+
+# ------------------------------------------------------------------------
+# Validate the mime type of a file and return the mime type and file type
+
+sub validate_mime_type {
+    my ($file_or_content) = @_;
+
+    my $ft        = File::Type->new();
+    my $mime_type = $ft->mime_type($file_or_content);
+
+    my $sel = 'SELECT file_type FROM picture_types WHERE mime_type = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($mime_type);
+
+    my $file_type;
+    if (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        $file_type = $row->{file_type};
+    }
+
+    return $mime_type, $file_type;
 }
 
 END { }

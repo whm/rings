@@ -13,6 +13,7 @@ use_ok('DBI');
 use_ok('File::Basename');
 use_ok('File::Copy');
 use_ok('File::Slurp');
+use_ok('File::Type');
 use_ok('Getopt::Long');
 use_ok('Image::ExifTool');
 use_ok('Image::Magick');
