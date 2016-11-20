@@ -13,6 +13,138 @@ $in_setdate     = get_request('in_setdate');
 $in_button_find = get_request('in_button_find');
 $upload         = get_request('upload');
 
+##############################################################################
+# Subroutines
+##############################################################################
+
+// ------------------------------------------------------------------------
+// Accept the uploaded file and store it
+
+function store_file($in_pid) {
+
+    global $CONF;
+    global $DBH;
+    
+    $file_id = 'in_filename';
+
+    if (
+        !isset($_FILES[$file_id]['error']) ||
+        is_array($_FILES[$file_id]['error'])
+    ) {
+        $msg = 'Unknown problem uploading file';
+        $_SESSION['msg'] .= "${warn}ERROR: ${msg}${em}";
+        syslog(LOG_ERROR, $msg);
+        return 1;
+    }
+
+    if ($_FILES[$file_id]['error'] == UPLOAD_ERR_OK) {
+        sys_msg('file uploaded');
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_INI_SIZE) {
+        sys_err('File exceeds the upload_max_filesize in php.ini');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_FORM_SIZE) {
+        sys_err('File exceeds the MAX_FILE_SIZE directive');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_PARTIAL) {
+        sys_err('File partially uploaded ... update abandonded');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_ERR_NO_FILE) {
+        sys_err('No file was uploaded');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_NO_TMP_DIR) {
+        sys_err('Missing temporary folder');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_CANT_WRITE) {
+        sys_err('Failed to write file to disk');
+        return 1;
+    } elseif ($_FILES[$file_id]['error'] == UPLOAD_ERR_EXTENSION) {
+        sys_err('A PHP extension stopped the file upload');
+        return 1;
+    } else {
+        sys_err('Unknown upload error ' . $_FILES[$file_id]['error']);
+        return 1;
+    }
+
+    $picture_lot = get_picture_lot($in_pid);
+    if (empty($picture_lot)) {
+        sys_err("Picture lot not found for $in_pid");
+        return;
+    }
+    
+    $tmp_file  = $_FILES[$file_id]['tmp_name'];
+    $mime_type = mime_content_type($tmp_file);
+    $file_type = validate_mime_type($mime_type);
+    if (!$file_type) {
+        sys_err("Upload of $mime_type files not allowed");
+        return 1;
+    }
+    
+    $original_file      = $_FILES[$fileID]["name"];
+    $content_type       = $_FILES[$fileID]["type"];
+    $original_file_size = $_FILES[$fileID]["size"];
+    $a_date  = date("Y-m-d H:i:s");
+    $z = strrpos ($original_file, ".");
+    $tmp = substr ($original_file, 0, $z);
+    
+    $the_file_contents = file_get_contents($tmp_file);
+
+    $pic_file
+      = $CONF['picture_root'] . "/${picture_lot}/raw/${in_pid}.${file_type}";
+    $bytes_written = file_put_contents($pic_file, $the_file_contents);
+    sys_msg("$bytes_written bytes written to $pic_file");
+
+    $raw_size = strlen($the_file_contents);
+    $cmd = 'UPDATE pictures_information SET ';
+    $cmd .= 'raw_picture_size = ?, ';
+    $cmd .= 'date_last_maint = NOW() ';
+    $cmd .= 'WHERE pid = ? ';
+    $sth = $DBH->prepare($cmd);
+    if ($sth->errno) {
+        sys_err('MySQL prepare error: ' . $sth->error);
+        sys_err("SQL: $cmd");
+        return;
+    }
+    $sth->bind_param('ii', $raw_size, $in_pid);
+    $sth->execute();
+    if ($sth->errno) {
+        sys_err('MySQL exec error: ' . $sth->error);
+        sys_err("SQL: $cmd");
+    }
+    $sth->close();
+    
+    $cmd = 'UPDATE pictures_raw SET ';
+    $cmd .= 'mime_type = ?, ';
+    $cmd .= 'date_last_maint = NOW() ';
+    $cmd .= 'WHERE pid = ? ';
+    $sth = $DBH->prepare($cmd);
+    if ($sth->errno) {
+        sys_err('MySQL prepare error: ' . $sth->error);
+        sys_err("SQL: $cmd");
+        return;
+    }
+    $sth->bind_param('si', $mime_type, $in_pid);
+    $sth->execute();
+    if ($sth->errno) {
+        sys_err('MySQL exec error: ' . $sth->error);
+        sys_err("SQL: $cmd");
+    }
+    $sth->close();
+
+    unlink ($tmp_file);
+    queue_status_set($in_pid);
+
+    echo "$in_pid uploaded. ";
+    echo "<a href=\"picture_maint.php?in_pid=$in_pid\" "
+        . "target=\"_blank\">Update Picture Details.</a>";
+    echo "<br>\n";
+
+    return;
+}
+
+
+##############################################################################
+# Main Routine
+##############################################################################
 ?>
 
 <html>
@@ -27,13 +159,6 @@ $upload         = get_request('upload');
 $thisTitle = 'Re-load a Picture into the Rings';
 require ('page_top.php');
 
-$ok   = '<font color="green">';
-$warn = '<font color="red">';
-$em   = "</font><br>\n";
-
-// -- main routine
-
-openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
@@ -58,10 +183,8 @@ openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
 <?php
 
 if ($in_pid > 0) {
-    if (!isset($upload)) {
-
+    if (empty($upload)) {
         // -- Display the upload form
-
         echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
         echo 'action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
         echo '<input type="hidden" name="in_pid" value="'.$in_pid.'">'."\n";
@@ -83,88 +206,19 @@ if ($in_pid > 0) {
             . 'Set Date from Picture Information<br>'."\n";
         echo "<input type=\"submit\" name=\"upload\" value=\"Upload\">\n";
         echo "</form>\n";
-
     } else {
-
-        // -- Do the work
-
-        $file_id = 'in_filename';
-        $tmp_file = $_FILES[$file_id]['tmp_name'];
-        if ($_FILES[$file_id]['error'] !=0
-            && $_FILES[$file_id]['error'] !=4) {
-            echo "Error uploading ".$_FILES[$file_id]["name"]."<br>\n";
-        }
-        if (!isset($tmp_file) || strlen($tmp_file) == 0) {
-            $_SESSION['msg'] .= "<br>$warn No file uploaded.</font>\n";
-        } else {
-            echo "<h1>Upload results</h1>\n";
+        // Save the file and request regeneration
+        if (store_file($in_pid)) {
+            echo "<h2>Upload Failure</h2>\n";
             echo "<p>\n";
-            $original_file      = $_FILES[$fileID]["name"];
-            $content_type       = $_FILES[$fileID]["type"];
-            $original_file_size = $_FILES[$fileID]["size"];
-            $a_date  = date("Y-m-d H:i:s");
-            $z = strrpos ($original_file, ".");
-            $tmp = substr ($original_file, 0, $z);
-
-            $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-
-            $cmd = "UPDATE pictures_information SET ";
-            $cmd .= "raw_picture_size = " . strlen($the_file_contents) . ", ";
-            $cmd .= "date_last_maint = NOW() ";
-            $cmd .= "WHERE pid = $in_pid ";
-            $sth = $DBH->query($cmd);
-            if ($sth->errno) {
-                $_SESSION['msg'] .= $warn."MySQL prepare error:"
-                    . $sth->error . $em;
-                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
-            }
-
-            $cmd = "INSERT INTO pictures_raw SET ";
-            $cmd .= "pid = ?, ";
-            $cmd .= "mime_type = ?, ";
-            $cmd .= "picture = ?, ";
-            $cmd .= "date_last_maint = NOW(), ";
-            $cmd .= "date_added = NOW() ";
-            $cmd .= "ON DUPLICATE KEY UPDATE ";
-            $cmd .= "mime_type = ?, ";
-            $cmd .= "picture = ?, ";
-            $cmd .= "date_last_maint = NOW() ";
-            $sth = $DBH->prepare($cmd);
-            $sth->bind_param('i', $in_pid);
-            $sth->bind_param('s', $content_type);
-            $sth->bind_param('b', $the_file_contents);
-            $sth->bind_param('s', $content_type);
-            $sth->bind_param('b', $the_file_contents);
-            $sth->execute();
-            if ($sth->errno) {
-                $_SESSION['msg'] .= $warn."MySQL prepare error:"
-                    . $sth->error . $em;
-                $_SESSION['msg'] .= $warn."SQL:$cmd$em";
-            }
-
-            echo "$in_pid uploaded. ";
-            echo "<a href=\"picture_maint.php?in_pid=$in_pid\" "
-                . "target=\"_blank\">Update Picture Details.</a>";
-            echo "<br>\n";
-
-            unlink ($tmp_file);
-
-            $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
-            $sh_cmd .= " --start=$in_pid";
-            $sh_cmd .= " --end=$in_pid";
-            $sh_cmd .= " --host=$mysql_host";
-            $sh_cmd .= " --user=$mysql_user";
-            $sh_cmd .= " --db=$mysql_db";
-            $sh_cmd .= " --update";
-            if (strlen($in_setdate)>0) {$sh_cmd .= " --dateupdate";}
-            syslog(LOG_INFO, "Executing:$sh_cmd");
-            $sh_cmd .= " --pass=$mysql_pass";
-            system($sh_cmd);
+        } else {
+            echo "<h2>File uploaded</h2>\n";
+            echo "<p>\n";
         }
     }
 }
 
-if (strlen($_SESSION['msg']) > 0) {
+if (!empty($_SESSION['msg'])) {
     echo $_SESSION['msg'];
     $_SESSION['msg'] = '';
 }

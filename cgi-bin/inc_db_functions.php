@@ -78,9 +78,7 @@ function validate_size ($id) {
 
     $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id=? ';
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
-        syslog(LOG_ERR, $m);
-        syslog(LOG_INFO, "Problem statement: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
     $stmt->bind_param('s', $id);
     $stmt->execute();
@@ -94,5 +92,96 @@ function validate_size ($id) {
     }
 
     return $this_size;
+}
+
+//-------------------------------------------------------------
+// Add entry to the picture resize queue
+
+function queue_status_set ($pid, $date_update) {
+
+    global $DBH;
+    global $CONF;
+
+    $sel = 'INSERT INTO picture_resize_queue SET ';
+    $sel .= 'pid = ?, ';
+    $sel .= "status = 'PENDING', ";
+    $sel .= 'date_last_maint = NOW(), ';
+    $sel .= 'date_added = NOW() ';
+    $sel .= 'ON DUPLICATE KEY UPDATE ';
+    $sel .= "status = 'PENDING', ";
+    $sel .= 'date_last_maint = NOW() ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return 1;
+    }
+
+    $stmt->bind_param('i', $pid);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return 1;
+    }
+    $stmt->close();
+
+    return;
+}
+
+//-------------------------------------------------------------
+// Check the validity of a mime type and return file type if valid
+
+function validate_mime_type ($mime_type) {
+        
+    global $DBH;
+    global $CONF;
+
+    $sel = 'SELECT file_type FROM picture_types WHERE mime_type = ? ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('s', $mime_type);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_result($p1);
+    if ($stmt->fetch()) {
+        $picture_type = $p1;
+    }
+    $stmt->close();
+
+    return $picture_type;
+}
+
+//-------------------------------------------------------------
+// Get the picture_lot so we know where to put the file
+
+function get_picture_lot ($pid) {
+
+    global $DBH;
+    global $CONF;
+        
+    $sel = 'SELECT picture_lot FROM pictures_information WHERE pid = ?';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('i', $pid);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_result($p1);
+    if ($stmt->fetch()) {
+        $picture_lot = $p1;
+    }
+    $stmt->close();
+
+    return $picture_lot;
 }
 ?>

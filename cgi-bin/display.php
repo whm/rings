@@ -133,6 +133,6 @@ if (file_exists($pic_path)) {
     readfile($pic_path);
     flush();
 } else {
-    no_picture('Picture not available. (file not found');
+    no_picture('Picture not available. (file not found)');
 }
 ?>

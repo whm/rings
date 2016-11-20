@@ -33,8 +33,8 @@ if (empty($CONF['ring_admin'])) {
 if (empty($CONF['ring_id'])) {
     $CONF['ring_id'] = 'rings';
 }
-if (empty($CONF['ring_root'])) {
-    $CONF['ring_root'] = '/srv/rings';
+if (empty($CONF['picture_root'])) {
+    $CONF['picture_root'] = '/srv/rings';
 }
 if (empty($CONF['debug'])) {
     $CONF['debug'] = 0;
