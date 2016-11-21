@@ -41,6 +41,7 @@ BEGIN {
       get_picture_path
       get_picture_sizes
       get_picture_types
+      make_picture_path
       msg
       pid_to_path
       queue_error
@@ -692,11 +693,49 @@ sub check_picture_size {
 # ------------------------------------------------------------------------
 # Return a full path to a picture file
 
-sub get_picture_patch {
-    my ($a_lot, $a_file) = @_;
-    my $this_path = $CONF->picture_root . '/' . $a_lot . '/' . $a_file;
+sub get_picture_path {
+    my ($a_lot, $a_size_id, $a_file) = @_;
+    my $this_path = $CONF->picture_root;
+    $this_path .= '/' . $a_lot;
+    $this_path .= '/' . $a_size_id;
+    $this_path .= '/' . $a_file;
     $this_path =~ s{//}{/}xmsg;
     return $this_path;
+}
+
+# ------------------------------------------------------------------------
+# Construct a path
+
+sub make_picture_path {
+    my ($lot, $size_id, $pid, $type) = @_;
+
+    if (!$lot) {
+        my $m = "make_picture_path missing picture_lot ($lot)";
+        msg('error', $m);
+        return $m;
+    }
+    if (!$size_id) {
+        my $m = "picture_path invalid size_id ($size_id)";
+        msg('error', $m);
+        return $m;
+    }
+    if ($pid < 1) {
+        my $m = 'picture_path invalid pid';
+        msg('error', $m);
+        return $m;
+    }
+    if (!$type) {
+        my $m = "picture_path invalid file_type ($type)";
+        msg('error', $m);
+        return $m;
+    }
+
+    my $pic_file = $CONF->picture_root;
+    $pic_file .= '/' . $lot;
+    $pic_file .= '/' . $size_id;
+    $pic_file .= '/' . $pid;
+    $pic_file .= '.' . $type;
+    return $pic_file;
 }
 
 # ------------------------------------------------------------------------
