@@ -278,14 +278,11 @@ if ( $update_flag ) {
 
 } elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {
 
-    $sh_cmd = "/usr/bin/ring-rotate";
-    $sh_cmd .= " --start=$in_pid";
-    $sh_cmd .= " --end=$in_pid";
-    $sh_cmd .= " --update";
+    $sh_cmd = "/usr/bin/ring-rotate $in_pid";
     if (!empty($in_button_rotate_right)) {
         $sh_cmd .= " --right";
     } else {
-        $sh_cmf .= " --left";
+        $sh_cmd .= " --left";
     }
     $ret = array();
     $z = exec($sh_cmd, $ret, $ret_status);
@@ -295,17 +292,7 @@ if ( $update_flag ) {
         $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
     }
 
-    $sh_cmd = "/usr/bin/ring-resize";
-    $sh_cmd .= " --start=$in_pid";
-    $sh_cmd .= " --end=$in_pid";
-    $sh_cmd .= " --update";
-    $ret = array();
-    $z = exec($sh_cmd, $ret, $ret_status);
-    if ($ret_status) {
-        $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-        foreach ($ret as $v) $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
-        $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
-    }
+    queue_status_set($in_pid);
 
     $next_pid = $in_pid;
 

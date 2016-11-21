@@ -124,7 +124,7 @@ function validate_type ($file_type) {
 //-------------------------------------------------------------
 // Add entry to the picture resize queue
 
-function queue_status_set ($pid, $date_update) {
+function queue_status_set ($pid) {
 
     global $DBH;
     global $CONF;
