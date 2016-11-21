@@ -88,8 +88,7 @@ function store_file($in_pid) {
     
     $the_file_contents = file_get_contents($tmp_file);
 
-    $pic_file
-      = $CONF['picture_root'] . "/${picture_lot}/raw/${in_pid}.${file_type}";
+    $pic_file = picture_path ($picture_lot, 'raw', $in_pid, $file_type);
     $bytes_written = file_put_contents($pic_file, $the_file_contents);
     sys_msg("$bytes_written bytes written to $pic_file");
 
