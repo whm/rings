@@ -119,5 +119,43 @@ function sys_err ($txt) {
     syslog(LOG_ERROR, $txt);
     return;
 }
+
+// ------------------------------------------------------------------------
+// Assemble the path to a picture
+
+function picture_path ($lot, $size_id, $pid, $type) {
+
+    global $CONF;
+
+    if (empty($lot)) {
+        $m = "picture_path missing picture_lot ($lot)";
+        sys_err($m);
+        return $m;
+    }
+    list ($a_size_id, $a_size_desc) = validate_size($size_id);
+    if (empty($a_size_id)) {
+        $m = "picture_path invalid size_id ($size_id)";
+        sys_err($m);
+        return $m;
+    }
+    if ($pid < 1) {
+        $m = 'picture_path invalid pid';
+        sys_err($m);
+        return $m;
+    }
+    list ($a_file_type, $a_mime_type) = validate_type($type);
+    if (empty($a_file_type)) {
+        $m = "picture_path invalid file_type ($type)";
+        sys_err($m);
+        return $m;
+    }
     
+    $pic_file = $CONF['picture_root'];
+    $pic_file .= '/' . $lot;
+    $pic_file .= '/' . $a_size_id;
+    $pic_file .= '/' . $pid;
+    $pic_file .= '.' . $a_file_type;
+    return $pic_file;
+}
+
 ?>

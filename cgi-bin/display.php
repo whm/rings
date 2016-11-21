@@ -87,7 +87,7 @@ if (auth_picture_invisible($in_pid)>0) {
 if (empty($in_size)) {
     $in_size = $CONF['display_size'];
 } else {
-    $valid_size = validate_size($in_size);
+    list($valid_size, $valid_desc) = validate_size($in_size);
     if (empty($valid_size)) {
         syslog(LOG_WARN, "Invalid picture size $in_size");
         $in_size = $CONF['display_size'];
@@ -121,10 +121,7 @@ if (empty($picture_lot)) {
 
 $type = get_picture_type($in_pid, $in_size);
 
-$pic_path = $CONF['picture_root']
-    . '/' . $picture_lot
-    . '/' . $in_size
-    . '/' . $in_pid . '.jpg';
+$pic_path = picture_path($picture_lot, $in_size, $in_pid, 'jpg');
 if ($CONF['debug']) {
     syslog(LOG_INFO, "Opening file $pic_path");
 }

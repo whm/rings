@@ -76,7 +76,9 @@ function validate_size ($id) {
     global $DBH;
     global $CONF;
 
-    $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id=? ';
+    $this_size = '';
+    $this_description = '';
+    $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id = ? ';
     if (!$stmt = $DBH->prepare($sel)) {
         sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
@@ -85,13 +87,38 @@ function validate_size ($id) {
     $stmt->bind_result($p1, $p2);
     if ($stmt->fetch()) {
         $this_size = $p1;
+        $this_description = $p2;
     }
     $stmt->close();
-    if (empty($this_size)) {
-        $this_size = $CONF['raw_id'];
-    }
 
-    return $this_size;
+    return array($this_size, $this_description);
+}
+
+//-------------------------------------------------------------
+// Validate the file type
+
+function validate_type ($file_type) {
+
+    global $DBH;
+    global $CONF;
+
+    $this_file_type = '';
+    $this_mime_type = '';
+    $sel = 'SELECT file_type, mime_type ';
+    $sel .= 'FROM picture_types WHERE file_type = ? ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    $stmt->bind_param('s', $file_type);
+    $stmt->execute();
+    $stmt->bind_result($p1, $p2);
+    if ($stmt->fetch()) {
+        $this_file_type = $p1;
+        $this_mime_type = $p2;
+    }
+    $stmt->close();
+
+    return array($this_file_type, $this_mime_type);
 }
 
 //-------------------------------------------------------------
