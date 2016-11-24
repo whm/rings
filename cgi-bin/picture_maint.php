@@ -66,47 +66,66 @@ function increment_time ($a_datetime) {
 
 if (!empty($in_pid)) {
     if ($in_pid=='CLEARFORM') {
-        $add_flag = 1;
-        $in_pid = '';
+        $add_flag    = 1;
+        $this_pid    = 0;
+        $display_pid = '';
+    }
+    if ($in_pid < 1) {
+        sys_msg("Invalid PID entered $in_pid");
+        $this_pid    = 0;
+        $display_pid = '';
+    } else {
+        $this_pid    = $in_pid;
+        $display_pid = $in_pid;
     }
 } else {
-    $in_pid = '';
+    $this_pid = 0;
 }
 
-// Find the next or the previous picture.
-$sel_pid = empty($in_pid) ? 0 : $in_pid;
+// SQL for selecting next and previous PIDs
 $base_sel = 'SELECT pid FROM pictures_information ';
-$prev_sel = "WHERE pid < $sel_pid ORDER BY pid DESC ";
-$next_sel = "WHERE pid > $sel_pid ORDER BY pid ";
+$prev_sel = "WHERE pid < ? ORDER BY pid DESC ";
+$next_sel = "WHERE pid > ? ORDER BY pid ";
 
+// Find previous PID
 $sel = "$base_sel $prev_sel LIMIT 0,1 ";
 if ($CONF['debug']) {
     syslog(LOG_DEBUG, $sel);
 }
-$result = $DBH->query ($sel);
-if ($result) {
-    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if (!empty($row['pid'])) {
-            $prev_pid = $row['pid'];
-        }
-    }
+if (!$stmt = $DBH->prepare($sel)) {
+    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
 }
+$stmt->bind_param('i', $this_pid);
+$stmt->execute();
+$stmt->bind_result($p1);
+if ($stmt->fetch()) {
+    $prev_pid = $p1;
+}
+$stmt->close();
+
+// Find next PID
 $sel = "$base_sel $next_sel LIMIT 0,1 ";
 if ($CONF['debug']) {
     syslog(LOG_DEBUG, $sel);
 }
-$result = $DBH->query ($sel);
-if ($result) {
-    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if (!empty($row['pid'])) {
-            $next_pid = $row['pid'];
-        }
-    }
+if (!$stmt = $DBH->prepare($sel)) {
+    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
 }
+$stmt->bind_param('i', $this_pid);
+$stmt->execute();
+$stmt->bind_result($p1);
+if ($stmt->fetch()) {
+    $next_pid = $p1;
+}
+$stmt->close();
+
+// Set PID selections if next or previous was selected
 if (!empty($in_button_next)) {
-    $in_pid = $next_pid;
+    $this_pid    = $next_pid;
+    $display_pid = $this_pid;
 } elseif (!empty($in_button_prev)) {
-    $in_pid = $prev_pid;
+    $this_pid    = $prev_pid;
+    $display_pid = $this_pid;
 }
 
 if (!empty($_SESSION['maint_last_datetime'])) {
@@ -115,21 +134,21 @@ if (!empty($_SESSION['maint_last_datetime'])) {
 
 $sel = "SELECT * ";
 $sel .= "FROM pictures_information ";
-$sel .= "WHERE pid = '$in_pid' ";
+$sel .= "WHERE pid = $this_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
-    if (!isset($row['picture_date']) || strlen($row['picture_date']) == 0) {
+    if (empty($row['picture_date'])) {
         $row['picture_date'] = $row['date_taken'];
     }
-    if (!empty($row['pid']) && strlen($row['pid'])>0) {
+    if (!empty($row['pid'])) {
         foreach ($row as $fld => $val) {
             $row[$fld] = trim($val);
         }
     }
 }
-if (!empty($in_pid) && empty($row["pid"]) ) {
-    $_SESSION['msg'] .= "Picture '$in_pid' not found.\n";
+if ($this_pid > 0 && empty($row['pid']) ) {
+    sys_msg("Picture '$in_pid' not found.");
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $row[$db_fld] = '';
@@ -137,15 +156,15 @@ if (!empty($in_pid) && empty($row["pid"]) ) {
 }
 
 // Check to see if the raw image exists
-if (!empty($in_pid) && strlen($in_pid) > 0) {
+if ($this_pid > 0) {
     $sel = "SELECT pid ";
     $sel .= "FROM pictures_raw ";
-    $sel .= "WHERE pid = '$in_pid' ";
+    $sel .= "WHERE pid = $this_pid ";
     $result = $DBH->query ($sel);
     if ($result) {
         $raw_row = $result->fetch_array(MYSQLI_ASSOC);
         if (empty($raw_row['pid'])) {
-            $_SESSION['msg'] .= "Raw image is missing for '$in_pid'.\n";
+            sys_msg("Raw image is missing for $this_pid.");
         }
     }
 }
@@ -220,7 +239,7 @@ require ('page_top.php');
 <table border="1">
 <tr>
   <td align="right">Picture ID:</td>
-  <td><input type="text" name="in_pid" value="<?php print $in_pid;?>">
+  <td><input type="text" name="in_pid" value="<?php print $display_pid;?>">
   </td>
 </tr>
 <tr>
@@ -236,8 +255,9 @@ require ('page_top.php');
 </tr>
 </table>
 <?php
-if (!empty($in_pid)) {
-    echo "<input type=\"hidden\" name=\"in_pid\" value=\"$in_pid\">\n";
+if ($this_pid > 0) {
+    echo '<input type="hidden" name="old_pid" '
+        . 'value="' . $this_pid . '">' . "\n";
 }
 ?>
 </form>
@@ -296,13 +316,13 @@ if (!empty($in_pid)) {
             $pic_info .= '<br/> File:' . $row['file_name'];
         }
         $pic_info .= '<br/>'
-            . '<a href="picture_reload.php?in_pid=' . $in_pid . '" '
+            . '<a href="picture_reload.php?in_pid=' . $display_pid . '" '
             . 'target="_blank">Reload</a>'
             . "\n";
         print $pic_info;
     }
     ?>
-    <input type="hidden" name="in_pid" value="<?php print $in_pid;?>">
+    <input type="hidden" name="in_pid" value="<?php print $display_pid;?>">
  </td>
 </tr>
 <tr>
@@ -526,7 +546,7 @@ $sel .= "FROM tmp_matching ";
 $sel .= "JOIN pictures_small ";
 $sel .= "ON (pictures_small.size = tmp_matching.size ";
 $sel .= "AND pictures_small.width = tmp_matching.width) ";
-$sel .= "WHERE pictures_small.pid = $in_pid ";
+$sel .= "WHERE pictures_small.pid = $this_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
