@@ -427,10 +427,10 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute($meta{'datetime'}, $meta{'size'},
-          $meta{'signature'},
-          $meta{'camera'},   $meta{'shutterspeed'}, $meta{'fnumber'},
-          $ts, $pid
+        $sth_update->execute(
+            $meta{'datetime'}, $meta{'size'},         $meta{'signature'},
+            $meta{'camera'},   $meta{'shutterspeed'}, $meta{'fnumber'},
+            $ts,               $pid,
         );
     } else {
         # Get a picture sequence number

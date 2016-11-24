@@ -84,8 +84,9 @@ sub save_file {
         dbg($sql);
     }
     my $sth = $DBH->prepare($sql);
-    $sth->execute($pic{size}, $pic{camera}, $pic{shutterspeed},
-        $pic{this_fnumber});
+    $sth->execute(
+        $pic{size}, $pic{camera}, $pic{shutterspeed}, $pic{this_fnumber},
+    );
     my $dup_cnt = 0;
 
     while (my $row = $sth->fetchrow_hashref()) {

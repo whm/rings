@@ -85,8 +85,9 @@ sub read_and_update {
             $thisPic->BlobToImage(@blob);
 
             my ($width, $height, $size, $format, $compression)
-              = $thisPic->Get('width', 'height', 'filesize', 'format',
-                'compression');
+              = $thisPic->Get(
+                'width', 'height', 'filesize', 'format', 'compression',
+            );
 
             # Get EXIF data using image info
             my $info              = ImageInfo(\$blob[0]);
@@ -141,9 +142,11 @@ sub read_and_update {
                 my $sth_update = $DBH_UPDATE->prepare($cmd);
                 if ($opt_update) {
                     print "Updating $thisPID, date taken $this_datetime\n";
-                    $sth_update->execute($camera, $this_datetime,
-                        $this_fnumber, $this_pic_size, $this_shutterspeed,
-                        sql_datetime(), $thisPID);
+                    $sth_update->execute(
+                        $camera,        $this_datetime,     $this_fnumber,
+                        $this_pic_size, $this_shutterspeed, sql_datetime(),
+                        $thisPID,
+                    );
                 } else {
                     print "For pid $thisPID proposing to set:\n";
                     print "    Camera: $camera\n";
