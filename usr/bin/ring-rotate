@@ -52,6 +52,9 @@ sub read_and_update {
         my $pid      = $row->{pid};
         my $lot      = $row->{picture_lot};
         my $pic_file = $row->{filename};
+        if (!$pic_file) {
+            $pic_file = "${pid}.jpg";
+        }
         my $pic_path = get_picture_path($row->{picture_lot}, 'raw', $pic_file);
 
         my $old_blob = read_file($pic_path, binmode => ':raw');
@@ -75,8 +78,10 @@ sub read_and_update {
         my $signature   = $this_pic->Get('signature');
 
         # update size and signature in pictures_information
-        my $cmd = 'INSERT INTO pictures_information SET ';
-        $cmd .= 'raw_size = ?, raw_signature = ?, date_last_maint = NOW() ';
+        my $cmd = 'UPDATE pictures_information SET ';
+        $cmd .= 'raw_picture_size = ?, ';
+        $cmd .= 'raw_signature = ?, ';
+        $cmd .= 'date_last_maint = NOW() ';
         $cmd .= 'WHERE pid = ? ';
         if ($CONF->debug) {
             dbg($cmd);
@@ -87,23 +92,29 @@ sub read_and_update {
         # Update signature, width, height, size, format, compression
         # in pictures_raw
         $cmd = 'UPDATE pictures_raw SET ';
-        $cmd .= 'signature = ?, width = ?, height = ?, size = ?, format = ?, ';
-        $cmd .= 'compression = ?, date_last_maint = NOW() ';
+        $cmd .= 'filename = ?, ';
+        $cmd .= 'signature = ?, ';
+        $cmd .= 'width = ?, ';
+        $cmd .= 'height = ?, ';
+        $cmd .= 'size = ?, ';
+        $cmd .= 'format = ?, ';
+        $cmd .= 'compression = ?, ';
+        $cmd .= 'date_last_maint = NOW() ';
         $cmd .= 'WHERE pid = ? ';
         if ($CONF->debug) {
             dbg($cmd);
         }
         my $sth_update = $DBH->prepare($cmd);
-        $sth_update->execute($signature, $width, $height, $size, $format,
-            $compression, $pid);
+        $sth_update->execute($pic_file, $signature, $width, $height, $size,
+            $format, $compression, $pid);
 
         # copy a backup just in case
         my $pic_tmp = File::Temp::tempnam('/tmp', $pic_file . 'XXXXXXX');
-        copy($pic_file, $pic_tmp) or die("ERROR: problem creating $pic_tmp");
+        copy($pic_path, $pic_tmp) or die("ERROR: creating $pic_tmp $!");
 
         # store the file
-        open(my $fh, '>', $pic_file)
-          or die("ERROR: problem opening $pic_file");
+        open(my $fh, '>', $pic_path)
+          or die("ERROR: problem opening $pic_path");
         print $fh $new_pic[0];
         close $fh;
 
