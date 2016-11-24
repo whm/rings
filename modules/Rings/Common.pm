@@ -358,7 +358,7 @@ sub get_meta_data {
 
     # Get picture meta data
     my @blob;
-    $blob[0] = $ret{'picture'};
+    $blob[0] = $in_blob;
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
