@@ -218,8 +218,10 @@ sub get_config {
         $CONF->db_user($db_conf->db_user);
         $CONF->db_password($db_conf->db_password);
     } else {
-        msg('fatal',
-            'db_credentials file not found (' . $CONF->db_credentials . ')');
+        msg(
+            'fatal',
+            'db_credentials file not found (' . $CONF->db_credentials . ')'
+        );
     }
 
     if ($CONF->syslog) {
@@ -317,8 +319,10 @@ sub sql_datetime {
     $mon++;
     $year += 1900;
 
-    return sprintf("%04d-%02d-%02d %02d:%02d:%02d",
-        $year, $mon, $mday, $hour, $min, $sec);
+    return sprintf(
+        "%04d-%02d-%02d %02d:%02d:%02d",
+        $year, $mon, $mday, $hour, $min, $sec
+    );
 }
 
 # ------------------------------------------------------------------------

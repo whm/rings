@@ -87,7 +87,7 @@ sub read_and_update {
             my ($width, $height, $size, $format, $compression)
               = $thisPic->Get(
                 'width', 'height', 'filesize', 'format', 'compression',
-            );
+              );
 
             # Get EXIF data using image info
             my $info              = ImageInfo(\$blob[0]);
