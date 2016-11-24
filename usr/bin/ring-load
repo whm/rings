@@ -103,9 +103,11 @@ sub save_file {
 
     # Store meta-data and copy the raw picture to rings directory
     my $pic_path = create_picture_dirs($a_parent, 'raw');
-    my $pic_file = "${pic_path}/${pid}.${a_filetype}";
+    my $pic_base = "${pic_path}/${pid}.${a_filetype}";
+    my $pic_file = "${pic_path}/${pic_base}";
     $pic{'in_file'} = $pic_file;
     store_meta_data($pid, $a_fullname, \%pic);
+    create_picture($pid, 'raw', $blob, $pic_base, $pic{'MIMEType'});
     copy($a_fullname, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_path");
 
