@@ -287,6 +287,10 @@ sub get_next_id {
 
 sub msg {
     my ($severity, $msg) = @_;
+    if (!$msg) {
+        $msg      = $severity;
+        $severity = 'info';
+    }
     my @lines = split /\n/, $msg;
     for my $l (@lines) {
         print uc($severity) . " $l\n" or die "ERROR writing msg\n";
@@ -413,8 +417,6 @@ sub store_meta_data {
         $cmd .= 'picture_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
-        $cmd .= 'raw_format = ?, ';
-        $cmd .= 'raw_compression = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -425,11 +427,10 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg($cmd);
         }
-        $sth_update->execute(
-            $meta{'datetime'},     $meta{'size'},        $meta{'signature'},
-            $meta{'format'},       $meta{'Compression'}, $meta{'camera'},
-            $meta{'shutterspeed'}, $meta{'fnumber'},     $ts,
-            $pid
+        $sth_update->execute($meta{'datetime'}, $meta{'size'},
+          $meta{'signature'},
+          $meta{'camera'},   $meta{'shutterspeed'}, $meta{'fnumber'},
+          $ts, $pid
         );
     } else {
         # Get a picture sequence number
@@ -444,8 +445,6 @@ sub store_meta_data {
         $cmd .= 'file_name = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
-        $cmd .= 'raw_format = ?, ';
-        $cmd .= 'raw_compression = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -463,8 +462,7 @@ sub store_meta_data {
             $meta{'datetime'},            $meta{'datetime'},
             $picture_sequence,            $meta{'source_path'},
             $meta{'source_file'},         $meta{'size'},
-            $meta{'signature'},           $meta{'format'},
-            $meta{'Compression'},         $meta{'Model'},
+            $meta{'signature'},           $meta{'Model'},
             $meta{'ExposureTime'},        $meta{'FNumber'},
             $CONF->default_display_grade, $CONF->default_public,
             $ts,                          $ts
