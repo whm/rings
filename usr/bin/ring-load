@@ -105,7 +105,7 @@ sub save_file {
     my $pic_file = "${pic_path}/${pid}.${a_filetype}";
     $pic{'in_file'} = $pic_file;
     store_meta_data($pid, $a_fullname, \%pic);
-    copy($a_file, $pic_file)
+    copy($a_fullname, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_path");
 
     queue_status_set($pid);
@@ -129,7 +129,7 @@ GetOptions(
 );
 
 # help the poor souls out
-if (@ARGV && $ARGV[0] == 'help') {
+if (@ARGV && $ARGV[0] eq 'help') {
     $opt_help = 1;
 }
 if ($opt_help) {
@@ -167,9 +167,9 @@ for my $this_dir (@dir_list) {
         next;
     }
     $this_dir =~ s{/$}{}xms;
-    msg("Examining files that match *.${type_list} in ${this_dir}");
+    msg('info', "Examining files that match *.${type_list} in ${this_dir}");
     opendir(my $dh, $this_dir) || die "ERROR: problem opening $this_dir\n";
-    while ($this_dir) {
+    while (readdir $dh) {
         my $f = $_;
         if ($f =~ /(.*?)\.$type_list$/xmsi) {
             if ($CONF->debug) {
