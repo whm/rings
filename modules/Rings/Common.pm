@@ -355,7 +355,6 @@ sub get_meta_data {
 
     # Data returned will be passed in a hash
     my %ret = ();
-    $ret{'picture'} = $in_blob;
 
     # Get picture meta data
     my @blob;
@@ -437,7 +436,6 @@ sub store_meta_data {
             $ts,               $pid,
         );
     } else {
-        # Get a picture sequence number
         my $picture_sequence = get_picture_sequence($meta{'datetime'});
         my $cmd              = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?, ';
