@@ -91,10 +91,10 @@ sub save_file {
 
     while (my $row = $sth->fetchrow_hashref()) {
         $dup_cnt++;
-        print "File $a_file duplicates $row->{pid}\n";
+        msg("File $a_file duplicates $row->{pid}");
     }
     if ($dup_cnt and !$opt_force) {
-        print "SKIPPING: $a_file\n";
+        msg("SKIPPING: $a_file");
         return;
     }
 
@@ -119,8 +119,6 @@ sub save_file {
 ##############################################################################
 # Main Routine
 ##############################################################################
-
-print ">>> ring-load  v:30-Oct-2016\n";
 
 # -- get options
 GetOptions(
@@ -177,7 +175,7 @@ for my $this_dir (@dir_list) {
         my $f = $_;
         if ($f =~ /(.*?)\.$type_list$/xmsi) {
             if ($CONF->debug) {
-                dbg("    Saving file: $f");
+                dbg("Saving file: $f");
             }
             my $full_path = "$this_dir/$f";
             $file_list{$full_path}++;
