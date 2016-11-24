@@ -105,8 +105,10 @@ sub read_and_update {
             dbg($cmd);
         }
         my $sth_update = $DBH->prepare($cmd);
-        $sth_update->execute($pic_file, $signature, $width, $height, $size,
-            $format, $compression, $pid);
+        $sth_update->execute(
+            $pic_file, $signature,   $width, $height, $size,
+            $format,   $compression, $pid
+        );
 
         # copy a backup just in case
         my $pic_tmp = File::Temp::tempnam('/tmp', $pic_file . 'XXXXXXX');

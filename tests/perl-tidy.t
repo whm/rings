@@ -39,6 +39,7 @@ for my $s (@perl_list) {
     push @cmd, '-pt=2';  # don't add extra whitespace around parentheses
     push @cmd, '-sbt=2'; # ...or square brackets
     push @cmd, '-sfs';   # no space before semicolon in for
+    push @cmd, '-boc';   # break on old commas which perserves list formattting
     push @cmd, $s;
     system(@cmd);
 
