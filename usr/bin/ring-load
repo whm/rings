@@ -164,6 +164,7 @@ my $type_list = get_file_types();
 
 %SIZE_IDS = get_picture_sizes();
 
+my %file_list = ();
 for my $this_dir (@dir_list) {
     if (!-d $this_dir) {
         msg('INFO: $this_dir not found ... skipping');
@@ -179,12 +180,13 @@ for my $this_dir (@dir_list) {
                 dbg("    Saving file: $f");
             }
             my $full_path = "$this_dir/$f";
-            save_file($full_path);
+            $file_list{$full_path}++;
         }
     }
 }
-
-print "$CNT pictures processed\n";
+for my $f (sort keys %file_list) {
+    save_file($f);
+}
 
 exit;
 
