@@ -25,23 +25,6 @@ my $opt_manual;
 ##############################################################################
 
 # ----------------------------------------------------------------------
-# Set the file name in the pictures_raw table for a picture
-
-sub update_raw_filename {
-    my ($pid, $path) = @_;
-    my ($filename, $dirs, $suffix) = fileparse($path);
-    my $sel = 'UPDATE pictures_raw SET filename = ?, ';
-    $sel .= 'date_last_maint = NOW() ';
-    $sel .= 'WHERE pid = ? ';
-    if ($CONF->debug) {
-        dbg($sel);
-    }
-    my $sth = $DBH->prepare($sel);
-    $sth->execute($filename, $pid);
-    return;
-}
-
-# ----------------------------------------------------------------------
 # Read a picture from a table and write it to disk
 
 sub export_picture {
@@ -70,7 +53,6 @@ sub export_picture {
               or msg('fatal', "Problem writing to $out_path");
             close PF
               or msg('fatal', "Problem closing $out_path");
-            update_raw_filename($pid, $out_path);
             queue_status_set($pid);
         }
         $cnt++;

@@ -81,11 +81,14 @@ sub read_and_update {
     my $cnt = 0;
     foreach my $pid (sort keys %pid_list) {
         msg('info', "Resizing $pid");
-        my $sel = 'SELECT pictures_raw.filename, ';
-        $sel .= 'pictures_information.picture_lot ';
+        my $sel = 'SELECT pictures_raw.mime_type, ';
+        $sel .= 'pictures_information.picture_lot, ';
+        $sel .= 'picture_types.file_type ';
         $sel .= 'FROM pictures_raw ';
         $sel .= 'JOIN pictures_information ';
         $sel .= 'ON (pictures_information.pid = pictures_raw.pid) ';
+        $sel .= 'JOIN picture_types ';
+        $sel .= 'ON (picture_types.mime_type = pictures_raw.mime_type) ';
         $sel .= 'WHERE pictures_raw.pid = ? ';
         if ($CONF->debug) {
             dbg($sel);
@@ -94,10 +97,12 @@ sub read_and_update {
         my $sth = $DBH->prepare($sel);
         $sth->execute($pid);
         my $pic_lot;
-        my $raw_file;
+        my $raw_mime_type;
+        my $raw_file_type;
         if (my $row = $sth->fetchrow_hashref) {
-            $pic_lot  = $row->{picture_lot};
-            $raw_file = $row->{filename};
+            $pic_lot       = $row->{picture_lot};
+            $raw_mime_type = $row->{mime_type};
+            $raw_file_type = $row->{file_type};
         } else {
             msg('error', "PROBLEM SQL: $sel");
             my $msg = "Problems getting raw_picture information for $pid";
@@ -107,8 +112,9 @@ sub read_and_update {
         }
 
         # Get the raw picture
+        my $raw_file = "${pid}.$raw_file_type";
         my $pic_path = $CONF->picture_root . "/$pic_lot/raw/$raw_file";
-        if (!-e $pic_path) {
+        if (!-e $pic_path || -d $pic_path) {
             my $msg = "Raw picture not found for $pid ($pic_path)";
             msg('error', $msg);
             queue_error($pid, $msg);

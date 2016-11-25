@@ -38,7 +38,6 @@ BEGIN {
       get_config
       get_meta_data
       get_next_id
-      get_picture_path
       get_picture_sizes
       get_picture_types
       make_picture_path
@@ -547,35 +546,32 @@ sub create_picture {
     my $cmd = "INSERT INTO $table SET ";
     $cmd .= 'pid = ?, ';
     $cmd .= 'mime_type = ?, ';
-    $cmd .= 'filename = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
     $cmd .= 'signature = ?, ';
     $cmd .= 'format = ?, ';
     $cmd .= 'compression = ?, ';
-    $cmd .= 'date_last_maint = ?, ';
-    $cmd .= 'date_added = ? ';
+    $cmd .= 'date_last_maint = NOW(), ';
+    $cmd .= 'date_added = NOW() ';
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'mime_type = ?, ';
-    $cmd .= 'filename = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
     $cmd .= 'signature = ?, ';
     $cmd .= 'format = ?, ';
     $cmd .= 'compression = ?, ';
-    $cmd .= 'date_last_maint = ? ';
+    $cmd .= 'date_last_maint = NOW() ';
     my $sth_update = $DBH_UPDATE->prepare($cmd);
 
     if ($CONF->debug) {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_pid, $this_type, $this_file, $width,       $height,
-        $ret_size, $signature, $format,    $compression, $ts,
-        $ts,       $this_type, $this_file, $width,       $height,
-        $ret_size, $signature, $format,    $compression, $ts
+        $this_pid,  $this_type, $width,       $height,    $ret_size,
+        $signature, $format,    $compression, $this_type, $width,
+        $height,    $ret_size,  $signature,   $format,    $compression,
     );
 
     return $ret_pic;
@@ -665,19 +661,6 @@ sub check_picture_size {
         $size_found++;
     }
     return $size_found;
-}
-
-# ------------------------------------------------------------------------
-# Return a full path to a picture file
-
-sub get_picture_path {
-    my ($a_lot, $a_size_id, $a_file) = @_;
-    my $this_path = $CONF->picture_root;
-    $this_path .= '/' . $a_lot;
-    $this_path .= '/' . $a_size_id;
-    $this_path .= '/' . $a_file;
-    $this_path =~ s{//}{/}xmsg;
-    return $this_path;
 }
 
 # ------------------------------------------------------------------------
