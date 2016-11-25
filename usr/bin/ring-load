@@ -76,26 +76,23 @@ sub save_file {
     my %pic = get_meta_data($blob);
 
     # Check for duplicate picture
-    my $dup_cnt = 0;
-    my $sql     = "SELECT pid FROM pictures_information ";
-    $sql .= "WHERE raw_picture_size = ? ";
-    $sql .= "AND camera = ? ";
-    $sql .= "AND shutter_speed = ? ";
-    $sql .= "AND fstop = ?";
-    if ($opt_debug) {
-        dbg($sql);
-    }
-    my $sth = $DBH->prepare($sql);
-    $sth->execute(
-        $pic{size}, $pic{camera}, $pic{shutterspeed}, $pic{this_fnumber},
-    );
-    while (my $row = $sth->fetchrow_hashref()) {
-        $dup_cnt++;
-        msg("File $a_file duplicates $row->{pid}");
-    }
-    if ($dup_cnt and !$opt_force) {
-        msg("SKIPPING: $a_file");
-        return;
+    if (!$opt_force) {
+        my $dup_cnt = 0;
+        my $sql     = "SELECT pid FROM pictures_information ";
+        $sql .= "WHERE raw_signature = ? ";
+        if ($opt_debug) {
+            dbg($sql);
+        }
+        my $sth = $DBH->prepare($sql);
+        $sth->execute($pic{signature});
+        while (my $row = $sth->fetchrow_hashref()) {
+            $dup_cnt++;
+            msg('info', "File $a_file duplicates $row->{pid}");
+        }
+        if ($dup_cnt > 0) {
+            msg('info', "SKIPPING: $a_file");
+            return;
+        }
     }
 
     # Set the PID

@@ -52,19 +52,17 @@ function mkin ($a_fld, $a_val, $in_type) {
 $thisTitle = 'Load Pictures into the Rings';
 require ('page_top.php');
 
-$ok   = '<font color="green">';
-$warn = '<font color="red">';
-$em   = "</font><br>\n";
-
 // -- main routine
 
-openlog($_SERVER['PHP_SELF'], LOG_PID | LOG_PERROR, LOG_LOCAL0);
-
-if ($_SESSION['upload_slots'] < 1) {$_SESSION['upload_slots'] = 5;}
-if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
+if ($_SESSION['upload_slots'] < 1) {
+    $_SESSION['upload_slots'] = 5;
+}
+if ($in_upload_slots < 1) {
+    $in_upload_slots = $_SESSION['upload_slots'];
+}
 $_SESSION['upload_slots'] = $in_upload_slots;
 
-if (!isset($in_upload)) {
+if (empty($in_upload)) {
 
     // -- Display slots from
     echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
@@ -114,76 +112,12 @@ if (!isset($in_upload)) {
     echo "<p>\n";
 
     for ($i=0; $i<$in_upload_slots; $i++) {
-        $file_id = "in_filename_" . $i;
-        $tmp_file = $_FILES[$file_id]['tmp_name'];
-        if ($_FILES[$file_id]['error'] !=0
-            && $_FILES[$file_id]['error'] !=4) {
-            echo "Error uploading ".$_FILES[$file_id]["name"]."<br>\n";
-        }
-        if (!isset($tmp_file) || strlen($tmp_file) == 0) {
+        $fld_name = "in_filename_" . $i;
+        if (empty($tmp_file)) {
             continue;
         }
-        $original_file      = $_FILES[$file_id]["name"];
-        $content_type       = $_FILES[$file_id]["type"];
-        $original_file_size = $_FILES[$file_id]["size"];
-        $a_date  = date("Y-m-d H:i:s");
-        $z = strrpos ($original_file, ".");
-        $tmp = substr ($original_file, 0, $z);
-
-        $the_file_contents = fread(fopen($tmp_file,'r'), 5000000);
-
-        $pid = get_next('pid');
-
-        $flds = $vals = '';
-
-        mkin ('pid',             $pid,               'n');
-        mkin ('raw_picture_size',strlen($the_file_contents),'n');
-        mkin ('file_name',       $original_file,     's');
-        mkin ('date_last_maint', $a_date,            'd');
-        mkin ('date_added',      $a_date,            'd');
-        $cmd = "INSERT INTO pictures_information ";
-        $cmd .= "($flds) VALUES ($vals) ";
-        $result = $DBH->query ($cmd);
-        if ($result->errno) {
-            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error .$em;
-            $_SESSION['msg'] .= $warn . "SQL:$cmd$em";
-        }
-
-        $flds = $vals = '';
-        mkin ('pid',             $pid,               'n');
-        mkin ('mime_type',       $content_type,      's');
-        mkin ('picture',         $the_file_contents, 's');
-        mkin ('date_last_maint', $a_date,            'd');
-        mkin ('date_added',      $a_date,            'd');
-        $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
-        $result = $DBH->query($cmd);
-        if ($result->errno) {
-            $_SESSION['msg'] .= $warn . 'MySQL error:' . $result->error . $em;
-        }
-
-        echo "$pid uploaded. ";
-        echo "<a href=\"picture_maint.php?in_pid=$pid\" "
-            . "target=\"_blank\">Update Picture Details.</a>";
-        echo "<br>\n";
-
-        unlink ($tmp_file);
-
-        if ($starting_pid==0) {$starting_pid = $pid;}
+        accept_and_store($fld_name, 0);
     }
-    if ($starting_pid > 0) {
-        $sh_cmd = "/usr/bin/perl /usr/bin/ring-resize.pl";
-        $sh_cmd .= " --start=$starting_pid";
-        $sh_cmd .= " --host=$mysql_host";
-        $sh_cmd .= " --user=$mysql_user";
-        $sh_cmd .= " --db=$mysql_db";
-        $sh_cmd .= " --update";
-        $sh_cmd .= " --dateupdate";
-        syslog(LOG_INFO, "Executing:$sh_cmd");
-        $sh_cmd .= " --pass=$mysql_pass";
-        system($sh_cmd);
-    }
-    echo "<p>\n";
-    echo "<a href=\"picture_load.php\">Back to Load Files</a>\n";
 }
 
 if (strlen($_SESSION['msg']) > 0) {
