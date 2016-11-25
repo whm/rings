@@ -471,29 +471,6 @@ sub store_meta_data {
         );
     }
 
-    # Clean out any existing metadata for this picture
-    my $exif_clean_cmd = 'DELETE FROM pictures_exif where pid = ?';
-    my $exif_del       = $DBH_UPDATE->prepare($exif_clean_cmd);
-    if ($CONF->debug) {
-        dbg($exif_clean_cmd);
-    }
-    $exif_del->execute($pid);
-
-    # Store all of the meta data extracted from the image
-    my $exif_insert_cmd = 'INSERT INTO pictures_exif SET ';
-    $exif_insert_cmd .= 'pid = ?, ';
-    $exif_insert_cmd .= 'exif_key = ?, ';
-    $exif_insert_cmd .= 'exif_value = ?, ';
-    $exif_insert_cmd .= 'date_last_maint = ?, ';
-    $exif_insert_cmd .= 'date_added = ? ';
-    my $exif_insert = $DBH_UPDATE->prepare($exif_insert_cmd);
-    if ($CONF->debug) {
-        dbg($exif_insert_cmd);
-    }
-    for my $k (sort keys %meta) {
-        $exif_insert->execute($pid, $k, $meta{$k}, $ts, $ts);
-    }
-
     return;
 }
 
@@ -505,7 +482,7 @@ sub create_picture {
     my ($this_pid, $this_size_id, $this_picture, $this_file, $this_type) = @_;
 
     if ($this_pid == 0) {
-        my $msg = "PID is server.  Skipping create_picture for $this_size_id";
+        my $msg = "Invalid PID.  Skipping create_picture for $this_size_id";
         msg('error', $msg);
         return;
     }
