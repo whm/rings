@@ -81,6 +81,7 @@ sub read_and_write {
         $sel .= 'WHERE pid >= ? AND pid <= ? ';
         @sql_params = ($start, $end);
     }
+    $sel .= 'ORDER BY pid';
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);

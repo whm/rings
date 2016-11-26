@@ -28,50 +28,6 @@ function no_picture ($t, $flag) {
     exit;
 }
 
-function get_picture_type ($pid, $size_id) {
-    global $DBH;
-    global $CONF;
-
-    $sel = 'SELECT picture_table FROM picture_sizes WHERE size_id = ? ';
-    if ($CONF['debug']) {
-        syslog(LOG_DEBUG, $sel);
-    }
-    if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
-        syslog(LOG_ERR, $m);
-        syslog(LOG_INFO, "Problem statement: $sel");
-    }
-    $stmt->bind_param('s', $size_id);
-    $stmt->execute();
-    $stmt->bind_result($z);
-    if ($stmt->fetch()) {
-        $picture_table = $z;
-    }
-    $stmt->close();
-    if (!empty($picture_table)) {
-        $sel = "SELECT mime_type FROM $picture_table WHERE pid = ? ";
-        if ($CONF['debug']) {
-            syslog(LOG_DEBUG, $sel);
-        }
-        if (!$stmt = $DBH->prepare($sel)) {
-            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
-            syslog(LOG_ERR, $m);
-            syslog(LOG_INFO, "Problem statement: $sel");
-        }
-        $stmt->bind_param('i', $pid);
-        $stmt->execute();
-        $stmt->bind_result($z);
-        if ($stmt->fetch()) {
-            $type = $z;
-        }
-        $stmt->close();
-    }
-    if (empty($type)) {
-        $type = 'application/octet-stream';
-    }
-    return $type;
-}
-
 ##############################################################################
 # Main routine
 ##############################################################################
@@ -119,14 +75,13 @@ if (empty($picture_lot)) {
     no_picture('Picture not available. (picture_log not found');
 }
 
-$type = get_picture_type($in_pid, $in_size);
-
-$pic_path = picture_path($picture_lot, $in_size, $in_pid, 'jpg');
+list($mime_type, $file_type) = get_picture_type($in_pid, $in_size);
+$pic_path = picture_path($picture_lot, $in_size, $in_pid, $file_type);
 if ($CONF['debug']) {
     syslog(LOG_INFO, "Opening file $pic_path");
 }
 if (file_exists($pic_path)) {
-    header("Content-type: $type");
+    header("Content-type: $mime_type");
     readfile($pic_path);
     flush();
 } else {

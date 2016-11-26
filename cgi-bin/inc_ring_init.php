@@ -27,6 +27,9 @@ if (empty($CONF['display_size'])) {
 if (empty($CONF['maint_size'])) {
     $CONF['maint_size'] = '640x480';
 }
+if (empty($CONF['mail_size'])) {
+    $CONF['mail_size'] = 'large';
+}
 if (empty($CONF['ring_admin'])) {
     $CONF['ring_admin'] = 'ring_admin';
 }

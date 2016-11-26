@@ -123,7 +123,7 @@ function sys_err ($txt) {
 // ------------------------------------------------------------------------
 // Assemble the path to a picture
 
-function picture_path ($lot, $size_id, $pid, $type) {
+function picture_path ($lot, $size_id, $pid, $file_type) {
 
     global $CONF;
 
@@ -143,7 +143,7 @@ function picture_path ($lot, $size_id, $pid, $type) {
         sys_err($m);
         return $m;
     }
-    list ($a_file_type, $a_mime_type) = validate_type($type);
+    list ($a_file_type, $a_mime_type) = validate_type($file_type);
     if (empty($a_file_type)) {
         $m = "picture_path invalid file_type ($type)";
         sys_err($m);
