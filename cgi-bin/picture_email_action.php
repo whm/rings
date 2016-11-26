@@ -33,7 +33,7 @@ $mend = "</font><br>\n";
 $msg  = '';
 
 // get the picture information
-if (isset($in_button_send)) {
+if (!empty($in_button_send)) {
 
     // get to: distribution list
     $to_addrs = array();
@@ -78,10 +78,11 @@ if (isset($in_button_send)) {
     $mailMsg->setHeader('X-Mailer', $xhdr);
 
     $email_list = explode(" ", $_SESSION['s_email_list']);
+    $msg_cnt = 0;
     foreach ($email_list as $email_pid) {
 
         // Skip empty entries.
-        if (strlen($email_pid)==0 || $email_pid<1) { continue; }
+        if (empty($email_pid) || $email_pid<1) { continue; }
 
         // get the picture information
         $sel = "SELECT * FROM pictures_information WHERE pid=$email_pid ";
@@ -93,31 +94,29 @@ if (isset($in_button_send)) {
         }
 
         $row = $result->fetch_array(MYSQLI_ASSOC);
-        $thisFilename = $row['file_name'];
+        $pic_lot  = $row['picture_lot'];
+        $pic_size = $CONF['mail_size'];
+        $pic_path = picture_path($pic_lot, $pic_size, $email_pid, $file_type);
 
-        // get the picture
-        $sel = "SELECT * FROM pictures_large WHERE pid=$email_pid ";
-        $result = $DBH->query ($sel);
-        if (!$result) {
-            $err_msg .= "$warn Problem finding image.$mend";
-            $err_msg .= "$warn Problem SQL:$sel$mend";
-            break;
-        } else {
-
-            $row = $result->fetch_array(MYSQLI_ASSOC);
-            $thisPicture = $row['picture'];
-            $thisFiletype = $row['mime_type'];
-
-            $msg .= "$ok Picture size " . strlen($thisPicture) . "$mend";
-
-            // Add the picture
-            $mailMsg->addAttachment($thisPicture,
-                                    $thisFilename,
-                                    $thisFiletype);
+        list($this_mime_type, $this_file_type)
+            = get_picture_type($email_pid, $pic_size);
+        if (empty($mime_type)) {
+            sys_err("Skipping picture $pid");
+            continue;
         }
+
+        $this_picture = file_get_contents($pic_path);
+        $this_file    = "${pic_lot}-${email_pid}.${this_file_type}";
+        sys_msg("Picture ${this_file}, size " . strlen($this_picture));
+            
+        // Add the picture
+        $mailMsg->addAttachment($this_picture,
+                                $this_file,
+                                $this_mime_type);
+        $msg_cnt++;
     }
-    if (strlen($err_msg) > 0) {
-        $msg .= "$warn Message not sent $mend";
+    if ($msg_cnt == 0) {
+        sys_msg("Message not sent");
     } else {
         $mailResult = $mailMsg->send($to_addrs);
     }
@@ -137,28 +136,25 @@ if (isset($in_button_send)) {
 
 <?php
 // These errors are only set if you're using SMTP to send the message
-if ( strlen($err_msg)>0 ) {
-    echo $err_msg;
-    echo "<p>\n";
-    echo "$warn Mail not sent.$mend";
-} elseif (isset($in_button_cancel)) {
+if (!empty($in_button_cancel)) {
     echo '<h3>No mail sent.  List cleared.</h3>';
     $_SESSION['s_email_list'] = '';
 } elseif (!$mailResult) {
-    echo "$warn\n";
+    echo "${sys_msg_warn}\n";
     echo "<pre>\n";
     print_r($mailMsg->errors);
     echo "</pre>\n";
-    echo $mend;
+    echo "${sys_msg_end}\n";
 } else {
     echo '<h3>Mail sent!</h3>';
     echo "<blockquote>\n";
-    echo $msg;
+    echo $_SESSION['msg'];
+    $_SESSION['msg'] = '';
     echo "</blockquote>\n";
 }
 ?>
 
-<?php if (isset($in_button_cancel)) { ?>
+<?php if (!empty($in_button_cancel)) { ?>
 <form name="emailMessageAction"
       method="post"
       action="picture_email.php">

@@ -196,6 +196,58 @@ function get_next ($id) {
 }
 
 //-------------------------------------------------------------
+// Get the mime type and file extension for a picture
+
+function get_picture_type ($pid, $size_id) {
+    global $DBH;
+    global $CONF;
+
+    $sel = 'SELECT picture_table FROM picture_sizes WHERE size_id = ? ';
+    if ($CONF['debug']) {
+        sys_msg("DEBUG: $sel");
+    }
+    if (!$stmt = $DBH->prepare($sel)) {
+        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+        sys_err($m);
+        sys_msg(LOG_INFO, "Problem statement: $sel");
+        return;
+    }
+    $stmt->bind_param('s', $size_id);
+    $stmt->execute();
+    $stmt->bind_result($z);
+    if ($stmt->fetch()) {
+        $picture_table = $z;
+    }
+    $stmt->close();
+    if (!empty($picture_table)) {
+        $sel = 'SELECT mime_type, file_type ';
+        $sel .= "FROM $picture_table WHERE pid = ? ";
+        if ($CONF['debug']) {
+            sys_msg("DEBUG: $sel");
+        }
+        if (!$stmt = $DBH->prepare($sel)) {
+            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+            sys_err($m);
+            sys_err("Problem statement: $sel");
+            return;
+        }
+        $stmt->bind_param('i', $pid);
+        $stmt->execute();
+        $stmt->bind_result($p1, $p2);
+        if ($stmt->fetch()) {
+            $mime_type = $p1;
+            $file_type = $p2;
+        }
+        $stmt->close();
+    }
+    if (empty($mime_type)) {
+        $mime_type = 'application/octet-stream';
+        $file_type = '';
+    }
+    return array($mime_type, $file_type);
+}
+
+//-------------------------------------------------------------
 // Validate the size and return raw if not found
 
 function validate_size ($id) {
