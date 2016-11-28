@@ -78,6 +78,10 @@ function accept_and_store($fld_name, $in_pid) {
 
     $pic_file = picture_path ($picture_lot, 'raw', $pid, $file_type);
     $bytes_written = file_put_contents($pic_file, $the_file_contents);
+    if ($bytes_written == 0) {
+        sys_err("Problem writing to $pic_file");
+        return;
+    }
     sys_msg("$bytes_written bytes written to $pic_file");
 
     $raw_size = strlen($the_file_contents);
@@ -220,8 +224,11 @@ function get_picture_type ($pid, $size_id) {
     }
     $stmt->close();
     if (!empty($picture_table)) {
-        $sel = 'SELECT mime_type, file_type ';
-        $sel .= "FROM $picture_table WHERE pid = ? ";
+        $sel = "SELECT ${picture_table}.mime_type, picture_types.file_type ";
+        $sel .= "FROM $picture_table ";
+        $sel .= 'JOIN picture_types ';
+        $sel .= "ON (picture_types.mime_type = ${picture_table}.mime_type) ";
+        $sel .= 'WHERE pid = ? ';
         if ($CONF['debug']) {
             sys_msg("DEBUG: $sel");
         }
