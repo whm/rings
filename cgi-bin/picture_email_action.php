@@ -96,7 +96,8 @@ if (!empty($in_button_send)) {
         $row = $result->fetch_array(MYSQLI_ASSOC);
         $pic_lot  = $row['picture_lot'];
         $pic_size = $CONF['mail_size'];
-        $pic_path = picture_path($pic_lot, $pic_size, $email_pid, $file_type);
+        list ($pic_dir, $pic_path)
+            = picture_path($pic_lot, $pic_size, $email_pid, $file_type);
 
         list($this_mime_type, $this_file_type)
             = get_picture_type($email_pid, $pic_size);
