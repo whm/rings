@@ -10,34 +10,7 @@ require('inc_ring_init.php');
 // Form or URL inputs
 $in_upload       = get_request('in_upload');
 $in_upload_slots = get_request('in_upload_slots');
-$in_type         = get_request('in_type');
 
-//-------------------------------------------------------------
-// construct an flds and values for an insert
-//
-//  $in_type == "n" is a number
-//  $in_type != "n" anything else is a string
-
-function mkin ($a_fld, $a_val, $in_type) {
-
-    global $DBH;
-    global $flds;
-    global $vals;
-
-    if (strlen($a_val) > 0) {
-        $c = "";
-        if (strlen($flds) > 0) {$c = ",";}
-        $flds .= $c . $a_fld;
-        if ( $in_type != "n" ) {
-            $a_val = $DBH->real_escape_string($a_val);
-            $vals .= $c . "'$a_val'";
-        } else {
-            $vals .= $c . $a_val;
-        }
-    }
-
-    return;
-}
 ?>
 
 <html>
@@ -116,11 +89,15 @@ if (empty($in_upload)) {
         if (empty($tmp_file)) {
             continue;
         }
-        accept_and_store($fld_name, 0);
+        $upload_status = accept_and_store($fld_name, 0);
+        if (!empty_upload_status) {
+            $slot = $i + 1;
+            sys_err("Problem uploading file $slot");
+        }
     }
 }
 
-if (strlen($_SESSION['msg']) > 0) {
+if (!empty($_SESSION['msg'])) {
     echo $_SESSION['msg'];
     $_SESSION['msg'] = '';
 }
