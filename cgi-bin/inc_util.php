@@ -112,12 +112,24 @@ function sys_msg ($txt) {
     return;
 }
     
+function display_msg ($txt) {
+    global $sys_msg_ok;
+    global $sys_msg_end;
+    return "${sys_msg_ok}${txt}${sys_msg_end}";
+}
+    
 function sys_err ($txt) {
     global $sys_msg_warn;
     global $sys_msg_end;
     $_SESSION['msg'] .= "${sys_msg_warn}ERROR: ${txt}${sys_msg_end}";
     syslog(LOG_ERROR, $txt);
     return;
+}
+
+function display_err ($txt) {
+    global $sys_msg_warn;
+    global $sys_msg_end;
+    return "${sys_msg_warn}ERROR: ${txt}${sys_msg_end}";
 }
 
 // ------------------------------------------------------------------------
