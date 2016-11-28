@@ -49,7 +49,7 @@ function accept_and_store($fld_name, $in_pid) {
 
     if ($in_pid == 0) {
         $pid = get_next('pid');
-        $picture_lot = 'upload-' . sql_datetime();
+        $picture_lot = 'upload-' . date('Y-m-d-H-i-s');
     } else {
         $pid = $in_pid;
         $picture_lot = get_picture_lot($pid);

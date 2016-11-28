@@ -86,13 +86,14 @@ if (empty($in_upload)) {
 
     for ($i=0; $i<$in_upload_slots; $i++) {
         $fld_name = "in_filename_" . $i;
+        $tmp_file  = $_FILES[$fld_name]['tmp_name'];
         if (empty($tmp_file)) {
             continue;
         }
         $upload_status = accept_and_store($fld_name, 0);
-        if (!empty_upload_status) {
+        if (!empty(upload_status)) {
             $slot = $i + 1;
-            sys_err("Problem uploading file $slot");
+            echo display_err("Problem uploading file $slot");
         }
     }
 }
