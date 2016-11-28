@@ -49,7 +49,7 @@ function accept_and_store($fld_name, $in_pid) {
 
     if ($in_pid == 0) {
         $pid = get_next('pid');
-        $picture_lot = 'upload-' . date('Y-m-d-H-i-s');
+        $picture_lot = 'upload-' . date('Y-m-d');
     } else {
         $pid = $in_pid;
         $picture_lot = get_picture_lot($pid);
@@ -76,7 +76,14 @@ function accept_and_store($fld_name, $in_pid) {
 
     $the_file_contents = file_get_contents($tmp_file);
 
-    $pic_file = picture_path ($picture_lot, 'raw', $pid, $file_type);
+    list($pic_dir, $pic_file)
+        = picture_path ($picture_lot, 'raw', $pid, $file_type);
+    if (!file_exists($pic_dir)) {
+        if (!mkdir($pic_dir, 0775, true)) {
+            sys_err("Problem creating $pic_dir");
+            return 1;
+        }
+    }
     $bytes_written = file_put_contents($pic_file, $the_file_contents);
     if ($bytes_written == 0) {
         sys_err("Problem writing to $pic_file");

@@ -76,7 +76,8 @@ if (empty($picture_lot)) {
 }
 
 list($mime_type, $file_type) = get_picture_type($in_pid, $in_size);
-$pic_path = picture_path($picture_lot, $in_size, $in_pid, $file_type);
+list($pic_dir, $pic_path)
+    = picture_path($picture_lot, $in_size, $in_pid, $file_type);
 if ($CONF['debug']) {
     syslog(LOG_INFO, "Opening file $pic_path");
 }

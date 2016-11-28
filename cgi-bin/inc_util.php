@@ -162,12 +162,15 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
         return $m;
     }
     
-    $pic_file = $CONF['picture_root'];
-    $pic_file .= '/' . $lot;
-    $pic_file .= '/' . $a_size_id;
+    $pic_dir = $CONF['picture_root'];
+    $pic_dir .= '/' . $lot;
+    $pic_dir .= '/' . $a_size_id;
+
+    $pic_file = $pic_dir;
     $pic_file .= '/' . $pid;
     $pic_file .= '.' . $a_file_type;
-    return $pic_file;
+
+    return array($pic_dir, $pic_file);
 }
 
 ?>
