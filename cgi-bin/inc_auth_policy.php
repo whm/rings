@@ -18,7 +18,7 @@ function auth_picture_invisible ($pid) {
         }
         $result = $DBH->query($sel);
         if (!$result) {
-            syslog(LOG_ERROR, 'ERROR: ' . $result->error);
+            syslog(LOG_ERR, 'ERROR: ' . $result->error);
             syslog(LOG_INFO, "Problem SQL:$sql");
         } else {
             if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -47,7 +47,7 @@ function auth_person_hidden ($uid) {
         }
         $result = $DBH->query($sel);
         if (!$result) {
-            syslog(LOG_ERROR, 'ERROR: ' . $result->error);
+            syslog(LOG_ERR, 'ERROR: ' . $result->error);
             syslog(LOG_INFO, "Problem SQL:$sql");
             $hide_picture = 1;
         } else {

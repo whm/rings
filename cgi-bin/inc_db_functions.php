@@ -79,8 +79,9 @@ function accept_and_store($fld_name, $in_pid) {
     list($pic_dir, $pic_file)
         = picture_path ($picture_lot, 'raw', $pid, $file_type);
     if (!file_exists($pic_dir)) {
-        if (!mkdir($pic_dir, 0775, true)) {
-            sys_err("Problem creating $pic_dir");
+        if (!@mkdir($pic_dir, 0775, true)) {
+            $this_error = error_get_last();
+            sys_err("Problem creating $pic_dir: $this_error");
             return 1;
         }
     }
@@ -184,38 +185,59 @@ function get_next ($id) {
 
     $return_number = 0;
 
-    $sel = "SELECT next_number FROM next_number WHERE id='$id' ";
-    $result = $DBH->query ($sel);
-    if ($result->errno) {
-        $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-        $_SESSION['msg'] .= "Problem SQL:$sel<br>\n";
-    } else {
-        if ($result) {
-            $row = $result->fetch_array(MYSQLI_ASSOC);
-            $return_number = $row["next_number"];
-        }
+    $sel = "SELECT next_number FROM next_number WHERE id= ? ";
+    if (!$stmt = $DBH->prepare($sel)) {
+        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+        sys_err($m);
+        sys_msg(LOG_INFO, "Problem statement: $sel");
+        return;
+    }
+    $stmt->bind_param('s', $id);
+    if (!$stmt->execute()) {
+        $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
+        sys_err($m);
+        sys_msg(LOG_INFO, "Problem statement: $sel");
+        return;
+    }
+    $stmt->bind_result($z);
+    if ($stmt->fetch()) {
+        $return_number = $z;
     }
     if ($return_number > 0) {
         $nxt = $return_number + 1;
-        $cmd = "UPDATE next_number SET next_number=$nxt WHERE id='$id' ";
-        $result = $DBH->query($cmd);
-        if ($DBH->errno) {
-            $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
+        $cmd = 'UPDATE next_number SET next_number=? WHERE id = ? ';
+        if (!$stmt = $DBH->prepare($cmd)) {
+            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+            sys_err($m);
+            sys_msg(LOG_INFO, "Problem statement: $cmd");
+            return;
+        }
+        $stmt->bind_param('is', $nxt, $id);
+        $stmt->execute();
+        if (!$stmt->execute()) {
+            $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
+            sys_err($m);
+            sys_msg(LOG_INFO, "Problem statement: $cmd");
+            return;
         }
     } else {
         $nxt = 1;
-        $cmd = "INSERT INTO  next_number (id,next_number) ";
-        $cmd .= "VALUES ('$id',$nxt) ";
-        $result = $DBH->query($cmd);
-        if ($result->errno) {
-            $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error . $em;
-            $_SESSION['msg'] .= "Problem SQL:$cmd<br>\n";
-        } else {
-            if ($result) {
-                $return_number = $nxt;
-            }
+        $cmd = 'INSERT INTO  next_number (id,next_number) VALUES (?, ?) ';
+        if (!$stmt = $DBH->prepare($cmd)) {
+            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+            sys_err($m);
+            sys_msg(LOG_INFO, "Problem statement: $cmd");
+            return;
         }
+        $stmt->bind_param('si', $id, $nxt);
+        $stmt->execute();
+        if (!$stmt->execute()) {
+            $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
+            sys_err($m);
+            sys_msg(LOG_INFO, "Problem statement: $cmd");
+            return;
+        }
+        $return_number = $nxt;
     }
 
     return $return_number;
