@@ -45,9 +45,8 @@ if (empty($in_size)) {
 } else {
     list($valid_size, $valid_desc) = validate_size($in_size);
     if (empty($valid_size)) {
-        syslog(LOG_WARN, "Invalid picture size $in_size");
+        sys_err("Invalid picture size $in_size");
         $in_size = $CONF['display_size'];
-        syslog(LOG_INFO, "Setting size to $in_size");
     } else {
         $in_size = $valid_size;
     }

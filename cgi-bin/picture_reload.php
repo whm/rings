@@ -46,7 +46,7 @@ require ('page_top.php');
 </table>
 
 <?php if ($in_pid > 0) { ?>
-<img src="/rings/display.php?in_pid=<?php echo $in_pid;?>&in_size=large"><br>
+<img src="/rings/display.php?in_pid=<?php echo $in_pid;?>"><br>
 <?php } ?>
 
 </form>
