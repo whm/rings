@@ -92,17 +92,29 @@ function accept_and_store($fld_name, $in_pid) {
     sys_msg("$bytes_written bytes written to $pic_file");
 
     $raw_size = strlen($the_file_contents);
-    $cmd = 'UPDATE pictures_information SET ';
+    $cmd = 'INSERT INTO pictures_information SET ';
+    $cmd .= 'pid = ?, ';
+    $cmd .= 'source_file = ?, ';
+    $cmd .= 'picture_lot = ?, ';
+    $cmd .= 'file_name = ?, ';
+    $cmd .= 'picture_sequence = ?, ';
+    $cmd .= 'raw_picture_size = ?, ';
+    $cmd .= 'picture_date = NOW(), ';
+    $cmd .= 'date_last_maint = NOW(), ';
+    $cmd .= 'date_addedd = NOW() ';
+    $cmd = 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'raw_picture_size = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
-    $cmd .= 'WHERE pid = ? ';
     $sth = $DBH->prepare($cmd);
     if ($sth->errno) {
         sys_err('MySQL prepare error: ' . $sth->error);
         sys_err("SQL: $cmd");
         return;
     }
-    $sth->bind_param('ii', $raw_size, $pid);
+    $sth->bind_param(
+        'isssiii',      $pid,              $original_file, $picture_lot,
+        $original_name, $picture_sequence, $raw_size,      $raw_size
+    );
     $sth->execute();
     if ($sth->errno) {
         sys_err('MySQL exec error: ' . $sth->error);
@@ -110,17 +122,21 @@ function accept_and_store($fld_name, $in_pid) {
     }
     $sth->close();
 
-    $cmd = 'UPDATE pictures_raw SET ';
+    $cmd = 'INSERT INTO pictures_raw SET ';
+    $cmd .= 'pid = ?, ';
+    $cmd .= 'mime_type = ?, ';
+    $cmd .= 'date_last_maint = NOW(), ';
+    $cmd .= 'date_added = NOW() ';
+    $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'mime_type = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
-    $cmd .= 'WHERE pid = ? ';
     $sth = $DBH->prepare($cmd);
     if ($sth->errno) {
         sys_err('MySQL prepare error: ' . $sth->error);
         sys_err("SQL: $cmd");
         return;
     }
-    $sth->bind_param('si', $mime_type, $pid);
+    $sth->bind_param('iss', $pid, $mime_type, $mime_type);
     $sth->execute();
     if ($sth->errno) {
         sys_err('MySQL exec error: ' . $sth->error);
