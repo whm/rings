@@ -55,7 +55,7 @@ function accept_and_store($fld_name, $in_pid) {
         $picture_lot = get_picture_lot($pid);
         if (empty($picture_lot)) {
             sys_err("Picture lot not found for $pid");
-            return;
+            return 1;
         }
     }
 
@@ -88,11 +88,18 @@ function accept_and_store($fld_name, $in_pid) {
     $bytes_written = file_put_contents($pic_file, $the_file_contents);
     if ($bytes_written == 0) {
         sys_err("Problem writing to $pic_file");
-        return;
+        return 1;
     }
     sys_msg("$bytes_written bytes written to $pic_file");
 
+    if (empty($_SESSION['picture_sequence'])) {
+        $_SESSION['picture_sequence'] = 1;
+    } else {
+        $_SESSION['picture_sequence'] += 1;
+    }
+    $picture_sequence = $_SESSION['picture_sequence'];
     $raw_size = strlen($the_file_contents);
+
     $cmd = 'INSERT INTO pictures_information SET ';
     $cmd .= 'pid = ?, ';
     $cmd .= 'source_file = ?, ';
@@ -102,24 +109,25 @@ function accept_and_store($fld_name, $in_pid) {
     $cmd .= 'raw_picture_size = ?, ';
     $cmd .= 'picture_date = NOW(), ';
     $cmd .= 'date_last_maint = NOW(), ';
-    $cmd .= 'date_addedd = NOW() ';
-    $cmd = 'ON DUPLICATE KEY UPDATE ';
+    $cmd .= 'date_added = NOW() ';
+    $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'raw_picture_size = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
-    $sth = $DBH->prepare($cmd);
-    if ($sth->errno) {
-        sys_err('MySQL prepare error: ' . $sth->error);
-        sys_err("SQL: $cmd");
-        return;
+    if (!$sth = $DBH->prepare($cmd)) {
+        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $cmd";
+        sys_err($m);
+        return 1;
     }
     $sth->bind_param(
         'isssiii',      $pid,              $original_file, $picture_lot,
-        $original_name, $picture_sequence, $raw_size,      $raw_size
+        $original_file, $picture_sequence, $raw_size,      $raw_size
     );
-    $sth->execute();
-    if ($sth->errno) {
-        sys_err('MySQL exec error: ' . $sth->error);
-        sys_err("SQL: $cmd");
+    if (!$sth->execute()) {
+        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $cmd";
+        sys_err($m);
+        return 1;
     }
     $sth->close();
 
@@ -131,26 +139,27 @@ function accept_and_store($fld_name, $in_pid) {
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'mime_type = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
-    $sth = $DBH->prepare($cmd);
-    if ($sth->errno) {
-        sys_err('MySQL prepare error: ' . $sth->error);
-        sys_err("SQL: $cmd");
-        return;
+    if (!$sth = $DBH->prepare($cmd)) {
+        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $cmd";
+        sys_err($m);
+        return 1;
     }
     $sth->bind_param('iss', $pid, $mime_type, $mime_type);
-    $sth->execute();
-    if ($sth->errno) {
-        sys_err('MySQL exec error: ' . $sth->error);
-        sys_err("SQL: $cmd");
+    if (!$sth->execute()) {
+        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $cmd";
+        sys_err($m);
+        return 1;
     }
     $sth->close();
 
     unlink ($tmp_file);
     queue_status_set($pid);
 
-    sys_msg("$pid uploaded.");
-    sys_msg('<a href="picture_maint.php?in_pid=' . $pid. '" '
-    . 'target="_blank">Update Picture Details.</a>');
+    echo display_msg("$pid uploaded.");
+    echo '<a href="picture_maint.php?in_pid=' . $pid . '" '
+      . 'target="_blank">Update Picture Details.</a>';
 
     return;
 }
@@ -187,29 +196,31 @@ function get_next ($id) {
 
     $sel = "SELECT next_number FROM next_number WHERE id= ? ";
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $sel";
         sys_err($m);
-        sys_msg(LOG_INFO, "Problem statement: $sel");
         return;
     }
     $stmt->bind_param('s', $id);
     if (!$stmt->execute()) {
-        $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
+        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $sel";
         sys_err($m);
-        sys_msg(LOG_INFO, "Problem statement: $sel");
         return;
     }
     $stmt->bind_result($z);
     if ($stmt->fetch()) {
         $return_number = $z;
     }
+    $stmt->close();
+
     if ($return_number > 0) {
         $nxt = $return_number + 1;
         $cmd = 'UPDATE next_number SET next_number=? WHERE id = ? ';
         if (!$stmt = $DBH->prepare($cmd)) {
-            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+            $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+            $m .= "Problem statement: $cmd";
             sys_err($m);
-            sys_msg(LOG_INFO, "Problem statement: $cmd");
             return;
         }
         $stmt->bind_param('is', $nxt, $id);
@@ -217,16 +228,16 @@ function get_next ($id) {
         if (!$stmt->execute()) {
             $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
             sys_err($m);
-            sys_msg(LOG_INFO, "Problem statement: $cmd");
             return;
         }
+        $stmt->close();
     } else {
         $nxt = 1;
         $cmd = 'INSERT INTO  next_number (id,next_number) VALUES (?, ?) ';
         if (!$stmt = $DBH->prepare($cmd)) {
-            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
+            $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+            $m .= "Problem statement: $cmd";
             sys_err($m);
-            sys_msg(LOG_INFO, "Problem statement: $cmd");
             return;
         }
         $stmt->bind_param('si', $id, $nxt);
@@ -234,7 +245,6 @@ function get_next ($id) {
         if (!$stmt->execute()) {
             $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
             sys_err($m);
-            sys_msg(LOG_INFO, "Problem statement: $cmd");
             return;
         }
         $return_number = $nxt;

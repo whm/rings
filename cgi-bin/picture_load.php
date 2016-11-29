@@ -79,8 +79,6 @@ if (empty($in_upload)) {
 
     // -- Do the work
 
-    $noinput = true;
-    $starting_pid = 0;
     echo "<h1>Upload results</h1>\n";
     echo "<p>\n";
 
@@ -91,7 +89,7 @@ if (empty($in_upload)) {
             continue;
         }
         $upload_status = accept_and_store($fld_name, 0);
-        if (!empty(upload_status)) {
+        if (!empty($upload_status)) {
             $slot = $i + 1;
             echo display_err("Problem uploading file $slot");
         }
