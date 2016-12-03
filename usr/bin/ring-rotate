@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 #
 # ring-rotate - rotate a picture in the database
+#
+# Author: Bill MacAllister <bill@ca-zephyr.org>
 
 use strict;
 use Cwd;
@@ -121,7 +123,7 @@ sub read_and_update {
         close $fh;
 
         # That the associated pictures be regenerated.
-        queue_status_set($pid);
+        queue_action_set($pid, 'SIZE');
 
         # delete the tmp file is we thing everything is okay
         if (-e $pic_file) {
