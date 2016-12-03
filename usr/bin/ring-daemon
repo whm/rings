@@ -16,7 +16,7 @@ use Rings::Common;
 my %SIZE_IDS = ();
 my @ACTION_LIST = ('SIZE', 'INFO');
 
-my $opt_action; 
+my $opt_action;
 my $opt_conf;
 my $opt_debug;
 my $opt_help;
@@ -74,8 +74,8 @@ sub get_pids {
 
 sub process_pids {
     my ($action, $pid_list_ref) = @_;
-    @pid_list = @{$pid_list_ref);
-    
+    my @pid_list = @{$pid_list_ref};
+
     # process the pictures
 
     my $cnt = 0;
