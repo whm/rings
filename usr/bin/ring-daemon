@@ -2,7 +2,7 @@
 
 # File: ring-daemon
 # Author: Bill MacAllister <bill@ca-zephyr.org>
-# Copyright: 2016 by Bill MacAllister. All right reserved.
+# Copyright: 2016 by Bill MacAllister.  All rights reserved.
 
 use strict;
 use Cwd;
