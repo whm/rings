@@ -155,7 +155,8 @@ function accept_and_store($fld_name, $in_pid) {
     $sth->close();
 
     unlink ($tmp_file);
-    queue_status_set($pid);
+    queue_action_set($pid, 'INFO');
+    queue_action_set($pid, 'SIZE');
 
     echo display_msg("$pid uploaded.");
     echo '<a href="picture_maint.php?in_pid=' . $pid . '" '
@@ -363,15 +364,16 @@ function validate_type ($file_type) {
 }
 
 //-------------------------------------------------------------
-// Add entry to the picture resize queue
+// Add entry to the picture action queue
 
-function queue_status_set ($pid) {
+function queue_action_set ($pid, $action) {
 
     global $DBH;
     global $CONF;
 
-    $sel = 'INSERT INTO picture_resize_queue SET ';
+    $sel = 'INSERT INTO picture_action_queue SET ';
     $sel .= 'pid = ?, ';
+    $sel .= 'action = ?, ';
     $sel .= "status = 'PENDING', ";
     $sel .= 'date_last_maint = NOW(), ';
     $sel .= 'date_added = NOW() ';
@@ -384,7 +386,7 @@ function queue_status_set ($pid) {
         return 1;
     }
 
-    $stmt->bind_param('i', $pid);
+    $stmt->bind_param('is', $pid, $action);
     if (!$stmt->execute()) {
         sys_err("Problem SQL: $sel");
         sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);

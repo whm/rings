@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+#
+# Reload a picture into the database
+#
+# Author: Bill MacAllister <bill@ca-zephyr.org>
 
 use AppConfig qw(:argcount :expand);
 use DBI;
@@ -165,7 +169,7 @@ sub example_conf {
 
 # ------------------------------------------------------------------------
 # Find the entry in the database, load the file into the raw table,
-# and add row to resize queue table.
+# and add row to action queue table.
 
 sub update_db {
     my ($this_file) = $_;
@@ -230,29 +234,15 @@ sub update_db {
         msg("Proposing to update $this_pid\n");
     }
 
-    $cmd = 'INSERT INTO picture_resize_queue SET ';
-    $cmd .= 'pid = ?, ';
-    $cmd .= "status = 'PENDING', ";
-    $cmd .= 'date_last_maint = ?, ';
-    $cmd .= 'date_added = ? ';
-    if ($opt_debug) {
-        dbg($cmd);
-    }
-    my $sth_update = $DBH_UPDATE->prepare($cmd);
-    if ($opt_update) {
-        msg("Requesting resize of $this_pid\n");
-        $sth_update->execute($this_pid, $this_date, $this_date);
-    } else {
-        msg("Proposing to request resize of $this_pid\n");
-    }
+    queue_action_set($this_pid, 'INFO');
+    queue_action_set($this_pid, 'SIZE');
+
     return;
 }
 
 # -------------
 # Main routine
 # -------------
-
-print ">>> ring-fix                    v:27-Jun-2016\n";
 
 # -- get options
 GetOptions(

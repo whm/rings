@@ -292,7 +292,7 @@ if ( $update_flag ) {
         $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
     }
 
-    queue_status_set($in_pid);
+    queue_action_set($in_pid, 'SIZE');
 
     $next_pid = $in_pid;
 

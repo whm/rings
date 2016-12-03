@@ -2,6 +2,7 @@
 #
 # ring-load - load pictures into a ring database
 #
+# Author: Bill MacAllister <bill@ca-zephyr.org>
 
 use strict;
 use Cwd;
@@ -109,7 +110,7 @@ sub save_file {
     copy($a_fullname, $pic_file)
       or msg('fatal', "Problem copying $a_file to $pic_file, $!");
 
-    queue_status_set($pid);
+    queue_action_set($pid, 'SIZE');
 
     return;
 }

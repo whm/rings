@@ -44,8 +44,8 @@ BEGIN {
       msg
       pid_to_path
       queue_error
-      queue_status_reset
-      queue_status_set
+      queue_action_reset
+      queue_action_set
       sql_datetime
       store_meta_data
       trim
@@ -758,10 +758,10 @@ sub pid_to_path {
 # Save the processing error text
 
 sub queue_error {
-    my ($pid, $msg) = @_;
+    my ($pid, $action, $msg) = @_;
 
     my $dt  = sql_datetime();
-    my $sel = 'INSERT INTO picture_resize_queue ';
+    my $sel = 'INSERT INTO picture_action_queue ';
     $sel .= '(pid, status, error_text, date_last_maint, date_added) ';
     $sel .= 'VALUES (?, ?, ?, ?, ?) ';
     $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
@@ -779,20 +779,20 @@ sub queue_error {
 # ------------------------------------------------------------------------
 # Set the picture queue status to pending
 
-sub queue_status_set {
-    my ($pid) = @_;
+sub queue_action_set {
+    my ($pid, $action) = @_;
 
     my $dt  = sql_datetime();
-    my $sel = 'INSERT INTO picture_resize_queue ';
-    $sel .= '(pid, status, date_last_maint, date_added) ';
-    $sel .= 'VALUES (?, ?, ?, ?) ';
-    $sel .= 'ON DUPLICATE KEY UPDATE date_last_maint = ? ';
+    my $sel = 'INSERT INTO picture_action_queue ';
+    $sel .= '(pid, action, status, date_last_maint, date_added) ';
+    $sel .= 'VALUES (?, ?, ?, ?, ?) ';
+    $sel .= 'ON DUPLICATE KEY UPDATE status = ?, date_last_maint = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'PENDING', $dt, $dt, $dt);
+    $sth->execute($pid, $action, 'PENDING', $dt, $dt, 'PENDING', $dt);
 
     return;
 }
@@ -800,17 +800,18 @@ sub queue_status_set {
 # ------------------------------------------------------------------------
 # Reset the picture queue status by deleting the entry in the table
 
-sub queue_status_reset {
-    my ($pid) = @_;
+sub queue_action_reset {
+    my ($pid, $action) = @_;
 
-    my $sel = 'DELETE FROM picture_resize_queue ';
+    my $sel = 'DELETE FROM picture_action_queue ';
     $sel .= 'WHERE pid = ? ';
+    $sel .= 'AND action = ? ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid);
+    $sth->execute($pid, $action);
 
     return;
 }

@@ -53,7 +53,7 @@ sub export_picture {
               or msg('fatal', "Problem writing to $out_path");
             close PF
               or msg('fatal', "Problem closing $out_path");
-            queue_status_set($pid);
+            queue_action_set($pid, 'SIZE');
         }
         $cnt++;
     }
