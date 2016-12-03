@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
 # File: ring-daemon
-# Author: Bill MacAllister
+# Author: Bill MacAllister <bill@ca-zephyr.org>
+# Copyright: 2016 by Bill MacAllister. All right reserved.
 
 use strict;
 use Cwd;
