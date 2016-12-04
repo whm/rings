@@ -54,6 +54,7 @@ sub export_picture {
             close PF
               or msg('fatal', "Problem closing $out_path");
             queue_action_set($pid, 'SIZE');
+            queue_action_set($pid, 'INFO');
         }
         $cnt++;
     }

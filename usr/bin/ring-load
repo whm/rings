@@ -111,6 +111,7 @@ sub save_file {
       or msg('fatal', "Problem copying $a_file to $pic_file, $!");
 
     queue_action_set($pid, 'SIZE');
+    queue_action_set($pid, 'INFO');
 
     return;
 }
