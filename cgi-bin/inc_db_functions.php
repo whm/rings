@@ -393,7 +393,7 @@ function queue_action_set ($pid, $action) {
         return 1;
     }
     $stmt->close();
-
+    sys_msg("Picture $action update queued for $pid");
     return;
 }
 
