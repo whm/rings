@@ -450,8 +450,8 @@ sub store_meta_data {
     my %meta = %{$meta_data_ref};
     my $ts   = sql_datetime();
 
-    dbg(" Storing meta data for $in_file");
     if ($CONF->debug) {
+        dbg("Storing meta data for $pid");
         for my $a (sort keys %meta) {
             dbg("meta{$a} = $meta{$a}");
         }
@@ -601,7 +601,9 @@ sub create_picture {
         }
         $width  = int($x);
         $height = int($y);
-        dbg("    Producing picture $width by $height");
+        if ($CONF->debug) {
+            dbg("Producing picture $width by $height");
+        }
         $newPic->Resize(width => $x, height => $y);
         my @bPic = $newPic->ImageToBlob();
         $ret_pic = $bPic[0];
@@ -836,7 +838,7 @@ sub queue_error {
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, $action, $msg, $msg, $dt);
+    $sth->execute($pid, $action, $msg, $msg);
     return;
 }
 

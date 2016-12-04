@@ -85,7 +85,7 @@ sub process_pids {
 
     my $cnt = 0;
     foreach my $pid (@pid_list) {
-        msg('info', "$action $pid");
+        msg('info', "Performing action: $action for picture: $pid");
         my $sel = 'SELECT pictures_raw.mime_type, ';
         $sel .= 'pictures_information.picture_lot, ';
         $sel .= 'pictures_information.source_file, ';
