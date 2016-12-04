@@ -36,6 +36,10 @@ sub get_pids {
 
     my @pid_list = ();
 
+    if ($CONF->debug) {
+        dbg("action: $action");
+        dbg("pid_start: $pid_start");
+    }
     if ($pid_start == 'pending') {
         my $sel = 'SELECT pid FROM picture_action_queue ';
         $sel .= "WHERE status = 'PENDING' ";
@@ -81,7 +85,7 @@ sub process_pids {
 
     my $cnt = 0;
     foreach my $pid (@pid_list) {
-        msg('info', "Resizing $pid");
+        msg('info', "$action $pid");
         my $sel = 'SELECT pictures_raw.mime_type, ';
         $sel .= 'pictures_information.picture_lot, ';
         $sel .= 'pictures_information.source_file, ';
@@ -151,6 +155,7 @@ sub process_pids {
             my $blob = read_file("$pic_path", binmode => ':raw');
             my %pic = get_meta_data($blob);
             store_meta_data($pid, $source_file, \%pic);
+            queue_action_reset($pid, $action);
         } else {
             queue_error($pid, $action, "Unknown action $action");
         }
