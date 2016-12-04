@@ -188,11 +188,19 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 if ($opt_action) {
-    if (scalar(grep(!/^$opt_action$/, @ACTION_LIST))) {
-        msg('info', "ERROR: unknown action $opt_action");
-        pod2usage(-verbose => 0);
-    } else {
-        @ACTION_LIST = ($opt_action);
+    my %valid_actions = ();
+    for my $a (@ACTION_LIST) {
+        $valid_actions{$a} = 1;
+    }
+    @ACTION_LIST = ();
+    my @new_actions = split /,/, $opt_action;
+    for my $a (@new_actions) {
+        if ($valid_actions{$a}) {
+            push @ACTION_LIST, $a;
+        } else {
+            msg('info', "ERROR: unknown action requested $a");
+            pod2usage(-verbose => 0);
+        }
     }
 }
 

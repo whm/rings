@@ -66,35 +66,20 @@ if (!empty($in_group_id)) {
 // set the display size
 if (empty($in_size)) {
     if (empty($_SESSION['display_size'])) {
-        $in_size = 'larger';
+        $in_size = $CONF['maint_size'];
     } else {
         $in_size = $_SESSION['display_size'];
     }
 }
 $_SESSION['display_size'] = $in_size;
 
-$chk_large = $chk_larger = $chk_raw = $chk_1280_1024 = '';
-if ($in_size == 'large') {
-    $chk_large = 'CHECKED';
-} elseif ($in_size == 'larger') {
-    $chk_larger = 'CHECKED';
-} elseif ($in_size == '1280_1024') {
-    $chk_1280_1024 = 'CHECKED';
-} elseif ($in_size == 'raw') {
-    $chk_raw = 'CHECKED';
-} else {
-    $chk_larger = 'CHECKED';
-    $in_size = 'larger';
-}
-$_SESSION['display_size'] = $in_size;
-
 // set display grade
-if (strlen($in_grade)>0) {
+if (!empty($in_grade)) {
     $_SESSION['display_grade'] = $in_grade;
 } else {
     $in_grade = $_SESSION['display_grade'];
 }
-if (strlen($in_grade)==0) {
+if (empty($in_grade)) {
     $in_grade = 'A';
 }
 $chk_a = $chk_b = $chk_c = '';
@@ -109,14 +94,16 @@ if ($in_grade == 'C') {
 $_SESSION['display_grade'] = $in_grade;
 
 // set show delay
-if (strlen($in_seconds) == 0) {
+if (empty($in_seconds)) {
     $in_seconds = $_SESSION['display_seconds'];
 }
 if ($in_seconds < 3) { $in_seconds = 3;}
 $_SESSION['display_seconds'] = $in_seconds;
 
 // set button postion on picture display pages
-if (strlen($in_pos) == 0) {$in_pos = $_SESSION['button_position'];}
+if (empty($in_pos)) {
+    $in_pos = $_SESSION['button_position'];
+}
 $chk_pos_top = $chk_pos_bottom = '';
 if ($in_pos == 'B') {
     $chk_pos_bottom = 'CHECKED';
@@ -253,17 +240,31 @@ if ($result = $DBH->query($sel)) {
     <input type="submit" name="in_button_set" value="Set">
     </td>
     <th align="right">Picture Size:</th>
-    <td><input type="radio" <?php echo $chk_large;?> name="in_size"
-                value="large">Large
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_larger;?> name="in_size"
-                value="larger">Larger
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_1280_1024;?> name="in_size"
-                value="1280_1024">Larger Still
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_raw;?> name="in_size"
-                value="raw">Gigantic
+    <td>
+<?php
+$sel = 'SELECT size_id,description FROM picture_sizes ';
+if (!$stmt = $DBH->prepare($sel)) {
+    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+}
+$stmt->bind_param('s', $id);
+$stmt->execute();
+$stmt->bind_result($p1, $p2);
+$sp = '';
+while ($stmt->fetch()) {
+    $this_size        = $p1;
+    $this_description = $p2;
+    $input = $sp . '<input type="radio" ';
+    if ($in_size == $this_size) {
+        $input .= 'CHECKED ';
+    }
+    $input .= 'name="in_size" ';
+    $input .= 'value="' . $this_size . '">';
+    $input .= $this_description;
+    echo $input . "\n";
+    $sp = '&nbsp;&nbsp';
+}
+$stmt->close();
+?>
     </td>
     </tr>
 
@@ -490,7 +491,7 @@ if (!empty($_SESSION['msg'])) {
 
 <script language="JavaScript">
 <?php
-if (strlen($chk_pref_yes) < 1) {
+if (empty($chk_pref_yes)) {
     echo "getDom(\"preferencesDisplay\").style.display = 'none';\n";
 }
 ?>

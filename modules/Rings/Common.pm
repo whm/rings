@@ -47,6 +47,7 @@ BEGIN {
       queue_action_reset
       queue_action_set
       sql_datetime
+      sql_format_datetime
       store_meta_data
       trim
       unix_seconds
@@ -325,6 +326,36 @@ sub sql_datetime {
 }
 
 # ------------------------------------------------------------------------
+# sql date time string from a string date time
+
+sub sql_format_datetime {
+
+    my ($dt) = @_;
+
+    my $return_dt = $dt;
+    my $dt_format = '%0.4i-%0.2i-%0.2i %0.2i:%0.2i:%0.2i';
+    if ($dt =~ /^(\d{4}).(\d{1,2}).(\d{1,2}).(\d{1,2}).(\d{1,2}).(\d{1,2})/xms)
+    {
+        my $yr  = $1;
+        my $mon = $2;
+        my $day = $3;
+        my $hr  = $4;
+        my $min = $5;
+        my $sec = $6;
+        $return_dt = sprintf($dt_format, $yr, $mon, $day, $hr, $min, $sec);
+    } elsif ($dt =~ /^(\d{4}).(\d{1,2}).(\d{1,2})/xms) {
+        my $yr  = $1;
+        my $mon = $2;
+        my $day = $3;
+        my $hr  = 0;
+        my $min = 0;
+        my $sec = 0;
+        $return_dt = sprintf($dt_format, $yr, $mon, $day, $hr, $min, $sec);
+    }
+    return $return_dt;
+}
+
+# ------------------------------------------------------------------------
 # Selecting the next picture in a ring requires that the date_taken
 # and the picture_sequence pair be unique. This routine searches the
 # existing picture database and returns the number of entries for a
@@ -361,25 +392,26 @@ sub get_meta_data {
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
+    # Make sure this data is pulled from the image
+    $ret{'ring_width'}       = $pic->Get('width');
+    $ret{'ring_height'}      = $pic->Get('height');
+    $ret{'ring_size'}        = $pic->Get('filesize');
+    $ret{'ring_format'}      = $pic->Get('format');
+    $ret{'ring_compression'} = $pic->Get('compression');
+    $ret{'ring_signature'}   = $pic->Get('signature');
+
     # Now pull the rest of the exif data
     my $info    = ImageInfo(\@blob[0]);
     my %meta_lc = ();
     for my $t (keys %{$info}) {
         $t =~ s/^\s+|\s+$//g;
-        $ret{$t}     = ${$info}{$t};
-        $meta_lc{$t} = ${$info}{$t};
+        $ret{$t} = ${$info}{$t};
+        $meta_lc{ lc($t) } = ${$info}{$t};
         if ($CONF->debug) {
             dbg("$t = $ret{$t}");
         }
     }
 
-    # Make sure this data is pulled from the image
-    $ret{'ring_width'}        = $meta_lc{'width'};
-    $ret{'ring_height'}       = $meta_lc{'height'};
-    $ret{'ring_size'}         = $meta_lc{'filesize'};
-    $ret{'ring_format'}       = $meta_lc{'format'};
-    $ret{'ring_compression'}  = $meta_lc{'compression'};
-    $ret{'ring_signature'}    = $meta_lc{'signature'};
     $ret{'ring_shutterspeed'} = $meta_lc{'shutterspeed'};
     $ret{'ring_fstop'}        = $meta_lc{'fnumber'};
 
@@ -399,7 +431,10 @@ sub get_meta_data {
     );
     for my $n (@date_names) {
         if ($meta_lc{$n}) {
-            $ret{'ring_datetime'} = $meta_lc{$n};
+            $ret{'ring_datetime'} = sql_format_datetime($meta_lc{$n});
+            if ($CONF->debug) {
+                dbg("n = $n, ring_datetime = $ret{'ring_datetime'}");
+            }
         }
     }
 
@@ -416,6 +451,11 @@ sub store_meta_data {
     my $ts   = sql_datetime();
 
     dbg(" Storing meta data for $in_file");
+    if ($CONF->debug) {
+        for my $a (sort keys %meta) {
+            dbg("meta{$a} = $meta{$a}");
+        }
+    }
 
     # Set file paths and names
     $meta{'source_path'} = File::Spec->rel2abs($in_file);
@@ -433,12 +473,8 @@ sub store_meta_data {
     $sth->execute($pid);
     my $row_found;
     if (my $row = $sth->fetchrow_hashref) {
-        my $picture_date = $row->{picture_date};
-        if (!$picture_date) {
-            $picture_date = $meta{ring_datetime};
-        }
         my $date_taken = $row->{date_taken};
-        if (!$date_taken) {
+        if (!$date_taken || $date_taken eq 'UNKNOWN') {
             $date_taken = $meta{ring_datetime};
         }
         my $cmd = "UPDATE pictures_information SET ";
@@ -457,7 +493,7 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $date_taken,          $picture_date,
+            $date_taken,          $meta{ring_datetime},
             $meta{'ring_size'},   $meta{'ring_signature'},
             $meta{'ring_camera'}, $meta{'ring_shutterspeed'},
             $meta{'ring_fstop'},  $ts,
