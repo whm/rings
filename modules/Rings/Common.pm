@@ -361,21 +361,45 @@ sub get_meta_data {
     my $pic = Image::Magick->New();
     $pic->BlobToImage(@blob);
 
-    # Make sure this data is pulled from the image
-    $ret{'width'}       = $pic->Get('width');
-    $ret{'height'}      = $pic->Get('height');
-    $ret{'size'}        = $pic->Get('filesize');
-    $ret{'format'}      = $pic->Get('format');
-    $ret{'Compression'} = $pic->Get('compression');
-    $ret{'signature'}   = $pic->Get('signature');
-
     # Now pull the rest of the exif data
-    my $info = ImageInfo(\@blob[0]);
+    my $info    = ImageInfo(\@blob[0]);
+    my %meta_lc = ();
     for my $t (keys %{$info}) {
         $t =~ s/^\s+|\s+$//g;
-        $ret{$t} = ${$info}{$t};
+        $ret{$t}     = ${$info}{$t};
+        $meta_lc{$t} = ${$info}{$t};
         if ($CONF->debug) {
             dbg("$t = $ret{$t}");
+        }
+    }
+
+    # Make sure this data is pulled from the image
+    $ret{'ring_width'}        = $meta_lc{'width'};
+    $ret{'ring_height'}       = $meta_lc{'height'};
+    $ret{'ring_size'}         = $meta_lc{'filesize'};
+    $ret{'ring_format'}       = $meta_lc{'format'};
+    $ret{'ring_compression'}  = $meta_lc{'compression'};
+    $ret{'ring_signature'}    = $meta_lc{'signature'};
+    $ret{'ring_shutterspeed'} = $meta_lc{'shutterspeed'};
+    $ret{'ring_fstop'}        = $meta_lc{'fnumber'};
+
+    # Look for some fields under multiple names
+    $ret{'ring_camera'} = 'UNKNOWN';
+    my @camera_names = ('make', 'model');
+    for my $c (@camera_names) {
+        if ($meta_lc{$c}) {
+            $ret{'ring_camera'} = $meta_lc{$c};
+        }
+    }
+
+    $ret{'ring_datetime'} = sql_datetime();
+    my @date_names = (
+        'datemodify', 'modifydate', 'datetimeoriginal',
+        'datecreate', 'createdate'
+    );
+    for my $n (@date_names) {
+        if ($meta_lc{$n}) {
+            $ret{'ring_datetime'} = $meta_lc{$n};
         }
     }
 
@@ -400,22 +424,25 @@ sub store_meta_data {
     my @dirs = split(/\//, $meta{'source_dirs'});
     $meta{'picture_lot'} = @dirs[-1];
 
-    # Set default time stamp
-    if (!$meta{'datetime'}) {
-        $meta{'datetime'} = $ts;
-    }
-
     # Store summary meta data
-    my $sel = "SELECT pid FROM pictures_information WHERE pid=? ";
+    my $sel = "SELECT * FROM pictures_information WHERE pid=? ";
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);
     }
     $sth->execute($pid);
     my $row_found;
-    while (my $row = $sth->fetchrow_hashref) { $row_found = 1; }
-    if ($row_found) {
+    if (my $row = $sth->fetchrow_hashref) {
+        my $picture_date = $row->{picture_date};
+        if (!$picture_date) {
+            $picture_date = $meta{ring_datetime};
+        }
+        my $date_taken = $row->{date_taken};
+        if (!$date_taken) {
+            $date_taken = $meta{ring_datetime};
+        }
         my $cmd = "UPDATE pictures_information SET ";
+        $cmd .= 'date_taken = ?, ';
         $cmd .= 'picture_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
@@ -430,9 +457,11 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $meta{'datetime'}, $meta{'size'},         $meta{'signature'},
-            $meta{'camera'},   $meta{'shutterspeed'}, $meta{'fnumber'},
-            $ts,               $pid,
+            $date_taken,          $picture_date,
+            $meta{'ring_size'},   $meta{'ring_signature'},
+            $meta{'ring_camera'}, $meta{'ring_shutterspeed'},
+            $meta{'ring_fstop'},  $ts,
+            $pid,
         );
     } else {
         my $picture_sequence = get_picture_sequence($meta{'datetime'});
@@ -460,11 +489,11 @@ sub store_meta_data {
         }
         $sth_update->execute(
             $pid,                         $meta{'picture_lot'},
-            $meta{'datetime'},            $meta{'datetime'},
+            $meta{'ring_datetime'},       $meta{'ring_datetime'},
             $picture_sequence,            $meta{'source_path'},
-            $meta{'source_file'},         $meta{'size'},
-            $meta{'signature'},           $meta{'Model'},
-            $meta{'ExposureTime'},        $meta{'FNumber'},
+            $meta{'source_file'},         $meta{'ring_size'},
+            $meta{'ring_signature'},      $meta{'ring_camera'},
+            $meta{'ring_shutterspeed'},   $meta{'ring_fstop'},
             $CONF->default_display_grade, $CONF->default_public,
             $ts,                          $ts
         );
