@@ -825,19 +825,18 @@ sub pid_to_path {
 sub queue_error {
     my ($pid, $action, $msg) = @_;
 
-    my $dt  = sql_datetime();
     my $sel = 'INSERT INTO picture_action_queue ';
-    $sel .= '(pid, status, error_text, date_last_maint, date_added) ';
-    $sel .= 'VALUES (?, ?, ?, ?, ?) ';
+    $sel .= '(status, pid, action, error_text, date_last_maint, date_added) ';
+    $sel .= "VALUES ('ERROR', ?, ?, ?, NOW(), NOW()) ";
     $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
-    $sel .= 'status = ?, ';
-    $sel .= 'date_last_maint = ? ';
+    $sel .= "status = 'ERROR', ";
+    $sel .= 'date_last_maint = NOW() ';
     if ($CONF->debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute($pid, 'ERROR', $msg, $dt, $dt, $msg, 'ERROR', $dt);
+    $sth->execute($pid, $action, $msg, $msg, $dt);
     return;
 }
 
