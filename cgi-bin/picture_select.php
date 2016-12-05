@@ -331,7 +331,8 @@ if (!empty($in_ring_pid)) {
     echo '<tr>'."\n";
     echo '<td valign="top" align="center">'."\n";
 
-    echo '<a href="display.php?in_pid='.$this_pid.'" target="_blank">';
+    echo '<a href="display.php?in_pid=' . $this_pid
+        . '&in_size=raw" target="_blank">';
     echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
     echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
     echo 'alt="Display full size image in a new window.">';
