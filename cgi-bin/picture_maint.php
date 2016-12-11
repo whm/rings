@@ -138,9 +138,6 @@ $sel .= "WHERE pid = $this_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
-    if (empty($row['picture_date'])) {
-        $row['picture_date'] = $row['date_taken'];
-    }
     if (!empty($row['pid'])) {
         foreach ($row as $fld => $val) {
             $row[$fld] = trim($val);
@@ -328,6 +325,10 @@ if ($this_pid > 0) {
 <tr>
  <td align="right">Old Date Taken:</td>
  <td><?php $row['date_taken']; ?></td>
+</tr>
+<tr>
+ <td align="right">Camera Date:</td>
+ <td><?php $row['camera_date']; ?></td>
 </tr>
 <tr>
  <td align="right">Picture Date:</td>
