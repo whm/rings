@@ -356,7 +356,7 @@ sub sql_format_datetime {
 }
 
 # ------------------------------------------------------------------------
-# Selecting the next picture in a ring requires that the date_taken
+# Selecting the next picture in a ring requires that the picture_date
 # and the picture_sequence pair be unique. This routine searches the
 # existing picture database and returns the number of entries for a
 # given date +1.
@@ -364,7 +364,7 @@ sub sql_format_datetime {
 sub get_picture_sequence {
     my ($dt) = @_;
     my $seq  = 1;
-    my $sel  = "SELECT pid FROM pictures_information WHERE date_taken = ? ";
+    my $sel  = "SELECT pid FROM pictures_information WHERE picture_date = ? ";
     my $sth  = $DBH->prepare($sel);
     if ($CONF->debug) {
         dbg($sel);
@@ -424,7 +424,7 @@ sub get_meta_data {
         }
     }
 
-    $ret{'ring_datetime'} = sql_datetime();
+    $ret{'ring_datetime'} = '1948-09-25 09:00:00';
     my @date_names = (
         'datemodify', 'modifydate', 'datetimeoriginal',
         'datecreate', 'createdate'
@@ -435,6 +435,7 @@ sub get_meta_data {
             if ($CONF->debug) {
                 dbg("n = $n, ring_datetime = $ret{'ring_datetime'}");
             }
+            last;
         }
     }
 
@@ -473,19 +474,14 @@ sub store_meta_data {
     $sth->execute($pid);
     my $row_found;
     if (my $row = $sth->fetchrow_hashref) {
-        my $date_taken = $row->{date_taken};
-        if (!$date_taken || $date_taken eq 'UNKNOWN') {
-            $date_taken = $meta{ring_datetime};
-        }
         my $cmd = "UPDATE pictures_information SET ";
-        $cmd .= 'date_taken = ?, ';
-        $cmd .= 'picture_date = ?, ';
+        $cmd .= 'camera_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
-        $cmd .= 'date_last_maint = ?';
+        $cmd .= 'date_last_maint = NOW()';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
@@ -493,10 +489,9 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $date_taken,          $meta{ring_datetime},
-            $meta{'ring_size'},   $meta{'ring_signature'},
-            $meta{'ring_camera'}, $meta{'ring_shutterspeed'},
-            $meta{'ring_fstop'},  $ts,
+            $meta{'ring_datetime'},     $meta{'ring_size'},
+            $meta{'ring_signature'},    $meta{'ring_camera'},
+            $meta{'ring_shutterspeed'}, $meta{'ring_fstop'},
             $pid,
         );
     } else {
@@ -504,7 +499,7 @@ sub store_meta_data {
         my $cmd              = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?, ';
         $cmd .= 'picture_lot = ?, ';
-        $cmd .= 'date_taken = ?, ';
+        $cmd .= 'camera_date = ?, ';
         $cmd .= 'picture_date = ?, ';
         $cmd .= 'picture_sequence = ?, ';
         $cmd .= 'source_file = ?, ';
@@ -516,8 +511,8 @@ sub store_meta_data {
         $cmd .= 'fstop = ?, ';
         $cmd .= 'grade = ?, ';
         $cmd .= 'public = ?, ';
-        $cmd .= 'date_last_maint = ?, ';
-        $cmd .= 'date_added = ? ';
+        $cmd .= 'date_last_maint = NOW(), ';
+        $cmd .= 'date_added = NOW() ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
@@ -531,7 +526,6 @@ sub store_meta_data {
             $meta{'ring_signature'},      $meta{'ring_camera'},
             $meta{'ring_shutterspeed'},   $meta{'ring_fstop'},
             $CONF->default_display_grade, $CONF->default_public,
-            $ts,                          $ts
         );
     }
 
