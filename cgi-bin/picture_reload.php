@@ -44,9 +44,18 @@ require ('page_top.php');
 </tr>
 </table>
 
-<?php if ($in_pid > 0) { ?>
-<img src="/rings/display.php?in_pid=<?php echo $in_pid;?>"><br>
-<?php } ?>
+<?php
+if ($in_pid > 0) {
+    # Defeat the local picture cache by adding a random number to
+    # the image tag.
+    $i = rand(0, 10000);
+    $this_img
+        = '<img src="display.php?in_pid=' . $in_pid
+        . '&rand=' . $i
+        . '">';
+    echo $this_img;
+}
+?>
 
 </form>
 

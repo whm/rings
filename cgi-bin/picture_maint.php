@@ -154,7 +154,7 @@ if ($this_pid > 0 && empty($row['pid']) ) {
 
 // Check to see if the raw image exists
 if ($this_pid > 0) {
-    $sel = "SELECT pid ";
+    $sel = "SELECT pid,date_last_maint ";
     $sel .= "FROM pictures_raw ";
     $sel .= "WHERE pid = $this_pid ";
     $result = $DBH->query ($sel);
@@ -162,7 +162,8 @@ if ($this_pid > 0) {
         $raw_row = $result->fetch_array(MYSQLI_ASSOC);
         if (empty($raw_row['pid'])) {
             sys_msg("Raw image is missing for $this_pid.");
-        }
+        } else {
+            $date_last_maint = $raw_row['date_last_maint'];
     }
 }
 ?>
@@ -531,33 +532,33 @@ if (!empty($_SESSION['msg'])) {
 <p>
 
 <?php
-if (!empty($row['pid']) && $row["pid"]>0) {
-    echo '<img src="display.php';
-    echo '?in_pid=' . $row["pid"];
-    echo '&in_size=' . $CONF['maint_size'];
-    echo '">' . "\n";
-    echo "<br/>\n";
-}
-?>
-
-<?php
-# Picture matching code
-$sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
-$sel .= "FROM tmp_matching ";
-$sel .= "JOIN pictures_small ";
-$sel .= "ON (pictures_small.size = tmp_matching.size ";
-$sel .= "AND pictures_small.width = tmp_matching.width) ";
-$sel .= "WHERE pictures_small.pid = $this_pid ";
-$result = $DBH->query ($sel);
-if ($result) {
-    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $this_path = $row['file_path'];
-        $this_sig  = $row['signature'];
-        echo '<img src="display_file.php?in_signature=';
-        echo $this_sig;
+    if (!empty($row['pid'])) {
+        echo '<img src="display.php';
+        echo '?in_pid=' . $row["pid"];
+        echo '&in_size=' . $CONF['maint_size'];
+        echo '&dlm=' . htmlentities($date_last_maint);
         echo '">' . "\n";
         echo "<br/>\n";
-        echo $row['file_path'] . "<br>\n";
+    }
+
+    # Picture matching code
+    $sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
+    $sel .= "FROM tmp_matching ";
+    $sel .= "JOIN pictures_small ";
+    $sel .= "ON (pictures_small.size = tmp_matching.size ";
+    $sel .= "AND pictures_small.width = tmp_matching.width) ";
+    $sel .= "WHERE pictures_small.pid = $this_pid ";
+    $result = $DBH->query ($sel);
+    if ($result) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $this_path = $row['file_path'];
+            $this_sig  = $row['signature'];
+            echo '<img src="display_file.php?in_signature=';
+            echo $this_sig;
+            echo '">' . "\n";
+            echo "<br/>\n";
+            echo $row['file_path'] . "<br>\n";
+        }
     }
 }
 ?>

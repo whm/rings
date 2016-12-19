@@ -258,7 +258,14 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
         $pid = $row["pid"];
         $pic_href = '<a href="picture_maint.php?in_pid=$pid" '
             . 'target="_blank">';
-        $thumb = "<img src=\"display.php?in_pid=$pid&in_size=small\">";
+        # Defeat the local picture cache by adding a random number to
+        # the image tag.
+        $i = rand(0, 10000);
+        $thumb
+            = '<img src="display.php?in_pid=' . $pid
+            . '&in_size=small'
+            . '&rand=' . $i
+            . '">';
         echo " <tr>\n";
         echo "  <td>$thumb</td>\n";
         echo "  <td>".$pic_href.$row["pid"]."</a></td>\n";

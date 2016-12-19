@@ -154,7 +154,7 @@ if (!empty($in_start_date)) {
 
 <?php 
 
-$sel = "SELECT p.picture_date, d.pid ";
+$sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
@@ -224,11 +224,13 @@ if (!$result) {
             $hr = "<hr>\n";
         }
         $pid = $row["pid"];
-        $pic_href = '<a href="picture_select.php?in_ring_pid=' . $pid .'" '
+        $pic_href = '<a href="picture_select.php'
+            . '?in_ring_pid=' . $pid .'" '
             . 'target="_blank">';
         $thumb = '<img src="display.php'
             . '?in_pid=' . $pid
-            . '&in_size=' . $CONF['index_size'] . '" '
+            . '&in_size=' . $CONF['index_size']
+            . '&dlm=' . htmlentities($row['date_last_maint']) . '" '
             . 'border="0">';
         echo $pic_href . $thumb . "</a>\n";
         $cnt++;

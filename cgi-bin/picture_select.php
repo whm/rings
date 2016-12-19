@@ -239,10 +239,14 @@ if (!empty($in_ring_pid)) {
         $this_pid          = $row["pid"];
         $this_picture_date = $row["picture_date"];
         $this_picture_seq  = $row["picture_sequence"];
+        $this_dlm          = $row["date_last_maint"];
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
-        $image_reference   .= "<img src=\"display.php";
-        $image_reference   .= "?in_pid=$this_pid";
-        $image_reference   .= "&in_size=$this_size\">\n";
+        $image_reference
+            .= '<img src="display.php'
+            . '?in_pid=' . $this_pid
+            . '&dlm=' . htmlentities($this_dlm)
+            . '&in_size=' . $this_size
+            . '">';
         if (!empty($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
@@ -331,8 +335,15 @@ if (!empty($in_ring_pid)) {
     echo '<tr>'."\n";
     echo '<td valign="top" align="center">'."\n";
 
-    echo '<a href="display.php?in_pid=' . $this_pid
-        . '&in_size=raw" target="_blank">';
+    # Defeat the local picture cache by adding a random number to
+    # the image tag.
+    $i = rand(0, 10000);
+    $raw_img
+        = '<img src="display.php?in_pid=' . $this_pid
+        . '&in_size=raw'
+        . '&rand=' . $i
+        . '">';
+    echo $raw_img;
     echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
     echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
     echo 'alt="Display full size image in a new window.">';
