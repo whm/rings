@@ -95,6 +95,7 @@ if ($in_pid > 0) {
             echo "<p>\n";
         }
     }
+    check_action_queue($in_pid);
 }
 
 if (!empty($_SESSION['msg'])) {
