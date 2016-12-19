@@ -79,13 +79,13 @@ function print_row ($n, $r) {
     $duplicate_list = '';
     $sel = 'SELECT pid ';
     $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid != ".$r['pid'].' ';
-    $sel .= "AND raw_picture_size = ".$r['raw_picture_size']." ";
-    $sel .= "AND file_name = '".$r['file_name']."' ";
+    $sel .= "WHERE pid != " . $r['pid'] . ' ';
+    $sel .= "AND raw_picture_size = " . $r['raw_picture_size'] . ' ';
+    $sel .= "AND file_name = '" . $r['file_name'] . "' ";
     $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
     foreach ($dup_fld_list as $fld) {
       if (isset($r[$fld])) {
-          $sel .= "AND $fld = '".$r[$fld]."' ";
+          $sel .= "AND $fld = '" . $r[$fld] . "' ";
       } else {
           $sel .= "AND $fld IS NULL ";
       }
@@ -103,10 +103,14 @@ function print_row ($n, $r) {
         }
     }
 
+    $i = rand(0, 10000);
     $pic_href
-        = '<a href="picture_maint.php?in_pid=' . $r['pid']
-        . '" target="_blank">';
-    $thumb = '<img src="display.php?in_pid=' . $r['pid'] . '&in_size=small">';
+        = '<a href="picture_maint?in_pid=' . $r['pid'] . '" target="_blank">';
+    $thumb
+        = '<img src="display.php?in_pid=' . $r['pid']
+        . '&in_size=small'
+        . '&rand=' . $i
+        . '">';
     $up_pid = "up_pid_$n";
     $chk_grade_a = $chk_grade_b = $chk_grade_c = '';
     if ($r['grade'] == 'A') {

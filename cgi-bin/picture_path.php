@@ -54,7 +54,7 @@ function print_row ($n, $r) {
     $sel .= "FROM picture_details d ";
     $sel .= "LEFT OUTER JOIN people_or_places p ";
     $sel .= "ON (d.uid = p.uid) ";
-    $sel .= "WHERE d.pid = '".$r['pid']."' ";
+    $sel .= "WHERE d.pid = '" . $r['pid'] . "' ";
     $sel .= "ORDER BY p.display_name ";
     $result = $DBH->query($sel);
     $plist = '';
@@ -66,22 +66,30 @@ function print_row ($n, $r) {
         }
     }
 
-    $pic_href = '<a href="picture_maint?in_pid='.$r['pid'].'" target="_blank">';
-    $thumb = '<img src="display.php?in_pid='.$r['pid'].'&in_size=small">';
+    # Defeat the local picture cache by adding a random number to
+    # the image tag.
+    $i = rand(0, 10000);
+    $pic_href
+        = '<a href="picture_maint?in_pid=' . $r['pid'] . '" target="_blank">';
+    $thumb
+        = '<img src="display.php?in_pid=' . $r['pid']
+        . '&in_size=small'
+        . '&rand=' . $i
+        . '">';
     $up_pid = "up_pid_$n";
     echo " <tr>\n";
     echo "  <td>$thumb</td>\n";
-    echo '  <td align="center">'.$pic_href.$r['pid']."</a>\n";
-    echo '      <input type="hidden"'."\n";
-    echo '             name="'.$up_pid.'"'."\n";
-    echo '             value="'.$r['pid'].'"'.">\n";
+    echo '  <td align="center">' . $pic_href . $r['pid'] . "</a>\n";
+    echo '      <input type="hidden"' . "\n";
+    echo '             name="' . $up_pid.'"' . "\n";
+    echo '             value="' . $r['pid'] . '"' . ">\n";
     echo "      <br>\n";
-    echo '      '.$r['file_name']."\n";
+    echo '      ' . $r['file_name'] . "\n";
     echo "  </td>\n";
-    echo '  <td>'.$r['picture_date']."</td>\n";
+    echo '  <td>' . $r['picture_date'] . "</td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
-    echo "  <td>".$r['group_path']."  </td>\n";
+    echo "  <td>" . $r['group_path'] . "  </td>\n";
     echo "</tr>\n";
 }
 
