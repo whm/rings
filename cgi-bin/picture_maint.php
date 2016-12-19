@@ -507,11 +507,12 @@ if (is_array($uid_sort)) {
 
  <td colspan="2" align="center" valign="top">
 <?php
+check_action_queue($this_pid);
 if (!empty($_SESSION['msg'])) {
 ?>
 <span bgcolor="#ffffff" align="center">
-    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
-    </span>
+    <?php print $_SESSION['msg'];?>
+</span>
 
 <?php
     $_SESSION['msg'] = '';

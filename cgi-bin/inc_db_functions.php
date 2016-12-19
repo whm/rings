@@ -195,7 +195,7 @@ function get_next ($id) {
 
     $return_number = 0;
 
-    $sel = "SELECT next_number FROM next_number WHERE id= ? ";
+    $sel = "SELECT next_number FROM next_number WHERE id = ? ";
     if (!$stmt = $DBH->prepare($sel)) {
         $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
         $m .= "Problem statement: $sel";
@@ -395,6 +395,53 @@ function queue_action_set ($pid, $action) {
     $stmt->close();
     sys_msg("Picture $action update queued for $pid");
     return;
+}
+
+//-------------------------------------------------------------
+// Check status for a picture
+
+function check_action_queue ($pid) {
+
+    global $DBH;
+    global $CONF;
+
+    if (empty($pid)) {
+        return;
+    }
+    $msg = '';
+
+    $sel = 'SELECT action, status, error_text, date_last_maint ';
+    $sel .= 'FROM picture_action_queue ';
+    $sel .= 'WHERE pid = ? ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return 1;
+    }
+
+    $stmt->bind_param('i', $pid);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return 1;
+    }
+    $stmt->bind_result($z1, $z2, $z3, $z4);
+    while ($stmt->fetch()) {
+        $action          = $z1;
+        $status          = $z2;
+        $error_text      = $z3;
+        $date_last_maint = $z4;
+        $msg = "$action queue entry for $pid. Status: $status";
+        if (empty($error_text)) {
+            sys_msg($msg);
+        } else {
+            $msg .= ', Error: ' . $error_text;
+            sys_err($msg);
+        }
+    }
+
+    $stmt->close();
+    return $msg;
 }
 
 //-------------------------------------------------------------
