@@ -338,12 +338,11 @@ if (!empty($in_ring_pid)) {
     # Defeat the local picture cache by adding a random number to
     # the image tag.
     $i = rand(0, 10000);
-    $raw_img
-        = '<img src="display.php?in_pid=' . $this_pid
+    echo '<a href="display.php'
+        . '?in_pid=' . $this_pid
         . '&in_size=raw'
         . '&rand=' . $i
-        . '">';
-    echo $raw_img;
+        . '" target="_blank">';
     echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
     echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
     echo 'alt="Display full size image in a new window.">';
