@@ -288,7 +288,9 @@ if ( $update_flag ) {
     $z = exec($sh_cmd, $ret, $ret_status);
     if ($ret_status) {
         $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-        foreach ($ret as $v) $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+        foreach ($ret as $v) {
+            $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+        }
         $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
     }
 
