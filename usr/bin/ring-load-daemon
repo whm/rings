@@ -1,0 +1,298 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-load-daemon
+# Description: load pictures into a ring database
+
+use strict;
+use DBI;
+use File::Copy;
+use File::Slurp;
+use File::Spec;
+use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
+use Image::Magick;
+use Pod::Usage;
+use Rings::Common;
+
+my %MIME_TYPES = ();
+my %SIZE_IDS   = ();
+
+my $opt_conf;
+my $opt_debug;
+my $opt_force;
+my $opt_help;
+my $opt_manual;
+my $opt_oneshot;
+
+##############################################################################
+# Subroutines
+##############################################################################
+
+# ------------------------------------------------
+# return regex target string with all files types supported
+
+sub get_file_types {
+    my %file_types = ();
+    for my $t (keys %MIME_TYPES) {
+        $file_types{ $MIME_TYPES{$t} }++;
+    }
+    my $type_list = '';
+    my $or        = '(';
+    for my $t (keys %file_types) {
+        $type_list .= $or . $t;
+        $or = '|';
+    }
+    if ($or eq '|') {
+        $type_list .= ')';
+    }
+    return $type_list;
+}
+
+# ------------------------------------------------
+# process the files
+
+sub save_file {
+
+    (my $a_file) = @_;
+
+    if ($CONF->debug) {
+        dbg("Saving file: $a_file");
+    }
+
+    # Pull out the file name, the file type, and the parent directory
+    my $a_fullname = File::Spec->rel2abs($a_file);
+    my ($a_vol, $a_dirlist, $a_filename) = File::Spec->splitpath($a_fullname);
+    my $a_filetype = '';
+    if ($a_filename =~ /^(.*?)\.(.*)/xms) {
+        $a_filename = $1;
+        $a_filetype = $2;
+    }
+    $a_dirlist =~ s{^/}{}xms;
+    $a_dirlist =~ s{/$}{}xms;
+    my @dirs     = File::Spec->splitdir($a_dirlist);
+    my $a_parent = $dirs[-1];
+
+    my $blob = read_file("$a_file", binmode => ':raw');
+    my %pic = get_meta_data($blob);
+
+    # Check for duplicate picture
+    if (!$opt_force) {
+        my $dup_cnt = 0;
+        my $sql     = "SELECT pid FROM pictures_information ";
+        $sql .= "WHERE raw_signature = ? ";
+        if ($opt_debug) {
+            dbg($sql);
+        }
+        my $sth = $DBH->prepare($sql);
+        $sth->execute($pic{ring_signature});
+        while (my $row = $sth->fetchrow_hashref()) {
+            $dup_cnt++;
+            msg('info', "File $a_file duplicates $row->{pid}");
+        }
+        if ($dup_cnt > 0) {
+            msg('info', "SKIPPING: $a_file");
+            return;
+        }
+    }
+
+    # Set the PID
+    my $pid = get_next_id("pid");
+
+    # Store meta-data and copy the raw picture to rings directory
+    my $pic_path = create_picture_dirs($a_parent, 'raw');
+    my $pic_base = lc("${pid}.${a_filetype}");
+    my $pic_file = "${pic_path}/${pic_base}";
+    $pic{'in_file'} = $pic_file;
+    store_meta_data($pid, $a_fullname, \%pic);
+    create_picture($pid, 'raw', $blob, $pic_base, $pic{'MIMEType'});
+    copy($a_fullname, $pic_file)
+      or msg('fatal', "Problem copying $a_file to $pic_file, $!");
+
+    queue_action_set($pid, 'SIZE');
+    queue_action_set($pid, 'INFO');
+    set_new_picture($pid);
+
+    return;
+}
+
+# ------------------------------------------------
+# Set a list of directories to process from the picture_action_queue
+
+sub get_directories {
+    my @dir_list = ();
+    my $sql = "SELECT * from picture_upload_queue WHERE status = 'PENDING'";
+    if ($opt_debug) {
+        dbg($sql);
+    }
+    my $sth = $DBH->prepare($sql);
+    $sth->execute();
+    while (my $row = $sth->fetchrow_hashref()) {
+        push @dir_list, $row->{path};
+    }
+    return @dir_list;
+}
+
+# ------------------------------------------------
+# process directories that contain pictures
+
+sub process_directories {
+    my @dir_list  = @_;
+    my $type_list = get_file_types();
+
+    for my $this_dir (@dir_list) {
+        my %file_list = ();
+        if (!-d $this_dir) {
+            my $m = "$this_dir not found";
+            msg('info', "$m ... skipping");
+            queue_upload_error($m);
+            next;
+        }
+        $this_dir =~ s{/$}{}xms;
+        msg(
+            'info',
+            "Examining files that match *.${type_list} in ${this_dir}"
+        );
+        opendir(my $dh, $this_dir) || die "ERROR: problem opening $this_dir\n";
+        while (readdir $dh) {
+            my $f = $_;
+            if ($f =~ /(.*?)\.$type_list$/xmsi) {
+                my $full_path = "$this_dir/$f";
+                $file_list{$full_path}++;
+            }
+        }
+        for my $f (sort keys %file_list) {
+            save_file($f);
+        }
+        queue_upload_reset($this_dir);
+    }
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+# -- get options
+GetOptions(
+    'conf=s'  => \$opt_conf,
+    'debug'   => \$opt_debug,
+    'force'   => \$opt_force,
+    'help'    => \$opt_help,
+    'manual'  => \$opt_manual,
+    'oneshot' => \$opt_oneshot
+);
+
+# help the poor souls out
+if (@ARGV && $ARGV[0] eq 'help') {
+    $opt_help = 1;
+}
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+get_config($opt_conf);
+
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
+}
+
+# -- Open up connections to the MySQL data
+db_connect();
+
+my $end = 0;
+while ($end == 0) {
+    my @dir_list;
+    if (@ARGV) {
+        @dir_list    = @ARGV;
+        $opt_oneshot = 1;
+    } else {
+        @dir_list = get_directories();
+    }
+    if (scalar(@dir_list) > 0) {
+        %MIME_TYPES = get_picture_types();
+        %SIZE_IDS   = get_picture_sizes();
+        process_directories(@dir_list);
+    } else {
+        if ($opt_oneshot) {
+            $end = 1;
+        } else {
+            sleep $CONF->queue_sleep;
+        }
+    }
+}
+
+db_disconnect();
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-load-daemon
+
+=head1 SYNOPSIS
+
+ring-daemon <directory1> [<directory2> ...] [--conf=<configuration>]
+[--oneshot] [--force] [--debug] [--help] [--manual]
+
+
+=head1 DESCRIPTION
+
+This script reads the jpeg files in a directory and loads the rings
+database.  The default action is loop reading 'UPLOAD' entries from
+the picture_action_queue and process them.  If a directories are
+specified on the command line then the directories are process and the
+script is exited.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --force
+
+Override duplicate detection and store the pictures anyway.
+
+=item --onetime
+
+Process the current file list, either from the command line or the
+picture_action_queue, and exit.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut
