@@ -1,8 +1,9 @@
 #!/usr/bin/perl
-
+#
+# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-daemon
-# Author: Bill MacAllister <bill@ca-zephyr.org>
-# Copyright: 2016 by Bill MacAllister.  All rights reserved.
+# Description: Update pictures by either creating/re-creating alternate
+#   or updating meta-data.
 
 use strict;
 use Cwd;
@@ -318,5 +319,17 @@ Turns on debugging displays.
 =head1 AUTHOR
 
 Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
 
 =cut

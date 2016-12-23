@@ -4,9 +4,10 @@ picture-rings (2.10) UNRELEASED; urgency=medium
     database and store them as files.
   * Update ring-load to support new files format.
   * Create Rings::Common module to hold common routines for perl scripts.
-  * Move to picture display from files.
+  * Create an action queue and process compute intensive jobs using a
+    separate daemon.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 19 Sep 2016 00:11:32 -0700
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 23 Dec 2016 12:08:03 -0800
 
 picture-rings (2.9) unstable; urgency=medium
 
