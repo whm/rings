@@ -112,6 +112,7 @@ sub save_file {
 
     queue_action_set($pid, 'SIZE');
     queue_action_set($pid, 'INFO');
+    set_new_picture($pid);
 
     return;
 }
