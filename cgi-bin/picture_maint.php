@@ -150,6 +150,9 @@ if ($this_pid > 0 && empty($row['pid']) ) {
     foreach ($fld_names as $db_fld) {
         $row[$db_fld] = '';
     }
+    if (!empty($row['picture_date'])) {
+        $_SESSION['maint_last_datetime'] = $row['picture_date'];
+    }
 }
 
 // Check to see if the raw image exists
