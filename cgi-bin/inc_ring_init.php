@@ -27,6 +27,9 @@ if (empty($CONF['display_size'])) {
 if (empty($CONF['maint_size'])) {
     $CONF['maint_size'] = '640x480';
 }
+if (empty($CONF['index_size'])) {
+    $CONF['index_size'] = '125x125';
+}
 if (empty($CONF['mail_size'])) {
     $CONF['mail_size'] = 'large';
 }

@@ -28,14 +28,14 @@ $pics_per_page = 100;
 
 function set_search ($fld, $sess_fld, $op, $val, $cond) {
 
-    if (strlen($cond) > 0) {
+    if (!empty($cond)) {
         $word = 'AND';
     } else {
         $word = 'WHERE';
     }
 
     $new = '';
-    if (strlen($val) > 0) {
+    if (!empty($val)) {
         if ($op == '=') {
             if (preg_match('/%/', $val)) {
                 $new .= "$word p.$fld LIKE '$val' ";
@@ -56,6 +56,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 
 function print_row ($n, $r) {
     global $DBH;
+    global $CONF;
 
     // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
@@ -105,10 +106,11 @@ function print_row ($n, $r) {
 
     $i = rand(0, 10000);
     $pic_href
-        = '<a href="picture_maint?in_pid=' . $r['pid'] . '" target="_blank">';
+        = '<a href="picture_maint.php?in_pid=' . $r['pid']
+        . '" target="_blank">';
     $thumb
         = '<img src="display.php?in_pid=' . $r['pid']
-        . '&in_size=small'
+        . '&in_size=' . $CONF['index_size']
         . '&rand=' . $i
         . '">';
     $up_pid = "up_pid_$n";
@@ -121,20 +123,20 @@ function print_row ($n, $r) {
         $chk_grade_b = 'CHECKED';
     }
     echo " <tr>\n";
-    echo "  <td>$pic_href$thumb<a/></td>\n";
-    echo '  <td align="center">'.$pic_href.$r['pid']."</a>\n";
+    echo "  <td>$pic_href$thumb</a></td>\n";
+    echo '  <td align="center">' . $pic_href . $r['pid'] . "</a>\n";
     echo '      <input type="hidden"'."\n";
-    echo '             name="'.$up_pid.'"'."\n";
-    echo '             value="'.$r['pid'].'"'.">\n";
+    echo '             name="' . $up_pid . '"'."\n";
+    echo '             value="' . $r['pid'] . '"' . ">\n";
     echo "      <br>\n";
-    echo '      '.$r['file_name']."\n";
+    echo '      ' . $r['file_name'] . "\n";
     if (strlen($duplicate_list) > 0) {
         echo "      <br>Duplicates: $duplicate_list\n";
     }
     echo "  </td>\n";
-    echo '  <td><input name="up_picture_date_'.$n.'"'."\n";
-    echo '             type="text" size="18"'."\n";
-    echo '             value="'.$r['picture_date'].'">'."\n";
+    echo '  <td><input name="up_picture_date_' . $n . '"' . "\n";
+    echo '             type="text" size="18"' . "\n";
+    echo '             value="' . $r['picture_date'] . '">' . "\n";
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
@@ -154,10 +156,10 @@ function print_row ($n, $r) {
     echo "  </td>\n";
     echo "</tr>\n";
     echo "<tr>\n";
-    echo '  <td colspan="2" align="right">Description:</td>'."\n";
-    echo '  <td colspan="5"><textarea name="up_description_'.$n.'" ';
+    echo '  <td colspan="2" align="right">Description:</td>' . "\n";
+    echo '  <td colspan="5"><textarea name="up_description_' . $n . '" ';
     echo 'rows="2" ';
-    echo 'cols="60">'.$r['description']."</textarea>\n";
+    echo 'cols="60">' . $r['description'] . "</textarea>\n";
     echo "  </td>\n";
     echo " <tr>\n";
 }
@@ -227,6 +229,21 @@ if (isset($in_button_find) || isset($in_new)) {
             $word = 'AND';
         }
     }
+
+    # Count tne number of rows
+    $_SESSION['s_num_user_rows'] = 0;
+    $cnt_sel = 'SELECT COUNT(DISTINCT p.pid) AS cnt ';
+    $cnt_sel .= "FROM pictures_information p ";
+    $cnt_sel .= "LEFT OUTER JOIN picture_details d ";
+    $cnt_sel .= "ON (p.pid = d.pid) ";
+    $cnt_sel .= "LEFT OUTER JOIN people_or_places pop ";
+    $cnt_sel .= "ON (d.uid = pop.uid) ";
+    $cnt_sel .= $condition;
+    $result = $DBH->query ($cnt_sel);
+    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $_SESSION['s_num_user_rows'] = $row['cnt'];
+    }
+    
     $sel = "SELECT p.pid, ";
     $sel .= "p.picture_date, ";
     $sel .= "p.description, ";
@@ -249,16 +266,9 @@ if (isset($in_button_find) || isset($in_new)) {
     } else {
         $sel .= "ORDER BY picture_date, pid ";
     }
+    
     $_SESSION['s_list_select'] = $sel;
     $_SESSION['s_start_row'] = 0;
-
-    // find the number of rows
-    $result = $DBH->query ($_SESSION['s_list_select']);
-    if ($result) {
-        $_SESSION['s_num_user_rows'] = $result->num_rows;
-    } else {
-        $_SESSION['s_num_user_rows'] = 0;
-    }
 
 } elseif (isset($in_button_next)) {
 
@@ -379,35 +389,38 @@ if ($result) {
 
 <?php
 echo "$sel<br>\n";
-if (strlen($_SESSION['msg']) > 0) {
+if (!empty($_SESSION['msg'])) {
     echo $_SESSION['msg'];
     $_SESSION['msg'] = '';
 }
 
 if ($_SESSION['s_num_user_rows']>0) {
-    if (($end_row != $_SESSION['s_num_user_rows'])
-        || ((strlen($_SESSION['s_start_row'])>0)
-            && ($_SESSION['s_start_row'] > 0)) ) {
+    if (
+        ($end_row != $_SESSION['s_num_user_rows'])
+        || (!empty($_SESSION['s_start_row']) && $_SESSION['s_start_row'] > 0)
+    ) {
 ?>
 <table border="1">
 <tr><td>
     <table width="100%" border="0">
       <tr>
       <td>
-        <?php if ($_SESSION['s_start_row']
-                  +$pics_per_page<$_SESSION['s_num_user_rows']) { ?>
+<?php if (
+    $_SESSION['s_start_row'] + $pics_per_page < $_SESSION['s_num_user_rows']
+) { ?>
         <input type="submit" name="in_button_next" value="Next Page">
-        <?php } ?>
+<?php } ?>
       </td>
       <td align="center">
         Records <?php print $_SESSION['s_start_row']; ?> through
         <?php print $end_row; ?> of <?php print $_SESSION['s_num_user_rows'];?>
       </td>
       <td align="right">
-        <?php if ((strlen($_SESSION['s_start_row'])>0)
-                 && ($_SESSION['s_start_row'] > 0)) { ?>
+<?php if (
+    (!empty($_SESSION['s_start_row']) && $_SESSION['s_start_row'] > 0)
+) { ?>
         <input type="submit" name="in_button_back" value="Previous Page">
-        <?php } ?>
+<?php } ?>
       </td>
       </tr>
     </table>
