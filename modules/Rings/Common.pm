@@ -47,6 +47,9 @@ BEGIN {
       queue_error
       queue_action_reset
       queue_action_set
+      queue_upload
+      queue_upload_error
+      queue_upload_reset
       set_new_picture
       sql_datetime
       sql_format_datetime
@@ -903,6 +906,66 @@ sub queue_action_reset {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action);
 
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Queue a picture upload request
+
+sub queue_upload {
+    my ($path) = @_;
+
+    my $dt  = sql_datetime();
+    my $sel = 'INSERT INTO picture_upload_queue ';
+    $sel .= '(path, status, date_last_maint, date_added) ';
+    $sel .= 'VALUES (?, ?, ?, ?) ';
+    $sel .= 'ON DUPLICATE KEY UPDATE status = ?, date_last_maint = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($path, 'PENDING', $dt, $dt, 'PENDING', $dt);
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Reset the picture upload queue status by deleting the entry in the table
+
+sub queue_upload_reset {
+    my ($path) = @_;
+
+    my $sel = 'DELETE FROM picture_upload_queue ';
+    $sel .= 'WHERE path = ? ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($path);
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Save the upload processing error text
+
+sub queue_upload_error {
+    my ($path, $msg) = @_;
+
+    my $sel = 'INSERT INTO picture_upload_queue ';
+    $sel .= '(status, path, error_text, date_last_maint, date_added) ';
+    $sel .= "VALUES ('ERROR', ?, ?, NOW(), NOW()) ";
+    $sel .= 'ON DUPLICATE KEY UPDATE error_text = ?, ';
+    $sel .= "status = 'ERROR', ";
+    $sel .= 'date_last_maint = NOW() ';
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($path, $msg, $msg);
     return;
 }
 
