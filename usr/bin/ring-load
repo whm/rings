@@ -85,8 +85,7 @@ sub save_file {
             dbg($sql);
         }
         my $sth = $DBH->prepare($sql);
-        print("new signature:$pic{signature}");
-        $sth->execute($pic{signature});
+        $sth->execute($pic{ring_signature});
         while (my $row = $sth->fetchrow_hashref()) {
             $dup_cnt++;
             msg('info', "File $a_file duplicates $row->{pid}");
