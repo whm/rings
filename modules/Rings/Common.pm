@@ -46,6 +46,7 @@ BEGIN {
       queue_error
       queue_action_reset
       queue_action_set
+      set_new_picture
       sql_datetime
       sql_format_datetime
       store_meta_data
@@ -289,6 +290,27 @@ sub get_next_id {
 
     return $return_number;
 
+}
+
+# ------------------------------------------------------------------------
+# set picture in the new picture group
+
+sub set_new_picture {
+
+    (my $pid) = @_;
+
+    my $sel
+      = 'INSERT INTO picture_details SET '
+      . 'pid = ?, '
+      . 'date_last_maint = NOW(), '
+      . 'date_added = NOW() '
+      . 'ON DUPLICATE KEY UPDATE '
+      . 'date_last_maint = NOW() ';
+    dbg($sel) if $CONF->debug;
+    my $sth_update = $DBH_UPDATE->prepare($sel);
+    $sth_update->execute($pid)
+      or die "Error updating picture_details for $pid: $DBH::errstr\n";
+    return;
 }
 
 # ------------------------------------------------------------------------
