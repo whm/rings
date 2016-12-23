@@ -1,6 +1,7 @@
 # -------------------------------------------------------------------
-# This module is used by the Rings gallery application.  See
-# below for a more complete description.
+# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# File: Common.pm
+# Description: This module is used by the Rings gallery application.
 
 package Rings::Common;
 
@@ -964,9 +965,16 @@ whm::rings - Utility routines for the rings gallery application
 
 Bill MacAllister <bill@ca-zephyr.org>
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This software was developed for use by Bill MacAllister.  All rights
-reserved.
+Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
 
 =cut
