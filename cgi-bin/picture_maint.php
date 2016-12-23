@@ -84,8 +84,8 @@ if (!empty($in_pid)) {
 
 // SQL for selecting next and previous PIDs
 $base_sel = 'SELECT pid FROM pictures_information ';
-$prev_sel = "WHERE pid < ? ORDER BY pid DESC ";
-$next_sel = "WHERE pid > ? ORDER BY pid ";
+$prev_sel = 'WHERE pid < ? ORDER BY pid DESC ';
+$next_sel = 'WHERE pid > ? ORDER BY pid ';
 
 // Find previous PID
 $sel = "$base_sel $prev_sel LIMIT 0,1 ";
@@ -132,8 +132,8 @@ if (!empty($_SESSION['maint_last_datetime'])) {
     $next_datetime = increment_time($_SESSION['maint_last_datetime']);
 }
 
-$sel = "SELECT * ";
-$sel .= "FROM pictures_information ";
+$sel = 'SELECT * ';
+$sel .= 'FROM pictures_information ';
 $sel .= "WHERE pid = $this_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
@@ -154,8 +154,8 @@ if ($this_pid > 0 && empty($row['pid']) ) {
 
 // Check to see if the raw image exists
 if ($this_pid > 0) {
-    $sel = "SELECT pid,date_last_maint ";
-    $sel .= "FROM pictures_raw ";
+    $sel = 'SELECT pid,date_last_maint ';
+    $sel .= 'FROM pictures_raw ';
     $sel .= "WHERE pid = $this_pid ";
     $result = $DBH->query ($sel);
     if ($result) {
@@ -164,6 +164,7 @@ if ($this_pid > 0) {
             sys_msg("Raw image is missing for $this_pid.");
         } else {
             $date_last_maint = $raw_row['date_last_maint'];
+        }
     }
 }
 ?>
@@ -209,7 +210,7 @@ function verifyInput() {
 
     if (click_delete != 0) {
         click_delete = 0;
-        if (!confirm("Really delete this picture?")) {
+        if (!confirm('Really delete this picture?')) {
             return false;
         }
     }
@@ -308,7 +309,7 @@ if ($this_pid > 0) {
  <td align="right">Picture ID:</td>
  <td><?php
     if (!empty($row['pid'])) {
-        $pic_info = $row["pid"];
+        $pic_info = $row['pid'];
         $pic_info .= '<br/> Lot:' . $row['picture_lot'];
         if (!empty($row['file_name'])) {
             $pic_info .= '<br/> File:' . $row['file_name'];
@@ -416,19 +417,19 @@ if ($row['public'] == 'N') {
 <?php
 # Generate table rows of people in the picture already
 $picturePeople = '';
-$thisID = $row["pid"];
+$thisID = $row['pid'];
 $people_cnt = 0;
-if (strlen($thisID) > 0) {
-    $cmd = "SELECT det.uid uid, p.display_name display_name ";
-    $cmd .= "FROM picture_details det, people_or_places p ";
+if (!empty($thisID)) {
+    $cmd = 'SELECT det.uid uid, p.display_name display_name ';
+    $cmd .= 'FROM picture_details det, people_or_places p ';
     $cmd .= "WHERE det.pid=$thisID ";
-    $cmd .= "AND det.uid = p.uid ";
-    $cmd .= "ORDER BY p.display_name ";
+    $cmd .= 'AND det.uid = p.uid ';
+    $cmd .= 'ORDER BY p.display_name ';
     $result = $DBH->query ($cmd);
     if ($result) {
         while ($link_row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $a_uid = $link_row["uid"];
-            $a_name = $link_row["display_name"];
+            $a_uid = $link_row['uid'];
+            $a_name = $link_row['display_name'];
             $found["$a_uid"] = 1;
             $picturePeople .= "<tr>\n";
             $picturePeople .= " <td>$a_name</td>\n";
@@ -447,13 +448,13 @@ if (strlen($thisID) > 0) {
 }
 
 // Get a list of folks to add to the picture
-$cmd = "SELECT uid,display_name ";
-$cmd .= "FROM people_or_places ";
-$cmd .= "ORDER BY display_name ";
+$cmd = 'SELECT uid,display_name ';
+$cmd .= 'FROM people_or_places ';
+$cmd .= 'ORDER BY display_name ';
 $result = $DBH->query ($cmd);
 if ($result) {
     while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $a_uid = $person_row["uid"];
+        $a_uid = $person_row['uid'];
         if (!empty($found["$a_uid"])) {continue;}
         $uid_list[$a_uid] = $person_row['display_name'];
         $thisWeight = 32767;
@@ -533,33 +534,32 @@ if (!empty($_SESSION['msg'])) {
 <p>
 
 <?php
-    if (!empty($row['pid'])) {
-        echo '<img src="display.php';
-        echo '?in_pid=' . $row["pid"];
-        echo '&in_size=' . $CONF['maint_size'];
-        echo '&dlm=' . htmlentities($date_last_maint);
+if (!empty($row['pid'])) {
+    echo '<img src="display.php';
+    echo '?in_pid=' . $row["pid"];
+    echo '&in_size=' . $CONF['maint_size'];
+    echo '&dlm=' . htmlentities($date_last_maint);
+    echo '">' . "\n";
+    echo "<br/>\n";
+}
+
+# Picture matching code
+$sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
+$sel .= "FROM tmp_matching ";
+$sel .= "JOIN pictures_small ";
+$sel .= "ON (pictures_small.size = tmp_matching.size ";
+$sel .= "AND pictures_small.width = tmp_matching.width) ";
+$sel .= "WHERE pictures_small.pid = $this_pid ";
+$result = $DBH->query ($sel);
+if ($result) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        $this_path = $row['file_path'];
+        $this_sig  = $row['signature'];
+        echo '<img src="display_file.php?in_signature=';
+        echo $this_sig;
         echo '">' . "\n";
         echo "<br/>\n";
-    }
-
-    # Picture matching code
-    $sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
-    $sel .= "FROM tmp_matching ";
-    $sel .= "JOIN pictures_small ";
-    $sel .= "ON (pictures_small.size = tmp_matching.size ";
-    $sel .= "AND pictures_small.width = tmp_matching.width) ";
-    $sel .= "WHERE pictures_small.pid = $this_pid ";
-    $result = $DBH->query ($sel);
-    if ($result) {
-        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $this_path = $row['file_path'];
-            $this_sig  = $row['signature'];
-            echo '<img src="display_file.php?in_signature=';
-            echo $this_sig;
-            echo '">' . "\n";
-            echo "<br/>\n";
-            echo $row['file_path'] . "<br>\n";
-        }
+        echo $row['file_path'] . "<br>\n";
     }
 }
 ?>
