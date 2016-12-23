@@ -24,6 +24,7 @@ my $opt_debug;
 my $opt_force;
 my $opt_help;
 my $opt_manual;
+my $opt_oneshot;
 
 ##############################################################################
 # Subroutines
@@ -116,17 +117,47 @@ sub save_file {
     return;
 }
 
+# ------------------------------------------------
+# process directories that contain pictures
+
+sub process_directories {
+    my @dir_list = @_;
+    
+    my %file_list = ();
+    for my $this_dir (@dir_list) {
+        if (!-d $this_dir) {
+            msg('INFO: $this_dir not found ... skipping');
+            next;
+        }
+        $this_dir =~ s{/$}{}xms;
+        msg('info', "Examining files that match *.${type_list} in ${this_dir}");
+        opendir(my $dh, $this_dir) || die "ERROR: problem opening $this_dir\n";
+        while (readdir $dh) {
+            my $f = $_;
+            if ($f =~ /(.*?)\.$type_list$/xmsi) {
+                my $full_path = "$this_dir/$f";
+                $file_list{$full_path}++;
+            }
+        }
+    }
+    for my $f (sort keys %file_list) {
+        save_file($f);
+    }
+    return;
+}
+
 ##############################################################################
 # Main Routine
 ##############################################################################
 
 # -- get options
 GetOptions(
-    'conf=s' => \$opt_conf,
-    'debug'  => \$opt_debug,
-    'force'  => \$opt_force,
-    'help'   => \$opt_help,
-    'manual' => \$opt_manual
+    'conf=s'  => \$opt_conf,
+    'debug'   => \$opt_debug,
+    'force'   => \$opt_force,
+    'help'    => \$opt_help,
+    'manual'  => \$opt_manual,
+    'oneshot' => \$opt_oneshot
 );
 
 # help the poor souls out
@@ -139,11 +170,6 @@ if ($opt_help) {
 if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
-if (!@ARGV) {
-    msg('ERROR: directory specification required');
-    pod2usage(-verbose => 0);
-}
-my @dir_list = @ARGV;
 
 get_config($opt_conf);
 
@@ -157,30 +183,27 @@ if ($CONF->debug) {
 # -- Open up connections to the MySQL data
 db_connect();
 
-%MIME_TYPES = get_picture_types();
-my $type_list = get_file_types();
-
-%SIZE_IDS = get_picture_sizes();
-
-my %file_list = ();
-for my $this_dir (@dir_list) {
-    if (!-d $this_dir) {
-        msg('INFO: $this_dir not found ... skipping');
-        next;
+my $end = 0;
+while ($end == 0) {
+    my @dir_list;
+    if (@ARGV) {
+        @dir_list = @ARGV;
+        $opt_oneshot = 1;
+    } else {
+        @dir_list = get_directory_list();
     }
-    $this_dir =~ s{/$}{}xms;
-    msg('info', "Examining files that match *.${type_list} in ${this_dir}");
-    opendir(my $dh, $this_dir) || die "ERROR: problem opening $this_dir\n";
-    while (readdir $dh) {
-        my $f = $_;
-        if ($f =~ /(.*?)\.$type_list$/xmsi) {
-            my $full_path = "$this_dir/$f";
-            $file_list{$full_path}++;
+    if (scalar(@dir_list) > 0) {
+        %MIME_TYPES = get_picture_types();
+        my $type_list = get_file_types();
+        %SIZE_IDS = get_picture_sizes();
+        process_directories(@dir_list);
+    } else {
+        if ($opt_oneshot) {
+            $end = 1;
+        } else {
+            sleep $CONF->queue_sleep;
         }
     }
-}
-for my $f (sort keys %file_list) {
-    save_file($f);
 }
 
 exit;
@@ -194,13 +217,16 @@ ring-load
 =head1 SYNOPSIS
 
 ring=load <directory1> [<directory2> ...] [--conf=<configuration>]
-[--force] [--debug] [--help] [--manual]
+[--oneshot] [--force] [--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
 
 This script reads the jpeg files in a directory and loads the rings
-database.  At least one directory specification is required.
+database.  The default action is loop reading 'UPLOAD' entries from
+the picture_action_queue and process them.  If a directories are
+specified on the command line then the directories are process and the
+script is exited.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -209,6 +235,11 @@ database.  At least one directory specification is required.
 =item --force
 
 Override duplicate detection and store the pictures anyway.
+
+=item --onetime
+
+Process the current file list, either from the command line or the
+picture_action_queue, and exit.
 
 =item --help
 
