@@ -1,0 +1,15 @@
+[Unit]
+Description=Ring Resize
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/ring-load-daemon
+PrivateTmp=true
+PrivateDevices=yes
+ProtectSystem=full
+ProtectHome=read-only
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

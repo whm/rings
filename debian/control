@@ -3,6 +3,7 @@ Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
 Build-Depends: debhelper (>= 8),
+ dh-systemd (>= 1.5),
  imagemagick,
  libappconfig-perl,
  libdbi-perl,
