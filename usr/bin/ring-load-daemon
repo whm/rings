@@ -67,8 +67,7 @@ sub save_file {
     $a_dirlist =~ s{^/}{}xms;
     $a_dirlist =~ s{/$}{}xms;
     my @dirs  = File::Spec->splitdir($a_dirlist);
-    my $a_lot = lc($dirs[-1]);
-    $a_lot =~ s/\s+//xmsg;
+    my $a_lot = normalize_picture_lot($dirs[-1]);
 
     my $blob = read_file("$a_file", binmode => ':raw');
     my %pic = get_meta_data($blob);
@@ -142,7 +141,7 @@ sub process_directories {
         if (!-d $this_dir) {
             my $m = "$this_dir not found";
             msg('info', "$m ... skipping");
-            queue_upload_error($m);
+            queue_upload_error($this_dir, $m);
             next;
         }
         $this_dir =~ s{/$}{}xms;

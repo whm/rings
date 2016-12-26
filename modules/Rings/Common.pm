@@ -43,6 +43,7 @@ BEGIN {
       get_picture_types
       make_picture_path
       msg
+      normalize_picture_lot
       pid_to_path
       queue_error
       queue_action_reset
@@ -511,7 +512,7 @@ sub store_meta_data {
     ($meta{'source_file'}, $meta{'source_dirs'}, $meta{'source_suffix'})
       = fileparse($meta{'source_path'});
     my @dirs = split(/\//, $meta{'source_dirs'});
-    $meta{'picture_lot'} = @dirs[-1];
+    $meta{'picture_lot'} = normalize_picture_lot(@dirs[-1]);
 
     # Store summary meta data
     my $sel = "SELECT * FROM pictures_information WHERE pid=? ";
@@ -842,6 +843,16 @@ sub get_picture_types {
         $mime_types{ $row->{mime_type} } = $row->{file_type};
     }
     return %mime_types;
+}
+
+# ------------------------------------------------------------------------
+# Normalize the picture lot
+
+sub normalize_picture_lot {
+    my ($dir) = @_;
+    my $lot = lc($dir);
+    $lot =~ s/\s+//xmsg;
+    return $lot;
 }
 
 # ------------------------------------------------------------------------
