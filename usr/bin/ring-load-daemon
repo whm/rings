@@ -199,11 +199,12 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
-# -- Open up connections to the MySQL data
-db_connect();
-
+my $end  = 0;
 my $loop = 0;
-while ($loop < $CONF->loop_limit_load) {
+while ($end == 0) {
+    if ($loop == 0) {
+        db_connect();
+    }
     my @dir_list;
     if (@ARGV) {
         @dir_list    = @ARGV;
@@ -217,15 +218,17 @@ while ($loop < $CONF->loop_limit_load) {
         process_directories(@dir_list);
     } else {
         if ($opt_oneshot) {
-            $loop = $CONF->loop_limit_load + 1;
+            db_disconnect();
+            $end = 1;
         } else {
             sleep $CONF->queue_sleep;
-            $loop++;
         }
     }
+    if ($loop++ > $CONF->loop_limit_load) {
+        db_disconnect();
+        $loop = 0;
+    }
 }
-
-db_disconnect();
 
 exit;
 
