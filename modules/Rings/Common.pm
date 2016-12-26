@@ -319,6 +319,7 @@ sub set_new_picture {
 
     my $sel
       = 'INSERT INTO picture_details SET '
+      . "uid = 'new', "
       . 'pid = ?, '
       . 'date_last_maint = NOW(), '
       . 'date_added = NOW() '
