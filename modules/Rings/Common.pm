@@ -182,6 +182,20 @@ sub get_config {
         }
     );
     $CONF->define(
+        'loop_limit_daemon',
+        {
+            DEFAULT  => 120,
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'loop_limit_load',
+        {
+            DEFAULT  => 120,
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'picture_root',
         {
             DEFAULT  => '/srv/rings',
@@ -191,7 +205,7 @@ sub get_config {
     $CONF->define(
         'queue_sleep',
         {
-            DEFAULT  => '60',
+            DEFAULT  => '30',
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );

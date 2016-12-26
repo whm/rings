@@ -1,4 +1,14 @@
-picture-rings (2.10) UNRELEASED; urgency=medium
+picture-rings (2.11) unstable; urgency=medium
+
+  * Modify the daemon processing policies.  Set a limit on the number
+    of sleep iterations for a daemon.  The number defaults to 120 and
+    can be set in the configuraiton file.
+  * Modify the default sleep time to 30 seconds.
+  * Modify the daemon systemd definitions to always start failed daemons.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 26 Dec 2016 01:42:09 -0800
+
+picture-rings (2.10) unstable; urgency=medium
 
   * Add script ring-db2files script to pull pictures blobs from the 
     database and store them as files.
