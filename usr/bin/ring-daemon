@@ -228,14 +228,15 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
-# Open up connections to the MySQL data
-db_connect();
-%SIZE_IDS = get_picture_sizes();
-
+my $end  = 0;
 my $loop = 0;
-while ($loop < $CONF->loop_limit_daemon) {
+while ($end == 0) {
+    if ($loop == 0) {
+        db_connect();
+        %SIZE_IDS = get_picture_sizes();
+    }
     if ($opt_oneshot || $pid_start > 0) {
-        $loop = $CONF->loop_limit_daemon + 1;
+        $end = 1;
     }
     my $update_flag = 0;
     for my $action (@ACTION_LIST) {
@@ -247,11 +248,12 @@ while ($loop < $CONF->loop_limit_daemon) {
     }
     if (!$update_flag && !$opt_oneshot) {
         sleep $CONF->queue_sleep;
-        $loop++;
+    }
+    if ($loop++ > $CONF->loop_limit_daemon) {
+        db_disconnect();
+        $loop = 0;
     }
 }
-
-db_disconnect();
 
 exit;
 
