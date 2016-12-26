@@ -5,6 +5,7 @@ picture-rings (2.11) unstable; urgency=medium
     can be set in the configuraiton file.
   * Modify the default sleep time to 30 seconds.
   * Modify the daemon systemd definitions to always start failed daemons.
+  * Correct the creation of files names by ring-load-daemon.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 26 Dec 2016 01:42:09 -0800
 

@@ -63,15 +63,12 @@ sub save_file {
     # Pull out the file name, the file type, and the parent directory
     my $a_fullname = File::Spec->rel2abs($a_file);
     my ($a_vol, $a_dirlist, $a_filename) = File::Spec->splitpath($a_fullname);
-    my $a_filetype = '';
-    if ($a_filename =~ /^(.*?)\.(.*)/xms) {
-        $a_filename = $1;
-        $a_filetype = $2;
-    }
+    my ($a_mime_type, $a_filetype) = validate_mime_type($a_fullname);
     $a_dirlist =~ s{^/}{}xms;
     $a_dirlist =~ s{/$}{}xms;
-    my @dirs     = File::Spec->splitdir($a_dirlist);
-    my $a_parent = $dirs[-1];
+    my @dirs  = File::Spec->splitdir($a_dirlist);
+    my $a_lot = lc($dirs[-1]);
+    $a_lot =~ s/\s+//xmsg;
 
     my $blob = read_file("$a_file", binmode => ':raw');
     my %pic = get_meta_data($blob);
@@ -100,7 +97,7 @@ sub save_file {
     my $pid = get_next_id("pid");
 
     # Store meta-data and copy the raw picture to rings directory
-    my $pic_path = create_picture_dirs($a_parent, 'raw');
+    my $pic_path = create_picture_dirs($a_lot, 'raw');
     my $pic_base = lc("${pid}.${a_filetype}");
     my $pic_file = "${pic_path}/${pic_base}";
     $pic{'in_file'} = $pic_file;
