@@ -232,10 +232,10 @@ if ($CONF->debug) {
 db_connect();
 %SIZE_IDS = get_picture_sizes();
 
-my $loop = 1;
-while ($loop) {
+my $loop = 0;
+while ($loop < $CONF->loop_limit_daemon) {
     if ($opt_oneshot || $pid_start > 0) {
-        $loop = 0;
+        $loop = $CONF->loop_limit_daemon + 1;
     }
     my $update_flag = 0;
     for my $action (@ACTION_LIST) {
@@ -245,8 +245,9 @@ while ($loop) {
             process_pids($action, $this_list_ref);
         }
     }
-    if (!$update_flag && $loop > 0) {
+    if (!$update_flag && !$opt_oneshot) {
         sleep $CONF->queue_sleep;
+        $loop++;
     }
 }
 

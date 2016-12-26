@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/ring-daemon pending
+Restart=always
 PrivateTmp=true
 PrivateDevices=yes
 ProtectSystem=full

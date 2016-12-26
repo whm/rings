@@ -206,8 +206,8 @@ if ($CONF->debug) {
 # -- Open up connections to the MySQL data
 db_connect();
 
-my $end = 0;
-while ($end == 0) {
+my $loop = 0;
+while ($loop < $CONF->loop_limit_load) {
     my @dir_list;
     if (@ARGV) {
         @dir_list    = @ARGV;
@@ -221,9 +221,10 @@ while ($end == 0) {
         process_directories(@dir_list);
     } else {
         if ($opt_oneshot) {
-            $end = 1;
+            $loop = $CONF->loop_limit_load + 1;
         } else {
             sleep $CONF->queue_sleep;
+            $loop++;
         }
     }
 }
