@@ -405,27 +405,6 @@ sub sql_format_datetime {
 }
 
 # ------------------------------------------------------------------------
-# Selecting the next picture in a ring requires that the picture_date
-# and the picture_sequence pair be unique. This routine searches the
-# existing picture database and returns the number of entries for a
-# given date +1.
-
-sub get_picture_sequence {
-    my ($dt) = @_;
-    my $seq  = 1;
-    my $sel  = "SELECT pid FROM pictures_information WHERE picture_date = ? ";
-    my $sth  = $DBH->prepare($sel);
-    if ($CONF->debug) {
-        dbg($sel);
-    }
-    $sth->execute($dt);
-    while (my $row = $sth->fetchrow_hashref) {
-        $seq++;
-    }
-    return $seq;
-}
-
-# ------------------------------------------------------------------------
 # Get meta data from picture and return a hash with the data.
 
 sub get_meta_data {
@@ -544,13 +523,11 @@ sub store_meta_data {
             $pid,
         );
     } else {
-        my $picture_sequence = get_picture_sequence($meta{'datetime'});
-        my $cmd              = "INSERT INTO pictures_information SET ";
+        my $cmd = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?, ';
         $cmd .= 'picture_lot = ?, ';
         $cmd .= 'camera_date = ?, ';
         $cmd .= 'picture_date = ?, ';
-        $cmd .= 'picture_sequence = ?, ';
         $cmd .= 'source_file = ?, ';
         $cmd .= 'file_name = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
@@ -568,13 +545,19 @@ sub store_meta_data {
             dbg($cmd);
         }
         $sth_update->execute(
-            $pid,                         $meta{'picture_lot'},
-            $meta{'ring_datetime'},       $meta{'ring_datetime'},
-            $picture_sequence,            $meta{'source_path'},
-            $meta{'source_file'},         $meta{'ring_size'},
-            $meta{'ring_signature'},      $meta{'ring_camera'},
-            $meta{'ring_shutterspeed'},   $meta{'ring_fstop'},
-            $CONF->default_display_grade, $CONF->default_public,
+            $pid,
+            $meta{'picture_lot'},
+            $meta{'ring_datetime'},
+            $meta{'ring_datetime'},
+            $meta{'source_path'},
+            $meta{'source_file'},
+            $meta{'ring_size'},
+            $meta{'ring_signature'},
+            $meta{'ring_camera'},
+            $meta{'ring_shutterspeed'},
+            $meta{'ring_fstop'},
+            $CONF->default_display_grade,
+            $CONF->default_public,
         );
     }
 

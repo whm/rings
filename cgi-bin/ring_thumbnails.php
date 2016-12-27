@@ -163,7 +163,7 @@ if (empty($_SERVER['REMOTE_USER'])) {
 }
 $sel .= "AND $grade_sel ";
 $sel .= "GROUP BY d.pid ";
-$sel .= "ORDER BY p.picture_date,p.picture_sequence ";
+$sel .= "ORDER BY p.picture_date,p.pid ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = $DBH->query($sel);
 if (!$result) {

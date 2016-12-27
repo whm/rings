@@ -47,7 +47,6 @@ sub display_example {
     print "#  file_name\n";
     print "#  date_taken\n";
     print "#  picture_date\n";
-    print "#  picture_sequence\n";
     print "#  taken_by\n";
     print "#  description\n";
     print "#  grade\n";

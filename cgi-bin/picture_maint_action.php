@@ -16,7 +16,6 @@ $in_date_added          = get_request('in_date_added');
 $in_pid                 = get_request('in_pid');
 $in_type                = get_request('in_type');
 $in_date_last_maint     = get_request('in_date_last_maint');
-$in_picture_sequence    = get_request('in_picture_sequence');
 $in_newuids             = get_request('in_newuids');
 $in_button_update       = get_request('in_button_update');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
@@ -59,43 +58,6 @@ function sql_quote ($a_val, $in_type) {
         $ret = "'" . str_replace("'", "\'", $ret) . "'";
     }
     return $ret;
-
-}
-
-//-------------------------------------------------------------
-// Check for duplicate dates
-
-function date_dup_check($dt, $pid) {
-
-    global $DBH;
-
-    $new_seq = 0;
-
-    $sel = 'SELECT count(*) cnt FROM pictures_information ';
-    $sel .= "WHERE picture_date='$dt' ";
-    $sel .= "AND pid != $pid ";
-    $result = $DBH->query($sel);
-    if (!$result) {
-        $_SESSION['msg'] .= "<br>MySQL error executing: $sel";
-        return 0;
-    }
-    if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if ($row['cnt'] > 0) {
-            $sel = 'SELECT max(picture_sequence) max_seq ';
-            $sel .= 'FROM pictures_information ';
-            $sel .= "WHERE picture_date='$dt' ";
-            $result = $DBH->query($sel);
-            if (!$result) {
-                $_SESSION['msg'] .= "<br>MySQL error executing: $sel";
-                return 0;
-            }
-            if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                $new_seq = $row['max_seq'] + 1;
-            }
-        }
-    }
-
-    return $new_seq;
 
 }
 
@@ -147,7 +109,6 @@ if ( $update_flag ) {
     $update_cnt = 0;
 
     $update_list[] = 'picture_date';
-    $update_list[] = 'picture_sequence';
     $update_list[] = 'description';
     $update_list[] = 'key_words';
     $update_list[] = 'taken_by';
@@ -155,8 +116,6 @@ if ( $update_flag ) {
     $update_list[] = 'public';
     $update_list[] = 'date_last_maint';
 
-    # check for duplicate date, sequence
-    $seq = date_dup_check($in_picture_date, $in_pid);
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
     $up_msg = '';

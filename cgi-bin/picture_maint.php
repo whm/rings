@@ -354,12 +354,6 @@ if ($this_pid > 0) {
  </td>
 </tr>
 <tr>
- <td align="right">Picture Sequence:</td>
- <td> <input type="text" name="in_picture_sequence" size="4"
-             value="<?php print $row["picture_sequence"]; ?>">
- </td>
-</tr>
-<tr>
  <td align="right">Taken By:</td>
  <td> <input type="text" name="in_taken_by" size="16" maxlength="32"
              value="<?php print $row["taken_by"]; ?>">
