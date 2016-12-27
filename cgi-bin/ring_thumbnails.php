@@ -32,7 +32,7 @@ function back_to_index () {
     echo '<a href="rings">Rings of Pictures</a>'."\n";
     echo "</body>\n";
     echo "</html>\n";
-    $_SESSION['msg'] .= "Ring Not Found.\n";
+    sys_msg_err('Ring Not Found.');
 
     exit;
 }
@@ -243,13 +243,7 @@ if (!$result) {
        src="/rings-images/rings.png" 
        alt="Pick a New Ring"
        border="0"></a>
-<?php 
-if (!empty($_SESSION['msg'])) {
-    echo "<p>\n";
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-}
-?>
+<?php sys_display_msg(); ?>
 
 </body>
 </html>

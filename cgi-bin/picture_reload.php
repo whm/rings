@@ -98,10 +98,7 @@ if ($in_pid > 0) {
     check_action_queue($in_pid);
 }
 
-if (!empty($_SESSION['msg'])) {
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-}
+sys_display_msg();
 
 ?>
 

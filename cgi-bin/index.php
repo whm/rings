@@ -479,12 +479,7 @@ yourself, either to add pictures, update descriptions or whatever contact
 </dl>
 
 <!-- Message area -->
-<?php
-if (!empty($_SESSION['msg'])) {
-    echo "<br>".$_SESSION['msg']."<br>\n";
-    $_SESSION['msg'] = '';
-}
-?>
+<?php sys_display_msg(); ?>
 
 </Body>
 </html>

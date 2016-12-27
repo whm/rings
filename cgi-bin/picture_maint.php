@@ -506,16 +506,9 @@ if (is_array($uid_sort)) {
  <td colspan="2" align="center" valign="top">
 <?php
 check_action_queue($this_pid);
-if (!empty($_SESSION['msg'])) {
+sys_display_msg();
 ?>
-<span bgcolor="#ffffff" align="center">
-    <?php print $_SESSION['msg'];?>
-</span>
 
-<?php
-    $_SESSION['msg'] = '';
-}
-?>
 <p>
 <table border="1">
 <tr>

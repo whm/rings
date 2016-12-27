@@ -388,11 +388,7 @@ if ($result) {
 <p>
 
 <?php
-echo "$sel<br>\n";
-if (!empty($_SESSION['msg'])) {
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-}
+sys_display_msg();
 
 if ($_SESSION['s_num_user_rows']>0) {
     if (
@@ -434,7 +430,7 @@ if ($_SESSION['s_num_user_rows']>0) {
 </form>
 
 
-<form method="post" action="picture_sort_action">
+<form method="post" action="picture_sort_action.php">
 <table border="1">
   <tr>
     <th>&nbsp;</th>
