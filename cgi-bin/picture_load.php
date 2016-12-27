@@ -91,15 +91,12 @@ if (empty($in_upload)) {
         $upload_status = accept_and_store($fld_name, 0);
         if (!empty($upload_status)) {
             $slot = $i + 1;
-            echo display_err("Problem uploading file $slot");
+            echo msg_err("Problem uploading file $slot");
         }
     }
 }
 
-if (!empty($_SESSION['msg'])) {
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-}
+sys_display_msg();
 
 ?>
 

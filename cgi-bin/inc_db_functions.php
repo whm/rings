@@ -156,7 +156,7 @@ function accept_and_store($fld_name, $in_pid) {
     queue_action_set($pid, 'INFO');
     queue_action_set($pid, 'SIZE');
 
-    echo display_msg("$pid uploaded.");
+    echo msg_okay("$pid uploaded.");
     echo '<a href="picture_maint.php?in_pid=' . $pid . '" '
       . 'target="_blank">Update Picture Details.</a>';
 

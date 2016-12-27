@@ -264,8 +264,8 @@ if (!empty($in_ring_pid)) {
         }
         $next_links['next-by-date'] = 'Next by Date';
     } else {
-        $_SESSION['msg'] .= 'ERROR: ' . $result->error . "<b>\n";
-        $_SESSION['msg'] .= "SQL: $sel<br>\n";
+        sys_msg_err('ERROR: ' . $result->error);
+        sys_msg_err("SQL: $sel");
     }
 
     // ------------------------------------------
@@ -415,10 +415,7 @@ if (!empty($in_ring_pid)) {
 
 }
 
-if (!empty($_SESSION['msg'])) {
-  echo $_SESSION['msg'];
-  $_SESSION['msg'] = '';
-}
+sys_display_msg();
 
 ?>
 

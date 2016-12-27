@@ -32,7 +32,7 @@ if ( strlen($btn_update)>0 ) {
 
     for ($i=0; $i<$in_up_picture_cnt; $i++) {
 
-        $cmd = "date_last_maint='$up_date_last_maint'";
+        $cmd = 'date_last_maint = NOW()';
         $update_cnt = 0;
 
         $up_pid = get_request("up_pid_$i");
@@ -49,8 +49,7 @@ if ( strlen($btn_update)>0 ) {
                 if ("$up_val" != "$db_val") {
                     $cmd .= ", $fld='$up_val' ";
                     $update_cnt++;
-                    $_SESSION['msg'] .=
-                        "<font $ok>$up_pid/$fld $db_val -> $up_val</font><br>";
+                    sys_msg("$up_pid/$fld $db_val -> $up_val");
                 }
             }
         }
@@ -61,10 +60,8 @@ if ( strlen($btn_update)>0 ) {
             $sql_cmd .= "WHERE pid = $up_pid ";
             $result = $DBH->query($sql_cmd);
             if (!$result) {
-                $_SESSION['msg'] .=
-                    "<font $warn>ERROR:" . $result->error . "</font><br>\n";
-                $_SESSION['msg'] .=
-                    "<font $warn>Problem SQL:$sql_cmd</font><br>\n";
+                sys_err("ERROR:" . $result->error);
+                sys_err("Problem SQL:$sql_cmd");
             }
         }
 
@@ -74,10 +71,7 @@ if ( strlen($btn_update)>0 ) {
         if ($rotation == 'LEFT' || $rotation == 'RIGHT') {
             $update_cnt++;
             // request the rotation
-            $sh_cmd = "/usr/bin/ring-rotate";
-            $sh_cmd .= " --start=$up_pid";
-            $sh_cmd .= " --end=$up_pid";
-            $sh_cmd .= " --update";
+            $sh_cmd = "/usr/bin/ring-rotate $up_pid ";
             if ($rotation == 'RIGHT') {
                 $sh_cmd .= " --right";
             } else {
@@ -86,30 +80,17 @@ if ( strlen($btn_update)>0 ) {
             $ret = array();
             $z = exec($sh_cmd, $ret, $ret_status);
             if ($ret_status) {
-                $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+                sys_err("Command:$sh_cmd");
                 foreach ($ret as $v) {
-                    $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+                    sys_err($v);
                 }
-                $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
+                sys_err('SCRIPT ERROR');
             }
             // resize everything
-            $sh_cmd = "/usr/bin/ring-resize";
-            $sh_cmd .= " --start=$up_pid";
-            $sh_cmd .= " --end=$up_pid";
-            $sh_cmd .= " --update";
-            $ret = array();
-            $z = exec($sh_cmd, $ret, $ret_status);
-            if ($ret_status) {
-                $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
-                foreach ($ret as $v) {
-                    $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
-                }
-                $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
-            }
+            queue_action_set($up_pid, 'SIZE');
         }
         if ($update_cnt>0) {
-            $_SESSION['msg']
-                .= "<font $ok>$up_pid rotated $rotation</font><br>\n";
+            sys_msg("$up_pid rotated $rotation");
         }
 
     }
