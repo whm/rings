@@ -92,12 +92,6 @@ function accept_and_store($fld_name, $in_pid) {
     }
     sys_msg("$bytes_written bytes written to $pic_file");
 
-    if (empty($_SESSION['picture_sequence'])) {
-        $_SESSION['picture_sequence'] = 1;
-    } else {
-        $_SESSION['picture_sequence'] += 1;
-    }
-    $picture_sequence = $_SESSION['picture_sequence'];
     $raw_size = strlen($the_file_contents);
 
     $cmd = 'INSERT INTO pictures_information SET ';
@@ -105,7 +99,6 @@ function accept_and_store($fld_name, $in_pid) {
     $cmd .= 'source_file = ?, ';
     $cmd .= 'picture_lot = ?, ';
     $cmd .= 'file_name = ?, ';
-    $cmd .= 'picture_sequence = ?, ';
     $cmd .= 'raw_picture_size = ?, ';
     $cmd .= 'picture_date = NOW(), ';
     $cmd .= 'date_last_maint = NOW(), ';
@@ -120,8 +113,13 @@ function accept_and_store($fld_name, $in_pid) {
         return 1;
     }
     $sth->bind_param(
-        'isssiii',      $pid,              $original_file, $picture_lot,
-        $original_file, $picture_sequence, $raw_size,      $raw_size
+        'isssiii',
+        $pid,
+        $original_file,
+        $picture_lot,
+        $original_file,
+        $raw_size,
+        $raw_size
     );
     if (!$sth->execute()) {
         $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;

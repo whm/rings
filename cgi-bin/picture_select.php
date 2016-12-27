@@ -11,7 +11,6 @@ require('inc_ring_init.php');
 // Form or URL inputs
 $in_slide_show     = get_request('in_slide_show');
 $in_ring_uid       = get_request('in_ring_uid');
-$in_ring_next_seq  = get_request('in_ring_next_seq');
 $in_ring_pid       = get_request('in_ring_pid');
 $in_ring_next_date = get_request('in_ring_next_date');
 
@@ -28,7 +27,6 @@ $grade_sel .= "OR p.grade IS NULL) ";
 function make_a_link ($thisUID,
                       $thisPID,
                       $this_picture_date,
-                      $this_seq,
                       $thisName) {
 
     $thisLink = '';
@@ -40,7 +38,6 @@ function make_a_link ($thisUID,
     $thisLink .= '?in_ring_uid='.urlencode($thisUID);
     $thisLink .= '&in_ring_pid='.urlencode($thisPID);
     $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
-    $thisLink .= '&in_ring_next_seq='.urlencode($this_seq);
     $thisLink .= '">';
     if (!empty($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
         $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
@@ -147,7 +144,6 @@ if (!empty($in_ring_uid)) {
     // Build selection for next links
     $base_sel = "SELECT ";
     $base_sel .= "p.picture_date     picture_date, ";
-    $base_sel .= "p.picture_sequence picture_sequence, ";
     $base_sel .= "p.pid              pid ";
     $base_sel .= "FROM pictures_information p ";
     $base_sel .= "JOIN picture_details det ";
@@ -162,14 +158,14 @@ if (!empty($in_ring_uid)) {
         $base_sel .= "JOIN people_or_places pp ";
         $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
     }
-    $order_sel .= "ORDER BY p.picture_date, p.picture_sequence ";
+    $order_sel .= "ORDER BY p.picture_date, p.pid ";
 
     // look up the next picture
     if (!empty($in_ring_next_date)) {
         $sel = $base_sel;
         $sel .= "WHERE ((picture_date='$in_ring_next_date' ";
-        $sel .= "AND picture_sequence>$in_ring_next_seq) ";
-        $sel .= "OR (picture_date>'$in_ring_next_date')) ";
+        $sel .= "AND pid > $in_ring_pid) ";
+        $sel .= "OR (picture_date > '$in_ring_next_date')) ";
         $sel .= "AND p.pid != $in_ring_pid ";
         if (empty($_SERVER['REMOTE_USER'])) {
             $sel .= "AND public='Y' ";
@@ -238,7 +234,6 @@ if (!empty($in_ring_pid)) {
         $row = $result->fetch_array(MYSQLI_ASSOC);
         $this_pid          = $row["pid"];
         $this_picture_date = $row["picture_date"];
-        $this_picture_seq  = $row["picture_sequence"];
         $this_dlm          = $row["date_last_maint"];
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
         $image_reference
@@ -295,7 +290,6 @@ if (!empty($in_ring_pid)) {
             $l = make_a_link($in_ring_uid,
                              $this_pid,
                              $this_picture_date,
-                             $this_picture_seq,
                              $next_links[$in_ring_uid]);
             if (!empty($l)) {echo $l."<br>\n";}
         }
@@ -312,7 +306,6 @@ if (!empty($in_ring_pid)) {
                 $l = make_a_link($thisUID,
                                  $this_pid,
                                  $this_picture_date,
-                                 $this_picture_seq,
                                  $next_links[$thisUID]);
                 if (!empty($l)) {
                     echo $c.$l;
@@ -451,7 +444,6 @@ hideReload();
         . '?in_ring_uid='.$in_ring_uid
         . '&in_ring_pid='.urlencode($this_pid)
         . '&in_ring_next_date='.urlencode($this_picture_date)
-        . '&in_ring_next_seq='.urlencode($this_picture_seq)
         . '&in_slide_show='.$in_slide_show
         . '";'."\n";
     echo '    location = url;'."\n";
