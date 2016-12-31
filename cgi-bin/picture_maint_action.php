@@ -12,10 +12,8 @@ require('inc_ring_init.php');
 $in_fld                 = get_request('in_fld');
 $in_val                 = get_request('in_val');
 $in_picture_date        = get_request('in_picture_date');
-$in_date_added          = get_request('in_date_added');
 $in_pid                 = get_request('in_pid');
 $in_type                = get_request('in_type');
-$in_date_last_maint     = get_request('in_date_last_maint');
 $in_newuids             = get_request('in_newuids');
 $in_button_update       = get_request('in_button_update');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
@@ -63,10 +61,6 @@ function sql_quote ($a_val, $in_type) {
 
 // ----------------------------------------------------
 // Main Routine
-
-$now                = date ('Y-m-d H:i:s');
-$in_date_last_maint = $now;
-$in_date_added      = $now;
 
 // No spaces allowed in the identifier
 $in_pid = preg_replace ('/\s+/', '', $in_pid);
@@ -118,7 +112,6 @@ if ( $update_flag ) {
 
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
-    $up_msg = '';
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $fld_update_flag = 0;
@@ -138,16 +131,16 @@ if ( $update_flag ) {
             $cmd .= "$comma $db_fld=" . sql_quote($in_val,'s') . ' ';
             $comma = ',';
             $update_cnt++;
-            $up_msg .= "<font $ok>$db_fld updated.</font><br>";
+            sys_msg("$db_fld updated.");
         }
     }
 
     if ($update_cnt>1) {
         // Make the changes
         $sql_cmd = "UPDATE pictures_information SET $cmd ";
+        $sql_cmd .= ', date_last_maint = NOW() ';
         $sql_cmd .= "WHERE pid = $in_pid ";
         $result = $DBH->query($sql_cmd);
-        $_SESSION['msg'] .= $up_msg;
     }
     $next_pid = $in_pid;
 
@@ -162,8 +155,7 @@ if ( $update_flag ) {
             $result = $DBH->query($cmd);
             if ($result) {
                 $update_cnt++;
-                $_SESSION['msg'] .= "<font $ok>"
-                    . "Deleted $a_uid from picture. </font><br>";
+                sys_msg("Deleted $a_uid from picture.");
                 if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
                     $_SESSION['s_uid_weight'][$a_uid]--;
                     if ($_SESSION['s_uid_weight'][$a_uid] < 0) {
@@ -171,8 +163,8 @@ if ( $update_flag ) {
                     }
                 }
             } else {
-                $_SESSION['msg'] .= "Problem deleting picture details.<br>";
-                $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
+                sys_err("Problem deleting picture details.");
+                sys_err("Problem SQL: $sql_cmd");
             }
         }
     }
@@ -180,33 +172,43 @@ if ( $update_flag ) {
     // add picture details
     for ($i=0; $i<get_request('in_add_cnt'); $i++) {
         $a_uid = '';
-        if (!empty($in_newuids[$i])) {$a_uid = $in_newuids[$i];}
+        if (!empty($in_newuids[$i])) {
+            $a_uid = $in_newuids[$i];
+        }
         if (strlen($a_uid) > 0) {
-            $flds = '';
-            $vals = '';
-            mkin ('uid', $a_uid, 's');
-            mkin ('pid', $in_pid, 'n');
-            $cmd = "INSERT INTO picture_details ($flds) VALUES ($vals)";
-            $add_result = $DBH->query($cmd);
-            if ($add_result) {
-                $update_cnt++;
-                $_SESSION['msg'] .= "<font $ok>$a_uid added.</font><br>";
-                if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
-                    $_SESSION['s_uid_weight'][$a_uid]++;
-                    if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
-                        $_SESSION['s_uid_weight'][$a_uid] = 32767;
-                    }
-                } else {
-                    $_SESSION['s_uid_weight'][$a_uid] = 1;
+            $cmd = 'INSERT INTO picture_details SET ';
+            $cmd .= 'uid = ?, ';
+            $cmd .= 'pid = ?, ';
+            $cmd .= 'date_last_maint = NOW(), ';
+            $cmd .= 'date_added = NOW() ';
+            if (!$sth = $DBH->prepare($cmd)) {
+                $m = 'Prepare failed: ' . $DBH->error
+                    . '(' . $DBH->errno . ') ' ;
+                $m .= "Problem statement: $cmd";
+                sys_err($m);
+            }
+            $sth->bind_param('si', $a_uid, $in_pid);
+            if (!$sth->execute()) {
+                $m = 'Execute failed: ' . $DBH->error
+                    . '(' . $DBH->errno . ') ' ;
+                $m .= "Problem statement: $cmd";
+                sys_err($m);
+            }
+            $sth->close();
+            $update_cnt++;
+            sys_msg("$a_uid added.");
+            if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
+                $_SESSION['s_uid_weight'][$a_uid]++;
+                if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {
+                    $_SESSION['s_uid_weight'][$a_uid] = 32767;
                 }
             } else {
-                $_SESSION['msg'] .= "Problem updating picture details<br>";
-                $_SESSION['msg'] .= "Problem SQL: $cmd<br>";
+                $_SESSION['s_uid_weight'][$a_uid] = 1;
             }
         }
     }
-    if ($update_cnt < 2) {
-        $_SESSION['msg'] .= "No changes found.<br>";
+    if ($update_cnt < 1) {
+        sys_msg('No changes found');
     }
 
 } elseif ( !empty($in_button_del) ) {
@@ -224,12 +226,10 @@ if ( $update_flag ) {
         $sql_cmd = "DELETE FROM $thisTable WHERE pid=$in_pid ";
         $result = $DBH->query($sql_cmd);
         if ($result) {
-            $_SESSION['msg'] .= "<font $ok>Picture '$in_pid' deleted "
-                . "from $thisTable.</font><br>";
+            sys_msg("Picture '$in_pid' deleted from $thisTable.");
         } else {
-            $_SESSION['msg']
-                .= "Problem deleting $in_pid from $thisTable<br>";
-            $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
+            sys_err("Problem deleting $in_pid from $thisTable");
+            sys_err("Problem SQL: $sql_cmd");
         }
     }
 
@@ -246,11 +246,11 @@ if ( $update_flag ) {
     $ret = array();
     $z = exec($sh_cmd, $ret, $ret_status);
     if ($ret_status) {
-        $_SESSION['msg'] .= "<font $ok>Command:$sh_cmd</font><br>\n";
+        sys_err("Command:$sh_cmd");
         foreach ($ret as $v) {
-            $_SESSION['msg'] .= "<font $ok>$v</font><br>\n";
+            sys_err($v);
         }
-        $_SESSION['msg'] .= "SCRIPT ERROR</br>\n";
+        sys_err("SCRIPT ERROR");
     }
 
     queue_action_set($in_pid, 'SIZE');
