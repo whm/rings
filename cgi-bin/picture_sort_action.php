@@ -14,9 +14,6 @@ $in_up_picture_cnt = get_request('up_picture_cnt', 0);
 // ----------------------------------------------------
 // Main Routine
 
-$now = date ('Y-m-d H:i:s');
-$up_date_last_maint = $now;
-
 // set update message area
 $ok = 'color="#009900"';
 $warn = 'color="#330000"';
