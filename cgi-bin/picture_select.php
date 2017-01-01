@@ -17,9 +17,9 @@ $in_ring_next_date = get_request('in_ring_next_date');
 if (empty($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
-$grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
-$grade_sel .= "OR p.grade = '' ";
-$grade_sel .= "OR p.grade IS NULL) ";
+$grade_sel = "(gr.grade <= '".$_SESSION['display_grade']."' ";
+$grade_sel .= "OR gr.grade = '' ";
+$grade_sel .= "OR gr.grade IS NULL) ";
 
 // ---------------------------------------------
 // make a link to another picture
@@ -28,19 +28,104 @@ function make_a_link ($thisUID,
                       $thisPID,
                       $this_picture_date,
                       $thisName) {
-
+    global $CONF;
+    global $DBH;
+    global $grade_sel;
+    
     $thisLink = '';
     if (auth_picture_invisible($thisPID)) {return $thisLink;}
     if (auth_person_hidden($thisUID))    {return $thisLink;}
 
-    $urlName = urlencode($thisName);
+    $next_uid  = $thisUID;
+    $next_pid  = '';
+    $next_date = '';
+
+    if ($thisUID == 'next-by-date') {
+        # Select next picture by date
+        $sel = 'SELECT info.pid ';
+        $sel .= 'FROM pictures_information info ';
+        $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+        $sel .= 'ON (gr.pid = info.pid) ';
+        $sel .= 'WHERE info.picture_date >= ? ';
+        $sel .= 'AND info.pid != ? ';
+        $sel .= 'AND ' . $grade_sel;
+        $sel .= 'ORDER BY info.picture_date, info.pid ';
+        $sel .= 'LIMIT 0,1 ';
+        if (!$sth = $DBH->prepare($sel)) {
+            sys_msg(
+                'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')'
+            );
+            sys_msg("Problem statement: $sel");
+            return $thisLink;
+        }
+        $sth->bind_param('si', $this_picture_date, $thisPID);
+        if (!$sth->execute()) {
+            $m = 'Execute failed: ' . $DBH->error
+                . '(' . $DBH->errno . ') ' ;
+            $m .= "Problem statement: $cmd";
+            sys_err($m);
+            return $thisLink;
+        }
+        $sth->bind_result($p1);
+        if ($sth->fetch()) {
+            $next_pid = $p1;
+        } else {
+            $next_pid = 1;
+        }
+        $sth->close();
+    } else {
+        # Find the next picture for this uid.  If we don't find
+        # a next entry return the first entry.
+        $sel = 'SELECT det.pid, det.uid ';
+        $sel .= 'FROM picture_details det ';
+        $sel .= 'JOIN pictures_information info ';
+        $sel .= 'ON (info.pid = det.pid) ';
+        $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+        $sel .= 'ON (gr.pid = info.pid) ';
+        $sel .= 'WHERE det.uid = ? ';
+        $sel .= 'AND info.picture_date >= ? ';
+        $sel .= 'AND det.pid != ? ';
+        $sel .= 'ORDER BY info.picture_date, det.pid ';
+        $sel .= 'LIMIT 0,1 ';
+        if (!$sth = $DBH->prepare($sel)) {
+            sys_msg(
+                'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')'
+            );
+            sys_msg("Problem statement: $sel");
+            return $thisLink;
+        }
+        $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
+        if (!$sth->execute()) {
+            $m = 'Execute failed: ' . $DBH->error
+                . '(' . $DBH->errno . ') ' ;
+            $m .= "Problem statement: $cmd";
+            sys_err($m);
+            return $thisLink;
+        }
+        $sth->bind_result($p1, $p2);
+        if ($sth->fetch()) {
+            $next_pid = $p1;
+        }
+        $sth->close();
+    }
+
+
     $thisLink .= '<a href="picture_select.php';
-    $thisLink .= '?in_ring_uid='.urlencode($thisUID);
-    $thisLink .= '&in_ring_pid='.urlencode($thisPID);
-    $thisLink .= '&in_ring_next_date='.urlencode($this_picture_date);
+    $sep = '?';
+    $suffix = '';
+    if (empty($next_pid)) {
+        $suffix = ' (restart)';
+    } else {
+        $thisLink .= $sep . 'in_ring_pid=' . urlencode($next_pid);
+        $sep = '&';
+    }
+    $thisLink .= $sep . 'in_ring_uid=' . urlencode($next_uid);
+    $sep = '&';
     $thisLink .= '">';
+
+    $urlName = urlencode($thisName . $suffix);
     if (!empty($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
-        $thisLink .= '<img src="button.php?in_button='.$urlName.'">';
+        $thisLink .= '<img src="button.php?in_button=' . $urlName . '">';
     } else {
         $thisLink .= $thisName;
     }
@@ -136,74 +221,34 @@ if (!empty($_SERVER['REMOTE_USER'])) {
     $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
 }
 
-if (!empty($in_ring_uid)) {
-
-    $new_pid   = '';
-    $order_sel = '';
-    
-    // Build selection for next links
-    $base_sel = "SELECT ";
-    $base_sel .= "p.picture_date     picture_date, ";
-    $base_sel .= "p.pid              pid ";
-    $base_sel .= "FROM pictures_information p ";
-    $base_sel .= "JOIN picture_details det ";
-    if ($in_ring_uid == 'next-by-date') {
-        // Just selecting the next picture by date
-        $base_sel .= "ON (p.pid=det.pid) ";
+# Get first picture for a uid if no pid is specified
+if (empty($in_ring_pid) && !empty($in_ring_uid)) {
+    $sel = 'SELECT det.pid ';
+    $sel .= 'FROM picture_details det ';
+    $sel .= 'JOIN pictures_information info ';
+    $sel .= 'ON (info.pid = det.pid) ';
+    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'WHERE det.uid = ? ';
+    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'LIMIT 0,1 ';
+    if (!$sth = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $sel");
+    }
+    $sth->bind_param('s', $in_ring_uid);
+    if (!$sth->execute()) {
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $sel");
+    }
+    $sth->bind_result($p1);
+    if ($sth->fetch()) {
+        $in_ring_pid = $p1;
     } else {
-        // Selecting by a specific ring uid
-        $base_sel .= "ON (p.pid=det.pid and det.uid='$in_ring_uid') ";
+        $in_ring_pid = 1;
+        sys_msg('Problem getting picture for first ' . $in_ring_uid);
     }
-    if (!empty($invisible_sel)) {
-        $base_sel .= "JOIN people_or_places pp ";
-        $base_sel .= "ON (pp.uid = det.uid $invisible_sel) ";
-    }
-    $order_sel .= "ORDER BY p.picture_date, p.pid ";
-
-    // look up the next picture
-    if (!empty($in_ring_next_date)) {
-        $sel = $base_sel;
-        $sel .= "WHERE ((picture_date='$in_ring_next_date' ";
-        $sel .= "AND pid > $in_ring_pid) ";
-        $sel .= "OR (picture_date > '$in_ring_next_date')) ";
-        $sel .= "AND p.pid != $in_ring_pid ";
-        if (empty($_SERVER['REMOTE_USER'])) {
-            $sel .= "AND public='Y' ";
-        }
-        $sel .= "AND $grade_sel ";
-        $sel .= $order_sel;
-        $result = $DBH->query($sel);
-        if ($result) {
-            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                if ( auth_picture_invisible($row['pid']) == 0 ) {
-                    $new_pid = $row['pid'];
-                    break;
-                }
-            }
-        }
-    }
-
-    // either there was no previous picture or we are wrapping around
-    if (empty($new_pid)) {
-        $sel = $base_sel;
-        $sel .= $order_sel;
-        $result = $DBH->query($sel);
-        if ($result) {
-            while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-                if ( auth_picture_invisible($row['pid']) == 0 ) {
-                    $new_pid = $row['pid'];
-                    break;
-                }
-            }
-        }
-    }
-
-    if (empty($new_pid)) {
-        http_redirect('/rings/index.php');
-        exit;
-    } else {
-        $in_ring_pid = $new_pid;
-    }
+    $sth->close();
 }
 
 if (!empty($in_ring_pid)) {
@@ -247,10 +292,10 @@ if (!empty($in_ring_pid)) {
             $image_reference .= $row['description']."\n";
         }
         $image_reference .= "<p>\n";
-        $image_reference .= "Date Taken: "
+        $image_reference .= "Picture Date: "
             . format_date_time($this_picture_date) . "\n";
         $image_reference .= "<p>\n";
-        $sel = "SELECT det.uid   uid, ";
+        $sel = "SELECT det.uid uid, ";
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
         $sel .= "JOIN people_or_places pp ";
