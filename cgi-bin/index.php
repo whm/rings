@@ -242,11 +242,12 @@ if ($result = $DBH->query($sel)) {
     <th align="right">Picture Size:</th>
     <td>
 <?php
-$sel = 'SELECT size_id,description FROM picture_sizes order by description ';
+$sel = 'SELECT size_id, description ';
+$sel .= 'FROM picture_sizes ';
+$sel .= 'ORDER BY description ';
 if (!$stmt = $DBH->prepare($sel)) {
     sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
 }
-$stmt->bind_param('s', $id);
 $stmt->execute();
 $stmt->bind_result($p1, $p2);
 $sp = '';
