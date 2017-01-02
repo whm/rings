@@ -24,17 +24,10 @@ $in_button_cancel = get_request('in_button_cancel');
 $in_button_email  = get_request('in_button_email');
 
 // look up the from address
-$ds = ldap_connect($ldap_server);
-$return_attr = array('cn','mail');
-$ldap_filter = '(uid=' . $_SERVER['REMOTE_USER'] . ')';
-$sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
-$info = @ldap_get_entries($ds, $sr);
-$ret_cnt = $info["count"];
-if ($ret_cnt == 1) {
-    $from_display = '&lt;'.$info[0]["mail"][0].'&gt; ' . $info[0]["cn"][0];
-    $from_addr = '<'.$info[0]["mail"][0].'> ' . $info[0]["cn"][0];
+if (empty($_SERVER['WEBAUTH_LDAP_MAIL'])) {
+    $from_email = $_SERVER['REMOTE_USER'] . '@' . $CONF['mail_domain'];
 } else {
-    $from_addr = 'webmaster@macallister.grass-valley.ca.us';
+    $from_email = $_SERVER['WEBAUTH_LDAP_MAIL'];
 }
 
 ?>
@@ -81,10 +74,10 @@ function get_mail_addresses(addrType) {
 <table border="0" cellpadding="2">
 <tr>
   <td align="right">From:</td>
-  <td><?php echo $from_display;?>
+  <td><?php echo $from_email;?>
       <input type="hidden"
              name="in_from_addr"
-             value="<?php echo $from_addr;?>">
+             value="<?php echo $from_email;?>">
   </td>
   <td>&nbsp;</td>
 </tr>
@@ -146,9 +139,13 @@ function get_mail_addresses(addrType) {
     <?php
     $email_list = explode(" ", $_SESSION['s_email_list']);
     foreach ($email_list as $email_pid) {
-      if ($email_pid > 0) {
-        echo "<img src=\"display.php?in_pid=$email_pid&in_size=small\">\n";
-      }
+        if ($email_pid > 0) {
+            $img = '<img src="display.php'
+                . '?in_pid=' . $email_pid
+                . '&in_size=' . $CONF['index_size']
+                . '">' . "\n";
+            echo $img;
+        }
     }
     ?>
   </td>

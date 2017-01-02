@@ -16,6 +16,7 @@ Build-Depends: debhelper (>= 8),
  libimage-info-perl,
  libimage-magick-perl,
  libipc-run-perl,
+ libphp-phpmailer,
  perl,
  perltidy,
  php-cli
@@ -38,6 +39,7 @@ Depends: apache2,
  libimage-info-perl,
  libimage-magick-perl,
  libipc-run-perl,
+ libphp-phpmailer,
  perl,
  ${perl:Depends}
 Description: Rings Picture Gallery Web Application

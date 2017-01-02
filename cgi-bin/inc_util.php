@@ -152,7 +152,7 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
         sys_err($m);
         return $m;
     }
-    list ($a_size_id, $a_size_desc) = validate_size($size_id);
+    list ($a_size_id, $a_size_desc, $a_table) = validate_size($size_id);
     if (empty($a_size_id)) {
         $m = "picture_path invalid size_id ($size_id)";
         sys_err($m);
