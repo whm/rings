@@ -256,21 +256,21 @@ function get_next ($id) {
 //-------------------------------------------------------------
 // Get the mime type and file extension for a picture
 
-function get_picture_type ($pid, $size_id) {
+function get_picture_type ($pid, $id) {
     global $DBH;
     global $CONF;
 
-    $sel = 'SELECT picture_table FROM picture_sizes WHERE size_id = ? ';
+    $sel = 'SELECT picture_table FROM picture_sizes '
+        . 'WHERE size_id = ? or description = ? ';
     if ($CONF['debug']) {
         sys_msg("DEBUG: $sel");
     }
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
-        sys_err($m);
-        sys_msg(LOG_INFO, "Problem statement: $sel");
+        sys_err('Prepare failed: ' . $DBH->errno . '- ' . $DBH->error);
+        sys_err("Problem statement: $sel");
         return;
     }
-    $stmt->bind_param('s', $size_id);
+    $stmt->bind_param('ss', $id, $id);
     $stmt->execute();
     $stmt->bind_result($z);
     if ($stmt->fetch()) {
@@ -318,20 +318,25 @@ function validate_size ($id) {
 
     $this_size = '';
     $this_description = '';
-    $sel = 'SELECT size_id,description FROM picture_sizes WHERE size_id = ? ';
+    $sel = 'SELECT size_id,'
+        . 'description, '
+        . 'picture_table '
+        . 'FROM picture_sizes '
+        . 'WHERE (size_id = ? OR description = ?) ';
     if (!$stmt = $DBH->prepare($sel)) {
         sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
-    $stmt->bind_param('s', $id);
+    $stmt->bind_param('ss', $id, $id);
     $stmt->execute();
-    $stmt->bind_result($p1, $p2);
+    $stmt->bind_result($p1, $p2, $p3);
     if ($stmt->fetch()) {
-        $this_size = $p1;
-        $this_description = $p2;
+        $sz_id    = $p1;
+        $sz_desc  = $p2;
+        $sz_table = $p3;
     }
     $stmt->close();
 
-    return array($this_size, $this_description);
+    return array($sz_id, $sz_desc, $sz_table);
 }
 
 //-------------------------------------------------------------

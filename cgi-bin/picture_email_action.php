@@ -7,8 +7,7 @@
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
 require('inc_ring_init.php');
-
-require ('htmlMimeMail.php');
+require 'libphp-phpmailer/PHPMailerAutoload.php';
 
 // Form or URL inputs
 $in_subject       = get_request('in_subject');
@@ -22,61 +21,56 @@ $in_button_send   = get_request('in_button_send');
 $in_button_cancel = get_request('in_button_cancel');
 $in_button_email  = get_request('in_button_email');
 
-// ----------------------------------------------------
-// Main Routine
-
-// set update message area
-$err_msg = '';
-$ok   = '<font color="#009900">';
-$warn = '<font color="#330000">';
-$mend = "</font><br>\n";
-$msg  = '';
+##############################################################################
+# Main Routine
+##############################################################################
 
 // get the picture information
 if (!empty($in_button_send)) {
 
+    // make a mail message
+    $mailMsg = new phpMailer;
+
+    // From address
+    sys_msg('Header From:' . htmlentities($in_from_addr));
+    $mailMsg->setFrom($in_from_addr);
+
     // get to: distribution list
     $to_addrs = array();
     $a_to = trim(strtok($in_to_addr, ','));
-    while (strlen($a_to)>0) {
-        $msg .= $ok.'To:'.htmlentities($a_to).$mend;
-        $to_addrs[] = $a_to;
+    while (!empty($a_to)) {
+        sys_msg('To:' . htmlentities($a_to));
+        $mailMsg->addAddress($a_to);
         $a_to = trim(strtok(','));
     }
 
-    // make a mail message
-    $mailMsg = new htmlMimeMail();
-    if ( strlen(trim($in_message)) == 0 ) {
-        $in_message = 'A picture for you\n';
-    }
-    $mailMsg->setText($in_message);
-    $msg .= $ok.'Message text size:'.strlen($in_message).$mend;
-
     // CC address
     $in_cc_addr = trim($in_cc_addr);
-    if ( strlen($in_cc_addr) > 0 ) {
-        $msg .= $ok.'CC:'.htmlentities($in_cc_addr).$mend;
-        $mailMsg->setCc($in_cc_addr);
+    if (!empty($in_cc_addr)) {
+        sys_msg('CC:' . htmlentities($in_cc_addr));
+        $mailMsg->AddCC($in_cc_addr);
     }
-
-    // From address
-    $env_from = $in_from_addr;
-    if ( preg_match ('/<(.*?)>/', $in_from_addr, $matches) ) {
-        $env_from = $matches[1];
-    }
-    $msg .= $ok.'Envelope From:'.htmlentities($env_from).$mend;
-    $mailMsg->setFrom($env_from);
-    //  $msg .= "$ok Header From:". htmlentities($in_from_addr) . $mend;
-    //  $mailMsg->setHeader('From', $in_from_addr);
 
     // Add subject header
-    $msg .= $ok.'Subject:'.htmlentities($in_subject).$mend;
-    $mailMsg->setSubject($in_subject);
+    sys_msg('Subject:' . htmlentities($in_subject));
+    $mailMsg->Subject = $in_subject;
 
     // Add mailer header
-    $xhdr = 'The Rings (http://www.macallister.grass-valley.ca.us/rings)';
-    $mailMsg->setHeader('X-Mailer', $xhdr);
+    $xhdr = 'The Rings (http://www.ca-zephyr.org/rings)';
+    $mailMsg->addCustomHeader('X-Mailer', $xhdr);
 
+    // message body
+    $mailMsg->WordWrap = 80;
+    $mailMsg->IsHTML(false);
+    
+    if (empty(trim($in_message))) {
+        $in_message = 'A picture for you\n';
+    }
+    $mailMsg->Body = $in_message;
+    sys_msg('Message text size:' . strlen($in_message));
+
+    // Get the table to pull the pictures mime type from
+    list($sz_id, $sz_desc, $sz_table) = validate_size($CONF['mail_size']);
     $email_list = explode(" ", $_SESSION['s_email_list']);
     $msg_cnt = 0;
     foreach ($email_list as $email_pid) {
@@ -84,42 +78,34 @@ if (!empty($in_button_send)) {
         // Skip empty entries.
         if (empty($email_pid) || $email_pid<1) { continue; }
 
-        // get the picture information
-        $sel = "SELECT * FROM pictures_information WHERE pid=$email_pid ";
-        $result = $DBH->query($sel);
-        if (!$result) {
-            $err_msg .= "$warn Problem finding picture information.$mend";
-            $err_msg .= "$warn Problem SQL:$sel$mend";
-            break;
-        }
+        // Get the picture lot
+        $pic_lot = get_picture_lot($email_pid);
 
-        $row = $result->fetch_array(MYSQLI_ASSOC);
-        $pic_lot  = $row['picture_lot'];
-        $pic_size = $CONF['mail_size'];
-        list ($pic_dir, $pic_path)
-            = picture_path($pic_lot, $pic_size, $email_pid, $file_type);
-
-        list($this_mime_type, $this_file_type)
-            = get_picture_type($email_pid, $pic_size);
-        if (empty($mime_type)) {
+        // Get the mime and file types for this picture
+        list($pic_mime_type, $pic_file_type)
+            = get_picture_type($email_pid, $sz_id);
+        if (empty($pic_mime_type)) {
             sys_err("Skipping picture $pid");
             continue;
         }
 
-        $this_picture = file_get_contents($pic_path);
-        $this_file    = "${pic_lot}-${email_pid}.${this_file_type}";
-        sys_msg("Picture ${this_file}, size " . strlen($this_picture));
-            
-        // Add the picture
-        $mailMsg->addAttachment($this_picture,
-                                $this_file,
-                                $this_mime_type);
+        // Assemble the paths to find the picture
+        list ($pic_dir, $pic_path)
+            = picture_path($pic_lot, $sz_id, $email_pid, $pic_file_type);
+
+        // Add the attachement to the message
+        $mailMsg->addAttachment($pic_path);
+        sys_msg("Added picture ${email_pid} to message.");
         $msg_cnt++;
     }
     if ($msg_cnt == 0) {
-        sys_msg("Message not sent");
+        sys_err('Message not sent');
     } else {
-        $mailResult = $mailMsg->send($to_addrs);
+        if (!$mailMsg->send()) {
+            sys_err('ERROR: ' . $mailMsg->ErrorInfo);
+        } else {
+            sys_msg('Message sent!');
+        }
     }
 }
 
@@ -138,21 +124,10 @@ if (!empty($in_button_send)) {
 <?php
 // These errors are only set if you're using SMTP to send the message
 if (!empty($in_button_cancel)) {
-    echo '<h3>No mail sent.  List cleared.</h3>';
+    sys_err('No mail sent.  List cleared.');
     $_SESSION['s_email_list'] = '';
-} elseif (!$mailResult) {
-    echo "${sys_msg_warn}\n";
-    echo "<pre>\n";
-    print_r($mailMsg->errors);
-    echo "</pre>\n";
-    echo "${sys_msg_end}\n";
-} else {
-    echo '<h3>Mail sent!</h3>';
-    echo "<blockquote>\n";
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-    echo "</blockquote>\n";
 }
+sys_display_msg();
 ?>
 
 <?php if (!empty($in_button_cancel)) { ?>

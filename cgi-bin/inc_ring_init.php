@@ -1,4 +1,18 @@
 <?PHP
+// ---------------------------------------------------------------------
+// Helper routine to set initial configuration values
+function set_default ($fld, $val) {
+    global $CONF;
+    if (empty($CONF[$fld])) {
+        $CONF[$fld] = $val;
+    }
+    return;
+}
+
+// ---------------------------------------------------------------------
+// Main Routine
+// ---------------------------------------------------------------------
+
 // Start a session
 session_start();
 
@@ -15,42 +29,19 @@ if (empty($_ENV['RINGCONF'])) {
     $ring_conf = $_ENV['RINGCONF'];
 }
 $CONF = read_conf($ring_conf);
-if (empty($CONF['db_name'])) {
-    $CONF['db_name'] = 'rings';
-}
-if (empty($CONF['db_secret'])) {
-    $CONF['db_secret'] = '/etc/rings/rings_db.conf';
-}
-if (empty($CONF['display_size'])) {
-    $CONF['default_size'] = 'raw';
-}
-if (empty($CONF['maint_size'])) {
-    $CONF['maint_size'] = '640x480';
-}
-if (empty($CONF['index_size'])) {
-    $CONF['index_size'] = '125x125';
-}
-if (empty($CONF['mail_size'])) {
-    $CONF['mail_size'] = 'large';
-}
-if (empty($CONF['ring_admin'])) {
-    $CONF['ring_admin'] = 'ring_admin';
-}
-if (empty($CONF['ring_id'])) {
-    $CONF['ring_id'] = 'rings';
-}
-if (empty($CONF['picture_root'])) {
-    $CONF['picture_root'] = '/srv/rings';
-}
-if (empty($CONF['debug'])) {
-    $CONF['debug'] = 0;
-}
-if (empty($CONF['index_size'])) {
-    $CONF['index_size'] = '125x125';
-}
-if (empty($CONF['cookie_id'])) {
-    $CONF['cookie_id'] = 'rings-' . $CONF['ring_id'];
-}
+set_default('cookie_id',    'rings-cookie');
+set_default('db_name',      'rings');
+set_default('db_secret',    '/etc/rings/rings_db.conf');
+set_default('debug',        0);
+set_default('display_size', 'raw');
+set_default('index_size',   '125x125');
+set_default('ldap_server',  'macdir.ca-zephyr.org');
+set_default('mail_domain',  'ca-zephyr.org');
+set_default('mail_size',    '800x600');
+set_default('maint_size',   '640x480');
+set_default('picture_root', '/srv/rings');
+set_default('ring_admin',   'ring_admin');
+set_default('ring_id',      'rings');
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);

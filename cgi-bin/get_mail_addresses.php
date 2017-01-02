@@ -53,7 +53,7 @@ function setAddress () {
 <?php
 
 // Look up the from address.  This is an anonymous bind.
-$ds = ldap_connect($ldap_server);
+$ds = ldap_connect($CONF['ldap_server']);
 $return_attr = array('cn','mail');
 $ldap_filter = '(&(mail=*)(objectclass=person))';
 $sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);

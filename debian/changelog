@@ -1,3 +1,11 @@
+picture-rings (2.13) unstable; urgency=medium
+
+  * Replace old htmlMimeMail with phpmailer.
+  * Update the validate_size and get_picture_type routines to accept
+    either the size identifier or the size description.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 01 Jan 2017 19:34:44 -0800
+
 picture-rings (2.12) unstable; urgency=medium
 
   * Update messaging handling in picture_maint_action.

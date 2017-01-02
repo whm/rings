@@ -43,7 +43,7 @@ if (auth_picture_invisible($in_pid)>0) {
 if (empty($in_size)) {
     $in_size = $CONF['display_size'];
 } else {
-    list($valid_size, $valid_desc) = validate_size($in_size);
+    list($valid_size, $valid_desc, $valid_table) = validate_size($in_size);
     if (empty($valid_size)) {
         sys_err("Invalid picture size $in_size");
         $in_size = $CONF['display_size'];
