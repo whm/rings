@@ -1,3 +1,10 @@
+picture-rings (2.14) unstable; urgency=medium
+
+  * Correct bug in selecting the next picture when there are duplicate
+    dates.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 07 Jan 2017 13:48:25 -0800
+
 picture-rings (2.13) unstable; urgency=medium
 
   * Replace old htmlMimeMail with phpmailer.
