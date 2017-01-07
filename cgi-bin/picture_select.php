@@ -21,6 +21,158 @@ $grade_sel = "(gr.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR gr.grade = '' ";
 $grade_sel .= "OR gr.grade IS NULL) ";
 
+##############################################################################
+# Subroutines
+##############################################################################
+
+// ---------------------------------------------
+// Get the next pid by date
+
+function get_next_pic_by_date($this_picture_date, $thisPID) {
+
+    global $CONF;
+    global $DBH;
+    global $grade_sel;
+
+    $next_pid = 0;
+
+    # First handle pictures with the exact same date taken.
+    # Select next picture by date
+    $sel = 'SELECT info.pid ';
+    $sel .= 'FROM pictures_information info ';
+    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'WHERE info.picture_date = ? ';
+    $sel .= 'AND info.pid > ? ';
+    $sel .= 'AND ' . $grade_sel;
+    $sel .= 'ORDER BY info.picture_date, info.pid ';
+    $sel .= 'LIMIT 0,1 ';
+    if (!$sth = $DBH->prepare($sel)) {
+        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $sel");
+        return 0;
+    }
+    $sth->bind_param('si', $this_picture_date, $thisPID);
+    if (!$sth->execute()) {
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $cmd");
+        return 0;
+    }
+    $sth->bind_result($p1);
+    if ($sth->fetch()) {
+        $next_pid = $p1;
+    }
+    $sth->close();
+    if ($next_pid > 0) {
+        return $next_pid;
+    }
+
+    # Select next picture by date
+    $sel = 'SELECT info.pid ';
+    $sel .= 'FROM pictures_information info ';
+    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'WHERE info.picture_date > ? ';
+    $sel .= 'AND ' . $grade_sel;
+    $sel .= 'ORDER BY info.picture_date ';
+    $sel .= 'LIMIT 0,1 ';
+    if (!$sth = $DBH->prepare($sel)) {
+        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $sel");
+        return 0;
+    }
+    $sth->bind_param('s', $this_picture_date);
+    if (!$sth->execute()) {
+        sys_msg('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $cmd");
+        return;
+    }
+    $sth->bind_result($p1);
+    if ($sth->fetch()) {
+        $next_pid = $p1;
+    }
+    $sth->close();
+
+    return $next_pid;
+}
+
+// ---------------------------------------------
+// Get next picture for a given uid
+
+function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
+
+    global $CONF;
+    global $DBH;
+    global $grade_sel;
+
+    $next_pid = 0;
+
+    # First handle any pictures that have exactly the same picture
+    # date.
+    $sel = 'SELECT det.pid ';
+    $sel .= 'FROM picture_details det ';
+    $sel .= 'JOIN pictures_information info ';
+    $sel .= 'ON (info.pid = det.pid) ';
+    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'WHERE det.uid = ? ';
+    $sel .= 'AND info.picture_date = ? ';
+    $sel .= 'AND det.pid > ? ';
+    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'LIMIT 0,1 ';
+    if (!$sth = $DBH->prepare($sel)) {
+        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $sel");
+        return 0;
+    }
+    $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
+    if (!$sth->execute()) {
+        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
+        $m .= "Problem statement: $cmd";
+        sys_err($m);
+        return 0;
+    }
+    $sth->bind_result($p1);
+    if ($sth->fetch()) {
+        $next_pid = $p1;
+    }
+    $sth->close();
+    if ($next_pid > 0) {
+        return $next_pid;
+    }
+
+    # If there is no duplicate date then just select the next
+    # picture by date.
+    $sel = 'SELECT det.pid ';
+    $sel .= 'FROM picture_details det ';
+    $sel .= 'JOIN pictures_information info ';
+    $sel .= 'ON (info.pid = det.pid) ';
+    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
+    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'WHERE det.uid = ? ';
+    $sel .= 'AND info.picture_date > ? ';
+    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'LIMIT 0,1 ';
+    if (!$sth = $DBH->prepare($sel)) {
+        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $sel");
+        return 0;
+    }
+    $sth->bind_param('ss', $thisUID, $this_picture_date);
+    if (!$sth->execute()) {
+        sys_msg('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_msg("Problem statement: $cmd");
+        return 0;
+    }
+    $sth->bind_result($p1);
+    if ($sth->fetch()) {
+        $next_pid = $p1;
+    }
+    $sth->close();
+
+    return $next_pid;
+}
+
 // ---------------------------------------------
 // make a link to another picture
 
@@ -30,8 +182,7 @@ function make_a_link ($thisUID,
                       $thisName) {
     global $CONF;
     global $DBH;
-    global $grade_sel;
-    
+
     $thisLink = '';
     if (auth_picture_invisible($thisPID)) {return $thisLink;}
     if (auth_person_hidden($thisUID))    {return $thisLink;}
@@ -41,74 +192,19 @@ function make_a_link ($thisUID,
     $next_date = '';
 
     if ($thisUID == 'next-by-date') {
-        # Select next picture by date
-        $sel = 'SELECT info.pid ';
-        $sel .= 'FROM pictures_information info ';
-        $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-        $sel .= 'ON (gr.pid = info.pid) ';
-        $sel .= 'WHERE info.picture_date >= ? ';
-        $sel .= 'AND info.pid > ? ';
-        $sel .= 'AND ' . $grade_sel;
-        $sel .= 'ORDER BY info.picture_date, info.pid ';
-        $sel .= 'LIMIT 0,1 ';
-        if (!$sth = $DBH->prepare($sel)) {
-            sys_msg(
-                'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')'
-            );
-            sys_msg("Problem statement: $sel");
-            return $thisLink;
+        $next_pid = get_next_pic_by_date($this_picture_date, $thisPID);
+        if ($next_pid == 0) {
+            $next_pid = get_next_pic_by_date('0001-01-01', $thisPID);
         }
-        $sth->bind_param('si', $this_picture_date, $thisPID);
-        if (!$sth->execute()) {
-            $m = 'Execute failed: ' . $DBH->error
-                . '(' . $DBH->errno . ') ' ;
-            $m .= "Problem statement: $cmd";
-            sys_err($m);
-            return $thisLink;
-        }
-        $sth->bind_result($p1);
-        if ($sth->fetch()) {
-            $next_pid = $p1;
-        } else {
-            $next_pid = 1;
-        }
-        $sth->close();
     } else {
-        # Find the next picture for this uid.  If we don't find
-        # a next entry return the first entry.
-        $sel = 'SELECT det.pid, det.uid ';
-        $sel .= 'FROM picture_details det ';
-        $sel .= 'JOIN pictures_information info ';
-        $sel .= 'ON (info.pid = det.pid) ';
-        $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-        $sel .= 'ON (gr.pid = info.pid) ';
-        $sel .= 'WHERE det.uid = ? ';
-        $sel .= 'AND info.picture_date >= ? ';
-        $sel .= 'AND det.pid > ? ';
-        $sel .= 'ORDER BY info.picture_date, det.pid ';
-        $sel .= 'LIMIT 0,1 ';
-        if (!$sth = $DBH->prepare($sel)) {
-            sys_msg(
-                'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')'
-            );
-            sys_msg("Problem statement: $sel");
-            return $thisLink;
+        $next_pid = get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID);
+        if ($next_pid == 0) {
+            $next_pid = get_next_pic_by_uid($thisUID, '0001-01-01', $thisPID);
         }
-        $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
-        if (!$sth->execute()) {
-            $m = 'Execute failed: ' . $DBH->error
-                . '(' . $DBH->errno . ') ' ;
-            $m .= "Problem statement: $cmd";
-            sys_err($m);
-            return $thisLink;
-        }
-        $sth->bind_result($p1, $p2);
-        if ($sth->fetch()) {
-            $next_pid = $p1;
-        }
-        $sth->close();
     }
-
+    if ($next_pid == 0) {
+        $next_pid = 1;
+    }
 
     $thisLink .= '<a href="picture_select.php';
     $sep = '?';
@@ -235,11 +331,13 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     if (!$sth = $DBH->prepare($sel)) {
         sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
         sys_err("Problem statement: $sel");
+        $in_ring_pid = 1;
     }
     $sth->bind_param('s', $in_ring_uid);
     if (!$sth->execute()) {
         sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $sel");
+        $in_ring_pid = 1;
     }
     $sth->bind_result($p1);
     if ($sth->fetch()) {
