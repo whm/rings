@@ -47,7 +47,7 @@ function make_a_link ($thisUID,
         $sel .= 'LEFT OUTER JOIN picture_grades gr ';
         $sel .= 'ON (gr.pid = info.pid) ';
         $sel .= 'WHERE info.picture_date >= ? ';
-        $sel .= 'AND info.pid != ? ';
+        $sel .= 'AND info.pid > ? ';
         $sel .= 'AND ' . $grade_sel;
         $sel .= 'ORDER BY info.picture_date, info.pid ';
         $sel .= 'LIMIT 0,1 ';
@@ -84,7 +84,7 @@ function make_a_link ($thisUID,
         $sel .= 'ON (gr.pid = info.pid) ';
         $sel .= 'WHERE det.uid = ? ';
         $sel .= 'AND info.picture_date >= ? ';
-        $sel .= 'AND det.pid != ? ';
+        $sel .= 'AND det.pid > ? ';
         $sel .= 'ORDER BY info.picture_date, det.pid ';
         $sel .= 'LIMIT 0,1 ';
         if (!$sth = $DBH->prepare($sel)) {
