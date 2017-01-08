@@ -11,12 +11,14 @@ require('inc_ring_init.php');
 // Form or URL inputs
 $in_button_update  = get_request('in_button_update');
 $in_up_picture_cnt = get_request('up_picture_cnt', 0);
+$in_uids           = get_request('in_uids');
+
 // ----------------------------------------------------
 // Main Routine
 
-// set update message area
-$ok = 'color="#009900"';
-$warn = 'color="#330000"';
+if (count($in_uids) > 0) {
+    $_SESSION['sort_uids'] = $in_uids;
+}
 
 // ---------------------------------------------------------
 // Processing for updates only
