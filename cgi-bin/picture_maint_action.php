@@ -19,6 +19,7 @@ $in_button_update       = get_request('in_button_update');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
+$in_clear_cache         = get_request('in_clear_cache');
 
 //-------------------------------------------------------------
 // construct flds and vals for an insert
@@ -166,6 +167,13 @@ if ( $update_flag ) {
                 sys_err("Problem deleting picture details.");
                 sys_err("Problem SQL: $sql_cmd");
             }
+        }
+    }
+
+    // Clear the name cache if requested
+    if (!empty($in_clear_cache)) {
+        foreach ($_SESSION['s_uid_weight'] as $u => $v) {
+            unset($_SESSION['s_uid_weight'][$u]);
         }
     }
 

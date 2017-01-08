@@ -17,6 +17,7 @@ $in_button_update       = get_request('in_button_update');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
+$in_clear_cache         = get_request('in_clear_cache');
 
 // Globals
 //
@@ -480,6 +481,7 @@ if ($result) {
    <input type="text"
           name="in_group_search"
           onkeyup="find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);">
+   <input type="checkbox" name="in_clear_cache" value="1">Clear Name Cache
    <br>
 <?php
 $add_cnt = 0;

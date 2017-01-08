@@ -1,3 +1,10 @@
+picture-rings (2.15) unstable; urgency=medium
+
+  * Add selection to clear the name cache to picture_sort.
+  * Correct bug in paging of picture_sort selection.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 07 Jan 2017 23:38:28 -0800
+
 picture-rings (2.14) unstable; urgency=medium
 
   * Correct bug in selecting the next picture when there are duplicate

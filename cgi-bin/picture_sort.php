@@ -23,6 +23,10 @@ $in_button_back = get_request('in_button_back');
 
 $pics_per_page = 100;
 
+##############################################################################
+# Subroutines
+##############################################################################
+
 // ------------------------------------------------------------
 // format an sql condition clause
 
@@ -71,8 +75,8 @@ function print_row ($n, $r) {
     $br = '';
     if ($result) {
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $plist .= $br . $row['display_name'] . "\n";
-            $br = "<hr>\n";
+            $plist .= $br . $row['display_name'];
+            $br = ', ';
         }
     }
 
@@ -164,6 +168,9 @@ function print_row ($n, $r) {
     echo " <tr>\n";
 }
 
+##############################################################################
+# Main Routine
+##############################################################################
 ?>
 
 <html>
@@ -210,7 +217,12 @@ if (isset($in_button_find) || isset($in_new)) {
         $in_uids = array('new');
     }
 
-    if (count($in_uids) > 0) {
+    if (count($in_uids) == 0) {
+        if (count($_SESSION['sort_uids']) > 0) {
+            $in_uids = $_SESSION['sort_uids'];
+        }
+    } elseif (count($in_uids) > 0) {
+        $_SESSION['sort_uids'] = $in_uids;
         $uid_word .= '(';
         $uid_select = array();
         foreach ($in_uids as $a_uid) {
