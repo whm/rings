@@ -1,20 +1,27 @@
 <?PHP
 // -------------------------------------------------------------
-// ring_thumbnails.php
+// ring_slide_table.php
 // author: Bill MacAllister
-// date: 26-Nov-2004
+// date: 21-May-2017
 
 // Init session, connect to database
 require('inc_ring_init.php');
 
 // Form or URL inputs
-$in_number     = get_request('in_number');
-$in_start_date = get_request('in_start_date');
-$in_last       = get_request('in_last');
-$in_start      = get_request('in_start');
-$in_next       = get_request('in_next');
-$in_prev       = get_request('in_prev');
-$in_uid        = get_request('in_uid');
+$form_flds = array(
+    'number',
+    'start_date',
+    'last',
+    'start',
+    'next',
+    'prev',
+    'uid'
+);
+$session_prefix = 'rst_';
+$in = array();
+foreach ($form_flds as $f) {
+    $in[$f] = get_request('in_' . $f, $_SESSION[$session_prefix . $f]);
+}
 
 ##############################################################################
 # Subroutines
@@ -36,10 +43,13 @@ function back_to_index () {
     echo '<a href="rings">Rings of Pictures</a>'."\n";
     echo "</body>\n";
     echo "</html>\n";
-    sys_msg_err('Ring Not Found.');
+    sys_err('Ring Not Found.');
 
     exit;
 }
+
+// ----------------------------------------------------------
+// Display page selection form
 
 function display_page_select($start_date) {
 ?>
@@ -55,7 +65,7 @@ function display_page_select($start_date) {
      <input type="text" 
             name="in_number" 
             size="10" 
-            value="<?php echo $in_number;?>">
+            value="<?php echo $in['number'];?>">
   </p>
 </fieldset>
 </form>
@@ -63,6 +73,7 @@ function display_page_select($start_date) {
     return;
 }
 
+// ----------------------------------------------------------
 // Display First, Previous, Next, Last
 function display_table_nav() {
     
@@ -92,6 +103,70 @@ function display_table_nav() {
 }
 
 // ----------------------------------------------------------
+// check to see if a picture duplicated
+
+function dup_check($pid) {
+    $duplicate_list = '';
+
+    // Read the existing picture data
+    $pic = array();
+    $flds = array(
+        'camera',
+        'file_name',
+        'fstop',
+        'raw_picture_size',
+        'shutter_speed'
+    );
+    $sel = 'SELECT ';
+    $comma = '';
+    foreach ($f as $flds) {
+        $sel .= $comma . $f;
+    }
+    $sel .= ' ';
+    $sel .= 'FROM pictures_information ';
+    $sel .= "WHERE pid = $pid ";
+    $result = $DBH->query ($sel);
+    if ($result) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            foreach ($flds as $f) {
+                if ( !empty($row[$f]) ) {
+                    $pic[$f] = $row[$f];
+                }
+            }
+        }
+    } else {
+        sys_err('PID ' . $pid . ' not found');
+        return array();
+    }
+    
+    $sel = 'SELECT pid ';
+    $sel .= 'FROM pictures_information ';
+    $sel .= "WHERE pid != $pid ";
+    $sel .= "AND raw_picture_size = " . $pic['raw_picture_size'] . ' ';
+    $sel .= "AND file_name = '" . $pic['file_name'] . "' ";
+    $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
+    foreach ($dup_fld_list as $f) {
+      if (!empty($pic[$f])) {
+          $sel .= "AND $fld = '" . $pic[$f] . "' ";
+      } else {
+          $sel .= "AND $fld IS NULL ";
+      }
+    }
+    $sel .= "ORDER BY pid ";
+
+    //$duplicate_list .= $sel;
+    $result = $DBH->query ($sel);
+    $dup_array = array();
+    if ($result) {
+        $comma = '';
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            array_push($dup_array, $row['pid']);
+        }
+    }
+    return $dup_array;
+}
+
+// ----------------------------------------------------------
 // Function to display the pictures in a form that will allow dates
 // to be adusted.
 
@@ -112,11 +187,21 @@ function display_slide_table($pic_data) {
     <legend>Slide Table</legend>
 <?php
     foreach ($pic_data as $cnt => $pic) {
-        $s = $CONF['index_size'];
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
         $pic_edit = 'picture_maint.php?in_pid=' . $pic['pid'];
         $pic_src  = 'display.php?in_pid=' . $pic['pid']
             . '&in_size=' . $CONF['index_size'];
+
+        // check for duplicates
+        $dups = dup_check($pic['pid']);
+        $pic_dups = '';
+        foreach ($dups as $d) {
+            $d .= "</br>\n";
+            $d = '<font color="red">Duplicate: ';
+            $d .= '<a href="picture_maint.php?in_pid=' . $d . '>';
+            $d .= "</font>\n";
+            $pic_dups .= $d;
+        }
 ?>
     <div class="sort_image">
       <a href="<?php echo $pic_href;?>" target="_blank">
@@ -127,6 +212,7 @@ function display_slide_table($pic_data) {
            target="_blank">
          <?php echo $pic['pid']; ?>
         </a>
+        <?php echo $pic_dups; ?>
         <input type="text" name="in_date_<?php echo $cnt;?>"
                value="<?php echo $pic['date'];?>" size="12">
       </div>
@@ -143,7 +229,9 @@ function display_slide_table($pic_data) {
     </fieldset>
     
     <p>
-    <input type="submit" name="btn_refresh" value="Refresh">
+    <input type="submit" name="in_button_update" value="Update">
+    <input type="hidden" name="in_picture_fount"
+           value="<?php echo count($pic);?>">
     </p>
 
     </form>
@@ -162,31 +250,20 @@ $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
-$in_start = empty($in_start) ? 0 : $in_start;
+$in['start'] = empty($in['start']) ? 0 : $in['start'];
 
-if ($in_number == 0) {
-    if (!empty($_SESSION['s_thumbs_per_page'])) {
-        $in_number = $_SESSION['s_thumbs_per_page'];
-    } else {
-        $in_number = 10 * 7;
-    }
-}
-$_SESSION['s_thumbs_per_page'] = $in_number;
-
-if (empty($in_uid)) {
-    $in_uid = $_SESSION['s_uid'];
-} else {
-    $_SESSION['s_uid'] = $in_uid;
+if ($in['number'] == 0) {
+    $in['number'] = 10 * 7;
 }
 
-if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
+if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in['uid']) > 0) {
     back_to_index();
 }
 
-$thisPerson = "$in_uid";
+$thisPerson = $in['uid'];
 $sel = "SELECT display_name ";
 $sel .= "FROM people_or_places pp ";
-$sel .= "WHERE uid='$in_uid' ";
+$sel .= "WHERE uid='" . $in['uid'] . "' ";
 $result = $DBH->query($sel);
 if ($result) {
     if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -201,7 +278,7 @@ $sel = "SELECT count(*) cnt ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
-$sel .= "WHERE d.uid='$in_uid' ";
+$sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 $sel .= "AND $grade_sel ";
 
 $thisCount = 0;
@@ -211,13 +288,13 @@ if ($result) {
         $thisCount = $row['cnt'];
     }
 }
-if (!empty($in_start_date)) {
+if (!empty($in['start_date'])) {
     $sel = "SELECT count(*) cnt ";
     $sel .= "FROM picture_details d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
-    $sel .= "WHERE d.uid='$in_uid' ";
-    $sel .= "AND p.picture_date=>'$in_start_date' ";
+    $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
+    $sel .= "AND p.picture_date=>'" . $in['start_date'] . "' ";
     $sel .= "AND $grade_sel ";
     if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
@@ -230,8 +307,10 @@ if (!empty($in_start_date)) {
         }
     }
     if ($partCount > 0) {
-        $in_start = $thisCount - $partCount;
-        if ($in_start < 0) {$in_start=0;}
+        $in['start'] = $thisCount - $partCount;
+        if ($in['start'] < 0) {
+            $in['start'] = 0;
+        }
     }
 }
 
@@ -242,40 +321,40 @@ if (!empty($in_start_date)) {
 $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
-$sel .= "WHERE d.uid='$in_uid' ";
+$sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 if (empty($_SERVER['REMOTE_USER'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
 $sel .= "GROUP BY d.pid ";
 $sel .= "ORDER BY p.picture_date,p.pid ";
-$sel .= "LIMIT $in_start, $in_number ";
+$sel .= 'LIMIT ' . $in['start'] . ',' . $in['number'] . ' ';
 $result = $DBH->query($sel);
 if (!$result) {
-    sys_msg_err("Person '$in_uid' not found.<br>");
+    sys_err("Person '" . $in['uid'] . "' not found.</br>");
 } else {
     $display_first = 0;
     $display_prev = -1;
     $display_next = 0;
     $display_last = 0;
-    if ($in_start > 0) {
-        $in_prev = $in_start - $in_number;
-        if ($in_prev < 0) {
-            $in_prev = 0;
+    if ($in['start'] > 0) {
+        $in['prev'] = $in['start'] - $in['number'];
+        if ($in['prev'] < 0) {
+            $in['prev'] = 0;
         }
         $display_first = 0;
-        if ($in_prev > 0) {
+        if ($in['prev'] > 0) {
             $display_first = 1;
         }
-        $display_prev = $in_prev;
+        $display_prev = $in['prev'];
     }
-    $in_next = $in_start + $in_number;
-    if ($in_next < $thisCount) {
-        if ($in_next+$in_number > $thisCount) {
-            $display_next = $thisCount - $in_number;
+    $in['next'] = $in['start'] + $in['number'];
+    if ($in['next'] < $thisCount) {
+        if ($in['next']+$in['number'] > $thisCount) {
+            $display_next = $thisCount - $in['number'];
         }
-        if ($in_next+$in_number < $thisCount) {
-            $display_last = $thisCount - $in_number;
+        if ($in['next']+$in['number'] < $thisCount) {
+            $display_last = $thisCount - $in['number'];
         }
     }
     
@@ -306,17 +385,17 @@ if (!$result) {
 $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
-$sel .= "WHERE d.uid='$in_uid' ";
+$sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 if (empty($_SERVER['REMOTE_USER'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
-$sel .= "GROUP BY d.pid ";
-$sel .= "ORDER BY p.picture_date,p.pid ";
-$sel .= "LIMIT $in_start, $in_number ";
+$sel .= 'GROUP BY d.pid ';
+$sel .= 'ORDER BY p.picture_date,p.pid ';
+$sel .= 'LIMIT ' . $in['start'] . ',' . $in['number'] . ' ';
 $result = $DBH->query($sel);
 if (!$result) {
-    sys_err("Person '$in_uid' not found.");
+    sys_err("Person '" . $in['uid'] . ' not found.</br>');
 } else {
     display_page_select($pic_data[0]['date']);
     display_slide_table($pic_data);
@@ -331,3 +410,9 @@ if (!$result) {
 
 </body>
 </html>
+<?php
+// Save Session data
+foreach ($form_flds as $f) {
+    $in[$f] = $_SESSION[$session_prefix . $f] = $in[$f];
+}
+?>
