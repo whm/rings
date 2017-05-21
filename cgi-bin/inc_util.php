@@ -14,7 +14,8 @@ $sys_msg_end  = "</font><br>\n";
 // get a value from the REQUEST array if it exists
 
 function get_request ($idx, $default = NULL) {
-    return isset($_REQUEST[$idx]) ? $_REQUEST[$idx] : $default;
+    $default = empty($default) ? '' : $default;
+    return empty($_REQUEST[$idx]) ? $default : $_REQUEST[$idx];
 }
 
 //-------------------------------------------------------------
