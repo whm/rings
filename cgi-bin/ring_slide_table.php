@@ -118,7 +118,7 @@ function display_slide_table($pic_data) {
         $pic_src  = 'display.php?in_pid=' . $pic['pid']
             . '&in_size=' . $CONF['index_size'];
 ?>
-    <div class="image">
+    <div class="sort_image">
       <a href="<?php echo $pic_href;?>" target="_blank">
         <img src="<?php echo $pic_src; ?>" border="0">
       </a>
@@ -318,7 +318,7 @@ $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '$in_uid' not found.");
 } else {
-    display_slide_select($pic_data);
+    display_page_select($pic_data);
     display_slide_table($pic_data);
 }
 ?>
