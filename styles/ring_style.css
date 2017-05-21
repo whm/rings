@@ -79,3 +79,16 @@ dd {
     font-style: normal;
     font-family: sans-serif;
 }
+
+.image .caption {
+    font-size: 80%;
+    font-family: Verdana, Arial, sans-serif;
+    text-align: center;
+}
+
+label.field {
+    text-align: right;
+    width: 25%;
+    float: left;
+    font-weight: bold;
+}
