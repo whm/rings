@@ -217,7 +217,7 @@ if (!empty($in_start_date)) {
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='$in_uid' ";
-    $sel .= "AND p.picture_date>'$in_start_date' ";
+    $sel .= "AND p.picture_date=>'$in_start_date' ";
     $sel .= "AND $grade_sel ";
     if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
@@ -318,7 +318,7 @@ $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '$in_uid' not found.");
 } else {
-    display_page_select($pic_data);
+    display_page_select($pic_data[0]['date']);
     display_slide_table($pic_data);
 }
 ?>
