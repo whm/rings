@@ -66,6 +66,7 @@ function display_table_nav() {
         echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $display_last
             . '">Last</a>';
     }
+    return;
 }
 
 // ----------------------------------------------------------
@@ -91,7 +92,7 @@ function display_slide_table($pic_data) {
     $cnt_in_row = 0;
     $row_limit = 6;
     foreach ($pic_data as $cnt => $pic) {
-        if ($cnt_in_row => $row_limit) {
+        if ($cnt_in_row >= $row_limit) {
             echo "    </li>\n";
             $cnt_in_row = 0;
         }
@@ -99,21 +100,19 @@ function display_slide_table($pic_data) {
             echo "    <li>\n";
         }
         $cnt_in_row++;
-        $p = $pic['pid'];
-        $d = $pic['date'];
         $s = $CONF['index_size'];
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
-        $pic_src  = 'src="display.php?in_pid=' . $pic_pid
-            . '&in_size=' . $CONF['index_size']
-            . '&dlm=' . htmlentities($pic['dlm']);
+        $pic_src  = 'display.php?in_pid=' . $pic['pid']
+            . '&in_size=' . $CONF['index_size'];
 ?>
     <div class="image">
     <a href="<?php echo $pic_href;?>" target="_blank">
       <img src="<?php echo $pic_src; ?>" border="0">
     </a>
     <div class="caption">
+    <?php echo $pic['pid']; ?>
     <input type="text" name="in_date_<?php echo $cnt;?>"
-        value="<?php echo $pic['date'];?>">
+        value="<?php echo $pic['date'];?>" size="12">
     </div>
     </div>
     <input type="hidden" name="in_pid_<?php echo $cnt;?>"
@@ -121,7 +120,7 @@ function display_slide_table($pic_data) {
     <input type="hidden" name="in_od_<?php echo $cnt;?>"
         value="<?php echo $pic['date'];?>">
     <input type="hidden" name="in_dlm_<?php echo $cnt;?>"
-        value="<?php echo $pic['dlm'];?>">
+        value="<?php echo htmlentites($pic['dlm']);?>">
 <?php
     }
 ?>
@@ -132,7 +131,7 @@ function display_slide_table($pic_data) {
     </p>
 
     </form>
-?>
+<?php
     return;
 }
 
@@ -224,8 +223,6 @@ if (!empty($in_start_date)) {
 # Select Picture data
 ##############################################################################
 
-$display_msg = '';
-
 $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
@@ -239,7 +236,7 @@ $sel .= "ORDER BY p.picture_date,p.pid ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = $DBH->query($sel);
 if (!$result) {
-    $display_msg .= "Person '$in_uid' not found.<br>\n";
+    sys_msg_err("Person '$in_uid' not found.<br>");
 } else {
     $display_first = 0;
     $display_prev = -1;
@@ -269,8 +266,9 @@ if (!$result) {
     $pic_data = [];
     $cnt = 0;
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $pic_data[$cnt]['pid']  = $row["pid"];
+        $pic_data[$cnt]['pid']  = $row['pid'];
         $pic_data[$cnt]['date'] = $row['picture_date'];
+        $pic_data[$cnt]['dlm']  = $row['date_last_maint'];
         $cnt++;
     }
 }
@@ -320,7 +318,6 @@ if (!$result) {
     sys_err("Person '$in_uid' not found.");
 } else {
     display_slide_table($pic_data);
-}
 }
 ?>
 <br>
