@@ -41,6 +41,28 @@ function back_to_index () {
     exit;
 }
 
+function display_page_select($start_date) {
+?>
+<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
+<fieldset>
+  <legend>Page Control</legend>
+  <p><label class="field">Starting Date</label>
+     <input type="text" name="in_start_date"
+            value="<?php echo $start_date;?>">
+     <input type="submit" name="btn_refresh" value="Refresh">
+  </p>
+  <p><label class="field">Number of Pictures to Display</label>
+     <input type="text" 
+            name="in_number" 
+            size="10" 
+            value="<?php echo $in_number;?>">
+  </p>
+</fieldset>
+</form>
+<?php
+    return;
+}
+
 // Display First, Previous, Next, Last
 function display_table_nav() {
     
@@ -89,38 +111,32 @@ function display_slide_table($pic_data) {
     <fieldset>
     <legend>Slide Table</legend>
 <?php
-    $cnt_in_row = 0;
-    $row_limit = 6;
     foreach ($pic_data as $cnt => $pic) {
-        if ($cnt_in_row >= $row_limit) {
-            echo "    </li>\n";
-            $cnt_in_row = 0;
-        }
-        if ($cnt_in_row == 0) {
-            echo "    <li>\n";
-        }
-        $cnt_in_row++;
         $s = $CONF['index_size'];
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
+        $pic_edit = 'picture_maint.php?in_pid=' . $pic['pid'];
         $pic_src  = 'display.php?in_pid=' . $pic['pid']
             . '&in_size=' . $CONF['index_size'];
 ?>
     <div class="image">
-    <a href="<?php echo $pic_href;?>" target="_blank">
-      <img src="<?php echo $pic_src; ?>" border="0">
-    </a>
-    <div class="caption">
-    <?php echo $pic['pid']; ?>
-    <input type="text" name="in_date_<?php echo $cnt;?>"
-        value="<?php echo $pic['date'];?>" size="12">
-    </div>
+      <a href="<?php echo $pic_href;?>" target="_blank">
+        <img src="<?php echo $pic_src; ?>" border="0">
+      </a>
+      <div class="caption">
+        <a href="<?php echo $pic_edit; ?>"
+           target="_blank">
+         <?php echo $pic['pid']; ?>
+        </a>
+        <input type="text" name="in_date_<?php echo $cnt;?>"
+               value="<?php echo $pic['date'];?>" size="12">
+      </div>
     </div>
     <input type="hidden" name="in_pid_<?php echo $cnt;?>"
         value="<?php echo $pic['pid'];?>">
     <input type="hidden" name="in_od_<?php echo $cnt;?>"
         value="<?php echo $pic['date'];?>">
     <input type="hidden" name="in_dlm_<?php echo $cnt;?>"
-        value="<?php echo htmlentites($pic['dlm']);?>">
+        value="<?php echo $pic['dlm'];?>">
 <?php
     }
 ?>
@@ -284,21 +300,6 @@ if (!$result) {
 <body bgcolor="#eeeeff">
 
 <h2><?php echo $thisPerson;?></h2>
-<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
-<fieldset>
-  <legend>Page Control</legend>
-  <p><label class="field">Starting Date:</label>
-     <input type="text" name="in_start_date">
-     <input type="submit" name="btn_refresh" value="Refresh">
-  </p>
-  <p><label class="field">Number of Pictures to Display:</label>
-     <input type="text" 
-            name="in_number" 
-            size="10" 
-            value="<?php echo $in_number;?>">
-  </p>
-</fieldset>
-</form>
 
 <?php 
 
@@ -317,6 +318,7 @@ $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '$in_uid' not found.");
 } else {
+    display_slide_select($pic_data);
     display_slide_table($pic_data);
 }
 ?>

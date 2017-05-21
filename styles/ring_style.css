@@ -80,15 +80,23 @@ dd {
     font-family: sans-serif;
 }
 
-.image .caption {
-    font-size: 80%;
+.sort_image {
+    display:       inline-block;
+    width:         150px;
+    margin-bottom: 3px;
+    padding:       3px;
+    border:        1px solid blue;
+    text-align:    center;
+}
+.sort_image .caption {
+    font-size:   60%;
     font-family: Verdana, Arial, sans-serif;
-    text-align: center;
 }
 
 label.field {
-    text-align: right;
-    width: 25%;
-    float: left;
+    text-align:  right;
+    width:       25%;
+    float:       left;
     font-weight: bold;
+    padding:     3px;
 }
