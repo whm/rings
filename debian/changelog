@@ -1,3 +1,9 @@
+picture-rings (2.16) unstable; urgency=medium
+
+  * Add in ring_slide_table and new home icon.
+
+ --
+
 picture-rings (2.15) unstable; urgency=medium
 
   * Add selection to clear the name cache to picture_sort.
