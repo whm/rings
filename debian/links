@@ -4,3 +4,4 @@ usr/share/rings/cgi-bin/auth/button.php usr/share/rings/cgi-bin/button.php
 usr/share/rings/cgi-bin/auth/display.php usr/share/rings/cgi-bin/display.php
 usr/share/rings/cgi-bin/auth/picture_select.php usr/share/rings/cgi-bin/picture_select.php
 usr/share/rings/cgi-bin/auth/ring_thumbnails.php usr/share/rings/cgi-bin/ring_thumbnails.php
+usr/share/rings/cgi-bin/auth/ring_slide_table.php usr/share/rings/cgi-bin/ring_slide_table.php
