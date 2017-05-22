@@ -52,7 +52,10 @@ function back_to_index () {
 
 function display_page_select($start_date, $number, $uid) {
 ?>
-<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
+<form name="page_select"
+      action="<?php echo $_SERVER['PHP_SELF'];?>"
+      onsubmit="return verifyInput()"
+      method="post">
 <fieldset>
   <legend>Page Control</legend>
   <label class="field">Starting Date</label>
@@ -215,10 +218,7 @@ function display_slide_table($pic_data) {
     
     $action_form = 'ring_slide_table_action.php';
 ?>
-    <form name="page_select"
-          method="post"
-          onsubmit="return verifyInput()"
-          method="post">
+    <form name="slide_table" method="post">
 
     <fieldset>
     <legend>Slide Table</legend>
