@@ -29,20 +29,30 @@ if ( $in_button_update == 'Update' ) {
 
         $up_pid = get_request("in_pid_$i");
         $up_od  = get_request("in_od_$i");
-        $up_nd = get_request("in_date_$i");
+        $up_nd  = get_request("in_date_$i");
 
         if ($up_od != $up_nd) {
-            // Update the meta data
+            // Update the picture date
             $sql_cmd = 'UPDATE pictures_information SET ';
-            $sql_cmd .= "picture_date = '$up_nd', ";
+            $sql_cmd .= "picture_date = ?, ";
             $sql_cmd .= 'date_last_maint = NOW() ';
-            $sql_cmd .= "WHERE pid = $up_pid ";
-            sys_msg("Updated $up_pid to $up_nd");
-            $result = $DBH->query($sql_cmd);
-            if (!$result) {
-                sys_err("ERROR:" . $result->error);
-                sys_err("Problem SQL:$sql_cmd");
+            $sql_cmd .= "WHERE pid = ? ";
+            if (!$stmt = $DBH->prepare($sql_cmd)) {
+                sys_err("Problem preparing: $sql_cmd");
+                sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+                break;
             }
+            if (!$stmt->bind_param("si", $up_nd, $up_pid)) {
+                sys_err("Problem binding parameter: $up_pid");
+                sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+                break;
+            }
+            if (!$stmt->execute()) {
+                sys_err("Problem executing: $sql_cmd");
+                sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+                break;
+            }
+            sys_msg("Updated $up_pid to " . htmlentities($up_nd));
         }
     }
     $next_url = 'ring_slide_table.php'
