@@ -17,10 +17,9 @@ $form_flds = array(
     'prev',
     'uid'
 );
-$session_prefix = 'rst_';
 $in = array();
 foreach ($form_flds as $f) {
-    $in[$f] = get_request('in_' . $f, $_SESSION[$session_prefix . $f]);
+    $in[$f] = get_request('in_' . $f);
 }
 
 ##############################################################################
@@ -28,7 +27,7 @@ foreach ($form_flds as $f) {
 ##############################################################################
 
 // ----------------------------------------------------------
-// Function to exit without displaying anything and return to 
+// Function to exit without displaying anything and return to
 // the main index page.
 
 function back_to_index () {
@@ -51,22 +50,26 @@ function back_to_index () {
 // ----------------------------------------------------------
 // Display page selection form
 
-function display_page_select($start_date) {
+function display_page_select($start_date, $number, $uid) {
 ?>
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
 <fieldset>
   <legend>Page Control</legend>
-  <p><label class="field">Starting Date</label>
+  <label class="field">Starting Date</label>
      <input type="text" name="in_start_date"
+            size="14"
             value="<?php echo $start_date;?>">
      <input type="submit" name="btn_refresh" value="Refresh">
-  </p>
+  <br/>
   <p><label class="field">Number of Pictures to Display</label>
-     <input type="text" 
-            name="in_number" 
-            size="10" 
-            value="<?php echo $in['number'];?>">
-  </p>
+     <input type="text"
+            name="in_number"
+            size="2"
+            value="<?php echo $number;?>">
+     <input type="hidden"
+            name="in_uid"
+            size="2"
+            value="<?php echo $uid;?>">
 </fieldset>
 </form>
 <?php
@@ -75,30 +78,48 @@ function display_page_select($start_date) {
 
 // ----------------------------------------------------------
 // Display First, Previous, Next, Last
-function display_table_nav() {
-    
-    global $display_first;
-    global $display_prev;
-    global $display_next;
-    global $display_last;
-    
-    if ($display_first > 0) {
-        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=0">First</a>';
-        echo " - ";
-    }
-    if ($display_prev > -1) {
-        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $display_prev
-            . '">Previous</a>';
+function display_table_nav($total) {
+
+    global $in;
+
+    if ($total > $in['number']) {
+        if ($in['start']+1 > $in['number']) {
+            echo "<div>\n";
+            echo '<a href="' . $_SERVER['PHP_SELF']
+                . '?in_start=0'
+                . '&in_uid=' . $in['uid']
+                . '">First</a>';
+            echo "</div>\n";
+            $display_prev = $in['start'] - $in['number'];
+            if ($display_prev < 0) {
+                $display_rev = 0;
+            }
+            echo "<div>\n";
+            echo '<a href="' . $_SERVER['PHP_SELF']
+                . '?in_start=' . $display_prev
+                . '&in_uid=' . $in['uid']
+                . '">Previous</a>';
+            echo "</div>\n";
+        }
+
+        if ($in['start'] < $total - $in['number']) {
+            $display_next = $in['start'] + $in['number'];
+            echo "<div>\n";
+            echo '<a href="' . $_SERVER['PHP_SELF']
+            . '?in_start=' . $display_next
+                . '&in_uid=' . $in['uid']
+                . '">Next</a>';
+            echo "</div>\n";
+            $display_last = $total - $in['number'];
+            echo "<div>\n";
+            echo '<a href="' . $_SERVER['PHP_SELF']
+                . '?in_start=' . $display_last
+                . '&in_uid=' . $in['uid']
+                . '">Last</a>';
+            echo "</div>\n";
+        }
     }
 
-    if ($display_next > 0) {
-        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $display_next
-            . '">Next</a>';
-    }
-    if ($display_last > 0) {
-        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $display_last
-            . '">Last</a>';
-    }
     return;
 }
 
@@ -106,6 +127,8 @@ function display_table_nav() {
 // check to see if a picture duplicated
 
 function dup_check($pid) {
+    global $DBH;
+
     $duplicate_list = '';
 
     // Read the existing picture data
@@ -119,8 +142,9 @@ function dup_check($pid) {
     );
     $sel = 'SELECT ';
     $comma = '';
-    foreach ($f as $flds) {
+    foreach ($flds as $f) {
         $sel .= $comma . $f;
+        $comma = ',';
     }
     $sel .= ' ';
     $sel .= 'FROM pictures_information ';
@@ -135,10 +159,11 @@ function dup_check($pid) {
             }
         }
     } else {
+        sys_err("Problem SQL: $sel");
         sys_err('PID ' . $pid . ' not found');
         return array();
     }
-    
+
     $sel = 'SELECT pid ';
     $sel .= 'FROM pictures_information ';
     $sel .= "WHERE pid != $pid ";
@@ -173,16 +198,12 @@ function dup_check($pid) {
 function display_slide_table($pic_data) {
 
     global $CONF;
-    
-    display_table_nav();
 
     $action_form = $_SERVER['PHP_SELF'] . '_action'
 ?>
     <br/>
     <form method="post" action="<?php echo $action_form;?>">
-    <p>
-    <input type="submit" name="btn_refresh" value="Refresh">
-    </p>
+
     <fieldset>
     <legend>Slide Table</legend>
 <?php
@@ -227,7 +248,7 @@ function display_slide_table($pic_data) {
     }
 ?>
     </fieldset>
-    
+
     <p>
     <input type="submit" name="in_button_update" value="Update">
     <input type="hidden" name="in_picture_fount"
@@ -250,16 +271,18 @@ $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
-$in['start'] = empty($in['start']) ? 0 : $in['start'];
-
+// Set some defaults
+if (empty($in['start'])){
+    $in['start']  = 0;
+}
 if ($in['number'] == 0) {
     $in['number'] = 10 * 7;
 }
 
+// Bail out if we don't have a selection
 if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in['uid']) > 0) {
     back_to_index();
 }
-
 $thisPerson = $in['uid'];
 $sel = "SELECT display_name ";
 $sel .= "FROM people_or_places pp ";
@@ -274,27 +297,29 @@ if (empty($row['display_name'])) {
     back_to_index();
 }
 
+// get a count of the number of pictures in total
+$thisCount = 0;
 $sel = "SELECT count(*) cnt ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 $sel .= "AND $grade_sel ";
-
-$thisCount = 0;
 $result = $DBH->query($sel);
 if ($result) {
     if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $thisCount = $row['cnt'];
     }
 }
+
+// Start by date if we have a new date
 if (!empty($in['start_date'])) {
     $sel = "SELECT count(*) cnt ";
     $sel .= "FROM picture_details d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
-    $sel .= "AND p.picture_date=>'" . $in['start_date'] . "' ";
+    $sel .= "AND p.picture_date>='" . $in['start_date'] . "' ";
     $sel .= "AND $grade_sel ";
     if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
@@ -312,6 +337,15 @@ if (!empty($in['start_date'])) {
             $in['start'] = 0;
         }
     }
+} else {
+    $nav_btn = array('first', 'prev', 'next', 'last');
+    foreach ($nav_btn as $b) {
+        if ($in[$b] > 0) {
+            $in['start'] = $in[$b];
+            break;
+        }
+    }
+
 }
 
 ##############################################################################
@@ -333,31 +367,6 @@ $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '" . $in['uid'] . "' not found.</br>");
 } else {
-    $display_first = 0;
-    $display_prev = -1;
-    $display_next = 0;
-    $display_last = 0;
-    if ($in['start'] > 0) {
-        $in['prev'] = $in['start'] - $in['number'];
-        if ($in['prev'] < 0) {
-            $in['prev'] = 0;
-        }
-        $display_first = 0;
-        if ($in['prev'] > 0) {
-            $display_first = 1;
-        }
-        $display_prev = $in['prev'];
-    }
-    $in['next'] = $in['start'] + $in['number'];
-    if ($in['next'] < $thisCount) {
-        if ($in['next']+$in['number'] > $thisCount) {
-            $display_next = $thisCount - $in['number'];
-        }
-        if ($in['next']+$in['number'] < $thisCount) {
-            $display_last = $thisCount - $in['number'];
-        }
-    }
-    
     $pic_data = [];
     $cnt = 0;
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -380,7 +389,7 @@ if (!$result) {
 
 <h2><?php echo $thisPerson;?></h2>
 
-<?php 
+<?php
 
 $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
@@ -397,22 +406,16 @@ $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '" . $in['uid'] . ' not found.</br>');
 } else {
-    display_page_select($pic_data[0]['date']);
+    display_page_select($pic_data[0]['date'], $in['number'], $in['uid']);
+    sys_display_msg();
+    display_table_nav($thisCount);
     display_slide_table($pic_data);
 }
 ?>
 <br>
-<a href="/rings/index.php"><img 
-       src="/rings-images/icon-home.png" 
+<a href="/rings/index.php"><img
+       src="/rings-images/icon-home.png"
        alt="Pick a New Ring"
        border="0"></a>
-<?php sys_display_msg(); ?>
-
 </body>
 </html>
-<?php
-// Save Session data
-foreach ($form_flds as $f) {
-    $in[$f] = $_SESSION[$session_prefix . $f] = $in[$f];
-}
-?>

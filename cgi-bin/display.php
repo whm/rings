@@ -38,7 +38,7 @@ require('inc_ring_init.php');
 $in_pid  = get_request('in_pid');
 $in_size = get_request('in_size');
 if (auth_picture_invisible($in_pid)>0) {
-    no_picture('You must login to view this picture.', $in_size);
+    no_picture('Hidden', $in_size);
 }
 if (empty($in_size)) {
     $in_size = $CONF['display_size'];
