@@ -84,6 +84,7 @@ function display_table_nav() {
     global $in;
 
     if ($picture_count > $in['number']) {
+        echo "<fieldset>\n";
         echo '<div class="pagenav">' . "\n";
         if ($in['start']+1 > $in['number']) {
             echo '<div class="first">';
@@ -129,6 +130,7 @@ function display_table_nav() {
         }
         echo "\n";
         echo '</div>' . "\n";
+        echo "</fieldset>\n";
     }
 
     return;
@@ -183,9 +185,9 @@ function dup_check($pid) {
     $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
     foreach ($dup_fld_list as $f) {
       if (!empty($pic[$f])) {
-          $sel .= "AND $fld = '" . $pic[$f] . "' ";
+          $sel .= "AND $f = '" . $pic[$f] . "' ";
       } else {
-          $sel .= "AND $fld IS NULL ";
+          $sel .= "AND $f IS NULL ";
       }
     }
     $sel .= "ORDER BY pid ";
@@ -209,17 +211,16 @@ function dup_check($pid) {
 function display_slide_table($pic_data) {
 
     global $CONF;
-
-    $action_form = $_SERVER['PHP_SELF'] . '_action'
+    global $in;
+    
+    $action_form = 'ring_slide_table_action.php';
 ?>
     <form method="post" action="<?php echo $action_form;?>">
 
     <fieldset>
     <legend>Slide Table</legend>
 <?php
-    echo "<fieldset>\n";
     display_table_nav();
-    echo "</fieldset>\n";
 
     foreach ($pic_data as $cnt => $pic) {
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
@@ -265,8 +266,12 @@ function display_slide_table($pic_data) {
 
     <p>
     <input type="submit" name="in_button_update" value="Update">
-    <input type="hidden" name="in_picture_fount"
+    <input type="hidden" name="in_picture_cnt"
            value="<?php echo count($pic);?>">
+    <input type="hidden" name="in_uid"
+           value="<?php echo $in['uid'];?>">
+    <input type="hidden" name="in_start"
+           value="<?php echo $in['start'];?>">
     </p>
 
     </form>
@@ -354,7 +359,7 @@ if (!empty($in['start_date'])) {
 } else {
     $nav_btn = array('first', 'prev', 'next', 'last');
     foreach ($nav_btn as $b) {
-        if ($in[$b] > 0) {
+        if (isset($in[$b]) && $in[$b] > 0) {
             $in['start'] = $in[$b];
             break;
         }
@@ -419,6 +424,7 @@ $sel .= 'LIMIT ' . $in['start'] . ',' . $in['number'] . ' ';
 $result = $DBH->query($sel);
 if (!$result) {
     sys_err("Person '" . $in['uid'] . ' not found.</br>');
+    sys_display_msg();
 } else {
     display_page_select($pic_data[0]['date'], $in['number'], $in['uid']);
     sys_display_msg();
