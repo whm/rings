@@ -82,6 +82,7 @@ dd {
 
 .sort_image {
     display:       inline-block;
+    float:         left
     width:         150px;
     margin-bottom: 3px;
     padding:       3px;
@@ -99,4 +100,28 @@ label.field {
     float:       left;
     font-weight: bold;
     padding:     3px;
+}
+
+pagenav {
+    padding:     3px;
+}
+.first {
+    text-align:  left;
+    width:       10%;
+    float:       left;
+}
+.prev {
+    text-align:  left;
+    width:       10%;
+    float:       left;
+}
+.next {
+    text-align:  right;
+    width:       10%;
+    float:       right;
+}
+.last {
+    text-align:  right;
+    width:       10%;
+    float:       right;
 }
