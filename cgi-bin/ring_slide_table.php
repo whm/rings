@@ -78,46 +78,57 @@ function display_page_select($start_date, $number, $uid) {
 
 // ----------------------------------------------------------
 // Display First, Previous, Next, Last
-function display_table_nav($total) {
+function display_table_nav() {
 
+    global $picture_count;
     global $in;
 
-    if ($total > $in['number']) {
+    if ($picture_count > $in['number']) {
+        echo '<div class="pagenav">' . "\n";
         if ($in['start']+1 > $in['number']) {
-            echo "<div>\n";
+            echo '<div class="first">';
             echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=0'
                 . '&in_uid=' . $in['uid']
                 . '">First</a>';
-            echo "</div>\n";
+            echo '</div>';
             $display_prev = $in['start'] - $in['number'];
             if ($display_prev < 0) {
                 $display_rev = 0;
             }
-            echo "<div>\n";
+            echo '<div class="prev">';
             echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=' . $display_prev
                 . '&in_uid=' . $in['uid']
                 . '">Previous</a>';
-            echo "</div>\n";
+            echo '</div>';
+        } else {
+            echo '<div class="first">&nbsp</div>';
+            echo '<div class="prev">&nbsp</div>';
         }
-
-        if ($in['start'] < $total - $in['number']) {
+        echo "\n";
+        
+        if ($in['start'] < $picture_count - $in['number']) {
             $display_next = $in['start'] + $in['number'];
-            echo "<div>\n";
-            echo '<a href="' . $_SERVER['PHP_SELF']
-            . '?in_start=' . $display_next
-                . '&in_uid=' . $in['uid']
-                . '">Next</a>';
-            echo "</div>\n";
-            $display_last = $total - $in['number'];
-            echo "<div>\n";
+            $display_last = $picture_count - $in['number'];
+            echo '<div class="last">';
             echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=' . $display_last
                 . '&in_uid=' . $in['uid']
                 . '">Last</a>';
-            echo "</div>\n";
+            echo '</div>';
+            echo '<div class="next">';
+            echo '<a href="' . $_SERVER['PHP_SELF']
+            . '?in_start=' . $display_next
+                . '&in_uid=' . $in['uid']
+                . '">Next</a>';
+            echo '</div>';
+        } else {
+            echo '<div class="next">&nbsp</div>';
+            echo '<div class="last">&nbsp</div>';
         }
+        echo "\n";
+        echo '</div>' . "\n";
     }
 
     return;
@@ -201,12 +212,15 @@ function display_slide_table($pic_data) {
 
     $action_form = $_SERVER['PHP_SELF'] . '_action'
 ?>
-    <br/>
     <form method="post" action="<?php echo $action_form;?>">
 
     <fieldset>
     <legend>Slide Table</legend>
 <?php
+    echo "<fieldset>\n";
+    display_table_nav();
+    echo "</fieldset>\n";
+
     foreach ($pic_data as $cnt => $pic) {
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
         $pic_edit = 'picture_maint.php?in_pid=' . $pic['pid'];
@@ -298,7 +312,7 @@ if (empty($row['display_name'])) {
 }
 
 // get a count of the number of pictures in total
-$thisCount = 0;
+$picture_count = 0;
 $sel = "SELECT count(*) cnt ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ";
@@ -308,7 +322,7 @@ $sel .= "AND $grade_sel ";
 $result = $DBH->query($sel);
 if ($result) {
     if ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $thisCount = $row['cnt'];
+        $picture_count = $row['cnt'];
     }
 }
 
@@ -332,7 +346,7 @@ if (!empty($in['start_date'])) {
         }
     }
     if ($partCount > 0) {
-        $in['start'] = $thisCount - $partCount;
+        $in['start'] = $picture_count - $partCount;
         if ($in['start'] < 0) {
             $in['start'] = 0;
         }
@@ -408,7 +422,6 @@ if (!$result) {
 } else {
     display_page_select($pic_data[0]['date'], $in['number'], $in['uid']);
     sys_display_msg();
-    display_table_nav($thisCount);
     display_slide_table($pic_data);
 }
 ?>
