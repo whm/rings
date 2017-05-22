@@ -222,6 +222,7 @@ function display_slide_table($pic_data) {
 <?php
     display_table_nav();
 
+    $cnt = 0;
     foreach ($pic_data as $cnt => $pic) {
         $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
         $pic_edit = 'picture_maint.php?in_pid=' . $pic['pid'];
@@ -260,6 +261,7 @@ function display_slide_table($pic_data) {
     <input type="hidden" name="in_dlm_<?php echo $cnt;?>"
         value="<?php echo $pic['dlm'];?>">
 <?php
+        $cnt++;
     }
 ?>
     </fieldset>
@@ -267,7 +269,7 @@ function display_slide_table($pic_data) {
     <p>
     <input type="submit" name="in_button_update" value="Update">
     <input type="hidden" name="in_picture_cnt"
-           value="<?php echo count($pic);?>">
+           value="<?php echo $cnt;?>">
     <input type="hidden" name="in_uid"
            value="<?php echo $in['uid'];?>">
     <input type="hidden" name="in_start"
