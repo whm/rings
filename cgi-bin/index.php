@@ -422,12 +422,14 @@ if (!empty($in_group_id)) {
             . 'alt="Index of all pictures of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
-        echo '  <a href="ring_slide_table.php?in_uid='.$this_uid.'">'."\n";
-        echo '    <img src="/rings-images/icon-sort.png" border="0" '
-            . 'width="32" height="32" '
-            . 'alt="Index of all pictures of '.$this_name.'">'."\n";
-        echo '  </a>'."\n";
-
+        if (!empty($_SERVER['REMOTE_USER'])) {
+            echo '  <a href="ring_slide_table.php?in_uid='.$this_uid.'">'."\n";
+            echo '    <img src="/rings-images/icon-sort.png" border="0" '
+                . 'width="32" height="32" '
+                . 'alt="Index of all pictures of '.$this_name.'">'."\n";
+            echo '  </a>'."\n";
+        }
+        
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
         echo '   <strong>'.$this_name.'</strong></a> &mdash; '.$this_desc."\n";
         echo " </p>\n";
