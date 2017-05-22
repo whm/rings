@@ -419,8 +419,30 @@ function verifyInput() {
 
     var f = document.page_select;
 
-    if (f.in_number.isNaN) {
+    if (isNaN(f.in_number.value)) {
         alert('Number of pictures must be a number');
+        return false;
+    }
+
+    var dt_parts = f.in_start_date.value.split(" ");
+    var d = dt_parts[0];
+    var t = dt_parts[1];
+    var d_regex = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/;
+    var d_match = d_regex.exec(d);
+    if (!d_match) {
+        alert("Invalid date, use format YYYY-MM-NN");
+        return false;
+    }
+    if (parseInt(d_match[1]) < 1000) {
+        alert("Invalid year: ".concat(d_match[1]));
+        return false;
+    }
+    if (parseInt(d_match[2]) < 1 || parseInt(d_match[2]) > 12) {
+        alert("Invalid month: ".concat(d_match[2]));
+        return false;
+    }
+    if (parseInt(d_match[3]) < 1 || parseInt(d_match[3]) > 31) {
+        alert("Invalid day: ".concat(d_match[3]));
         return false;
     }
 
