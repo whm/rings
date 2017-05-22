@@ -7,10 +7,10 @@
 require('inc_ring_init.php');
 
 // Form or URL inputs
-$in_button_update  = get_request('in_button_update');
-$in_up_picture_cnt = get_request('up_picture_cnt', 0);
-$in_start          = get_request('in_start', 0);
-$in_uid            = get_request('in_uid');
+$in_button_update = get_request('in_button_update');
+$in_picture_cnt   = get_request('in_picture_cnt', 0);
+$in_start         = get_request('in_start', 0);
+$in_uid           = get_request('in_uid');
 
 // ----------------------------------------------------
 // Main Routine
@@ -22,7 +22,7 @@ $next_url = 'index.php';
 
 if ( $in_button_update == 'Update' ) {
 
-    for ($i=0; $i<$in_up_picture_cnt; $i++) {
+    for ($i=0; $i<$in_picture_cnt; $i++) {
 
         $cmd = 'date_last_maint = NOW()';
         $update_cnt = 0;
@@ -52,8 +52,5 @@ if ( $in_button_update == 'Update' ) {
     sys_err("Invalid request to ring_slide_table_action");
 }
 
-$DBH->close;
-
-header ("REFRESH: 0; URL=$next_url=");
-
+header ("REFRESH: 0; URL=$next_url");
 ?>
