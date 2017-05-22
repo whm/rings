@@ -215,7 +215,10 @@ function display_slide_table($pic_data) {
     
     $action_form = 'ring_slide_table_action.php';
 ?>
-    <form method="post" action="<?php echo $action_form;?>">
+    <form name="page_select"
+          method="post"
+          onsubmit="return verifyInput()"
+          method="post">
 
     <fieldset>
     <legend>Slide Table</legend>
@@ -404,6 +407,27 @@ if (!$result) {
 <title>Picture Slide Table</title>
 <?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<script language="JavaScript">
+
+var click_update = 0;
+
+/* --------------------- */
+/* Verify the input form */
+/* --------------------- */
+
+function verifyInput() {
+
+    var f = document.page_select;
+
+    if (f.in_number.isNaN) {
+        alert('Number of pictures must be a number');
+        return false;
+    }
+
+    return true;
+}
+
+</script>
 </head>
 
 <body bgcolor="#eeeeff">
