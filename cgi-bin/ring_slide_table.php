@@ -27,27 +27,6 @@ foreach ($form_flds as $f) {
 ##############################################################################
 
 // ----------------------------------------------------------
-// Function to exit without displaying anything and return to
-// the main index page.
-
-function back_to_index () {
-
-    echo "<html>\n";
-    echo "<head>\n";
-    echo "<meta http-equiv=\"refresh\" ";
-    echo '    content="0; URL=http://'.$_SERVER['SERVER_NAME'].'/rings">'."\n";
-    echo "<title>Rings of Pictures</title>\n";
-    echo "</head>\n";
-    echo "<body>\n";
-    echo '<a href="rings">Rings of Pictures</a>'."\n";
-    echo "</body>\n";
-    echo "</html>\n";
-    sys_err('Ring Not Found.');
-
-    exit;
-}
-
-// ----------------------------------------------------------
 // Display page selection form
 
 function display_page_select($start_date, $number, $uid) {
@@ -215,6 +194,7 @@ function display_slide_table($pic_data) {
 
     global $CONF;
     global $in;
+    global $ring_admin_group;
     
     $action_form = 'ring_slide_table_action.php';
 ?>
@@ -248,10 +228,12 @@ function display_slide_table($pic_data) {
         <img src="<?php echo $pic_src; ?>" border="0">
       </a>
       <div class="caption">
+<?php if ($ring_admin_group) { ?>
         <a href="<?php echo $pic_edit; ?>"
            target="_blank">
          <?php echo $pic['pid']; ?>
         </a>
+<?php } ?>
         <?php echo $pic_dups; ?>
         <input type="text" name="in_date_<?php echo $cnt;?>"
                value="<?php echo $pic['date'];?>" size="12">
@@ -305,7 +287,7 @@ if ($in['number'] == 0) {
 
 // Bail out if we don't have a selection
 if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in['uid']) > 0) {
-    back_to_index();
+    back_to_index('Invalid person selection');
 }
 $thisPerson = $in['uid'];
 $sel = "SELECT display_name ";

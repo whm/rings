@@ -32,16 +32,18 @@ $CONF = read_conf($ring_conf);
 set_default('cookie_id',    'rings-cookie');
 set_default('db_name',      'rings');
 set_default('db_secret',    '/etc/rings/rings_db.conf');
-set_default('debug',        0);
-set_default('display_size', 'raw');
-set_default('index_size',   '125x125');
-set_default('ldap_server',  'macdir.ca-zephyr.org');
-set_default('mail_domain',  'ca-zephyr.org');
-set_default('mail_size',    '800x600');
-set_default('maint_size',   '640x480');
-set_default('picture_root', '/srv/rings');
-set_default('ring_admin',   'ring_admin');
-set_default('ring_id',      'rings');
+set_default('debug',            0);
+set_default('display_size',     'raw');
+set_default('index_size',       '125x125');
+set_default('ldap_server',      'macdir.ca-zephyr.org');
+set_default('mail_domain',      'ca-zephyr.org');
+set_default('mail_size',        '800x600');
+set_default('maint_size',       '640x480');
+set_default('picture_root',     '/srv/rings');
+set_default('ring_admin',       'ring_admin');
+set_default('ring_admin_attr',  'czPrivilegeGroup');
+set_default('ring_admin_group', 'ring:admin');
+set_default('ring_id',          'rings');
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);
@@ -63,4 +65,23 @@ if (isset($in_login) && $in_login > 0) {
 if (empty($_SESSION['msg'])) {
     $_SESSION['msg'] = '';
 }
+
+// Set the admin flag
+if (isset($_SESSION['ring_admin_group'])) {
+    $ring_admin_group = $_SESSION['ring_admin_group'];
+} else {
+    $c = 1;
+    while (1==1) {
+        $this_id = 'WEBAUTH_LDAP_CZPRIVILEGEGROUP' . $c;
+        if (empty($_SERVER[$this_id])) {
+            break;
+        }
+        if ($_SERVER[$this_id] == 'ring:admin') {
+            $ring_admin_group = 1;
+            break;
+        }
+        $c = $c + 1;
+    }
+}
+$_SESSION['ring_admin_group'] = $ring_admin_group;
 ?>

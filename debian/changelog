@@ -1,8 +1,10 @@
 picture-rings (2.16) unstable; urgency=medium
 
   * Add in ring_slide_table and new home icon.
+  * Introduction ring_admin based on czPrivilegeGroup.
+  * Move maint pages to CSS page layout.
 
- --
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 27 May 2017 15:29:24 -0700
 
 picture-rings (2.15) unstable; urgency=medium
 

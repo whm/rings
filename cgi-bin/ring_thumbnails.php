@@ -16,27 +16,6 @@ $in_next       = get_request('in_next');
 $in_prev       = get_request('in_prev');
 $in_uid        = get_request('in_uid');
 
-// ----------------------------------------------------------
-// Function to exit without displaying anything and return to 
-// the main index page.
-
-function back_to_index () {
-
-    echo "<html>\n";
-    echo "<head>\n";
-    echo "<meta http-equiv=\"refresh\" ";
-    echo '    content="0; URL=http://'.$_SERVER['SERVER_NAME'].'/rings">'."\n";
-    echo "<title>Rings of Pictures</title>\n";
-    echo "</head>\n";
-    echo "<body>\n";
-    echo '<a href="rings">Rings of Pictures</a>'."\n";
-    echo "</body>\n";
-    echo "</html>\n";
-    sys_msg_err('Ring Not Found.');
-
-    exit;
-}
-
 // ============
 // Main routine 
 
@@ -65,7 +44,7 @@ if (empty($in_uid)) {
 }
 
 if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
-    back_to_index();
+    back_to_index('Invalid person selection');
 }
 
 $thisPerson = "$in_uid";
