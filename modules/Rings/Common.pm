@@ -220,10 +220,12 @@ sub get_config {
 
     # Configuration elements used by the PHP user interface.  Defining
     # them here suppresses perl startup warnings.
-    $CONF->define('display_size', { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('index_size',   { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('maint_size',   { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('ring_admin',   { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('display_size',     { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('index_size',       { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('maint_size',       { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('ring_admin',       { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('ring_admin_attr',  { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('ring_admin_group', { ARGCOUNT => ARGCOUNT_ONE });
 
     # Read preferences files in order from global location,
     # home directory, and command line.

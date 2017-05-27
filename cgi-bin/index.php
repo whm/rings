@@ -323,7 +323,9 @@ $stmt->close();
 
 <?php
 if (!empty($_SERVER['REMOTE_USER'])) {
-    echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
+    if ($ring_admin_group) {
+        echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
+    }
     if (!empty($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }

@@ -7,6 +7,7 @@
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
 require('inc_ring_init.php');
+require('inc_maint_check.php');
 
 // Form or URL inputs
 $in_uid           = get_request('in_uid');

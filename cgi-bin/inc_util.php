@@ -190,4 +190,27 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
     return array($pic_dir, $pic_file);
 }
 
+// ------------------------------------------------------------------------
+// Function to exit without displaying anything and return to the main
+// index page.
+
+function back_to_index ($msg) {
+
+    if (!empty($msg)) {
+        sys_msg_err($msg);
+    }
+    echo "<html>\n";
+    echo "<head>\n";
+    echo "<meta http-equiv=\"refresh\" ";
+    echo '    content="0; URL=http://'.$_SERVER['SERVER_NAME'].'/rings">'."\n";
+    echo "<title>Rings of Pictures</title>\n";
+    echo "</head>\n";
+    echo "<body>\n";
+    echo '<a href="rings">Rings of Pictures</a>'."\n";
+    echo "</body>\n";
+    echo "</html>\n";
+
+    exit;
+}
+
 ?>
