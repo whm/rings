@@ -107,7 +107,6 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
 <p>
 <form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
-<div align="center">
 <table>
 <tr><td align="right">UserID:</td>
     <td>
@@ -242,7 +241,6 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
   }
 ?>
 </form>
-</div>
 
 <?php require('page_bottom.php'); ?>
 </body>

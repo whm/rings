@@ -20,12 +20,13 @@ $in_upload_slots = get_request('in_upload_slots');
 <?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
-<body bgcolor="#eeeeff">
 
 <?php
 $thisTitle = 'Load Pictures into the Rings';
 require ('page_top.php');
+?>
 
+<?php
 // -- main routine
 
 if ($_SESSION['upload_slots'] < 1) {

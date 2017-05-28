@@ -63,7 +63,6 @@ $thisTitle = 'Update Group';
 require ('page_top.php');
 ?>
 
-<div align="center">
 <form name="find_group"
       action="<?php print $_SERVER['PHP_SELF'];?>"
       method="post">

@@ -148,7 +148,7 @@ pagenav {
     width: 140px;
     padding: 2px;
 }
-#maintContent {
+.maintContent {
     margin-left: 140px;
 }
 ul.nav {
@@ -162,7 +162,6 @@ li.nav {
     padding: 2px;
     margin: 1px;
 }
-
 h3.nav {
     text-decoration: none;
     font-style: normal;

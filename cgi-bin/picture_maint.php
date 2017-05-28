@@ -236,7 +236,6 @@ $thisTitle = 'Update Ring Pictures';
 require ('page_top.php');
 ?>
 
-<div align="center">
 <form name="find_picture"
       action="<?php print $_SERVER['PHP_SELF'];?>"
       method="post">

@@ -25,12 +25,10 @@ $upload         = get_request('upload');
 <?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 </head>
-<body bgcolor="#eeeeff">
 
 <?php
 $thisTitle = 'Re-load a Picture into the Rings';
 require ('page_top.php');
-
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
