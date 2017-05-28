@@ -413,7 +413,7 @@ function verifyInput() {
 
     if (f.in_start_date.value == "") {
         f.in_start_date.value = "1900-01-01 12:00:00";
-        alert("Setting empty to the distant past.");
+        alert("Setting empty date to the distant past.  Try refresh again.");
         return false;
     }
     
