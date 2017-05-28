@@ -219,7 +219,7 @@ if (!$result) {
 ?>
 <br>
 <a href="/rings/index.php"><img 
-       src="/rings-images/rings.png" 
+       src="/rings-images/icon-home.png" 
        alt="Pick a New Ring"
        border="0"></a>
 <?php sys_display_msg(); ?>

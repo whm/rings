@@ -487,7 +487,7 @@ if (!empty($in_ring_pid)) {
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
     echo '<a href="index.php">';
-    echo '<img src="/rings-images/rings.png" border="0" ';
+    echo '<img src="/rings-images/icon-home.png" border="0" ';
     echo 'onMouseOver="showSelect();" onMouseOut="hideSelect();" ';
     echo 'alt="Pick a new Picture Ring">';
     echo "</a>\n";
@@ -511,13 +511,15 @@ if (!empty($in_ring_pid)) {
         echo 'alt="Add this picture to the email list">';
 
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-        echo '<a href="picture_maint.php'
-            . '?in_pid='.$this_pid.'" target="_blank">';
-        echo '<img src="/rings-images/icon-edit.png" border="0" ';
-        echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
-        echo 'alt="Edit Picture Information">';
-        echo "</a>\n";
+       
+        if ($ring_admin_group) {
+            echo '<a href="picture_maint.php'
+                . '?in_pid='.$this_pid.'" target="_blank">';
+            echo '<img src="/rings-images/icon-edit.png" border="0" ';
+            echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
+            echo 'alt="Edit Picture Information">';
+            echo "</a>\n";
+        }
     } else {
         echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
         echo '?in_ring_pid='.$in_ring_pid.'">';
