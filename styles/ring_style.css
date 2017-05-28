@@ -126,20 +126,23 @@ pagenav {
     float:       right;
 }
 
-#maintNav {
-    position: absolute;
+.maintNav {
+    float: left;
     top: 0;
     left: 0;
-    width: 200px;
+    width: 140px;
+    passing: 10px;
 }
-#maintNav.ul {
+.maintNavUL {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
-#maintNav.li {
+.maintNavLI {
     background: #ffffff;
-    margin: 5px;
+    border: 1px solid #000000;
+    padding: 2px;
+    margin: 1px;
 }
 
 #maintContent {
