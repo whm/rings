@@ -126,30 +126,6 @@ pagenav {
     float:       right;
 }
 
-.maintNav {
-    float: left;
-    top: 0;
-    left: 0;
-    width: 140px;
-    passing: 10px;
-}
-.maintNavUL {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
-.maintNavLI {
-    background: #ffffff;
-    border: 1px solid #000000;
-    padding: 2px;
-    margin: 1px;
-}
-
-#maintContent {
-    margin-left: 200px;
-}
-
-
 /* Initially used on ring_slide_table */
 #homeTop {
     float: right;
@@ -164,3 +140,34 @@ pagenav {
     width: 75%;
 }
 
+/* Navigation for the maintenance pages */                                      
+.maintNav {
+    float: left;
+    top: 0;
+    left: 0;
+    width: 140px;
+    padding: 2px;
+}
+#maintContent {
+    margin-left: 140px;
+}
+ul.nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+li.nav {
+    background: #ffffff;
+    border: 1px solid #000000;
+    padding: 2px;
+    margin: 1px;
+}
+
+h3.nav {
+    text-decoration: none;
+    font-style: normal;
+    font-weight: bold;
+    font-family: sans-serif;
+    margin-bottom: 0;
+    padding: 0;
+}
