@@ -32,19 +32,13 @@ require ('page_top.php');
 <tr><td>
 The Rings is really just a picture gallery.  It got its name because it
 is possible to pick many paths throught the gallery and the paths 
-conceptually for rings between lives, places, and events.
+conceptually form rings between lives, places, and events.
 
 <p>
 
 The functions in the navigation menu on the left are for editing and loading
-pictures one at a time.  For describing pictures there really is not any
-way around this.  
-
-<p>
-Loading though is another story.  To load pictures in bulk it is best 
-to use the perl script, <a href="ring_load.pl>ring_load.pl</a>, 
-developed for that purpose.  Of course, you have to have perl 
-installed on your system.  ImageMagick is also required.
+pictures one at a time.  For describing pictures there really is no way
+around doing the pictures one at a time.  
 
 </td></tr>
 </table>
