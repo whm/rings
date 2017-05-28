@@ -35,6 +35,7 @@ function display_page_select($start_date, $number, $uid) {
       action="<?php echo $_SERVER['PHP_SELF'];?>"
       onsubmit="return verifyInput()"
       method="post">
+<div id="pageControl">
 <fieldset>
   <legend>Page Control</legend>
   <label class="field">Starting Date</label>
@@ -53,6 +54,7 @@ function display_page_select($start_date, $number, $uid) {
             size="2"
             value="<?php echo $uid;?>">
 </fieldset>
+</div>
 </form>
 <?php
     return;
@@ -196,9 +198,11 @@ function display_slide_table($pic_data) {
     global $in;
     global $ring_admin_group;
     
-    $action_form = 'ring_slide_table_action.php';
+    $update_form_action = 'ring_slide_table_action.php';
 ?>
-    <form name="slide_table" method="post">
+    <form name="slide_table"
+          action="<?php echo $update_form_action;?>"
+          method="post">
 
     <fieldset>
     <legend>Slide Table</legend>
@@ -216,7 +220,7 @@ function display_slide_table($pic_data) {
         $dups = dup_check($pic['pid']);
         $pic_dups = '';
         foreach ($dups as $d) {
-            $d .= "</br>\n";
+            $d .= "<br/>\n";
             $d = '<font color="red">Duplicate: ';
             $d .= '<a href="picture_maint.php?in_pid=' . $d . '>';
             $d .= "</font>\n";
@@ -233,6 +237,7 @@ function display_slide_table($pic_data) {
            target="_blank">
          <?php echo $pic['pid']; ?>
         </a>
+        <br/>
 <?php } ?>
         <?php echo $pic_dups; ?>
         <input type="text" name="in_date_<?php echo $cnt;?>"
@@ -371,7 +376,7 @@ $sel .= "ORDER BY p.picture_date,p.pid ";
 $sel .= 'LIMIT ' . $in['start'] . ',' . $in['number'] . ' ';
 $result = $DBH->query($sel);
 if (!$result) {
-    sys_err("Person '" . $in['uid'] . "' not found.</br>");
+    sys_err("Person '" . $in['uid'] . "' not found");
 } else {
     $pic_data = [];
     $cnt = 0;
@@ -406,6 +411,12 @@ function verifyInput() {
         return false;
     }
 
+    if (f.in_start_date.value == "") {
+        f.in_start_date.value = "1900-01-01 12:00:00";
+        alert("Setting empty to the distant past.");
+        return false;
+    }
+    
     var dt_parts = f.in_start_date.value.split(" ");
     var d = dt_parts[0];
     var t = dt_parts[1];
@@ -436,7 +447,13 @@ function verifyInput() {
 
 <body bgcolor="#eeeeff">
 
-<h2><?php echo $thisPerson;?></h2>
+<h2 id="personTitle"><?php echo $thisPerson;?></h2>
+<div id="homeTop">
+<a href="/rings/index.php"><img
+       src="/rings-images/icon-home.png"
+       alt="Pick a New Ring"
+       border="0"></a>
+</div>
 
 <?php
 
@@ -453,7 +470,7 @@ $sel .= 'ORDER BY p.picture_date,p.pid ';
 $sel .= 'LIMIT ' . $in['start'] . ',' . $in['number'] . ' ';
 $result = $DBH->query($sel);
 if (!$result) {
-    sys_err("Person '" . $in['uid'] . ' not found.</br>');
+    sys_err("Person '" . $in['uid'] . ' not found.');
     sys_display_msg();
 } else {
     display_page_select($pic_data[0]['date'], $in['number'], $in['uid']);
@@ -461,7 +478,7 @@ if (!$result) {
     display_slide_table($pic_data);
 }
 ?>
-<br>
+<br/>
 <a href="/rings/index.php"><img
        src="/rings-images/icon-home.png"
        alt="Pick a New Ring"

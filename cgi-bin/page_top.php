@@ -1,8 +1,11 @@
 <!-- ################# Navigation Sidebar header ################ -->
 
 <div id="maintNav">
-     <a href="/rings/index.php">
-     <img src="/rings-images/home.png" border="0"></a>
+     <a href="/rings/index.php"><img
+       src="/rings-images/icon-home.png"
+       alt="Pick a New Ring"
+       border="0"></a>
+     <br/>
      Pictures
      <ul>
      <li><a href="picture_load.php">Load</a></li>

@@ -145,3 +145,19 @@ pagenav {
 #maintContent {
     margin-left: 200px;
 }
+
+
+/* Initially used on ring_slide_table */
+#homeTop {
+    float: right;
+    top: 0;
+}
+#personTitle {
+    float: left;
+    width: 25%;
+}
+#pageControl {
+    align: center;
+    width: 75%;
+}
+
