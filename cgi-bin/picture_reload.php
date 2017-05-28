@@ -29,7 +29,6 @@ $upload         = get_request('upload');
 <?php
 $thisTitle = 'Re-load a Picture into the Rings';
 require ('page_top.php');
-
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">

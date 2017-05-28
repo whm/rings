@@ -308,7 +308,6 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
 <p>
 <form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
 
-<div align="center">
 <table border="1">
 <tr>
   <td align="right">Picture Date Range:</td>
@@ -492,7 +491,6 @@ if (isset($_SESSION['msg'])>0) {
     $_SESSION['msg'] = '';
 }
 ?>
-</div>
 
 <?php require('page_bottom.php'); ?>
 </body>
