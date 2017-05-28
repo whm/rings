@@ -156,7 +156,7 @@ function get_mail_addresses(addrType) {
 </form>
 
 <a href="index.php">
-<img src="/rings-images/rings.png" border="0"
+<img src="/rings-images/icon-home.png" border="0"
      alt="Pick a new Picture Ring">
 </a>
 

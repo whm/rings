@@ -13,7 +13,6 @@
      <li><a href="picture_maint.php">Maint</a></li>
      <li><a href="picture_sort.php">Sort</a></li>
      <li><a href="picture_sort.php?in_new=1">Sort New</a></li>
-     <li><a href="ring_slide_table.php">Sort Table</a></li>
      </ul>
      People
      <ul>

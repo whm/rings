@@ -144,7 +144,7 @@ sys_display_msg();
 <?php } ?>
 
 <a href="index.php">
-<img src="/rings-images/rings.png" border="0"
+<img src="/rings-images/icon-home.png" border="0"
      alt="Pick a new Picture Ring">
 </a>
 
