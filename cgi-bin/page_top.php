@@ -6,23 +6,23 @@
        alt="Pick a New Ring"
        border="0"></a>
      <br/>
-     Pictures
-     <ul class="maintNavUL">
-     <li class="maintNavLI"><a href="picture_load.php">Load</a></li>
-     <li class="maintNavLI"><a href="picture_reload.php">Re-Load</a></li>
-     <li class="maintNavLI"><a href="picture_maint.php">Maint</a></li>
-     <li class="maintNavLI"><a href="picture_sort.php">Sort</a></li>
-     <li class="maintNavLI"><a href="picture_sort.php?in_new=1">Sort New</a></li>
+     <h3 class="nav">Pictures</h3>
+     <ul class="nav">
+     <a href="picture_load.php"><li class="nav">Load</li></a>
+     <a href="picture_reload.php"><li class="nav">Re-Load</li></a>
+     <a href="picture_maint.php"><li class="nav">Maint</li></a>
+     <a href="picture_sort.php"><li class="nav">Sort</li></a>
+     <a href="picture_sort.php?in_new=1"><li class="nav">Sort New</li></a>
      </ul>
-     People
-     <ul class="maintNavUL">
-     <li class="maintNavLI"><a href="people_search.php">Find</a></li>
-     <li class="maintNavLI"><a href="people_maint.php">Maint</a></li>
+     <h3 class="nav">People</h3>
+     <ul class="nav">
+     <a href="people_search.php"><li class="nav">Find</li></a>
+     <a href="people_maint.php"><li class="nav">Maint</li></a>
      </ul>
-     Groups
-     <ul class="maintNavUL">
-     <li class="maintNavLI"><a href="groups.php">List</a></li>
-     <li class="maintNavLI"><a href="group_maint.php">Maint</a></li>
+     <h3 class="nav">Groups></h3>
+     <ul class="nav">
+     <a href="groups.php"><li class="nav">List</li></a>
+     <a href="group_maint.php"><li class="nav">Maint</li></a>
      </ul>
 </div>
 <div id="maintContent">
