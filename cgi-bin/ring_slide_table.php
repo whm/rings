@@ -287,7 +287,11 @@ if (empty($in['start'])){
     $in['start']  = 0;
 }
 if ($in['number'] == 0) {
-    $in['number'] = 10 * 7;
+    if (!empty($_SESSION['s_thumbs_per_page'])) {
+        $in['number'] = $_SESSION['s_thumbs_per_page'];
+    } else {
+        $in['number'] = 10 * 7;
+    }
 }
 
 // Bail out if we don't have a selection

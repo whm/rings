@@ -355,12 +355,6 @@ if ($this_pid > 0) {
  </td>
 </tr>
 <tr>
- <td align="right">Taken By:</td>
- <td> <input type="text" name="in_taken_by" size="16" maxlength="32"
-             value="<?php print $row["taken_by"]; ?>">
- </td>
-</tr>
-<tr>
  <td align="right">Description:</td>
  <td>
 <TEXTAREA name="in_description" rows="2" cols="40">
@@ -527,11 +521,17 @@ sys_display_msg();
 
 <?php
 if (!empty($row['pid'])) {
+    echo '<a href="display.php'
+        . '?in_pid=' . $this_pid
+        . '&in_size=raw'
+        . '&rand=' . $i
+        . '" target="_blank">';
     echo '<img src="display.php';
     echo '?in_pid=' . $row["pid"];
     echo '&in_size=' . $CONF['maint_size'];
     echo '&dlm=' . htmlentities($date_last_maint);
     echo '">' . "\n";
+    echo "</a>\n";
     echo "<br/>\n";
 }
 
