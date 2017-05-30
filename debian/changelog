@@ -1,6 +1,7 @@
 picture-rings (2.17) unstable; urgency=medium
 
   * Add in email access request form.
+  * Adjust size of input date field in slide table page.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 29 May 2017 18:45:00 -0700
 
