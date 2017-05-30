@@ -333,7 +333,9 @@ if (!empty($_SERVER['REMOTE_USER'])) {
 } else {
     echo '<a href="' . auth_url($_SERVER['PHP_SELF']) . '"'
         . '>Login</a>' . "\n";
-    echo '&nbsp;-&nbsp;To see all of the pictures you need to login' . "\n";
+    echo '&nbsp;-&nbsp;To see all of the pictures you need to login.' . "\n";
+    echo '&nbsp;-&nbsp;<a href="access_email.php">Access Request Form.</a>'
+        . "\n";
     echo "</h5>\n";
 }
 ?>
