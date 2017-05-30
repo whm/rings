@@ -40,7 +40,7 @@ function display_page_select($start_date, $number, $uid) {
   <legend>Page Control</legend>
   <label class="field">Starting Date</label>
      <input type="text" name="in_start_date"
-            size="14"
+            size="18"
             value="<?php echo $start_date;?>">
      <input type="submit" name="btn_refresh" value="Refresh">
   <br/>
@@ -241,7 +241,7 @@ function display_slide_table($pic_data) {
 <?php } ?>
         <?php echo $pic_dups; ?>
         <input type="text" name="in_date_<?php echo $cnt;?>"
-               value="<?php echo $pic['date'];?>" size="12">
+               value="<?php echo $pic['date'];?>" size="18">
       </div>
     </div>
     <input type="hidden" name="in_pid_<?php echo $cnt;?>"
