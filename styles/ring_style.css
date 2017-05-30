@@ -170,3 +170,21 @@ h3.nav {
     margin-bottom: 0;
     padding: 0;
 }
+
+label.access {
+    text-align:  right;
+    width:       15%;
+    float:       left;
+    font-weight: bold;
+    padding:     3px;
+}
+input.access {
+    width:       25%;
+    float:       left;
+    padding:     3px;
+}
+#accessInputBox {
+    width:   100%;
+    float:   left;
+    padding: 3px;
+}
