@@ -113,7 +113,7 @@ function accept_and_store($fld_name, $in_pid) {
         return 1;
     }
     $sth->bind_param(
-        'isssiii',
+        'isssii',
         $pid,
         $original_file,
         $picture_lot,
