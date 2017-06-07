@@ -75,7 +75,8 @@ sub save_file {
     # Check for duplicate picture
     if (!$opt_force) {
         my $dup_cnt = 0;
-        my $sql     = "SELECT pid FROM pictures_information ";
+        # Check the signature for a duplication
+        my $sql = "SELECT pid FROM pictures_information ";
         $sql .= "WHERE raw_signature = ? ";
         if ($opt_debug) {
             dbg($sql);
@@ -85,6 +86,39 @@ sub save_file {
         while (my $row = $sth->fetchrow_hashref()) {
             $dup_cnt++;
             msg('info', "File $a_file duplicates $row->{pid}");
+        }
+        # But duplicate pictures and have different signature, so
+        # check other data as well.
+        if (!$dup_cnt) {
+            my $this_file = $a_filename;
+            $this_file =~ s/[.]*$a_filetype$//xms;
+            my $sel = 'SELECT pid, raw_picture_size ';
+            $sel .= 'FROM pictures_information ';
+            $sel .= 'WHERE file_name LIKE ? ';
+            $sel .= 'AND camera = ? ';
+            $sel .= 'AND shutter_speed = ? ';
+            $sel .= 'AND fstop = ? ';
+            $sel .= "ORDER BY pid ";
+            my $sth = $DBH->prepare($sel);
+            $sth->execute(
+                '%' . $this_file . '%',
+                $pic{'ring_camera'},
+                $pic{'ring_shutterspeed'},
+                $pic{'ring_fstop'}
+            );
+
+            while (my $row = $sth->fetchrow_hashref()) {
+                if ($row->{raw_picture_size} > 0) {
+                    my $size_match = length($blob) / $row->{raw_picture_size};
+                    if ($size_match < 1.05 && $size_match > .95) {
+                        $dup_cnt++;
+                        msg('info', "File $a_file duplicates $row->{pid}");
+                    }
+                } else {
+                    $dup_cnt++;
+                    msg('info', "File $a_file duplicates $row->{pid}");
+                }
+            }
         }
         if ($dup_cnt > 0) {
             msg('info', "SKIPPING: $a_file");

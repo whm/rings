@@ -224,24 +224,7 @@ if ( $update_flag ) {
 
     // -- Delete a record -------------------------------
 
-    $del_tables[] = 'pictures_information';
-    $del_tables[] = 'pictures_raw';
-    $del_tables[] = 'pictures_small';
-    $del_tables[] = 'pictures_large';
-    $del_tables[] = 'pictures_larger';
-    $del_tables[] = 'pictures_1280_1024';
-
-    foreach ($del_tables as $thisTable) {
-        $sql_cmd = "DELETE FROM $thisTable WHERE pid=$in_pid ";
-        $result = $DBH->query($sql_cmd);
-        if ($result) {
-            sys_msg("Picture '$in_pid' deleted from $thisTable.");
-        } else {
-            sys_err("Problem deleting $in_pid from $thisTable");
-            sys_err("Problem SQL: $sql_cmd");
-        }
-    }
-
+    db_delete_picture($in_pid);
     $next_uid = 'CLEARFORM';
 
 } elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {

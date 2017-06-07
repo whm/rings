@@ -164,6 +164,34 @@ function accept_and_store($fld_name, $in_pid) {
 }
 
 //-------------------------------------------------------------
+// Delete a picture database entries
+
+function db_delete_picture ($this_pid) {
+    global $DBH;
+
+    $del_tables = array();
+    $del_tables[] = 'pictures_information';
+    $del_tables[] = 'pictures_raw';
+    $del_tables[] = 'pictures_small';
+    $del_tables[] = 'pictures_large';
+    $del_tables[] = 'pictures_larger';
+    $del_tables[] = 'pictures_1280_1024';
+
+    foreach ($del_tables as $this_table) {
+        $sql_cmd = "DELETE FROM $this_table WHERE pid=$this_pid ";
+        $result = $DBH->query($sql_cmd);
+        if ($result) {
+            sys_msg("Picture '$this_pid' deleted from $this_table.");
+        } else {
+            sys_err("Problem deleting $this_pid from $this_table");
+            sys_err("Problem SQL: $sql_cmd");
+        }
+    }
+
+    return;
+}
+
+//-------------------------------------------------------------
 // Get the field names for a given table
 
 function get_fld_names ($this_table) {

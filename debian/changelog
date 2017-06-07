@@ -1,3 +1,11 @@
+picture-rings (2.19) unstable; urgency=medium
+
+  * Correct duplicate detection in ring_picture_slide and in
+    ring-load-daemon.
+  * Add delete for duplicates in ring_picture_slide.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 07 Jun 2017 01:22:34 -0700
+
 picture-rings (2.18) unstable; urgency=medium
 
   * Bug fix: Parameter count in picture_reload.

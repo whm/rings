@@ -92,7 +92,7 @@ function display_table_nav() {
             echo '<div class="prev">&nbsp</div>';
         }
         echo "\n";
-        
+
         if ($in['start'] < $picture_count - $in['number']) {
             $display_next = $in['start'] + $in['number'];
             $display_last = $picture_count - $in['number'];
@@ -161,11 +161,11 @@ function dup_check($pid) {
         return array();
     }
 
-    $sel = 'SELECT pid ';
+    $this_file = pathinfo($pic['file_name'], PATHINFO_FILENAME);
+    $sel = 'SELECT pid, raw_picture_size ';
     $sel .= 'FROM pictures_information ';
     $sel .= "WHERE pid != $pid ";
-    $sel .= "AND raw_picture_size = " . $pic['raw_picture_size'] . ' ';
-    $sel .= "AND file_name = '" . $pic['file_name'] . "' ";
+    $sel .= "AND file_name LIKE '%${this_file}%' ";
     $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
     foreach ($dup_fld_list as $f) {
       if (!empty($pic[$f])) {
@@ -176,13 +176,20 @@ function dup_check($pid) {
     }
     $sel .= "ORDER BY pid ";
 
-    //$duplicate_list .= $sel;
     $result = $DBH->query ($sel);
     $dup_array = array();
     if ($result) {
         $comma = '';
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            array_push($dup_array, $row['pid']);
+            if ($pic['raw_picture_size'] > 0) {
+                $size_match
+                    = $row['raw_picture_size'] / $pic['raw_picture_size'];
+                if ($size_match < 1.05 and $size_match > .95) {
+                    array_push($dup_array, $row['pid']);
+                }
+            } else {
+                array_push($dup_array, $row['pid']);
+            }
         }
     }
     return $dup_array;
@@ -197,7 +204,7 @@ function display_slide_table($pic_data) {
     global $CONF;
     global $in;
     global $ring_admin_group;
-    
+
     $update_form_action = 'ring_slide_table_action.php';
 ?>
     <form name="slide_table"
@@ -220,11 +227,12 @@ function display_slide_table($pic_data) {
         $dups = dup_check($pic['pid']);
         $pic_dups = '';
         foreach ($dups as $d) {
-            $d .= "<br/>\n";
-            $d = '<font color="red">Duplicate: ';
-            $d .= '<a href="picture_maint.php?in_pid=' . $d . '>';
-            $d .= "</font>\n";
-            $pic_dups .= $d;
+            $ditem = "<br/>\n";
+            $ditem .= '<font color="red">Duplicate: ';
+            $ditem .= '<a href="picture_maint.php?in_pid=' . $d . '">';
+            $ditem .= $d . '</a>';
+            $ditem .= "</font>\n";
+            $pic_dups .= $ditem;
         }
 ?>
     <div class="sort_image">
@@ -237,11 +245,16 @@ function display_slide_table($pic_data) {
            target="_blank">
          <?php echo $pic['pid']; ?>
         </a>
+<?php if (!empty($pic_dups)) { ?>
+        <input type="checkbox" value="delete"
+               name="in_delete_<?php echo $cnt;?>">Delete
+<?php } ?>
         <br/>
 <?php } ?>
-        <?php echo $pic_dups; ?>
         <input type="text" name="in_date_<?php echo $cnt;?>"
                value="<?php echo $pic['date'];?>" size="18">
+        <?php echo $pic_dups; ?>
+        <br/>
       </div>
     </div>
     <input type="hidden" name="in_pid_<?php echo $cnt;?>"
@@ -420,7 +433,7 @@ function verifyInput() {
         alert("Setting empty date to the distant past.  Try refresh again.");
         return false;
     }
-    
+
     var dt_parts = f.in_start_date.value.split(" ");
     var d = dt_parts[0];
     var t = dt_parts[1];
