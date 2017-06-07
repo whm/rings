@@ -27,11 +27,13 @@ if ( $in_button_update == 'Update' ) {
         $cmd = 'date_last_maint = NOW()';
         $update_cnt = 0;
 
-        $up_pid = get_request("in_pid_$i");
-        $up_od  = get_request("in_od_$i");
-        $up_nd  = get_request("in_date_$i");
-
-        if ($up_od != $up_nd) {
+        $up_pid    = get_request("in_pid_$i");
+        $up_od     = get_request("in_od_$i");
+        $up_nd     = get_request("in_date_$i");
+        $up_delete = get_request("in_delete_$i");
+        if ($up_delete == 'delete') {
+            db_delete_picture($up_pid);
+        } elseif ($up_od != $up_nd) {
             // Update the picture date
             $sql_cmd = 'UPDATE pictures_information SET ';
             $sql_cmd .= "picture_date = ?, ";
