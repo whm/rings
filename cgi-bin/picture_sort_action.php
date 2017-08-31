@@ -24,7 +24,7 @@ if (count($in_uids) > 0) {
 // ---------------------------------------------------------
 // Processing for updates only
 
-if ( strlen($btn_update)>0 ) {
+if ( $in_button_update == 'Update' ) {
 
     $flds['description']  = 's';
     $flds['grade']        = 's';
@@ -42,7 +42,7 @@ if ( strlen($btn_update)>0 ) {
         $sel .= "FROM pictures_information WHERE pid=$up_pid ";
         $result = $DBH->query($sel);
         if ($result) {
-            $row = $dbh->fetch_array(MYSQLI_ASSOC);
+            $row = $result->fetch_array(MYSQLI_ASSOC);
             foreach ($flds as $fld => $type) {
                 $up_val = trim(get_request("up_${fld}_${i}"));
                 $db_val = trim($row[$fld]);
@@ -100,8 +100,6 @@ if ( strlen($btn_update)>0 ) {
     echo "Ooops, this should never happen!<br>\n";
 
 }
-
-$DBH->close;
 
 header ("REFRESH: 0; URL=picture_sort.php");
 

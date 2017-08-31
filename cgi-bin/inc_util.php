@@ -8,7 +8,7 @@
 // Some global constants
 $sys_msg_ok   = '<font color="green">';
 $sys_msg_warn = '<font color="red">';
-$sys_msg_end  = "</font><br>\n";
+$sys_msg_end  = "</font><br/>\n";
 
 //-------------------------------------------------------------
 // get a value from the REQUEST array if it exists

@@ -146,7 +146,7 @@ $sel .= "ORDER BY p.picture_date,p.pid ";
 $sel .= "LIMIT $in_start, $in_number ";
 $result = $DBH->query($sel);
 if (!$result) {
-    echo "Person '$in_uid' not found.<br>\n";
+    echo "Person '$in_uid' not found.<br/>\n";
 } else {
 
     echo "<table border=\"1\"><tr><td>\n";
@@ -195,10 +195,10 @@ if (!$result) {
     $hr = '';
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         if ($cnt>6) {
-            echo "<br>\n";
+            echo "<br/>\n";
             echo $hr;
             echo $row['picture_date']."\n";
-            echo "<br>\n";
+            echo "<br/>\n";
             $cnt = 0;
             $hr = "<hr>\n";
         }
@@ -217,7 +217,7 @@ if (!$result) {
     echo "</td></tr></table>\n";
 }
 ?>
-<br>
+<br/>
 <a href="/rings/index.php"><img 
        src="/rings-images/icon-home.png" 
        alt="Pick a New Ring"
