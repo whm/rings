@@ -345,7 +345,7 @@ if ($this_pid > 0) {
       <input type="hidden"
              name="next_datetime"
              value="<?php echo $next_datetime;?>">
-      <br>
+      <br/>
       <input type="checkbox"
              name="set_date"
              onClick="setDatetime()">
@@ -476,7 +476,7 @@ if ($result) {
           name="in_group_search"
           onkeyup="find_select_items(this, this.form.elements['in_newuids[]'], in_ppe_values, in_ppe_display);">
    <input type="checkbox" name="in_clear_cache" value="1">Clear Name Cache
-   <br>
+   <br/>
 <?php
 $add_cnt = 0;
 if (is_array($uid_sort)) {
@@ -551,7 +551,7 @@ if ($result) {
         echo $this_sig;
         echo '">' . "\n";
         echo "<br/>\n";
-        echo $row['file_path'] . "<br>\n";
+        echo $row['file_path'] . "<br/>\n";
     }
 }
 ?>

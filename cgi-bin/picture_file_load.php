@@ -71,9 +71,8 @@ function unzip_and_load ($zipfile) {
             $cmd .= "($flds) VALUES ($vals) ";
             $result = $DBH->query ($cmd);
             if ($result->errno) {
-                $_SESSION['msg'] .= $warn
-                    . "MySQL error:" . $result->error . $em;
-                $_SESSION['msg'] .= $warn . "SQL:$cmd$em";
+                sys_err("MySQL error:" . $result->error);
+                sys_err("SQL:$cmd");
             }
 
             $flds = $vals = '';
@@ -85,14 +84,13 @@ function unzip_and_load ($zipfile) {
             $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
             $result = $DBH->query($cmd);
             if ($result->errno) {
-                $_SESSION['msg'] .= $warn
-                    . "MySQL error:" . $result->error . $em;
+                sys_err("MySQL error:" . $result->error);
             }
 
             echo "$pid uploaded. ";
             echo "<a href=\"picture_maint.php?in_pid=$pid\" "
                 . "target=\"_blank\">Update Picture Details.</a>";
-            echo "<br>\n";
+            echo "<br/>\n";
 
             unlink ($file);
         }
@@ -113,10 +111,6 @@ function unzip_and_load ($zipfile) {
 <?php
 $thisTitle = 'Load Pictures into the Rings';
 require ('page_top.php');
-
-$ok   = '<font color="green">';
-$warn = '<font color="red">';
-$em   = "</font><br>\n";
 
 // -- main routine
 
@@ -216,9 +210,8 @@ if (!isset($upload)) {
                     $cmd .= "($flds) VALUES ($vals) ";
                     $result = $DBH->query ($cmd);
                     if ($result->errno) {
-                        $_SESSION['msg'] .= $warn
-                            . "MySQL error:" . $DBH->error . $em;
-                        $_SESSION['msg'] .= $warn . "SQL:$cmd$em";
+                        sys_err("MySQL error:" . $DBH->error);
+                        sys_err("SQL:$cmd");
                     }
 
                     $flds = $vals = '';
@@ -230,8 +223,7 @@ if (!isset($upload)) {
                     $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
                     $result = $DBH->query ($cmd);
                     if ($result->errno) {
-                        $_SESSION['msg'] .= $warn . "MySQL error:" . $result->error
-                            . $em;
+                        sys_err("MySQL error:" . $result->error);
                     }
 
                     echo "$pid uploaded. ";
@@ -247,10 +239,7 @@ if (!isset($upload)) {
     echo "<a href=\"picture_load.php\">Back to Load Files</a>\n";
 }
 
-if (strlen($_SESSION['msg']) > 0) {
-    echo $_SESSION['msg'];
-    $_SESSION['msg'] = '';
-}
+sys_display_msg()
 
 ?>
 

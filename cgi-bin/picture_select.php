@@ -434,7 +434,9 @@ if (!empty($in_ring_pid)) {
                              $this_pid,
                              $this_picture_date,
                              $next_links[$in_ring_uid]);
-            if (!empty($l)) {echo $l."<br>\n";}
+            if (!empty($l)) {
+                echo $l."<br/>\n";
+            }
         }
         echo '<font  color="white">';
         if ($in_slide_show > 0) {
@@ -529,12 +531,11 @@ if (!empty($in_ring_pid)) {
 
     echo '<p id="mailHelpDisplay">'."\n";
     echo "Select this picture to email\n";
-    echo "<br>\n";
     echo "</p>\n";
 
     echo '<p id="bigHelpDisplay">'."\n";
     echo "Display picture full size\n";
-    echo "<br>\n";
+    echo "<br/>\n";
     echo "($this_fullbytes kbytes)\n";
     echo "</p>\n";
 

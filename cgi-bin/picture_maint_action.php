@@ -217,7 +217,7 @@ if ( $update_flag ) {
         }
     }
     if ($update_cnt < 1) {
-        sys_msg('No changes found');
+        msg_err('No changes found');
     }
 
 } elseif ( !empty($in_button_del) ) {
@@ -251,7 +251,7 @@ if ( $update_flag ) {
 
 } else {
 
-    echo "Ooops, this should never happen!<br>\n";
+    echo "Ooops, this should never happen!<br/>\n";
 
 }
 

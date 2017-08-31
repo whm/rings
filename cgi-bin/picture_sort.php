@@ -133,10 +133,10 @@ function print_row ($n, $r) {
     echo '      <input type="hidden"'."\n";
     echo '             name="' . $up_pid . '"'."\n";
     echo '             value="' . $r['pid'] . '"' . ">\n";
-    echo "      <br>\n";
+    echo "      <br/>\n";
     echo '      ' . $r['file_name'] . "\n";
     if (strlen($duplicate_list) > 0) {
-        echo "      <br>Duplicates: $duplicate_list\n";
+        echo "      <br/>Duplicates: $duplicate_list\n";
     }
     echo "  </td>\n";
     echo '  <td><input name="up_picture_date_' . $n . '"' . "\n";
@@ -363,7 +363,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
      <input type="text"
             name="in_group_search"
             onkeyup="find_select_items(this, this.form.elements['in_uids[]'], in_group_values, in_group_display);">
-     <br>
+     <br/>
      <select name="in_uids[]" size="4" multiple>
      <option value="None">None
 <?php
@@ -400,8 +400,6 @@ if ($result) {
 <p>
 
 <?php
-sys_display_msg();
-
 if ($_SESSION['s_num_user_rows']>0) {
     if (
         ($end_row != $_SESSION['s_num_user_rows'])
@@ -441,6 +439,9 @@ if ($_SESSION['s_num_user_rows']>0) {
 
 </form>
 
+<div align="center">
+<?php sys_display_msg(); ?>
+</div>
 
 <form method="post" action="picture_sort_action.php">
 <table border="1">
@@ -460,7 +461,7 @@ $people_list = '';
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         if (isset($last_row['pid']) && $row['pid'] == $last_row['pid']) {
-            if (strlen($people_list)>0) {$people_list .= "<br>\n";}
+            if (strlen($people_list)>0) {$people_list .= "<br/>\n";}
             $people_list .= $row['display_name'];
         } else {
             if (isset($last_row['pid'])) {

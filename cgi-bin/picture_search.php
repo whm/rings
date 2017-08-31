@@ -279,7 +279,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
     echo "</table>\n";
   } else {
     if (isset($in_button_find)) {
-      echo "$sel<br>\n";
+      echo "$sel<br/>\n";
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";
       echo "Two Suggestions:\n";

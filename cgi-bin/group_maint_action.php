@@ -53,7 +53,6 @@ function mkin ($a_fld, $a_val, $in_type) {
 $now = date ('Y-m-d H:i:s');
 $in_date_last_maint = $now;
 $in_date_added = $now;
-$msg = '';
 
 // No spaces allowed in the identifier
 $in_uid = preg_replace ('/\s+/', '', $in_uid);
@@ -62,10 +61,6 @@ $in_uid = preg_replace ('/\s+/', '', $in_uid);
 $next_url      = "group_maint.php";
 $next_header   = "REFRESH: 0; URL=$next_url";
 $next_group_id = $in_group_id;
-
-// set update message area
-$ok                = 'color="#009900"';
-$warn              = 'color="#330000"';
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
@@ -100,7 +95,6 @@ if ( $update_flag ) {
     $cmd        = '';
     $update_cnt = 0;
 
-    $up_msg = '';
     for ($i=0; $i<$fld_cnt; $i++) {
         $fld_info = $result->fetch_field_direct($i);
         $db_fld   = $fld_info->name;
@@ -113,7 +107,7 @@ if ( $update_flag ) {
             $cmd .= "$comma $db_fld='$in_val' ";
             $comma = ',';
             $update_cnt++;
-            $up_msg .= "<font $ok>$db_fld updated.</font><br>";
+            sys_okay("$db_fld updated.");
         }
     }
 
@@ -122,7 +116,6 @@ if ( $update_flag ) {
         $sql_cmd = "UPDATE groups SET $cmd ";
         $sql_cmd .= "WHERE group_id = '$this_group'";
         $result = $DBH->query($sql_cmd);
-        $_SESSION['msg'] .= $up_msg;
     }
 
     // -- add people to group
@@ -137,7 +130,7 @@ if ( $update_flag ) {
             mkin ('date_added',      $in_date_added,      's');
             $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
             $result = $DBH->query($sql_cmd);
-            $_SESSION['msg'] .= "<font $ok>'$a_uid' added </font><br>";
+            sys_okay("'$a_uid' added");
         }
     }
 
@@ -149,7 +142,7 @@ if ( $update_flag ) {
             $sql_cmd .= "WHERE group_id='$in_group_id' ";
             $sql_cmd .= "AND uid='$a_uid' ";
             $result = $DBH->query($sql_cmd);
-            $_SESSION['msg'] .= "<font $ok>'$a_uid' removed </font><br>";
+            sys_okay("'$a_uid' removed");
         }
     }
 
@@ -165,7 +158,8 @@ if ( $update_flag ) {
     }
 
     if ( strlen($this_group) > 0) {
-        $_SESSION['msg'] .= "Group already exists!<br>New entry NOT Added.<br>";
+        msg_err("Group already exists!");
+        msg_err("New entry NOT Added.");
     } else {
 
         // -- create the group
@@ -178,7 +172,7 @@ if ( $update_flag ) {
         }
         $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";
         $result = $DBH->query($sql_cmd);
-        $_SESSION['msg'] .= "<font $ok>Group '$in_group_id' added </font><br>";
+        sys_okay("Group '$in_group_id' added");
 
         // -- add people to group
 
@@ -192,7 +186,7 @@ if ( $update_flag ) {
                 mkin ('date_added',      $in_date_added,      's');
                 $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
                 $result = $DBH->query($sql_cmd);
-                $_SESSION['msg'] .= "<font $ok>'$a_uid' added </font><br>";
+                sys_okay("'$a_uid' added");
             }
         }
     }
@@ -205,20 +199,18 @@ if ( $update_flag ) {
     $sql_cmd = "DELETE FROM groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        $_SESSION['msg'] .= "<font $ok>Group '$in_group_id' dropped ";
-        $_SESSION['msg'] .= "from people.</font><br>";
+        sys_msg("Group '$in_group_id' dropped from people.");
     } else {
-        $_SESSION['msg'] .= "Problem deleting $in_group_id<br>";
-        $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
+        sys_err("Problem deleting $in_group_id");
+        sys_err("Problem SQL: $sql_cmd");
     }
     $sql_cmd = "DELETE FROM picture_groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        $_SESSION['msg'] .= "<font $ok>Picture references dropped ";
-        $_SESSION['msg'] .= "from people.</font><br>";
+        sys_msg("Picture references dropped from people.");
     } else {
-        $_SESSION['msg'] .= "Problem deleting $in_group_id<br>";
-        $_SESSION['msg'] .= "Problem SQL: $sql_cmd<br>";
+        sys_err("Problem deleting $in_group_id");
+        sys_err("Problem SQL: $sql_cmd");
     }
     $next_group_id = 'CLEARFORM';
 

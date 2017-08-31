@@ -1,3 +1,11 @@
+picture-rings (2.20) UNRELEASED; urgency=medium
+
+  * Replace lots of <br> with <br/>.
+  * Correct problem in picture_sort_action preventing updates.
+  * Use sys_* and msg_* routines instead of setting session msg directly.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 31 Aug 2017 01:25:53 -0700
+
 picture-rings (2.19) unstable; urgency=medium
 
   * Correct duplicate detection in ring_picture_slide and in

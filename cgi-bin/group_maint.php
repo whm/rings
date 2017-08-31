@@ -40,7 +40,7 @@ if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
 }
 if ( isset($in_group_id) && !isset($row["group_id"]) ) {
-   $_SESSION['msg'] .= "Group '$in_group_id' not found.<br>\n";
+    msg_err("Group '$in_group_id' not found.");
     $fld_names = get_fld_names('groups');
     foreach ($fld_names as $db_fld) {
         $row[$db_fld] = '';
@@ -79,10 +79,6 @@ require ('page_top.php');
   <input type="submit" name="in_button_find" value="Find">
   </td>
 </tr>
-<?php 
-if (isset($_SESSION['msg'])) { 
-  if (strlen($_SESSION['msg'])>0) { 
-?>
 <tr><td bgcolor="#ffffff" align="center" colspan="2">
     <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
     </td>
@@ -95,6 +91,8 @@ if (isset($_SESSION['msg'])) {
 </form>
 
 <p> 
+<?php sys_display_msg(); ?>
+</p>
 
 <form name="group_data" 
       action="group_maint_action.php" 
@@ -205,7 +203,7 @@ if ($result) {
                 . "this.form.elements['in_newuids[]'], "
                 . 'in_ppe_values, '
                 . 'in_ppe_display);">' . "\n";
-            echo "  <br>\n";
+            echo "  <br/>\n";
             echo '  <select name="in_newuids[]" multiple>' . "\n";
         }
         $add_cnt++;
