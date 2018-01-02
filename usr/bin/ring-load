@@ -62,6 +62,7 @@ if (@ARGV) {
 for my $d (@dir_list) {
     if (-d $d) {
         my $a_fullname = File::Spec->rel2abs($d);
+        print "Adding $d to processing queue ...\n";
         queue_upload($a_fullname);
     } else {
         print "$d not a directory ... skipping\n"
