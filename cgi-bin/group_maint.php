@@ -83,10 +83,6 @@ require ('page_top.php');
     <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
     </td>
 </tr>
-<?php 
-  $_SESSION['msg'] = '';
-  } 
-}?>
 </table>
 </form>
 
