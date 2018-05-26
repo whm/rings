@@ -374,6 +374,9 @@ if ($row['grade'] == 'B') {
 } elseif ($row['grade'] == 'C') {
     $chk_c = 'CHECKED';
     $chk_a = '';
+} elseif ($row['grade'] == 'D') {
+    $chk_d = 'CHECKED';
+    $chk_a = '';
 }
 ?>
  <td align="right">Grade:</td>
@@ -383,6 +386,8 @@ if ($row['grade'] == 'B') {
              value="B" <?php echo $chk_b;?>>B &nbsp;&nbsp;
       <input type="radio" name="in_grade"
              value="C" <?php echo $chk_c;?>>C
+      <input type="radio" name="in_grade"
+             value="D" <?php echo $chk_c;?>>Duplicate
  </td>
 </tr>
 
