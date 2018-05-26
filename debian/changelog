@@ -3,6 +3,7 @@ picture-rings (2.22) unstable; urgency=medium
   * Back out of the k5start process.  It is to slow.
   * Correct issue with setting the admin flag from the czPrivielegeGroup
     attribute.
+  * Correct picture_maint_action updates.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 25 May 2018 23:36:25 -0700
 
