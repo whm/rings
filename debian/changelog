@@ -1,3 +1,18 @@
+picture-rings (2.22) unstable; urgency=medium
+
+  * Back out of the k5start process.  It is to slow.
+  * Correct issue with setting the admin flag from the czPrivielegeGroup
+    attribute.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 25 May 2018 23:36:25 -0700
+
+picture-rings (2.21) unstable; urgency=medium
+
+  * Use k5start to access files.  This makes it possible to access
+    files that are stored in AFS.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 22 Apr 2018 14:24:55 -0700
+
 picture-rings (2.20) UNRELEASED; urgency=medium
 
   * Replace lots of <br> with <br/>.

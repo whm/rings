@@ -70,8 +70,8 @@ if ($stmt->fetch()) {
 $stmt->close();
 
 if (empty($picture_lot)) {
-    syslog(LOG_ERR, "Picture lot was not returned for pid: $in_pid");
-    no_picture('Picture not available. (picture_log not found');
+    syslog(LOG_DEBUG, "Failed to find $pic_path");
+    no_picture('Picture not available. (picture_lot not found');
 }
 
 list($mime_type, $file_type) = get_picture_type($in_pid, $in_size);
@@ -80,11 +80,16 @@ list($pic_dir, $pic_path)
 if ($CONF['debug']) {
     syslog(LOG_INFO, "Opening file $pic_path");
 }
+#    header("Content-type: $mime_type");
+#    readfile($pic_path);
+#    system("/usr/bin/k5start -q -t -f /etc/service-rings.keytab service/rings -- /bin/cat $pic_path");
+#    flush();
 if (file_exists($pic_path)) {
     header("Content-type: $mime_type");
     readfile($pic_path);
     flush();
 } else {
+    syslog(LOG_DEBUG, "Failed to find $pic_path");
     no_picture('Picture not available. (file not found)');
 }
 ?>

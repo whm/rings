@@ -44,6 +44,8 @@ set_default('ring_admin',       'ring_admin');
 set_default('ring_admin_attr',  'czPrivilegeGroup');
 set_default('ring_admin_group', 'ring:admin');
 set_default('ring_id',          'rings');
+set_default('ring_keytab',      '/NOKEYTAB');
+set_default('ring_princ',       'service/rings');
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);
@@ -67,7 +69,9 @@ if (empty($_SESSION['msg'])) {
 }
 
 // Set the admin flag
-if (isset($_SESSION['ring_admin_group'])) {
+if (isset($_SESSION['ring_admin_group'])
+    && $_SESSION['ring_admin_group'] > 0)
+{
     $ring_admin_group = $_SESSION['ring_admin_group'];
 } else {
     $c = 1;
@@ -76,7 +80,7 @@ if (isset($_SESSION['ring_admin_group'])) {
         if (empty($_SERVER[$this_id])) {
             break;
         }
-        if ($_SERVER[$this_id] == 'ring:admin') {
+        if ($_SERVER[$this_id] == $CONF['ring_admin_group']) {
             $ring_admin_group = 1;
             break;
         }
