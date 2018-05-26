@@ -110,7 +110,6 @@ if ( $update_flag ) {
     $update_list[] = 'taken_by';
     $update_list[] = 'grade';
     $update_list[] = 'public';
-    $update_list[] = 'date_last_maint';
 
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
@@ -130,19 +129,24 @@ if ( $update_flag ) {
         $_SESSION["$sess_fld"] = $in_val;
 
         if (trim($in_val) != trim($row[$db_fld])) {
-            $cmd .= "$comma $db_fld=" . sql_quote($in_val,'s') . ' ';
-            $comma = ',';
+            $cmd .= "$comma $db_fld=" . sql_quote($in_val,'s');
+            $comma = ', ';
             $update_cnt++;
             sys_msg("$db_fld updated.");
         }
     }
 
-    if ($update_cnt>1) {
+    if ($update_cnt>0) {
         // Make the changes
-        $sql_cmd = "UPDATE pictures_information SET $cmd ";
+        $sql_cmd = "UPDATE pictures_information SET $cmd";
         $sql_cmd .= ', date_last_maint = NOW() ';
         $sql_cmd .= "WHERE pid = $in_pid ";
         $result = $DBH->query($sql_cmd);
+        if (!$result) {
+            sys_err('Update failed. See syslog for more information');
+            syslog(LOG_ERR, 'Problem SQL: ' . $sql_cmd);
+            syslog(LOG_ERR, 'SQL error: ' . $DBH->error);
+        }
     }
     $next_pid = $in_pid;
 
