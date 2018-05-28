@@ -17,9 +17,9 @@ $in_ring_next_date = get_request('in_ring_next_date');
 if (empty($_SESSION['display_grade'])) {
     $_SESSION['display_grade'] = 'A';
 }
-$grade_sel = "(gr.grade <= '".$_SESSION['display_grade']."' ";
-$grade_sel .= "OR gr.grade = '' ";
-$grade_sel .= "OR gr.grade IS NULL) ";
+$grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
+$grade_sel .= "OR p.grade = '' ";
+$grade_sel .= "OR p.grade IS NULL) ";
 
 ##############################################################################
 # Subroutines
@@ -38,14 +38,12 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
 
     # First handle pictures with the exact same date taken.
     # Select next picture by date
-    $sel = 'SELECT info.pid ';
-    $sel .= 'FROM pictures_information info ';
-    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-    $sel .= 'ON (gr.pid = info.pid) ';
-    $sel .= 'WHERE info.picture_date = ? ';
-    $sel .= 'AND info.pid > ? ';
+    $sel = 'SELECT p.pid ';
+    $sel .= 'FROM pictures_information p ';
+    $sel .= 'WHERE p.picture_date = ? ';
+    $sel .= 'AND p.pid > ? ';
     $sel .= 'AND ' . $grade_sel;
-    $sel .= 'ORDER BY info.picture_date, info.pid ';
+    $sel .= 'ORDER BY p.picture_date, p.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
@@ -68,13 +66,11 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
     }
 
     # Select next picture by date
-    $sel = 'SELECT info.pid ';
-    $sel .= 'FROM pictures_information info ';
-    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-    $sel .= 'ON (gr.pid = info.pid) ';
-    $sel .= 'WHERE info.picture_date > ? ';
+    $sel = 'SELECT p.pid ';
+    $sel .= 'FROM pictures_information p ';
+    $sel .= 'WHERE p.picture_date > ? ';
     $sel .= 'AND ' . $grade_sel;
-    $sel .= 'ORDER BY info.picture_date ';
+    $sel .= 'ORDER BY p.picture_date ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
@@ -111,14 +107,12 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     # date.
     $sel = 'SELECT det.pid ';
     $sel .= 'FROM picture_details det ';
-    $sel .= 'JOIN pictures_information info ';
-    $sel .= 'ON (info.pid = det.pid) ';
-    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'JOIN pictures_information p ';
+    $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
-    $sel .= 'AND info.picture_date = ? ';
+    $sel .= 'AND p.picture_date = ? ';
     $sel .= 'AND det.pid > ? ';
-    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
@@ -145,13 +139,11 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     # picture by date.
     $sel = 'SELECT det.pid ';
     $sel .= 'FROM picture_details det ';
-    $sel .= 'JOIN pictures_information info ';
-    $sel .= 'ON (info.pid = det.pid) ';
-    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'JOIN pictures_information p ';
+    $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
-    $sel .= 'AND info.picture_date > ? ';
-    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'AND p.picture_date > ? ';
+    $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
@@ -272,25 +264,11 @@ function showEdit(){
     getDom("editHelpDisplay").style.display = '';
 }
 
-function hideGrade(){
-    getDom("gradeHelpDisplay").style.display = 'none';
-}
-function showGrade(){
-    getDom("gradeHelpDisplay").style.display = '';
-}
-
 function hideReload(){
     getDom("reloadHelpDisplay").style.display = 'none';
 }
 function showReload(){
     getDom("reloadHelpDisplay").style.display = '';
-}
-
-function get_vote(idx,username) {
-    var win = window.open("get_vote.php?in_id="+idx+"&username="+username,
-                          "Give the Picture a Grade",
-                          "width=400,height=150,status=no");
-    return false;
 }
 
 function add_email_list(idx) {
@@ -321,12 +299,10 @@ if (!empty($_SERVER['REMOTE_USER'])) {
 if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sel = 'SELECT det.pid ';
     $sel .= 'FROM picture_details det ';
-    $sel .= 'JOIN pictures_information info ';
-    $sel .= 'ON (info.pid = det.pid) ';
-    $sel .= 'LEFT OUTER JOIN picture_grades gr ';
-    $sel .= 'ON (gr.pid = info.pid) ';
+    $sel .= 'JOIN pictures_information p ';
+    $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
-    $sel .= 'ORDER BY info.picture_date, det.pid ';
+    $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
@@ -367,7 +343,7 @@ if (!empty($in_ring_pid)) {
 
     $image_reference = '';
     $sel = "SELECT * ";
-    $sel .= "FROM pictures_information ";
+    $sel .= "FROM pictures_information p ";
     $sel .= "WHERE pid=$in_ring_pid ";
     if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND public='Y' ";
@@ -500,13 +476,6 @@ if (!empty($in_ring_pid)) {
         $loggedInUser = $_SERVER['REMOTE_USER'];
     }
     if (!empty($loggedInUser)) {
-        echo '<img src="/rings-images/icon-grade.png"  border="0" ';
-        echo "onClick=\"get_vote($this_pid,'$loggedInUser');\" ";
-        echo 'onMouseOver="showGrade();" onMouseOut="hideGrade();" ';
-        echo 'alt="Give this picture a grade.">';
-
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
         echo '<img src="/rings-images/icon-mail-send.png" border="0" ';
         echo "onClick=\"add_email_list($this_pid);\" ";
         echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
@@ -547,10 +516,6 @@ if (!empty($in_ring_pid)) {
     echo "Edit Picture Ring Details\n";
     echo "</p>\n";
 
-    echo '<p id="gradeHelpDisplay">'."\n";
-    echo "Set the Grade for this picture.\n";
-    echo "</p>\n";
-
     echo '<p id="reloadHelpDisplay">'."\n";
     echo "Re-Load a picture from a file.\n";
     echo "</p>\n";
@@ -573,7 +538,6 @@ hideMail();
 hideBig();
 hideSelect();
 hideEdit();
-hideGrade();
 hideReload();
 
 <?php if ($in_slide_show > 0) {
