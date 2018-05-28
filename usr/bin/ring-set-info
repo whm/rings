@@ -41,6 +41,10 @@ sub read_and_update {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     while (my $row = $sth->fetchrow_hashref) {
         push @pid_list, $row->{pid};
     }
@@ -78,6 +82,10 @@ sub read_and_update {
 
         my $sth = $DBH->prepare($sel);
         $sth->execute();
+        if ($sth->err) {
+            print("INFO: problem sql: $sel");
+            die "ERROR: $sth->err - $sth->errstr \n";
+        }
         while (my $row = $sth->fetchrow_hashref) {
             my @blob;
             $blob[0] = $row->{picture};
@@ -147,6 +155,10 @@ sub read_and_update {
                         $this_pic_size, $this_shutterspeed, sql_datetime(),
                         $thisPID,
                     );
+                    if ($sth->err) {
+                        print("INFO: problem sql: $sel");
+                        die "ERROR: $sth->err - $sth->errstr \n";
+                    }
                 } else {
                     print "For pid $thisPID proposing to set:\n";
                     print "    Camera: $camera\n";

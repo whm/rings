@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2018, Bill MacAllister <bill@ca-zephyr.org>
 # File: Common.pm
 # Description: This module is used by the Rings gallery application.
 
@@ -77,7 +77,6 @@ sub db_connect {
       . $CONF->db_host . ';'
       . 'database='
       . $CONF->db_name;
-    my %attr = (PrintError => 1, RaiseError => 1);
     $DBH = DBI->connect($dbi, $CONF->db_user, $CONF->db_password, \%attr)
       or die "ERROR: Can't connect to database $dbi for read\n";
     $DBH_UPDATE
@@ -288,6 +287,11 @@ sub get_next_id {
     dbg($sel) if $CONF->debug;
     my $sth = $DBH->prepare($sel);
     $sth->execute($id);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        print("INFO: id = $id");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     my $cnt = 0;
     while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
@@ -306,6 +310,11 @@ sub get_next_id {
         if ($CONF->update) {
             my $sth_update = $DBH_UPDATE->prepare($cmd);
             $sth_update->execute($id, $return_number);
+            if ($sth_update->err) {
+                print("INFO: problem sql: $cmd");
+                print("INFO: id = $id, next_number = $next_number");
+                die "ERROR: $sth_update->err : $sth_update->errstr \n";
+            }
         }
     }
 
@@ -502,6 +511,12 @@ sub store_meta_data {
         dbg($sel);
     }
     $sth->execute($pid);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        print("INFO: pid = $pid");
+        die "ERROR: $sth->err : $sth->errstr \n";
+    }
+
     my $row_found;
     if (my $row = $sth->fetchrow_hashref) {
         my $cmd = "UPDATE pictures_information SET ";
@@ -524,6 +539,11 @@ sub store_meta_data {
             $meta{'ring_shutterspeed'}, $meta{'ring_fstop'},
             $pid,
         );
+        if ($sth_update->err) {
+            print("INFO: problem sql: $cmd");
+            print("INFO: pid = $pid");
+            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+        }
     } else {
         my $cmd = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?, ';
@@ -561,6 +581,11 @@ sub store_meta_data {
             $CONF->default_display_grade,
             $CONF->default_public,
         );
+        if ($sth_update->err) {
+            print("INFO: problem sql: $cmd");
+            print("INFO: pid = $pid");
+            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+        }
     }
 
     return;
@@ -593,6 +618,11 @@ sub create_picture {
         $max_y = $row->{max_height};
         $max_x = $row->{max_width};
         $table = $row->{picture_table};
+    }
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        print("INFO: size_id = $this_size_id");
+        die "ERROR: $sth->err - $sth->errstr \n";
     }
     if (!$table) {
         msg('fatal', "Invalid size id: $this_size_id");
@@ -668,6 +698,11 @@ sub create_picture {
         $signature, $format,    $compression, $this_type, $width,
         $height,    $ret_size,  $signature,   $format,    $compression,
     );
+    if ($sth_update->err) {
+        print("INFO: problem sql: $cmd");
+        print("INFO: pid = $pid");
+        die "ERROR: $sth_update->err - $sth_update->errstr \n";
+    }
 
     return $ret_pic;
 }
@@ -751,6 +786,11 @@ sub check_picture_size {
         dbg($sel);
     }
     $sth->execute($this_id);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        print("INFO: size_id = $this_id");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     my $size_found;
     while (my $row = $sth->fetchrow_hashref) {
         $size_found++;
@@ -805,6 +845,10 @@ sub get_picture_sizes {
         dbg($sel);
     }
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     while (my $row = $sth->fetchrow_hashref) {
         for my $f (@flds) {
             $psizes{ $row->{size_id} }{$f} = ${$row}{$f};
@@ -824,6 +868,10 @@ sub get_picture_types {
         dbg($sel);
     }
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     while (my $row = $sth->fetchrow_hashref) {
         $mime_types{ $row->{mime_type} } = $row->{file_type};
     }
@@ -877,6 +925,10 @@ sub queue_error {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action, $msg, $msg);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     return;
 }
 
@@ -897,6 +949,10 @@ sub queue_action_set {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action, 'PENDING', $dt, $dt, 'PENDING', $dt);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     return;
 }
@@ -916,6 +972,10 @@ sub queue_action_reset {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     return;
 }
@@ -937,6 +997,10 @@ sub queue_upload {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($path, 'PENDING', $dt, $dt, 'PENDING', $dt);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     return;
 }
@@ -955,6 +1019,10 @@ sub queue_upload_reset {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($path);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     return;
 }
@@ -977,6 +1045,10 @@ sub queue_upload_error {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute($path, $msg, $msg);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     return;
 }
 
@@ -1014,6 +1086,10 @@ sub validate_mime_type {
     }
     my $sth = $DBH->prepare($sel);
     $sth->execute($mime_type);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     my $file_type;
     if (my $row = $sth->fetchrow_hashref('NAME_lc')) {
@@ -1041,7 +1117,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2018, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

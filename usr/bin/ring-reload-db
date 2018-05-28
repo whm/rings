@@ -199,6 +199,10 @@ sub update_db {
     my $cnt = 0;
     my $this_pid;
     $sth->execute($this_search_target, $this_camera, $this_pop);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     while (my $row = $sth->fetchrow_hashref) {
         $cnt++;
         $this_pid = $row->{pid};
@@ -230,6 +234,10 @@ sub update_db {
     if ($opt_update) {
         msg("Updating $this_pid\n");
         $sth_update->execute($this_picture, $this_pid);
+        if ($sth_update->err) {
+            print("INFO: problem sql: $cmd");
+            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+        }
     } else {
         msg("Proposing to update $this_pid\n");
     }

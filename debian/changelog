@@ -4,6 +4,9 @@ picture-rings (2.22) unstable; urgency=medium
   * Correct issue with setting the admin flag from the czPrivielegeGroup
     attribute.
   * Correct picture_maint_action updates.
+  * Change the handling for mysql errors.  Instead of allowing the
+    errors to be handled by DBI, test for status and print out
+    additional information.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 25 May 2018 23:36:25 -0700
 
