@@ -190,6 +190,10 @@ sub write_html {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     my @names;
     my $name_cnt = 0;
 
@@ -343,6 +347,10 @@ sub read_and_write {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     $sth->finish();
 
     # -- Loop through the pictures
@@ -361,6 +369,10 @@ sub read_and_write {
 
     my $sth = $DBH->prepare($sel);
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     my $hfile_index = 'index.html';
     my $index_html  = '';
@@ -428,6 +440,10 @@ sub read_and_write {
 
         my $img_sth = $DBH->prepare($img_sel);
         $img_sth->execute();
+        if ($img_sth->err) {
+            print("INFO: problem sql: $img_sel");
+            die "ERROR: $img_sth->err - $img_sth->errstr \n";
+        }
 
         if (my $img_row = $img_sth->fetchrow_hashref) {
 

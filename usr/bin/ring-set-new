@@ -68,6 +68,10 @@ if ($opt_debug) {
     dbg($sel);
 }
 $sth->execute();
+if ($sth->err) {
+    print("INFO: problem sql: $sel");
+    die "ERROR: $sth->err - $sth->errstr \n";
+}
 
 my @pidList;
 while (my $row = $sth->fetchrow_hashref) {
@@ -83,6 +87,10 @@ my $sth_update = $DBH_UPDATE->prepare($cmd);
 
 foreach my $i (@pidList) {
     $sth_update->execute('new', $i);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 }
 
 exit;

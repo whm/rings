@@ -83,6 +83,10 @@ sub save_file {
         }
         my $sth = $DBH->prepare($sql);
         $sth->execute($pic{ring_signature});
+        if ($sth->err) {
+            print("INFO: problem sql: $sql");
+            die "ERROR: $sth->err - $sth->errstr \n";
+        }
         while (my $row = $sth->fetchrow_hashref()) {
             $dup_cnt++;
             msg('info', "File $a_file duplicates $row->{pid}");
@@ -106,6 +110,10 @@ sub save_file {
                 $pic{'ring_shutterspeed'},
                 $pic{'ring_fstop'}
             );
+            if ($sth->err) {
+                print("INFO: problem sql: $sel");
+                die "ERROR: $sth->err - $sth->errstr \n";
+            }
 
             while (my $row = $sth->fetchrow_hashref()) {
                 if ($row->{raw_picture_size} > 0) {
@@ -160,6 +168,10 @@ sub get_directories {
     }
     my $sth = $DBH->prepare($sql);
     $sth->execute();
+    if ($sth->err) {
+        print("INFO: problem sql: $sql");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
     while (my $row = $sth->fetchrow_hashref()) {
         push @dir_list, $row->{path};
     }

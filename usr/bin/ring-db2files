@@ -41,6 +41,11 @@ sub export_picture {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
 
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
+
     my $cnt = 0;
     if (my $row = $sth->fetchrow_hashref) {
         my $file_type = $row->{file_type};
@@ -89,6 +94,10 @@ sub read_and_write {
     }
 
     $sth->execute(@sql_params);
+    if ($sth->err) {
+        print("INFO: problem sql: $sel");
+        die "ERROR: $sth->err - $sth->errstr \n";
+    }
 
     while (my $row = $sth->fetchrow_hashref) {
         print "Processing $row->{'picture_lot'} $row->{'pid'}\n";
