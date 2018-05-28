@@ -41,8 +41,7 @@ sub export_picture {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     my $cnt = 0;
@@ -94,8 +93,7 @@ sub read_and_write {
 
     $sth->execute(@sql_params);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     while (my $row = $sth->fetchrow_hashref) {

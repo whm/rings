@@ -53,9 +53,8 @@ sub get_pids {
         my $sth = $DBH->prepare($sel);
         $sth->execute($action);
         if ($sth->err) {
-            print("INFO: problem sql: $sel");
             print("INFO: action = $action");
-            die "ERROR: $sth->err - $sth->errstr \n";
+            sql_die($sel, $sth->err, $sth->errstr);
         }
         while (my $row = $sth->fetchrow_hashref) {
             push @pid_list, $row->{pid};
@@ -72,9 +71,8 @@ sub get_pids {
         my $sth = $DBH->prepare($sel);
         $sth->execute($pid_start, $pid_end);
         if ($sth->err) {
-            print("INFO: problem sql: $sel");
             print("INFO: pid_start = $pid_start, pid_end = $pid_end");
-            die "ERROR: $sth->err - $sth->errstr \n";
+            sql_die($sel, $sth->err, $sth->errstr);
         }
         while (my $row = $sth->fetchrow_hashref) {
             push @pid_list, $row->{pid};
@@ -114,9 +112,8 @@ sub process_pids {
         my $sth = $DBH->prepare($sel);
         $sth->execute($pid);
         if ($sth->err) {
-            print("INFO: problem sql: $sel");
             print("INFO: pid = $pid");
-            die "ERROR: $sth->err - $sth->errstr \n";
+            sql_die($sel, $sth->err, $sth->errstr);
         }
         my $pic_lot;
         my $source_file;

@@ -69,8 +69,7 @@ if ($opt_debug) {
 }
 $sth->execute();
 if ($sth->err) {
-    print("INFO: problem sql: $sel");
-    die "ERROR: $sth->err - $sth->errstr \n";
+    sql_die($sel, $sth->err, $sth->errstr);
 }
 
 my @pidList;
@@ -88,8 +87,7 @@ my $sth_update = $DBH_UPDATE->prepare($cmd);
 foreach my $i (@pidList) {
     $sth_update->execute('new', $i);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($cmd, $sth_update->err, $sth_update->errstr);
     }
 }
 
