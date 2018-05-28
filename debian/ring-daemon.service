@@ -1,5 +1,5 @@
 [Unit]
-Description=Ring Resize
+Description=Ring Load Daemon
 After=network.target
 
 [Service]
