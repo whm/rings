@@ -82,8 +82,10 @@ if (!empty($in_grade)) {
 if (empty($in_grade)) {
     $in_grade = 'A';
 }
-$chk_a = $chk_b = $chk_c = '';
-if ($in_grade == 'C') {
+$chk_a = $chk_b = $chk_c = $chk_d = '';
+if ($in_grade == 'D') {
+    $chk_d = 'CHECKED';
+} elseif ($in_grade == 'C') {
     $chk_c = 'CHECKED';
 } elseif ($in_grade == 'B') {
     $chk_b = 'CHECKED';
@@ -279,6 +281,9 @@ $stmt->close();
          &nbsp;&nbsp;
          <input type="radio" <?php echo $chk_c;?> name="in_grade"
                 value="C">A's, B's, and C's
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_d;?> name="in_grade"
+                value="D">All
     </td>
     </tr>
 
