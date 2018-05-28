@@ -54,8 +54,7 @@ sub read_and_update {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid_start, $pid_end);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref) {
         my $pid       = $row->{pid};
@@ -96,8 +95,7 @@ sub read_and_update {
         my $sth_update = $DBH->prepare($cmd);
         $sth_update->execute($size, $signature, $pid);
         if ($sth_update->err) {
-            print("INFO: problem sql: $cmd");
-            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
 
         # Update signature, width, height, size, format, compression
@@ -120,8 +118,7 @@ sub read_and_update {
             $format,    $compression, $pid
         );
         if ($sth_update->err) {
-            print("INFO: problem sql: $cmd");
-            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
 
         # copy a backup just in case

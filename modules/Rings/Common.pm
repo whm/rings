@@ -53,6 +53,7 @@ BEGIN {
       queue_upload_reset
       set_new_picture
       sql_datetime
+      sql_die
       sql_format_datetime
       store_meta_data
       trim
@@ -287,9 +288,8 @@ sub get_next_id {
     my $sth = $DBH->prepare($sel);
     $sth->execute($id);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
         print("INFO: id = $id");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     my $cnt = 0;
@@ -310,9 +310,8 @@ sub get_next_id {
             my $sth_update = $DBH_UPDATE->prepare($cmd);
             $sth_update->execute($id, $return_number);
             if ($sth_update->err) {
-                print("INFO: problem sql: $cmd");
                 print("INFO: id = $id, next_number = $return_number");
-                die "ERROR: $sth_update->err : $sth_update->errstr \n";
+                sql_die($cmd, $sth_update->err, $sth_update->errstr);
             }
         }
     }
@@ -511,9 +510,8 @@ sub store_meta_data {
     }
     $sth->execute($pid);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
         print("INFO: pid = $pid");
-        die "ERROR: $sth->err : $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     my $row_found;
@@ -539,9 +537,8 @@ sub store_meta_data {
             $pid,
         );
         if ($sth_update->err) {
-            print("INFO: problem sql: $cmd");
             print("INFO: pid = $pid");
-            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
     } else {
         my $cmd = "INSERT INTO pictures_information SET ";
@@ -581,9 +578,8 @@ sub store_meta_data {
             $CONF->default_public,
         );
         if ($sth_update->err) {
-            print("INFO: problem sql: $cmd");
             print("INFO: pid = $pid");
-            die "ERROR: $sth_update->err - $sth_update->errstr \n";
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
     }
 
@@ -613,15 +609,14 @@ sub create_picture {
         dbg($sel);
     }
     $sth->execute($this_size_id);
+    if ($sth->err) {
+        print("INFO: size_id = $this_size_id");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
     if (my $row = $sth->fetchrow_hashref) {
         $max_y = $row->{max_height};
         $max_x = $row->{max_width};
         $table = $row->{picture_table};
-    }
-    if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        print("INFO: size_id = $this_size_id");
-        die "ERROR: $sth->err - $sth->errstr \n";
     }
     if (!$table) {
         msg('fatal', "Invalid size id: $this_size_id");
@@ -698,12 +693,22 @@ sub create_picture {
         $height,    $ret_size,  $signature,   $format,    $compression,
     );
     if ($sth_update->err) {
-        print("INFO: problem sql: $cmd");
         print("INFO: pid = $this_pid");
-        die "ERROR: $sth_update->err - $sth_update->errstr \n";
+        sql_die($cmd, $sth_update->err, $sth_update->errstr);
     }
 
     return $ret_pic;
+}
+
+# ------------------------------------------------------------------------
+# Print sql error message and die
+
+sub sql_die {
+    my ($sql, $errno, $err) = @_;
+    print("INFO: problem sql: $sql\n");
+    print("ERROR: $errno - $err\n");
+    die "FATAL: SQL error\n";
+    return;
 }
 
 # ------------------------------------------------------------------------
@@ -786,9 +791,8 @@ sub check_picture_size {
     }
     $sth->execute($this_id);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
         print("INFO: size_id = $this_id");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     my $size_found;
     while (my $row = $sth->fetchrow_hashref) {
@@ -845,8 +849,7 @@ sub get_picture_sizes {
     }
     $sth->execute();
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref) {
         for my $f (@flds) {
@@ -868,8 +871,7 @@ sub get_picture_types {
     }
     $sth->execute();
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref) {
         $mime_types{ $row->{mime_type} } = $row->{file_type};
@@ -925,8 +927,7 @@ sub queue_error {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action, $msg, $msg);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     return;
 }
@@ -949,8 +950,7 @@ sub queue_action_set {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action, 'PENDING', $dt, $dt, 'PENDING', $dt);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     return;
@@ -972,8 +972,7 @@ sub queue_action_reset {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid, $action);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     return;
@@ -997,8 +996,7 @@ sub queue_upload {
     my $sth = $DBH->prepare($sel);
     $sth->execute($path, 'PENDING', $dt, $dt, 'PENDING', $dt);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     return;
@@ -1019,8 +1017,7 @@ sub queue_upload_reset {
     my $sth = $DBH->prepare($sel);
     $sth->execute($path);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     return;
@@ -1045,8 +1042,7 @@ sub queue_upload_error {
     my $sth = $DBH->prepare($sel);
     $sth->execute($path, $msg, $msg);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
     return;
 }
@@ -1086,8 +1082,7 @@ sub validate_mime_type {
     my $sth = $DBH->prepare($sel);
     $sth->execute($mime_type);
     if ($sth->err) {
-        print("INFO: problem sql: $sel");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sel, $sth->err, $sth->errstr);
     }
 
     my $file_type;

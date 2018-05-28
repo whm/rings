@@ -84,8 +84,7 @@ sub save_file {
         my $sth = $DBH->prepare($sql);
         $sth->execute($pic{ring_signature});
         if ($sth->err) {
-            print("INFO: problem sql: $sql");
-            die "ERROR: $sth->err - $sth->errstr \n";
+            sql_die($sql, $sth->err, $sth->errstr);
         }
         while (my $row = $sth->fetchrow_hashref()) {
             $dup_cnt++;
@@ -111,8 +110,7 @@ sub save_file {
                 $pic{'ring_fstop'}
             );
             if ($sth->err) {
-                print("INFO: problem sql: $sel");
-                die "ERROR: $sth->err - $sth->errstr \n";
+                sql_die($sel, $sth->err, $sth->errstr);
             }
 
             while (my $row = $sth->fetchrow_hashref()) {
@@ -169,8 +167,7 @@ sub get_directories {
     my $sth = $DBH->prepare($sql);
     $sth->execute();
     if ($sth->err) {
-        print("INFO: problem sql: $sql");
-        die "ERROR: $sth->err - $sth->errstr \n";
+        sql_die($sql, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref()) {
         push @dir_list, $row->{path};
