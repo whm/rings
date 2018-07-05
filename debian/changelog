@@ -1,3 +1,9 @@
+picture-rings (2.23) unstable; urgency=medium
+
+  * Trap for zero length image files.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 04 Jul 2018 22:44:43 -0700
+
 picture-rings (2.22) unstable; urgency=medium
 
   * Back out of the k5start process.  It is to slow.
