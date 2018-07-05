@@ -69,8 +69,30 @@ sub save_file {
     my @dirs  = File::Spec->splitdir($a_dirlist);
     my $a_lot = normalize_picture_lot($dirs[-1]);
 
-    my $blob = read_file("$a_file", binmode => ':raw');
+    my $blob;
+    if ($CONF->debug) {
+        dbg("Reading file: $a_file");
+    }
+    eval {
+        $blob = read_file("$a_file", binmode => ':raw');
+	1;
+    } or do {
+        my $e = $@;
+        return $e;
+    };
+    my $blob_size = length($blob);
+    if ($CONF->debug) {
+        dbg("$a_file size $blob_size");
+    }
+    if ($blob_size < 1) {
+        return "Zero length file $a_file";
+    }
+
+    # Get meta data
     my %pic = get_meta_data($blob);
+    if ($CONF->debug) {
+        dbg("Done reading file and meta data from: $a_file");
+    }
 
     # Check for duplicate picture
     if (!$opt_force) {
