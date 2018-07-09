@@ -69,7 +69,8 @@ if (empty($_SESSION['msg'])) {
 }
 
 // Set the admin flag
-if (isset($_SESSION['ring_admin_group'])
+$ring_admin_group = '';
+if (! empty($_SESSION['ring_admin_group'])
     && $_SESSION['ring_admin_group'] > 0)
 {
     $ring_admin_group = $_SESSION['ring_admin_group'];
@@ -81,7 +82,7 @@ if (isset($_SESSION['ring_admin_group'])
             break;
         }
         if ($_SERVER[$this_id] == $CONF['ring_admin_group']) {
-            $ring_admin_group = 1;
+            $ring_admin_group = $CONF['ring_admin_group'];
             break;
         }
         $c = $c + 1;
