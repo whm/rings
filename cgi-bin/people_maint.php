@@ -151,7 +151,7 @@ require ('page_top.php');
  <td> <?php print $row["date_last_maint"]; ?> </td>
 </tr>
 <tr>
- <td align="right">Date Last Added:</td>
+ <td align="right">Date Added:</td>
  <td> <?php print $row["date_added"]; ?> </td>
 </tr>
 <tr><td colspan="2">
