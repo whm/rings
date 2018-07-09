@@ -36,7 +36,7 @@ if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
 }
 if ( isset($in_uid) && !isset($row["uid"]) ) {
-    $_SESSION['msg'] .= "Person '$in_uid' not found.<br>\n";
+    sys_err("Person '$in_uid' not found.");
     $fld_names = get_fld_names('people_or_places');
     foreach ($fld_names as $db_fld) {
         $row[$db_fld] = '';
@@ -73,20 +73,11 @@ require ('page_top.php');
   <input type="submit" name="in_button_find" value="Find">
   </td>
 </tr>
-<?php
-if (isset($_SESSION['msg'])) {
-?>
-<tr><td bgcolor="#ffffff" align="center" colspan="2">
-    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
-    </td>
-</tr>
-<?php
-  $_SESSION['msg'] = '';
-}?>
 </table>
 </form>
 
 <p>
+<?php sys_display_msg(); ?>
 
 <form name="person_data"
       action="people_maint_action.php"
