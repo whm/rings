@@ -21,7 +21,6 @@ $in_button_add      = get_request('in_button_add');
 $in_button_update   = get_request('in_button_update');
 $in_button_delete   = get_request('in_button_delete');
 
-    sys_err("in_button_add: $in_button_add");
 //-------------------------------------------------------------
 // construct flds and vals for an insert
 //
@@ -126,7 +125,7 @@ if ( $update_flag ) {
         }
     }
 
-    if ($update_cnt>1) {
+    if ($update_cnt>0) {
         // Make the changes
         $sql_cmd = "UPDATE people_or_places SET $cmd ";
         $sql_cmd .= ', date_last_maint = NOW() ';
@@ -157,28 +156,44 @@ if ( $update_flag ) {
     if ( strlen($this_user) > 0) {
         sys_err("Person already exists!<br>New entry NOT Added.");
     } else {
-        $flds = '';
-        $vals = '';
+        $comma = '';
+        $cmd = '';
+        $update_cnt = 0;
+
+        $update_list[] = 'uid';
+        $update_list[] = 'auth_uid';
+        $update_list[] = 'cn';
+        $update_list[] = 'display_name';
+        $update_list[] = 'description';
+        $update_list[] = 'visibility';
+    
         $fld_names = get_fld_names('people_or_places');
         foreach ($fld_names as $db_fld) {
-            if ($db_fld == "date_last_maint") {continue;}
-            if ($db_fld == "date_added")      {continue;}
-            $in_val = trim(get_request("in_$db_fld"));
-            if ( get_magic_quotes_gpc() ) {
-                $in_val = stripslashes($in_val);
+            $fld_add_flag = 0;
+            foreach ($update_list as $this_name) {
+                if ($this_name == $db_fld) {
+                    $fld_add_flag = 1;
+                }
             }
-            mkin ($db_fld, $in_val, 's');
-        }
+            if ($fld_add_flag == 0) {continue;}
+            $in_val = trim(stripslashes(get_request("in_$db_fld")));
 
-        $sql_cmd = "INSERT INTO people_or_places ($flds) VALUES ($vals)";
-        $result = $DBH->query($sql_cmd);
-        if ($result) {
-            sys_msg("Person '$in_uid' added to people.");
-        } else {
-            sys_err("Problem adding $in_uid");
-            sys_err("Problem SQL: $sql_cmd");
-            sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+            if (trim($in_val) != trim($row[$db_fld])) {
+                $cmd .= "$comma $db_fld=" . sql_quote($in_val,'s');
+                $comma = ', ';
+                $update_cnt++;
+                sys_msg("$db_fld added.");
+            }
         }
+    }
+    $sql_cmd = "INSERT INTO people_or_places SET $cmd";
+    $sql_cmd .= ', date_last_maint = NOW() ';
+    $sql_cmd .= ', date_added = NOW() ';
+    $result = $DBH->query($sql_cmd);
+    if (!$result) {
+        sys_err('Add failed. See syslog for more information');
+        syslog(LOG_ERR, 'Problem SQL: ' . $sql_cmd);
+        syslog(LOG_ERR, 'SQL error: ' . $DBH->error);
     }
     $next_uid = $in_uid;
 
