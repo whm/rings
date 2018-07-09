@@ -23,29 +23,6 @@ $in_button_del          = get_request('in_button_del');
 $in_clear_cache         = get_request('in_clear_cache');
 
 //-------------------------------------------------------------
-// construct flds and vals for an insert
-//
-//  $in_type == "n" is a number
-//  $in_type != "n" anything else is a string
-
-function mkin ($a_fld, $a_val, $in_type) {
-
-    global $flds, $vals;
-
-    $a_val = trim ($a_val);
-    $c = "";
-    if (strlen($flds) > 0) {$c = ",";}
-    $flds = $flds . $c . $a_fld;
-    if ( $in_type != "n" ) {
-        $vals = $vals . $c . sql_quote($a_val, $in_type);
-    } else {
-        $vals = $vals . $c . $a_val;
-    }
-
-    return;
-}
-
-//-------------------------------------------------------------
 // quote a value for storage
 //
 //  $in_type == "n" is a number
@@ -70,10 +47,6 @@ $in_pid = preg_replace ('/\s+/', '', $in_pid);
 // how to get back
 $next_url    = "picture_maint.php";
 $next_header = "REFRESH: 0; URL=$next_url";
-
-// set update message area
-$ok   = 'color="#009900"';
-$warn = 'color="#330000"';
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
