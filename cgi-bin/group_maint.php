@@ -22,7 +22,7 @@ $in_button_delete     = get_request('in_button_delete');
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-if (isset($in_group_id)) {
+if (!empty($in_group_id)) {
     if ($in_group_id == 'CLEARFORM') {
         $add_flag = 1;
         unset ($in_group_id);
@@ -39,7 +39,7 @@ $result = $DBH->query ($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
 }
-if ( isset($in_group_id) && !isset($row["group_id"]) ) {
+if ( !empty($in_group_id) && empty($row["group_id"]) ) {
     msg_err("Group '$in_group_id' not found.");
     $fld_names = get_fld_names('groups');
     foreach ($fld_names as $db_fld) {
@@ -78,10 +78,6 @@ require ('page_top.php');
   <td align="center" colspan="2">
   <input type="submit" name="in_button_find" value="Find">
   </td>
-</tr>
-<tr><td bgcolor="#ffffff" align="center" colspan="2">
-    <font color="#ff0000"><?php print $_SESSION['msg'];?></font>
-    </td>
 </tr>
 </table>
 </form>
@@ -135,14 +131,14 @@ require ('page_top.php');
 <?php
 
 $people_cnt = 0;
-if (strlen($in_group_id) > 0) {
+if (!empty($in_group_id)) {
     $cmd = "SELECT g.uid uid, ";
     $cmd .= "p.display_name name ";
     $cmd .= "FROM picture_groups g ";
     $cmd .= "LEFT OUTER JOIN people_or_places p ";
     $cmd .= "ON (g.uid = p.uid) "; 
     $cmd .= "WHERE g.group_id = '$in_group_id' ";
-    $cmd .= "ORDER BY p.display_name ";
+    $cmd .= "ORDER BY name ";
     $result = $DBH->query ($cmd);
     if ($result) {
         while ($link_row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -184,7 +180,7 @@ $result = $DBH->query ($cmd);
 if ($result) {
     while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
         $a_uid = trim($person_row["uid"]);
-        if ( isset( $found["$a_uid"] ) ) {
+        if ( !empty( $found["$a_uid"] ) ) {
             continue;
         }
         $a_name = $person_row["display_name"];

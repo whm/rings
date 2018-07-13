@@ -1,8 +1,9 @@
 picture-rings (2.23) unstable; urgency=medium
 
   * Trap for zero length image files.
+  * Correct handling of empty groups in group maintenance.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 04 Jul 2018 22:44:43 -0700
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 12 Jul 2018 23:38:33 -0700
 
 picture-rings (2.22) unstable; urgency=medium
 
