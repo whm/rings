@@ -107,7 +107,7 @@ if ( $update_flag ) {
             $cmd .= "$comma $db_fld='$in_val' ";
             $comma = ',';
             $update_cnt++;
-            sys_okay("$db_fld updated.");
+            msg_okay("$db_fld updated.");
         }
     }
 
@@ -130,7 +130,7 @@ if ( $update_flag ) {
             mkin ('date_added',      $in_date_added,      's');
             $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
             $result = $DBH->query($sql_cmd);
-            sys_okay("'$a_uid' added");
+            msg_okay("'$a_uid' added");
         }
     }
 
@@ -142,7 +142,7 @@ if ( $update_flag ) {
             $sql_cmd .= "WHERE group_id='$in_group_id' ";
             $sql_cmd .= "AND uid='$a_uid' ";
             $result = $DBH->query($sql_cmd);
-            sys_okay("'$a_uid' removed");
+            msg_okay("'$a_uid' removed");
         }
     }
 
@@ -172,7 +172,7 @@ if ( $update_flag ) {
         }
         $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";
         $result = $DBH->query($sql_cmd);
-        sys_okay("Group '$in_group_id' added");
+        msg_okay("Group '$in_group_id' added");
 
         // -- add people to group
 
@@ -186,7 +186,7 @@ if ( $update_flag ) {
                 mkin ('date_added',      $in_date_added,      's');
                 $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
                 $result = $DBH->query($sql_cmd);
-                sys_okay("'$a_uid' added");
+                msg_okay("'$a_uid' added");
             }
         }
     }
@@ -199,18 +199,18 @@ if ( $update_flag ) {
     $sql_cmd = "DELETE FROM groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        sys_msg("Group '$in_group_id' dropped from people.");
+        msg_msg("Group '$in_group_id' dropped from people.");
     } else {
-        sys_err("Problem deleting $in_group_id");
-        sys_err("Problem SQL: $sql_cmd");
+        msg_err("Problem deleting $in_group_id");
+        msg_err("Problem SQL: $sql_cmd");
     }
     $sql_cmd = "DELETE FROM picture_groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        sys_msg("Picture references dropped from people.");
+        msg_msg("Picture references dropped from people.");
     } else {
-        sys_err("Problem deleting $in_group_id");
-        sys_err("Problem SQL: $sql_cmd");
+        msg_err("Problem deleting $in_group_id");
+        msg_err("Problem SQL: $sql_cmd");
     }
     $next_group_id = 'CLEARFORM';
 
