@@ -34,61 +34,81 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
     global $DBH;
     global $grade_sel;
 
-    $next_pid = 0;
+    $rname = 'get_next_pic_by_date';
+    $loop_limit = 500;
+    $i = 0;
+    while ($i < $loop_limit) {
+        $next_pid = 0;
+        # First handle pictures with the exact same date taken.
+        $sel = 'SELECT p.pid ';
+        $sel .= 'FROM pictures_information p ';
+        $sel .= 'WHERE p.picture_date = ? ';
+        $sel .= 'AND p.pid > ? ';
+        $sel .= 'AND ' . $grade_sel;
+        $sel .= 'ORDER BY p.picture_date, p.pid ';
+        $sel .= 'LIMIT 0,1 ';
+        if (!$sth = $DBH->prepare($sel)) {
+            sys_err("Prepare failed ($rname exact): "
+                    . $DBH->error . '(' . $DBH->errno . ')');
+            sys_err("Problem statement: $sel");
+            return 0;
+        }
+        $sth->bind_param('si', $this_picture_date, $thisPID);
+        if (!$sth->execute()) {
+            sys_err('Execute failed ($rname): '
+                    . $DBH->error . '(' . $DBH->errno . ')');
+            sys_err("Problem statement: $cmd");
+            return 0;
+        }
+        $sth->bind_result($p1);
+        if ($sth->fetch()) {
+            $next_pid = $p1;
+        }
+        $sth->close();
+        if ($next_pid > 0) {
+            if (auth_picture_invisible($next_pid)) {
+                $i++;
+                $thisPID = $next_pid;
+                continue;
+            } else {
+                break;
+            }
+        }
 
-    # First handle pictures with the exact same date taken.
-    # Select next picture by date
-    $sel = 'SELECT p.pid ';
-    $sel .= 'FROM pictures_information p ';
-    $sel .= 'WHERE p.picture_date = ? ';
-    $sel .= 'AND p.pid > ? ';
-    $sel .= 'AND ' . $grade_sel;
-    $sel .= 'ORDER BY p.picture_date, p.pid ';
-    $sel .= 'LIMIT 0,1 ';
-    if (!$sth = $DBH->prepare($sel)) {
-        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $sel");
-        return 0;
+        # Select next picture by date
+        $sel = 'SELECT p.pid, ';
+        $sel .= 'p.picture_date ';            
+        $sel .= 'FROM pictures_information p ';
+        $sel .= 'WHERE p.picture_date > ? ';
+        $sel .= 'AND ' . $grade_sel;
+        $sel .= 'ORDER BY p.picture_date ';
+        $sel .= 'LIMIT 0,1 ';
+        if (!$sth = $DBH->prepare($sel)) {
+            sys_err("Prepare failed ($rname): "
+                    . $DBH->error . '(' . $DBH->errno . ')');
+            sys_err("Problem statement: $sel");
+            return 0;
+        }
+        $sth->bind_param('s', $this_picture_date);
+        if (!$sth->execute()) {
+            sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+            sys_err("Problem statement: $cmd");
+            return;
+        }
+        $sth->bind_result($p1, $p2);
+        if ($sth->fetch()) {
+            $next_pid  = $p1;
+            $next_date = $p2;
+        }
+        $sth->close();
+        if ($next_pid > 0 && !auth_picture_invisible($next_pid)) {
+            break;
+        } else {
+            $thisPID           = $next_pid;
+            $this_picture_date = $next_date;
+            $i++;
+        }
     }
-    $sth->bind_param('si', $this_picture_date, $thisPID);
-    if (!$sth->execute()) {
-        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_err("Problem statement: $cmd");
-        return 0;
-    }
-    $sth->bind_result($p1);
-    if ($sth->fetch()) {
-        $next_pid = $p1;
-    }
-    $sth->close();
-    if ($next_pid > 0) {
-        return $next_pid;
-    }
-
-    # Select next picture by date
-    $sel = 'SELECT p.pid ';
-    $sel .= 'FROM pictures_information p ';
-    $sel .= 'WHERE p.picture_date > ? ';
-    $sel .= 'AND ' . $grade_sel;
-    $sel .= 'ORDER BY p.picture_date ';
-    $sel .= 'LIMIT 0,1 ';
-    if (!$sth = $DBH->prepare($sel)) {
-        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $sel");
-        return 0;
-    }
-    $sth->bind_param('s', $this_picture_date);
-    if (!$sth->execute()) {
-        sys_msg('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $cmd");
-        return;
-    }
-    $sth->bind_result($p1);
-    if ($sth->fetch()) {
-        $next_pid = $p1;
-    }
-    $sth->close();
-
     return $next_pid;
 }
 
@@ -101,6 +121,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     global $DBH;
     global $grade_sel;
 
+    $rname = 'get_next_pic_by_uid';
     $next_pid = 0;
 
     # First handle any pictures that have exactly the same picture
@@ -115,8 +136,9 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
-        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $sel");
+        sys_err("Prepare failed ($rname exact): "
+                . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $sel");
         return 0;
     }
     $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
@@ -146,14 +168,15 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
-        sys_msg('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $sel");
+        sys_err("Prepare failed: ($rname)"
+                . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $sel");
         return 0;
     }
     $sth->bind_param('ss', $thisUID, $this_picture_date);
     if (!$sth->execute()) {
-        sys_msg('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
-        sys_msg("Problem statement: $cmd");
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $cmd");
         return 0;
     }
     $sth->bind_result($p1);
@@ -177,7 +200,7 @@ function make_a_link ($thisUID,
 
     $thisLink = '';
     if (auth_picture_invisible($thisPID)) {return $thisLink;}
-    if (auth_person_hidden($thisUID))    {return $thisLink;}
+    if (auth_person_hidden($thisUID))     {return $thisLink;}
 
     $next_uid  = $thisUID;
     $next_pid  = '';
@@ -305,7 +328,7 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
-        sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err('Prepare failed (get first picture): ' . $DBH->error . '(' . $DBH->errno . ')');
         sys_err("Problem statement: $sel");
         $in_ring_pid = 1;
     }
@@ -320,7 +343,7 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
         $in_ring_pid = $p1;
     } else {
         $in_ring_pid = 1;
-        sys_msg('Problem getting picture for first ' . $in_ring_uid);
+        sys_err('Problem getting picture for first ' . $in_ring_uid);
     }
     $sth->close();
 }
@@ -383,8 +406,8 @@ if (!empty($in_ring_pid)) {
         }
         $next_links['next-by-date'] = 'Next by Date';
     } else {
-        sys_msg_err('ERROR: ' . $result->error);
-        sys_msg_err("SQL: $sel");
+        sys_err('ERROR: ' . $result->error);
+        sys_err("SQL: $sel");
     }
 
     // ------------------------------------------
