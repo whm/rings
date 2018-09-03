@@ -322,11 +322,11 @@ __END__
 
 =head1 NAME
 
-ring-fix
+ring-reload-db - Restore raw pictures in database from file
 
 =head1 SYNOPSIS
 
-ring-reload --dir=some-path [--update] [--debug] [--help] [--manual]
+ring-reload-db --dir=some-path [--update] [--debug] [--help] [--manual]
 [--conf=file] [--example]
 
 =head1 DESCRIPTION
