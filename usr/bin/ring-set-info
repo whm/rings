@@ -252,11 +252,11 @@ __END__
 
 =head1 NAME
 
-ring-set-info
+ring-set-info - set picture information from the raw picture
 
 =head1 SYNOPSIS
 
- ring-set-info --start=int [--end=int] [--update] \
+ring-set-info --start=int [--end=int] [--update] \
               [--host=mysql-host] [--db=databasename] \
               --user=mysql-username --pass=mysql-password
               [--debug] [--help] [--manual]

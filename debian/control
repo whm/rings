@@ -2,7 +2,7 @@ Source: picture-rings
 Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
-Build-Depends: debhelper (>= 8),
+Build-Depends: debhelper (>= 10),
  dh-systemd (>= 1.5),
  imagemagick,
  libappconfig-perl,
@@ -20,11 +20,11 @@ Build-Depends: debhelper (>= 8),
  perl,
  perltidy,
  php-cli
-Standards-Version: 3.9.4
+Standards-Version: 3.9.8
 
 Package: picture-rings
 Architecture: all
-Depends: apache2,
+Depends: ${misc:Depends}, ${perl:Depends},
  exif,
  imagemagick,
  libapache2-mod-php5,
@@ -40,13 +40,11 @@ Depends: apache2,
  libimage-magick-perl,
  libipc-run-perl,
  libphp-phpmailer,
- perl,
- ${perl:Depends}
+ perl
 Description: Rings Picture Gallery Web Application
- This web application organizations pictures and displays them via a 
- web server.  The images are loaded into a mysql database in serveral 
- resultions for fast display.  The raw images are stored and not 
- modified.
+ This web application organizations pictures and displays them via a
+ web server.  The images are stored several resolutions for fast
+ display.  The raw images are stored and not modified.
  .
- The application supports a fine grained access model.  Access control 
- and password information are stored in an LDAP database.
+ The application supports a fine grained access model.  Authorization
+ information is stored in an LDAP database.

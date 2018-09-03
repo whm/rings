@@ -97,7 +97,7 @@ __END__
 
 =head1 NAME
 
-ring-set-net
+ring-set-new - set the uid to new for unlinked pictures
 
 =head1 SYNOPSIS
 
@@ -106,7 +106,7 @@ ring-set-new [--conf=<configuration file>][--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
-Set a UID of new for any picture that does not have at least one UID.
+Add UID of new to any picture that does not have at least one UID.
 
 =head1 OPTIONS AND ARGUMENTS
 
