@@ -1,3 +1,9 @@
+picture-rings (2.24) unstable; urgency=medium
+
+  * Correct selection by date for unauthenticated searches.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 02 Sep 2018 19:08:16 -0700
+
 picture-rings (2.23) unstable; urgency=medium
 
   * Trap for zero length image files.
