@@ -75,7 +75,7 @@ sub save_file {
     }
     eval {
         $blob = read_file("$a_file", binmode => ':raw');
-	1;
+        1;
     } or do {
         my $e = $@;
         return $e;
