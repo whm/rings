@@ -1,6 +1,7 @@
 picture-rings (2.24) unstable; urgency=medium
 
   * Correct selection by date for unauthenticated searches.
+  * Update standards version - no changes.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 02 Sep 2018 19:08:16 -0700
 

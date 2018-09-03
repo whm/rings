@@ -11,6 +11,8 @@ ProtectSystem=full
 ProtectHome=read-only
 User=www-data
 Group=www-data
+StartLimitIntervalSec=2
+StartLimitBurst=60
 
 [Install]
 WantedBy=multi-user.target

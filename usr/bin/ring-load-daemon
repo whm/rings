@@ -308,11 +308,11 @@ __END__
 
 =head1 NAME
 
-ring-load-daemon
+ring-load-daemon - load pictures into the rings
 
 =head1 SYNOPSIS
 
-ring-daemon <directory1> [<directory2> ...] [--conf=<configuration>]
+ring-load-daemon <directory1> [<directory2> ...] [--conf=<configuration>]
 [--oneshot] [--force] [--debug] [--help] [--manual]
 
 
