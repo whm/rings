@@ -27,7 +27,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
  exif,
  imagemagick,
- libapache2-mod-php7,
+ libapache2-mod-php,
  libappconfig-perl,
  libdbi-perl,
  libdbd-mysql-perl,
