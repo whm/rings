@@ -327,8 +327,8 @@ $stmt->close();
 </form>
 
 <?php
-if (!empty($_SERVER['REMOTE_USER'])) {
-    if ($ring_admin_group) {
+if (!empty($_SESSION['remote_user'])) {
+    if ($_SESSION['ring_admin']) {
         echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     }
     if (!empty($_SESSION['s_email_list'])) {
@@ -336,8 +336,7 @@ if (!empty($_SERVER['REMOTE_USER'])) {
     }
     echo "</h5>\n";
 } else {
-    echo '<a href="' . auth_url($_SERVER['PHP_SELF']) . '"'
-        . '>Login</a>' . "\n";
+    echo '<a href="' . auth_url() . '">Login</a>' . "\n";
     echo '&nbsp;-&nbsp;To see all of the pictures you need to login.' . "\n";
     echo '&nbsp;-&nbsp;<a href="access_email.php">Access Request Form.</a>'
         . "\n";
@@ -360,7 +359,7 @@ if (!empty($in_group_id)) {
     }
     // Hide the private folks
     $vis_sel = '';
-    if (empty($_SERVER['REMOTE_USER'])) {
+    if (empty($_SESSION['remote_user'])) {
         $vis_sel = "AND visibility != 'HIDDEN'";
         $vis_sel = "AND visibility != 'INVISIBLE' ";
     }
@@ -405,7 +404,7 @@ if (!empty($in_group_id)) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (empty($_SERVER['REMOTE_USER'])
+        if (empty($_SESSION['remote_user'])
         && auth_person_hidden($this_uid) > 0) {
             continue;
         }
@@ -431,7 +430,7 @@ if (!empty($in_group_id)) {
             . 'alt="Index of all pictures of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
-        if (!empty($_SERVER['REMOTE_USER'])) {
+        if (!empty($_SESSION['remote_user'])) {
             echo '  <a href="ring_slide_table.php?in_uid='.$this_uid.'">'."\n";
             echo '    <img src="/rings-images/icon-sort.png" border="0" '
                 . 'width="32" height="32" '
@@ -470,7 +469,7 @@ look.
 These policies apply only to anyone that has not logged into the server.
 If you would like to see all of the pictures you need to login, and
 to login you need credentials, and to get credentials send a
-request to <?php echo $CONF['ring_admin'];?>.
+request to <?php echo $CONF['server_admin'];?>.
 <p>
 Additionally, anyone that wants their pictures to be visible to everyone,
 but does not like the fact that Google, et. al. will index their
@@ -488,11 +487,10 @@ but that is not always possible.
 
 <p>
 <dt>Who makes up the descriptions, dates, etc.?</dt>
-<dd>At this point all updates are by
-<?php echo $CONF['ring_admin'];?>.  If you want to update the web site
-yourself, either to add pictures, update descriptions or whatever contact
-<?php echo $CONF['ring_admin'];?>.
-</dd>
+<dd>At this point all updates are by members of the <?php echo
+$CONF['ring_admin_group'];?> group.  If you want to update the web
+site yourself, either to add pictures, update descriptions or whatever
+contact <?php echo $CONF['server_admin'];?>.  </dd>
 
 </dl>
 

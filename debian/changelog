@@ -1,3 +1,10 @@
+picture-rings (2.26) unstable; urgency=medium
+
+  * Use HTTP_X_FORWARDED_HOST and REQUEST_URI to generate the URL
+    to forward to authenticated connections.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 22 Feb 2019 07:04:18 +0000
+
 picture-rings (2.25) unstable; urgency=medium
 
   * Update to php7.

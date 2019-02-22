@@ -25,9 +25,9 @@ $in_button_email  = get_request('in_button_email');
 
 // look up the from address
 if (empty($_SERVER['WEBAUTH_LDAP_MAIL'])) {
-    $from_email = $_SERVER['REMOTE_USER'] . '@' . $CONF['mail_domain'];
+    $from_email = $_SESSION['remote_user'] . '@' . $CONF['mail_domain'];
 } else {
-    $from_email = $_SERVER['WEBAUTH_LDAP_MAIL'];
+    $from_email = $_SESSION['user_mail'];
 }
 
 ?>
