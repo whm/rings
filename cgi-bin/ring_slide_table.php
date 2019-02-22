@@ -203,7 +203,6 @@ function display_slide_table($pic_data) {
 
     global $CONF;
     global $in;
-    global $ring_admin_group;
 
     $update_form_action = 'ring_slide_table_action.php';
 ?>
@@ -240,7 +239,7 @@ function display_slide_table($pic_data) {
         <img src="<?php echo $pic_src; ?>" border="0">
       </a>
       <div class="caption">
-<?php if ($ring_admin_group) { ?>
+<?php if ($_SESSION['ring_admin']) { ?>
         <a href="<?php echo $pic_edit; ?>"
            target="_blank">
          <?php echo $pic['pid']; ?>
@@ -308,7 +307,7 @@ if ($in['number'] == 0) {
 }
 
 // Bail out if we don't have a selection
-if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in['uid']) > 0) {
+if (empty($_SESSION['remote_user']) && auth_person_hidden($in['uid']) > 0) {
     back_to_index('Invalid person selection');
 }
 $thisPerson = $in['uid'];
@@ -349,7 +348,7 @@ if (!empty($in['start_date'])) {
     $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
     $sel .= "AND p.picture_date>='" . $in['start_date'] . "' ";
     $sel .= "AND $grade_sel ";
-    if (empty($_SERVER['REMOTE_USER'])) {
+    if (empty($_SESSION['remote_user'])) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
@@ -384,7 +383,7 @@ $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
-if (empty($_SERVER['REMOTE_USER'])) {
+if (empty($_SESSION['remote_user'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
@@ -478,7 +477,7 @@ $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
-if (empty($_SERVER['REMOTE_USER'])) {
+if (empty($_SESSION['remote_user'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";
