@@ -570,7 +570,7 @@ hideReload();
 
     echo "function slideShowNext(aUID, aDate, aMilliSec) {\n";
     echo "    var url;\n";
-    echo '    url = "'.$_SERVER['PHP_SELF']
+    echo '    url = "'.ring_url()
         . '?in_ring_uid='.$in_ring_uid
         . '&in_ring_pid='.urlencode($this_pid)
         . '&in_ring_next_date='.urlencode($this_picture_date)
