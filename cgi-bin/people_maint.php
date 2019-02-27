@@ -60,7 +60,7 @@ require ('page_top.php');
 
 <div align="center">
 <form name="find_person"
-      action="<?php print $_SERVER['PHP_SELF'];?>"
+      action="<?php print ring_url();?>"
       method="post">
 <table border="1">
 <tr>

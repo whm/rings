@@ -237,7 +237,7 @@ require ('page_top.php');
 ?>
 
 <form name="find_picture"
-      action="<?php print $_SERVER['PHP_SELF'];?>"
+      action="<?php print ring_url();?>"
       method="post">
 <table border="1">
 <tr>

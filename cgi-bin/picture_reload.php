@@ -31,7 +31,7 @@ $thisTitle = 'Re-load a Picture into the Rings';
 require ('page_top.php');
 ?>
 
-<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
+<form method="post" action="<?php echo ring_url();?>">
 <table border="0">
 <tr><td>Picture ID:</td>
     <td>
@@ -65,7 +65,7 @@ if ($in_pid > 0) {
     if (empty($upload)) {
         // -- Display the upload form
         echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
-        echo 'action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
+        echo 'action="' . ring_url() . '">' . "\n";
         echo '<input type="hidden" name="in_pid" value="'.$in_pid.'">'."\n";
         echo "<table border=\"1\">\n";
         echo "<tr>\n";
