@@ -3,6 +3,7 @@ picture-rings (2.27) unstable; urgency=medium
   * Modify the cgi-bin scripts to use auth_url instead of referencing
     PHP_SELF directly.  This allows the url to have the protocol type
     and server name to be preappended to the PHP_SELF value.
+  * Update handling of 'new' search in picture_sort.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 27 Feb 2019 00:50:25 +0000
 

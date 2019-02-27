@@ -90,7 +90,7 @@ function print_row ($n, $r) {
     $sel .= "AND file_name = '" . $r['file_name'] . "' ";
     $dup_fld_list = array('camera', 'shutter_speed', 'fstop');
     foreach ($dup_fld_list as $fld) {
-      if (isset($r[$fld])) {
+      if (!empty($r[$fld])) {
           $sel .= "AND $fld = '" . $r[$fld] . "' ";
       } else {
           $sel .= "AND $fld IS NULL ";
@@ -190,7 +190,7 @@ require ('page_top.php');
 
 // Set up if we have been here before
 $uid_word = '';
-if (isset($in_button_find) || isset($in_new)) {
+if (!empty($in_button_find) || !empty($in_new)) {
 
     $condition = '';
     $condition .= set_search ('picture_date',
@@ -207,15 +207,18 @@ if (isset($in_button_find) || isset($in_new)) {
     $_SESSION['s_order_by'] = $in_order;
 
     $word = 'WHERE';
-    if (isset($cond)) {
+    if (!empty($condition)) {
         $word = 'AND';
     }
 
-    # override selections if the special group 'new' is selected
+    # Add new if we are to return new entries
     $uid_condition = '';
-    if (isset($in_new)>0) {
-        $condition = '';
-        $in_uids = array('new');
+    if (!empty($in_new)) {
+        if (sizeof($in_uids) > 0) {
+            array_push($in_uids, 'new');
+        } else {
+            $in_uids = array('new');
+        }
     }
 
     if (count($in_uids) == 0) {
@@ -283,11 +286,11 @@ if (isset($in_button_find) || isset($in_new)) {
     $_SESSION['s_list_select'] = $sel;
     $_SESSION['s_start_row'] = 0;
 
-} elseif (isset($in_button_next)) {
+} elseif (!empty($in_button_next)) {
 
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $pics_per_page;
 
-} elseif (isset($in_button_back)) {
+} elseif (!empty($in_button_back)) {
 
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $pics_per_page;
     if ($_SESSION['s_start_row'] < 0) {
@@ -376,7 +379,7 @@ $add_cnt = 0;
 $result = $DBH->query ($cmd);
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if (isset($uid_select[$row['uid']])) {
+        if (!empty($uid_select[$row['uid']])) {
             $s = " SELECTED";
         } else {
             $s = '';
@@ -460,11 +463,11 @@ $last_row = array();
 $people_list = '';
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        if (isset($last_row['pid']) && $row['pid'] == $last_row['pid']) {
+        if (!empty($last_row['pid']) && $row['pid'] == $last_row['pid']) {
             if (strlen($people_list)>0) {$people_list .= "<br/>\n";}
             $people_list .= $row['display_name'];
         } else {
-            if (isset($last_row['pid'])) {
+            if (!empty($last_row['pid'])) {
                 print_row ($cnt, $last_row);
                 $cnt++;
             }
@@ -483,11 +486,11 @@ if ($result) {
     echo "       value=\"$cnt\">\n";
     echo "</form>\n";
 } else {
-    if (isset($in_button_find)) {
+    if (!empty($in_button_find)) {
         echo "<font color=\"#ff0000\">Nothing found!</font>\n";
     }
 }
-if (isset($_SESSION['msg'])>0) {
+if (!empty($_SESSION['msg'])) {
     echo '<p>'.$_SESSION['msg']."\n";
     $_SESSION['msg'] = '';
 }
