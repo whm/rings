@@ -9,11 +9,11 @@ function set_default ($fld, $val) {
     return;
 }
 
-function set_session2env($fld, $env) {
+function set_session2env($env, $fld) {
     global $CONF;
     $val = '';
-    if (! empty($_SERVER[ $CONF[$env] ])) {
-        $val = $_SERVER[ $CONF[$env] ];
+    if (!empty($_SERVER[CONF[$env])) {
+        $val = $_SERVER[CONF[$env];
     }
     $_SESSION[$fld] = $val;
     return;
@@ -87,12 +87,12 @@ if (empty($_SESSION['msg'])) {
 set_session2env('user_givenname', 'env_givenname');
 set_session2env('user_groups',    'env_groups');
 set_session2env('user_mail',      'env_mail');
-set_session2env('remote_user',    'env_remote_user');
+set_session2env('remote_user'     'env_remote_user');
 set_session2env('user_sn',        'env_sn');
 
 // Set the admin flag
 $_SESSION['ring_admin'] = 0;
-$privs = explode('|', $_SERVER[ $CONF['env_groups'] ]);
+my $privs = explode('|', $CONF['env_groups']);
 foreach ($privs as $p) {
     if ($p == $CONF['ring_admin_group']) {
         $_SESSION['ring_admin'] = 1;
