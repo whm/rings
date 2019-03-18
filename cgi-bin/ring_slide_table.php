@@ -32,7 +32,7 @@ foreach ($form_flds as $f) {
 function display_page_select($start_date, $number, $uid) {
 ?>
 <form name="page_select"
-      action="<?php echo ring_url();?>"
+      action="<?php echo $_SERVER['PHP_SELF'];?>"
       onsubmit="return verifyInput()"
       method="post">
 <div id="pageControl">
@@ -72,7 +72,7 @@ function display_table_nav() {
         echo '<div class="pagenav">' . "\n";
         if ($in['start']+1 > $in['number']) {
             echo '<div class="first">';
-            echo '<a href="' . ring_url()
+            echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=0'
                 . '&in_uid=' . $in['uid']
                 . '">First</a>';
@@ -82,7 +82,7 @@ function display_table_nav() {
                 $display_rev = 0;
             }
             echo '<div class="prev">';
-            echo '<a href="' . ring_url()
+            echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=' . $display_prev
                 . '&in_uid=' . $in['uid']
                 . '">Previous</a>';
@@ -97,13 +97,13 @@ function display_table_nav() {
             $display_next = $in['start'] + $in['number'];
             $display_last = $picture_count - $in['number'];
             echo '<div class="last">';
-            echo '<a href="' . ring_url()
+            echo '<a href="' . $_SERVER['PHP_SELF']
                 . '?in_start=' . $display_last
                 . '&in_uid=' . $in['uid']
                 . '">Last</a>';
             echo '</div>';
             echo '<div class="next">';
-            echo '<a href="' . ring_url()
+            echo '<a href="' . $_SERVER['PHP_SELF']
             . '?in_start=' . $display_next
                 . '&in_uid=' . $in['uid']
                 . '">Next</a>';

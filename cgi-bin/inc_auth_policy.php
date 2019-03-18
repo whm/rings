@@ -75,11 +75,15 @@ function auth_person_hidden ($uid) {
     return $hide_person;
 }
 
-// Create a url that will force a login
-function auth_url () {
+// Create a url that will display the current page using ssl.This
+// allows an apache configuration that uses webauth for
+// authentication.
+function auth_url() {
     global $CONF;
-    $url = ring_url();
-    $new_url = preg_replace('/^http:\/\//i', 'HTTPS://', $url);
+    global $DBH;
+    $new_url = 'HTTPS://' . $_SERVER['HTTP_X_FORWARDED_HOST']
+             . '/' . $_SERVER['REQUEST_URI'];
     return $new_url;
 }
+
 ?>
