@@ -64,7 +64,7 @@ require ('page_top.php');
 ?>
 
 <form name="find_group"
-      action="<?php print ring_url();?>"
+      action="<?php print $_SERVER['PHP_SELF'];?>"
       method="post">
 <table border="1">
 <tr>

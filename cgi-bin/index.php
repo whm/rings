@@ -160,7 +160,7 @@ setcookie($cookie_id, $cookie_value, $cookie_life);
 function gotoGroup() {
     var f;
     f = document.pick_group;
-    var new_group_url = "<?php echo ring_url();?>?in_group_id="
+    var new_group_url = "<?php echo $_SERVER['PHP_SELF'];?>?in_group_id="
                       + f.in_group_id.value;
     location = new_group_url;
 }
@@ -186,7 +186,7 @@ function showPreferences(){
 <h1>Pick a Picture Group</h1>
 
 <blockquote>
-<form name="pick_group" action="<?php echo ring_url();?>">
+<form name="pick_group" action="<?php echo $_SERVER['PHP_SELF'];?>">
 
 <table border="0" cellpadding="2">
 

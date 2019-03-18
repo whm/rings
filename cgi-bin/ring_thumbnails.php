@@ -111,7 +111,7 @@ if (!empty($in_start_date)) {
 <body bgcolor="#eeeeff">
 
 <h2><?php echo $thisPerson;?></h2>
-<form method="post" action="<?php echo ring_url();?>">
+<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
 
 <table border="0">
 <tr><td align="right">Starting Date:</td>
@@ -159,10 +159,10 @@ if (!$result) {
         $in_prev = $in_start - $in_number;
         if ($in_prev < 0) {$in_prev = 0;}
         if ($in_prev > 0) {
-            echo '<a href="' . ring_url() . '?in_start=0">First</a>';
+            echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=0">First</a>';
             echo " - ";
         }
-        echo '<a href="' . ring_url() . '?in_start=' . $in_prev
+        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_prev
             . '">Previous</a>';
     } else {
         echo "&nbsp;";
@@ -174,12 +174,12 @@ if (!$result) {
         if ($in_next+$in_number > $thisCount) {
             $in_next = $thisCount - $in_number;
         }
-        echo '<a href="' . ring_url() . '?in_start=' . $in_next
+        echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_next
             . '">Next</a>';
         if ($in_next+$in_number < $thisCount) {
             $in_last = $thisCount - $in_number;
             echo " - ";
-            echo '<a href="' . ring_url() . '?in_start=' . $in_last
+            echo '<a href="' . $_SERVER['PHP_SELF'] . '?in_start=' . $in_last
                 . '">Last</a>';
         }
     } else {

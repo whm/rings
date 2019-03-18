@@ -121,7 +121,7 @@ $_SESSION['upload_slots'] = $in_upload_slots;
 if (!isset($upload)) {
 
     // -- Display slots from
-    echo '<form method="post" action="' . ring_url() . '">' . "\n";
+    echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "  <font size=\"-1\" face=\"Arial, Helvetica, sans-serif\">\n";
     echo "   Number of Pictures to upload at once: \n";
     echo "  <input type=\"text\" size=\"3\"\n";
@@ -135,7 +135,7 @@ if (!isset($upload)) {
     // -- Display the upload form
 
     echo "<form enctype=\"multipart/form-data\" method=\"post\" ";
-    echo 'action="' . ring_url() . '">' . "\n";
+    echo 'action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
     echo "<table border=\"1\">\n";
     echo "<tr>\n";
     echo " <th><font face=\"Arial, Helvetica, sans-serif\">\n";

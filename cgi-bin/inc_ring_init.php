@@ -9,9 +9,6 @@ function set_default ($fld, $val) {
     return;
 }
 
-// ---------------------------------------------------------------------
-// Routine to set session variables from environment variables.
-// Generally these are values from the load balancer.
 function set_session2env($fld, $env) {
     global $CONF;
     $val = '';
@@ -20,15 +17,6 @@ function set_session2env($fld, $env) {
     }
     $_SESSION[$fld] = $val;
     return;
-}
-
-// Create a url that will display the current page using ssl.  This
-// allows an apache configuration that uses webauth for
-// authentication to form url's correctly.
-function ring_url() {
-    global $CONF;
-    $new_url = $CONF['ring_server_url'] . '/' . $_SERVER['PHP_SELF'];
-    return $new_url;
 }
 
 // ---------------------------------------------------------------------
@@ -72,23 +60,7 @@ set_default('ring_admin_group', 'ring:admin');
 set_default('ring_id',          'rings');
 set_default('ring_keytab',      '/NOKEYTAB');
 set_default('ring_princ',       'service/rings');
-set_default('ring_server',      '');
-set_default('ring_server_url',  '');
 set_default('server_admin',     'Bill MacAllister');
-
-// Set the ring server.  Use the load balancer name if it is
-// available.  Otherwise use the local server name.
-if (!empty($_SERVER['HTTP_X_FORWARDED_SERVER'])) {
-    $CONF['ring_server'] = $_SERVER['HTTP_X_FORWARDED_SERVER'];
-} else {
-    $CONF['ring_server'] = $_SERVER['SERVER_NAME'];
-}
-if (!empty($_SESSION['env_remote_user'])) {
-  $url_prefix = 'HTTPS://';
-} else {
-  $url_prefix = 'HTTP://';
-}
-$CONF['ring_server_url'] = $url_prefix . $CONF['ring_server'];
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);
@@ -103,7 +75,7 @@ require('inc_db_functions.php');
 // Check to see if they are trying to login
 $in_login = get_request('in_login');
 if (isset($in_login) && $in_login > 0) {
-    http_redirect(auth_url());
+    http_redirect(auth_url($_SERVER['PHP_SELF']));
 }
 
 // Initialize the message session variable
