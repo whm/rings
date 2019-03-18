@@ -43,7 +43,7 @@ if (empty($in_uid)) {
     $_SESSION['s_uid'] = $in_uid;
 }
 
-if (empty($_SESSION['remote_user']) && auth_person_hidden($in_uid) > 0) {
+if (empty($_SERVER['REMOTE_USER']) && auth_person_hidden($in_uid) > 0) {
     back_to_index('Invalid person selection');
 }
 
@@ -83,7 +83,7 @@ if (!empty($in_start_date)) {
     $sel .= "WHERE d.uid='$in_uid' ";
     $sel .= "AND p.picture_date>'$in_start_date' ";
     $sel .= "AND $grade_sel ";
-    if (empty($_SESSION['remote_user'])) {
+    if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND p.public='Y' ";
     }
     $partCount = 0;
@@ -137,7 +137,7 @@ $sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='$in_uid' ";
-if (empty($_SESSION['remote_user'])) {
+if (empty($_SERVER['REMOTE_USER'])) {
     $sel .= "AND p.public='Y' ";
 }
 $sel .= "AND $grade_sel ";

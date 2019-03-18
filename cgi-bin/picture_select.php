@@ -312,7 +312,7 @@ function add_email_list(idx) {
 
 $next_links = array();
 
-if (!empty($CONF['remote_user'])) {
+if (!empty($_SERVER['REMOTE_USER'])) {
     $invisible_sel = '';
 } else {
     $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
@@ -368,7 +368,7 @@ if (!empty($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information p ";
     $sel .= "WHERE pid=$in_ring_pid ";
-    if (empty($CONF['remote_user'])) {
+    if (empty($_SERVER['REMOTE_USER'])) {
         $sel .= "AND public='Y' ";
     }
     $result = $DBH->query($sel);
@@ -495,8 +495,8 @@ if (!empty($in_ring_pid)) {
 
     echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 
-    if (!empty($CONF['remote_user'])) {
-        $loggedInUser = $CONF['remote_user'];
+    if (!empty($_SERVER['REMOTE_USER'])) {
+        $loggedInUser = $_SERVER['REMOTE_USER'];
     }
     if (!empty($loggedInUser)) {
         echo '<img src="/rings-images/icon-mail-send.png" border="0" ';
@@ -506,7 +506,7 @@ if (!empty($in_ring_pid)) {
 
         echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
        
-        if ($_SESSION['ring_admin']) {
+        if ($ring_admin_group) {
             echo '<a href="picture_maint.php'
                 . '?in_pid='.$this_pid.'" target="_blank">';
             echo '<img src="/rings-images/icon-edit.png" border="0" ';
@@ -515,7 +515,7 @@ if (!empty($in_ring_pid)) {
             echo "</a>\n";
         }
     } else {
-        echo '<a href="' . auth_url();
+        echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
         echo '?in_ring_pid='.$in_ring_pid.'">';
         echo '<img src="/rings-images/login.jpg" border="0">';
         echo "</a>\n";

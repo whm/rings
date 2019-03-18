@@ -6,7 +6,7 @@ function auth_picture_invisible ($pid) {
     global $CONF;
     global $DBH;
     $hide_picture = 1;
-    if (!empty($_SESSION['remote_user'])) {
+    if (!empty($_SERVER['REMOTE_USER'])) {
         $hide_picture = 0;
     } else {
         $sel = "SELECT count(*) FROM picture_details pd ";
@@ -42,7 +42,7 @@ function auth_picture_invisible ($pid) {
 function auth_person_hidden ($uid) {
     global $CONF;
     global $DBH;
-    if (!empty($_SESSION['remote_user'])) {
+    if (!empty($_SERVER['REMOTE_USER'])) {
         $hide_person = 0;
     } else {
         $hide_person = 0;
@@ -78,11 +78,19 @@ function auth_person_hidden ($uid) {
 // Create a url that will display the current page using ssl.This
 // allows an apache configuration that uses webauth for
 // authentication.
-function auth_url() {
+function auth_url($url) {
     global $CONF;
     global $DBH;
-    $new_url = 'HTTPS://' . $_SERVER['HTTP_X_FORWARDED_HOST']
-             . '/' . $_SERVER['REQUEST_URI'];
+    $new_url = $url;
+    if (substr($new_url, 0, 7) == 'http://') {
+        $new_url = substr($new_url, 7);
+    }
+    if (substr($new_url, 0, 8) != 'https://') {
+        if (substr($new_url, 0, 1) != '/') {
+            $new_url = '/' . $new_url;
+        }
+        $new_url = 'https://' . $_SERVER['HTTP_HOST'] . $new_url;
+    }
     return $new_url;
 }
 
