@@ -38,7 +38,7 @@ $thisTitle = 'People Search';
 require ('page_top.php');
 
 // Set up if we have been here before
-if (isset($in_button_find)) {
+if (!empty($in_button_find)) {
     $word = "WHERE";
     $condition = '';
     $_SESSION['sp_uid']         = '';
@@ -88,10 +88,10 @@ if (isset($in_button_find)) {
     } else {
         $_SESSION['sp_num_user_rows'] = 0;
     }
-} elseif (isset($in_button_next)) {
+} elseif (!empty($in_button_next)) {
     $in_uid = $_SESSION['sp_uid'];
     $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] + 30;
-} elseif (isset($in_button_back)) {
+} elseif (!empty($in_button_back)) {
     $in_uid = $_SESSION['sp_uid'];
     $_SESSION['sp_start_row'] = $_SESSION['sp_start_row'] - 30;
     if ($_SESSION['sp_start_row'] < 0) {$_SESSION['sp_start_row'] = 0;}
@@ -140,7 +140,7 @@ if ($end_row > $_SESSION['sp_num_user_rows']) {
   <td>
 <?php
 $chk_all = $chk_show = $chk_hide = $chk_invis = '';
-if (isset($_SESSION['sp_visibility'])) {
+if (!empty($_SESSION['sp_visibility'])) {
     if ($_SESSION['sp_visibility'] == 'SHOW') {
         $chk_show  = 'CHECKED';
     }
@@ -233,7 +233,7 @@ if ($end_row != $_SESSION['sp_num_user_rows'] || $start_row_flag>0) {
     }
     echo "</table>\n";
   } else {
-    if (isset($in_button_find)) {
+    if (!empty($in_button_find)) {
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";
       echo "$sel\n";

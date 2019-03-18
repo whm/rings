@@ -76,7 +76,7 @@ if (strlen($in_count) > 0) {
 if ($in_count == 0) {$in_count = 30;}
 
 // Set up if we have been here before
-if (isset($in_button_find)) {
+if (!empty($in_button_find)) {
 
     $condition = '';
     $condition .= set_search ('key_words',
@@ -117,10 +117,10 @@ if (isset($in_button_find)) {
     } else {
         $_SESSION['s_num_user_rows'] = 0;
     }
-} elseif (isset($in_button_next)) {
+} elseif (!empty($in_button_next)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] + $in_count;
-} elseif (isset($in_button_back)) {
+} elseif (!empty($in_button_back)) {
     $in_pid = $_SESSION['s_pid'];
     $_SESSION['s_start_row'] = $_SESSION['s_start_row'] - $in_count;
     if ($_SESSION['s_start_row'] < 0) {$_SESSION['s_start_row'] = 0;}
@@ -278,7 +278,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
     }
     echo "</table>\n";
   } else {
-    if (isset($in_button_find)) {
+    if (!empty($in_button_find)) {
       echo "$sel<br/>\n";
       echo "<font color=\"#ff0000\">Nothing found!</font>\n";
       echo "<p>\n";

@@ -118,7 +118,7 @@ if ($_SESSION['upload_slots'] < 1) {$_SESSION['upload_slots'] = 5;}
 if ($in_upload_slots < 1) {$in_upload_slots = $_SESSION['upload_slots'];}
 $_SESSION['upload_slots'] = $in_upload_slots;
 
-if (!isset($upload)) {
+if (empty($upload)) {
 
     // -- Display slots from
     echo '<form method="post" action="' . $_SERVER['PHP_SELF'] . '">' . "\n";
