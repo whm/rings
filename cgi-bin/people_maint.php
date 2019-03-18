@@ -19,7 +19,7 @@ $in_button_delete = get_request('in_button_delete');
 //-------------------------------------------------------------
 // Start of main processing for the page
 
-if (isset($in_uid)) {
+if (!empty($in_uid)) {
     if ($in_uid=='CLEARFORM') {
         $add_flag = 1;
         $in_uid = '';
@@ -35,7 +35,7 @@ $result = $DBH->query($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
 }
-if ( isset($in_uid) && !isset($row["uid"]) ) {
+if ( !empty($in_uid) && empty($row["uid"]) ) {
     sys_err("Person '$in_uid' not found.");
     $fld_names = get_fld_names('people_or_places');
     foreach ($fld_names as $db_fld) {

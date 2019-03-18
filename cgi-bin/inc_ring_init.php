@@ -59,7 +59,7 @@ require('inc_db_functions.php');
 
 // Check to see if they are trying to login
 $in_login = get_request('in_login');
-if (isset($in_login) && $in_login > 0) {
+if (!empty($in_login) && $in_login > 0) {
     http_redirect(auth_url($_SERVER['PHP_SELF']));
 }
 

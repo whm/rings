@@ -67,7 +67,7 @@ $next_group_id = $in_group_id;
 
 $update_flag = $add_flag = 0;
 
-if ( isset($in_button_update) ) {
+if ( !empty($in_button_update) ) {
 
     // Try and get the old user record
     $sel = "SELECT * FROM groups WHERE group_id='$in_group_id'";
@@ -80,7 +80,7 @@ if ( isset($in_button_update) ) {
 
     $update_flag = 1;
     $add_flag    = 0;
-    if (!isset($this_group)) {
+    if (empty($this_group)) {
         // no old record, they must want a new one for this id
         $add_flag    = 1;
         $update_flag = 0;
@@ -146,7 +146,7 @@ if ( $update_flag ) {
         }
     }
 
-} elseif ( $add_flag || (isset($in_button_add)) ) {
+} elseif ( $add_flag || (!empty($in_button_add)) ) {
 
     // -- Add a new record -------------------------------
 
@@ -192,7 +192,7 @@ if ( $update_flag ) {
     }
     $next_uid = $in_uid;
 
-} elseif ( isset($in_button_delete) ) {
+} elseif ( !empty($in_button_delete) ) {
 
     // -- Delete a record -------------------------------
 

@@ -38,7 +38,7 @@ Picture ID: <?php echo $in_id;?>
 </html>
 
 <?php
-if ( isset($in_pid) )  {
+if ( !empty($in_pid) )  {
 
     $_SESSION['s_email_list'] .= $in_pid.' ';
     echo "<script language=\"JavaScript\">\n";

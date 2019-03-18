@@ -56,7 +56,7 @@ function closeWindow() {
 </html>
 
 <?php
-if (isset($in_pid) && preg_match("/[ABC]/",$in_grade))  {
+if (!empty($in_pid) && preg_match("/[ABC]/",$in_grade))  {
 
     $cmd = "INSERT INTO picture_grades SET ";
     $cmd .= "pid = $in_pid, ";

@@ -368,7 +368,7 @@ if (!empty($in['start_date'])) {
 } else {
     $nav_btn = array('first', 'prev', 'next', 'last');
     foreach ($nav_btn as $b) {
-        if (isset($in[$b]) && $in[$b] > 0) {
+        if (!empty($in[$b]) && $in[$b] > 0) {
             $in['start'] = $in[$b];
             break;
         }
