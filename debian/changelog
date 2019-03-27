@@ -1,3 +1,12 @@
+picture-rings (2.29) unstable; urgency=medium
+
+  * Add in requirement for php-ldap to support email address lookup.
+  * Add support for ldap_base to configuration file.
+  * Update the default ldap_server.
+  * Update usage of phpMailer.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 27 Mar 2019 05:54:28 +0000
+
 picture-rings (2.28) unstable; urgency=medium
 
   * The changes in versions 2.26 and 2.27 have been abandoned.  The changes
