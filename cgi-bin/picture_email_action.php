@@ -39,8 +39,16 @@ if (!empty($in_button_send)) {
     $to_addrs = array();
     $a_to = trim(strtok($in_to_addr, ','));
     while (!empty($a_to)) {
-        sys_msg('To:' . htmlentities($a_to));
-        $mailMsg->addAddress($a_to);
+        $bits = preg_split("/[<]/", $a_to);
+        print_r($bits);
+        $addr = str_replace('>', '', $bits[1]);
+        $comment =  $bits[1];
+        sys_msg("addr:$addr comment:$comment");
+        if ($mailMsg->addAddress($addr, $comment)) {
+            sys_msg('To: ' . htmlentities($a_to));
+        } else {
+            sys_err($mailMsg->ErrorInfo);
+        }
         $a_to = trim(strtok(','));
     }
 
@@ -52,6 +60,9 @@ if (!empty($in_button_send)) {
     }
 
     // Add subject header
+    if (empty($in_subject)) {
+        $in_subject = 'Some pictures for you';
+    }
     sys_msg('Subject:' . htmlentities($in_subject));
     $mailMsg->Subject = $in_subject;
 

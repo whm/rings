@@ -19,7 +19,8 @@ Build-Depends: debhelper (>= 10),
  libphp-phpmailer,
  perl,
  perltidy,
- php-cli
+ php-cli,
+ php-ldap
 Standards-Version: 3.9.8
 
 Package: picture-rings
@@ -40,7 +41,8 @@ Depends: ${misc:Depends}, ${perl:Depends},
  libimage-magick-perl,
  libipc-run-perl,
  libphp-phpmailer,
- perl
+ perl,
+ php-ldap
 Description: Rings Picture Gallery Web Application
  This web application organizations pictures and displays them via a
  web server.  The images are stored several resolutions for fast

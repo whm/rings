@@ -1,7 +1,7 @@
 <?php
 // ----------------------------------------------------------
 // File: get_mail_addresses.php
-// Fate: 23-Nov-2004
+// Date: 23-Nov-2004
 // Author: Bill MacAllister
 
 // Open a session, connect to the database, load convenience routines,
@@ -47,29 +47,45 @@ function setAddress () {
 
 <body bgcolor="#eeeeff">
 <h3>Pick Some Addresses</h3>
-<form name="selectAddress"
-      onsubmit="return setAddress()">
-<select name="addr" multiple size="16">
 <?php
 
 // Look up the from address.  This is an anonymous bind.
-$ds = ldap_connect($CONF['ldap_server']);
-$return_attr = array('cn','mail');
+$ldap_server = $CONF['ldap_server'];
+$ldap_base   = $CONF['ldap_base'];
 $ldap_filter = '(&(mail=*)(objectclass=person))';
-$sr = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
-$info = @ldap_get_entries($ds, $sr);
+$return_attr = array('cn','mail');
+
+$ds      = ldap_connect($ldap_server);
+$sr      = @ldap_search ($ds, $ldap_base, $ldap_filter, $return_attr);
+$info    = @ldap_get_entries($ds, $sr);
 $ret_cnt = $info["count"];
-// Display the options
-for ($i=0; $i<$ret_cnt;$i++) {
-  $from_display = $info[$i]["cn"][0] . ' &lt;'.$info[$i]["mail"][0].'&gt; ';
-  $from_addr = '<'.$info[$i]["mail"][0].'> ' . $info[$i]["cn"][0];
-  echo "<option value=\"$from_display\">$from_display\n";
+
+# Sort the search output
+if ($ret_cnt > 0) {
+    echo '<form name="selectAddress"' . "\n";
+    echo '      onsubmit="return setAddress()">' . "\n";
+    echo '<select name="addr" multiple size="16">' . "\n";
+    $peeps = array();
+    for ($i=0; $i<$ret_cnt;$i++) {
+        $peeps[$info[$i]["cn"][0]] = $i;
+    }
+    ksort($peeps);
+    foreach ($peeps as $cn => $i) {
+        $from_display = $cn . ' &lt;' . $info[$i]["mail"][0] . '&gt;';
+        $from_addr = '<' . $info[$i]["mail"][0] ."> $cn";
+        echo "<option value=\"$from_display\">$from_display\n";
+    }
+    echo '</select>' . "\n";
+    echo '<input type="submit" ' . "\n";
+    echo '       name="in_button_submit"' . "\n";
+    echo '       value="Set Address">' . "\n";
+    echo '<input type="hidden" name="fld_count" ' . "\n";
+    echo '       value="' . $ret_cnt . '">' . "\n";
+    echo '</form>' . "\n";
+} else {
+    echo 'No entries found';
 }
 ?>
-</select>
-<input type="submit" name="in_button_submit" value="Set Address">
-<input type="hidden" name="fld_count" value="<?php echo $cnt;?>">
-</form>
 
 </body>
 </html>
