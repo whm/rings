@@ -12,7 +12,7 @@ ProtectHome=read-only
 User=www-data
 Group=www-data
 Restart=on-failure
-StartLimitIntervalSec=2
+StartLimitInterval=2
 StartLimitBurst=60
 
 [Install]
