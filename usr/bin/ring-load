@@ -94,7 +94,7 @@ Add an entry to the picture_upload_queue.
 
 =over 4
 
-=item --conf=configuation-filoe
+=item --conf=configuation-file
 
 The default configuration file is /etc/rings/rings.conf.
 
@@ -111,6 +111,10 @@ Displays more complete help text.
 Turns on debugging displays.
 
 =back
+
+=head1 SEE ALSO
+
+ring-load-daemon, ring-daemon
 
 =head1 AUTHOR
 

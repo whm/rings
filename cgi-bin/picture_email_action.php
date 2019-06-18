@@ -39,11 +39,16 @@ if (!empty($in_button_send)) {
     $to_addrs = array();
     $a_to = trim(strtok($in_to_addr, ','));
     while (!empty($a_to)) {
-        $bits = preg_split("/[<]/", $a_to);
-        print_r($bits);
-        $addr = str_replace('>', '', $bits[1]);
-        $comment =  $bits[1];
-        sys_msg("addr:$addr comment:$comment");
+        if (preg_match('/([\w\d\-\.\_]*)[<]([\w\d\-\_\.]+)[>](.*)/',
+                       $a_to,
+                       $matches)) {
+            $addr = $matches[2][0];
+            $comment = $matches[1][0] + ' ' + $matches[3][0];
+            sys_msg("addr:$addr comment:$comment");
+        } else {
+            $addr = $a_to;
+            $comment = '';
+        }
         if ($mailMsg->addAddress($addr, $comment)) {
             sys_msg('To: ' . htmlentities($a_to));
         } else {
