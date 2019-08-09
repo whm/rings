@@ -3,6 +3,8 @@ Description=Ring Resize
 After=network.target
 
 [Service]
+User=www-data
+Group=www-data
 ExecStart=/usr/bin/ring-load-daemon
 Restart=on-failure
 PrivateTmp=true
@@ -11,7 +13,6 @@ ProtectSystem=full
 ProtectHome=read-only
 User=www-data
 Group=www-data
-StartLimitInterval=2
 StartLimitBurst=60
 
 [Install]
