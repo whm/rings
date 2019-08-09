@@ -3,6 +3,8 @@ Description=Ring Load Daemon
 After=network.target
 
 [Service]
+User=www-data
+Group=www-data
 ExecStart=/usr/bin/ring-daemon pending
 Restart=on-failure
 PrivateTmp=true
@@ -12,7 +14,6 @@ ProtectHome=read-only
 User=www-data
 Group=www-data
 Restart=on-failure
-StartLimitInterval=2
 StartLimitBurst=60
 
 [Install]
