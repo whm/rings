@@ -1,8 +1,10 @@
 picture-rings (2.31) UNRELEASED; urgency=medium
 
   * Correct bug in email parsing routine.
+  * Update systemd service files by including k5start for both ring-load
+    and ring-daemon.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 18 Jun 2019 06:33:45 +0000
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 14 Aug 2019 06:59:00 +0000
 
 picture-rings (2.30) unstable; urgency=medium
 

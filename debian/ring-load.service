@@ -3,17 +3,18 @@ Description=Ring Resize
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
-ExecStart=/usr/bin/ring-load-daemon
-Restart=on-failure
-PrivateTmp=true
-PrivateDevices=yes
-ProtectSystem=full
-ProtectHome=read-only
-User=www-data
-Group=www-data
-StartLimitBurst=60
+ExecStart=/usr/bin/k5start -L -K 6 -l 10h -f /etc/service-rings.keytab \
+    -m 640 -o www-data -g www-data \
+    -a -t -k /run/www-data/ring-load-daemon.tgt service/rings \
+    -- /usr/bin/ring-load-daemon
+Restart = on-failure
+PrivateTmp = true
+PrivateDevices = yes
+ProtectSystem = full
+ProtectHome = read-only
+User = www-data
+Group = www-data
+StartLimitBurst = 60
 
 [Install]
 WantedBy=multi-user.target
