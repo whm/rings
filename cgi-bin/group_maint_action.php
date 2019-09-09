@@ -165,7 +165,7 @@ if ( $update_flag ) {
         $vals = '';
         $fld_names = get_fld_names('groups');
         foreach ($fld_names as $db_fld) {
-            if ($db_fld == "date_last_maint" || $db_fld == 'date_last_maint') {
+            if ($db_fld == "date_added" || $db_fld == 'date_last_maint') {
                 $in_val = $now;
             } else {
                 $in_val = trim(get_request("in_$db_fld"));
@@ -174,7 +174,13 @@ if ( $update_flag ) {
         }
         $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";
         $result = $DBH->query($sql_cmd);
-        msg_okay("Group '$in_group_id' added");
+        if ($result) {
+            msg_okay("Group '$in_group_id' added");
+        } else {
+            sys_err("Problem updating $in_uid");
+            sys_err("Problem SQL: $sql_cmd");
+            sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+        }
 
         // -- add people to group
 
@@ -188,7 +194,13 @@ if ( $update_flag ) {
                 mkin ('date_added',      $now,         's');
                 $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
                 $result = $DBH->query($sql_cmd);
-                msg_okay("'$a_uid' added");
+                if ($result) {
+                    msg_okay("'$a_uid' added");
+                } else {
+                    sys_err("Problem updating $in_uid");
+                    sys_err("Problem SQL: $sql_cmd");
+                    sys_err('(' . $DBH->errno . ') ' . $DBH->error);
+                }
             }
         }
     }
