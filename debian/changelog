@@ -1,3 +1,9 @@
+picture-rings (2.32) unstable; urgency=medium
+
+  * Correct bug in group_maint_action.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 09 Sep 2019 06:47:08 +0000
+
 picture-rings (2.31) UNRELEASED; urgency=medium
 
   * Correct bug in email parsing routine.

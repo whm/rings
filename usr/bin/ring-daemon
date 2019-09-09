@@ -15,7 +15,7 @@ use Image::Magick;
 use Pod::Usage;
 use Rings::Common;
 
-my %SIZE_IDS = ();
+my %SIZE_IDS    = ();
 my @ACTION_LIST = ('SIZE', 'INFO');
 
 my $opt_action;
@@ -46,6 +46,7 @@ sub get_pids {
         $sel .= "WHERE status = 'PENDING' ";
         $sel .= 'AND action = ? ';
         $sel .= 'ORDER BY pid ';
+
         if ($CONF->debug) {
             dbg($sel);
         }
@@ -64,6 +65,7 @@ sub get_pids {
         $sel .= 'FROM pictures_information ';
         $sel .= 'WHERE pid >= ? AND pid <= ? ';
         $sel .= 'ORDER BY pid ';
+
         if ($CONF->debug) {
             dbg($sel);
         }
@@ -105,6 +107,7 @@ sub process_pids {
         $sel .= 'JOIN picture_types ';
         $sel .= 'ON (picture_types.mime_type = pictures_raw.mime_type) ';
         $sel .= 'WHERE pictures_raw.pid = ? ';
+
         if ($CONF->debug) {
             dbg($sel);
         }
@@ -166,7 +169,7 @@ sub process_pids {
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {
             my $blob = read_file("$pic_path", binmode => ':raw');
-            my %pic = get_meta_data($blob);
+            my %pic  = get_meta_data($blob);
             store_meta_data($pid, $source_file, \%pic);
             queue_action_reset($pid, $action);
         } else {

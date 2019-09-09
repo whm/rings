@@ -141,8 +141,8 @@ sub read_properties {
                 my $val  = $2;
                 $attr =~ s/^\s+//;
                 $attr =~ s/\s+$//;
-                $val =~ s/^\s+//;
-                $val =~ s/\s+$//;
+                $val  =~ s/^\s+//;
+                $val  =~ s/\s+$//;
                 $PROPS{$attr} = $val;
             }
         }
@@ -184,6 +184,7 @@ sub write_html {
     $sel .= "WHERE d.pid='$pid' ";
     $sel .= "AND p.display_name NOT LIKE 'ZID%' ";
     $sel .= "ORDER BY p.display_name ";
+
     if ($opt_debug) {
         dbg($sel);
     }
@@ -340,6 +341,7 @@ sub read_and_write {
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON d.pid=p.pid ";
     $sel .= "WHERE " . $PROPS{'selection'} . " ";
+
     if ($opt_debug) {
         dbg($sel);
     }
@@ -361,6 +363,7 @@ sub read_and_write {
     $sel .= "JOIN tmp_picture_list tmp ";
     $sel .= "ON (tmp.pid = pic.pid) ";
     $sel .= "ORDER BY pic.picture_date ";
+
     if ($opt_debug) {
         dbg($sel);
     }
@@ -431,6 +434,7 @@ sub read_and_write {
         $img_sel .= "JOIN pictures_small sm ";
         $img_sel .= "ON (sm.pid = rw.pid) ";
         $img_sel .= "WHERE rw.pid = '$row->{pid}' ";
+
         if ($opt_debug) {
             dbg($img_sel);
         }

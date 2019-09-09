@@ -10,12 +10,8 @@ require('inc_ring_init.php');
 require('inc_maint_check.php');
 
 // Form or URL inputs
-$in_fld             = get_request('in_fld');
-$in_val             = get_request('in_val');
 $in_group_id        = get_request('in_group_id');
-$in_date_added      = get_request('in_date_added');
 $in_type            = get_request('in_type');
-$in_date_last_maint = get_request('in_date_last_maint');
 $in_group_uid       = get_request('in_group_uid');
 $in_deluids         = get_request('in_deluids');
 $in_uid             = get_request('in_uid');
@@ -51,8 +47,6 @@ function mkin ($a_fld, $a_val, $in_type) {
 // Main Routine
 
 $now = date ('Y-m-d H:i:s');
-$in_date_last_maint = $now;
-$in_date_added = $now;
 
 // No spaces allowed in the identifier
 $in_uid = preg_replace ('/\s+/', '', $in_uid);
@@ -101,7 +95,11 @@ if ( $update_flag ) {
         if ($db_fld == "date_added") {
             continue;
         }
-        $in_val = trim(get_request("in_$db_fld"));
+        if ($db_fld == "date_last_maint") {
+            $in_val = $now;
+        } else {
+            $in_val = trim(get_request("in_$db_fld"));
+        }
         if (trim($in_val) != trim($row[$db_fld])) {
             $in_val = str_replace ("'", "\\'", $in_val);
             $cmd .= "$comma $db_fld='$in_val' ";
@@ -124,10 +122,10 @@ if ( $update_flag ) {
         foreach ($in_newuids as $i => $a_uid) {
             $flds = '';
             $vals = '';
-            mkin ('group_id',        $in_group_id,        's');
-            mkin ('uid',             $a_uid,              's');
-            mkin ('date_last_maint', $in_date_last_maint, 's');
-            mkin ('date_added',      $in_date_added,      's');
+            mkin ('group_id',        $in_group_id, 's');
+            mkin ('uid',             $a_uid,       's');
+            mkin ('date_last_maint', $now,         's');
+            mkin ('date_added',      $now,         's');
             $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
             $result = $DBH->query($sql_cmd);
             msg_okay("'$a_uid' added");
@@ -151,7 +149,7 @@ if ( $update_flag ) {
     // -- Add a new record -------------------------------
 
     $sel = "SELECT group_id FROM groups WHERE group_id='$in_group_uid'";
-    $result = $dbh->query($sel);
+    $result = $DBH->query($sel);
     if ($result) {
         $row = $result->fetch_array(MYSQLI_ASSOC);
         $this_group = $row['group_id'];
@@ -167,7 +165,11 @@ if ( $update_flag ) {
         $vals = '';
         $fld_names = get_fld_names('groups');
         foreach ($fld_names as $db_fld) {
-            $in_val = trim(get_request("in_$db_fld"));
+            if ($db_fld == "date_last_maint" || $db_fld == 'date_last_maint') {
+                $in_val = $now;
+            } else {
+                $in_val = trim(get_request("in_$db_fld"));
+            }
             mkin ($db_fld, $in_val, 's');
         }
         $sql_cmd = "INSERT INTO groups ($flds) VALUES ($vals)";
@@ -180,10 +182,10 @@ if ( $update_flag ) {
             foreach ($in_newuids as $i => $a_uid) {
                 $flds = '';
                 $vals = '';
-                mkin ('group_id',        $in_group_id,        's');
-                mkin ('uid',             $a_uid,              's');
-                mkin ('date_last_maint', $in_date_last_maint, 's');
-                mkin ('date_added',      $in_date_added,      's');
+                mkin ('group_id',        $in_group_id, 's');
+                mkin ('uid',             $a_uid,       's');
+                mkin ('date_last_maint', $now,         's');
+                mkin ('date_added',      $now,         's');
                 $sql_cmd = "INSERT INTO picture_groups ($flds) VALUES ($vals)";
                 $result = $DBH->query($sql_cmd);
                 msg_okay("'$a_uid' added");
@@ -199,7 +201,7 @@ if ( $update_flag ) {
     $sql_cmd = "DELETE FROM groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        msg_msg("Group '$in_group_id' dropped from people.");
+        sys_msg("Group '$in_group_id' dropped from people.");
     } else {
         msg_err("Problem deleting $in_group_id");
         msg_err("Problem SQL: $sql_cmd");
@@ -207,7 +209,7 @@ if ( $update_flag ) {
     $sql_cmd = "DELETE FROM picture_groups WHERE group_id='$in_group_id'";
     $result = $DBH->query($sql_cmd);
     if ($result) {
-        msg_msg("Picture references dropped from people.");
+        sys_msg("Picture references dropped from people.");
     } else {
         msg_err("Problem deleting $in_group_id");
         msg_err("Problem SQL: $sql_cmd");

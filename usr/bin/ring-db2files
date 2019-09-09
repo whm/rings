@@ -47,7 +47,7 @@ sub export_picture {
     my $cnt = 0;
     if (my $row = $sth->fetchrow_hashref) {
         my $file_type = $row->{file_type};
-        my $out_path = pid_to_path($pid, $group, 'raw', $file_type);
+        my $out_path  = pid_to_path($pid, $group, 'raw', $file_type);
         if ($opt_force || !-e $out_path) {
             print "  Writing file: $out_path\n";
             open PF, '>', $out_path
