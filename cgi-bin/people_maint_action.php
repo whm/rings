@@ -10,10 +10,6 @@ require('inc_ring_init.php');
 require('inc_maint_check.php');
 
 // Form or URL inputs
-$in_fld             = get_request('in_fld');
-$in_date_added      = get_request('in_date_added');
-$in_val             = get_request('in_val');
-$in_date_last_maint = get_request('in_date_last_maint');
 $in_type            = get_request('in_type');
 $in_uid             = get_request('in_uid');
 $in_cn              = get_request('in_cn');
@@ -62,8 +58,6 @@ function sql_quote ($a_val, $in_type) {
 // Main Routine
 
 $now = date ('Y-m-d H:i:s');
-$in_date_last_maint = $now;
-$in_date_added      = $now;
 
 // Field default
 if (strlen($in_cn) == 0) {
@@ -112,9 +106,12 @@ if ( $update_flag ) {
     $fld_names = get_fld_names('people_or_places');
     foreach ($fld_names as $db_fld) {
         if ($db_fld == "date_of_birth")   {continue;}
-        if ($db_fld == "date_last_maint") {continue;}
         if ($db_fld == "date_added")      {continue;}
-        $in_val = trim(get_request("in_$db_fld"));
+        if ($db_fld == "date_last_maint") {
+            $in_val = $now;
+        } else {
+            $in_val = trim(get_request("in_$db_fld"));
+        }       
         if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
         if (trim($in_val) != trim($row[$db_fld])) {
             $in_val = str_replace ("'", '\'', $in_val);

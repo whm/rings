@@ -35,6 +35,7 @@ sub read_and_update {
     $sel .= "FROM pictures_information ";
     $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
     $sel .= "ORDER BY pid ";
+
     if ($opt_debug) {
         dbg($sel);
     }
@@ -75,6 +76,7 @@ sub read_and_update {
         $sel .= "JOIN pictures_raw r ";
         $sel .= "ON (p.pid = r.pid) ";
         $sel .= "WHERE p.pid = $thisPID ";
+
         if ($opt_debug) {
             dbg($sel);
         }
@@ -141,6 +143,7 @@ sub read_and_update {
                 $cmd .= 'shutter_speed=?,';
                 $cmd .= 'date_last_maint=? ';
                 $cmd .= 'WHERE pid=? ';
+
                 if ($opt_debug) {
                     dbg($cmd);
                 }

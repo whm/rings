@@ -47,6 +47,7 @@ sub read_and_update {
     $sel .= 'WHERE pictures_information.pid >= ? ';
     $sel .= 'AND pictures_information.pid <= ? ';
     $sel .= 'ORDER BY pictures_information.pid ';
+
     if ($CONF->debug) {
         dbg($sel);
     }
@@ -89,6 +90,7 @@ sub read_and_update {
         $cmd .= 'raw_signature = ?, ';
         $cmd .= 'date_last_maint = NOW() ';
         $cmd .= 'WHERE pid = ? ';
+
         if ($CONF->debug) {
             dbg($cmd);
         }
@@ -109,6 +111,7 @@ sub read_and_update {
         $cmd .= 'compression = ?, ';
         $cmd .= 'date_last_maint = NOW() ';
         $cmd .= 'WHERE pid = ? ';
+
         if ($CONF->debug) {
             dbg($cmd);
         }
