@@ -243,7 +243,7 @@ function display_slide_table($pic_data) {
 <?php if ($ring_admin_group) { ?>
         <a href="<?php echo $pic_edit; ?>"
            target="_blank">
-         <?php echo $pic['pid']; ?>
+         <?php echo $pic['pid'] . ' ' . $pic['grade']; ?>
         </a>
 <?php if (!empty($pic_dups)) { ?>
         <input type="checkbox" value="delete"
@@ -380,7 +380,7 @@ if (!empty($in['start_date'])) {
 # Select Picture data
 ##############################################################################
 
-$sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
+$sel = "SELECT p.picture_date, p.grade, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
@@ -398,9 +398,10 @@ if (!$result) {
     $pic_data = [];
     $cnt = 0;
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $pic_data[$cnt]['pid']  = $row['pid'];
-        $pic_data[$cnt]['date'] = $row['picture_date'];
-        $pic_data[$cnt]['dlm']  = $row['date_last_maint'];
+        $pic_data[$cnt]['pid']   = $row['pid'];
+        $pic_data[$cnt]['date']  = $row['picture_date'];
+        $pic_data[$cnt]['grade'] = $row['grade'];
+        $pic_data[$cnt]['dlm']   = $row['date_last_maint'];
         $cnt++;
     }
 }
@@ -474,7 +475,7 @@ function verifyInput() {
 
 <?php
 
-$sel = "SELECT p.picture_date, d.pid, d.date_last_maint ";
+$sel = "SELECT p.picture_date, p.grade, d.pid, d.date_last_maint ";
 $sel .= "FROM picture_details d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
