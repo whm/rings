@@ -133,6 +133,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     $sel .= 'WHERE det.uid = ? ';
     $sel .= 'AND p.picture_date = ? ';
     $sel .= 'AND det.pid > ? ';
+    $sel .= 'AND ' . $grade_sel;
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
@@ -165,6 +166,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
     $sel .= 'AND p.picture_date > ? ';
+    $sel .= 'AND ' . $grade_sel;
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
@@ -325,6 +327,7 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sel .= 'JOIN pictures_information p ';
     $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
+    $sel .= 'AND ' . $grade_sel;
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
