@@ -13,7 +13,6 @@ require('inc_ring_init.php');
 $in_size         = get_request('in_size');
 $in_seconds      = get_request('in_seconds');
 $in_group_id     = get_request('in_group_id');
-$in_pos          = get_request('in_pos');
 $in_grade        = get_request('in_grade');
 $in_type         = get_request('in_type');
 $in_pref_display = get_request('in_pref_display');
@@ -101,36 +100,6 @@ if (empty($in_seconds)) {
 }
 if ($in_seconds < 3) { $in_seconds = 3;}
 $_SESSION['display_seconds'] = $in_seconds;
-
-// set button postion on picture display pages
-if (empty($in_pos)) {
-    $in_pos = $_SESSION['button_position'];
-}
-$chk_pos_top = $chk_pos_bottom = '';
-if ($in_pos == 'B') {
-    $chk_pos_bottom = 'CHECKED';
-} else {
-    $chk_pos_top = 'CHECKED';
-    $in_pos = 'T';
-}
-$_SESSION['button_position'] = $in_pos;
-
-// set button postion on picture display pages
-if (empty($in_type)) {
-    if (!empty($_SESSION['button_type'])) {
-        $in_type = $_SESSION['button_type'];
-    } else {
-        $in_type = 'G';
-    }
-}
-$chk_type_text = $chk_type_graphic = '';
-if ($in_type == 'T') {
-    $chk_type_text    = 'CHECKED';
-} else {
-    $chk_type_graphic = 'CHECKED';
-    $in_type          = 'G';
-}
-$_SESSION['button_type'] = $in_type;
 
 // set preferences display
 $chk_pref_yes = '';
@@ -238,9 +207,11 @@ if ($result = $DBH->query($sel)) {
     <table border="1" cellpadding="2">
 
     <tr>
-    <td rowspan="5">
+    <td rowspan="4">
     <input type="submit" name="in_button_set" value="Set">
     </td>
+    </tr>
+    
     <th align="right">Picture Size:</th>
     <td>
 <?php
@@ -292,28 +263,6 @@ $stmt->close();
     <td>
        <input type="text" size="4" name="in_seconds"
               value="<?php echo $in_seconds;?>">
-    </td>
-    </tr>
-
-    <tr>
-    <th align="right">Button Position:</th>
-    <td>
-       <input type="radio" <?php echo $chk_pos_top;?> name="in_pos"
-              value="T">Top
-       &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_pos_bottom;?> name="in_pos"
-              value="B">Bottom
-    </td>
-    </tr>
-
-    <tr>
-    <th align="right">Button Type:</th>
-    <td>
-       <input type="radio" <?php echo $chk_type_text;?> name="in_type"
-              value="T">Text
-       &nbsp;&nbsp;
-       <input type="radio" <?php echo $chk_type_graphic;?> name="in_type"
-              value="G">Graphic
     </td>
     </tr>
 

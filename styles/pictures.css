@@ -42,3 +42,26 @@ P {color: white;
    text-decoration: none;
    font-style: normal;
    font-family: sans-serif;}
+
+#linkDiv {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+  z-index: 9;
+  background-color: #ffffff;
+  border: 1px solid #d3d3d3;
+  text-align: left;
+}
+
+#linkDivHeader {
+  padding: 10px;
+  cursor: move;
+  z-index: 10;
+  background-color: #2196F3;
+  color: #fff;
+}
+
+p.tight {
+    margin: 0px;
+    background-color: #666666;
+}

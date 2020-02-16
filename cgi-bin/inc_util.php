@@ -11,6 +11,27 @@ $sys_msg_warn = '<font color="red">';
 $sys_msg_end  = "</font><br/>\n";
 
 //-------------------------------------------------------------
+// Calculate the size of a picture that will be contained within
+// the bounding box $max_x, $max_y.
+
+function calc_size ($max_x, $max_y, $width, $height) {
+    $x  = $width;
+    $y  = $height;
+    $x1 = $max_x;
+    $y1 = intval(($x1 / $width) * $height);
+    $y2 = $max_y;
+    $x2 = intval(($y2 / $height) * $width);
+    if ($x1 < $x2) {
+        $x = $x1;
+        $y = $y1;
+    } else {
+        $x = $x2;
+        $y = $y2;
+    }
+    return array($x, $y);
+}
+
+//-------------------------------------------------------------
 // get a value from the REQUEST array if it exists
 
 function get_request ($idx, $default = NULL) {

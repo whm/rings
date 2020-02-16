@@ -170,12 +170,18 @@ function db_delete_picture ($this_pid) {
     global $DBH;
 
     $del_tables = array();
-    $del_tables[] = 'pictures_information';
-    $del_tables[] = 'pictures_raw';
-    $del_tables[] = 'pictures_small';
-    $del_tables[] = 'pictures_large';
-    $del_tables[] = 'pictures_larger';
-    $del_tables[] = 'pictures_1280_1024';
+    $sel = 'SELECT picture_table '
+        . 'FROM picture_sizes ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    $stmt->bind_param();
+    $stmt->execute();
+    $stmt->bind_result($p1);
+    while ($stmt->fetch()) {
+        $del_tables[] = $p1;
+    }
+    $stmt->close();
 
     foreach ($del_tables as $this_table) {
         $sql_cmd = "DELETE FROM $this_table WHERE pid=$this_pid ";
@@ -334,6 +340,75 @@ function get_picture_type ($pid, $id) {
         $file_type = '';
     }
     return array($mime_type, $file_type);
+}
+
+//-------------------------------------------------------------
+// Look up the dimentions for a picture given the size id
+
+function lookup_pic_dimen($pid, $sid) {
+
+    global $CONF;
+    global $DBH;
+
+    // default picture table
+    $picture_table = 'pictures_1280_1024';
+
+    if (empty($pid)) {
+        sys_err('Empty pid sent to lookup_pic_dimen');
+        return;
+    }
+    if (empty($sid)) {
+        $size = $CONF['display_size'];
+    }
+
+    $sel = 'SELECT picture_table '
+        . 'FROM picture_sizes '
+        . 'WHERE size_id = ? or description = ? ';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    $stmt->bind_param('ss', $sid, $sid);
+    $stmt->execute();
+    $stmt->bind_result($p1);
+    $cnt = 0;
+    while ($stmt->fetch()) {
+        $picture_table = $p1;
+        $cnt++;
+    }
+    if ($cnt == 0) {
+        sys_err("Picture size not found for $sid, using default");
+    }
+    if ($cnt > 1) {
+        sys_warn("Ambiguous size specification $sid");
+    }
+    $stmt->close();
+
+    $this_height = 0;
+    $this_width = 0;
+
+    $sel = 'SELECT p.height, p.width ';
+    $sel .= "FROM $picture_table p ";
+    $sel .= 'WHERE p.pid = ? ';
+    if (!$sth = $DBH->prepare($sel)) {
+        $m = 'Prepare failed ' . $DBH->error . '(' . $DBH->errno . ') ';
+        $m .= "Problem statement: $sel";
+        sys_err($m);
+        return;
+    }
+    $sth->bind_param('i', $pid);
+    if (!$sth->execute()) {
+        sys_err('Execute failed ($rname): '
+                . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err("Problem statement: $cmd");
+        return;
+    }
+    $sth->bind_result($p1, $p2);
+    if ($sth->fetch()) {
+        $this_height = $p1;
+        $this_width  = $p2;
+    }
+    $sth->close();
+    return array($this_width, $this_height);
 }
 
 //-------------------------------------------------------------
