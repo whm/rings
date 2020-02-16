@@ -1,8 +1,57 @@
-<?PHP
+<?php
 // -------------------------------------------------------------
 // picture_select.php
 // author: Bill MacAllister
 // date: August 15, 2004
+
+// Get the screen properties before we do anything else
+function make_id ($s) {
+    return str_replace('.','',$s);
+}
+$clientProps = array('screen.width',
+                     'screen.height',
+                     'window.innerWidth',
+                     'window.innerHeight',
+                     'window.outerWidth',
+                     'window.outerHeight',
+                     'screen.colorDepth',
+                     'screen.pixelDepth');
+if(empty($_POST['screenheight'])) {
+    echo "<!DOCTYPE html>\n";
+    echo "<html>\n";
+    echo "<head>\n";
+    echo "  <style>\n";
+    echo "    body {\n";
+    echo "      background-color: black;\n";
+    echo "    }\n";
+    echo "  </style>\n";
+    echo "  <title>Get Window Size</title>\n";
+    echo "</head>\n";
+    echo "\n";
+    echo "<body>\n";
+    echo "Loading...";
+    // create hidden form
+    echo "<form method='POST' id='data' style='display:none'>\n";
+    foreach($clientProps as $p) {
+        $id = make_id($p);
+        echo "<input type='text' id='$id' name='$id'>\n";
+    }
+    echo "<input type='submit'>\n";
+    echo "</form>\n";
+
+    echo "<script>\n";
+    foreach($clientProps as $p) {
+        //populate hidden form with screen/window info
+        $id = make_id($p);
+        echo "document.getElementById('$id').value = $p;\n";
+    }
+    //submit form
+    echo "document.forms.namedItem('data').submit();\n";
+    echo "</script>\n";
+    echo "</body>\n";
+    echo "</html>\n";
+    exit;
+}
 
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
@@ -77,7 +126,7 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
 
         # Select next picture by date
         $sel = 'SELECT p.pid, ';
-        $sel .= 'p.picture_date ';            
+        $sel .= 'p.picture_date ';
         $sel .= 'FROM pictures_information p ';
         $sel .= 'WHERE p.picture_date > ? ';
         $sel .= 'AND ' . $grade_sel;
@@ -248,69 +297,55 @@ function make_a_link ($thisUID,
 
 }
 
-?>
-<html>
-<head>
-<title>Rings</title>
-<?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
-<script language="JavaScript">
+// ---------------------------------------------
+// make a url to go to another picture
 
-function getDom(objectname){
-    if (document.all) return document.all[objectname];
-    else return document.getElementById(objectname);
-}
+function make_a_url ($thisUID,
+                      $thisPID,
+                      $this_picture_date,
+                      $thisName) {
+    global $CONF;
+    global $DBH;
 
-function hideMail(){
-    getDom("mailHelpDisplay").style.display = 'none';
-}
-function showMail(){
-    getDom("mailHelpDisplay").style.display = '';
-}
+    $thisLink = '';
+    if (auth_picture_invisible($thisPID)) {return $thisLink;}
+    if (auth_person_hidden($thisUID))     {return $thisLink;}
 
-function hideBig(){
-    getDom("bigHelpDisplay").style.display = 'none';
-}
-function showBig(){
-    getDom("bigHelpDisplay").style.display = '';
-}
+    $next_uid  = $thisUID;
+    $next_pid  = '';
+    $next_date = '';
 
-function hideSelect(){
-    getDom("selectHelpDisplay").style.display = 'none';
-}
-function showSelect(){
-    getDom("selectHelpDisplay").style.display = '';
-}
+    if ($thisUID == 'next-by-date') {
+        $next_pid = get_next_pic_by_date($this_picture_date, $thisPID);
+        if ($next_pid == 0) {
+            $next_pid = get_next_pic_by_date('0001-01-01', $thisPID);
+        }
+    } else {
+        $next_pid = get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID);
+        if ($next_pid == 0) {
+            $next_pid = get_next_pic_by_uid($thisUID, '0001-01-01', $thisPID);
+        }
+    }
 
-function hideEdit(){
-    getDom("editHelpDisplay").style.display = 'none';
-}
-function showEdit(){
-    getDom("editHelpDisplay").style.display = '';
-}
+    if (empty($next_pid) || $next_pid == 0) {
+        $next_url = 1;
+    }
 
-function hideReload(){
-    getDom("reloadHelpDisplay").style.display = 'none';
-}
-function showReload(){
-    getDom("reloadHelpDisplay").style.display = '';
+    $this_url = 'picture_select.php';
+    $sep = '?';
+
+    $this_url .= $sep . 'in_ring_pid=' . $next_pid;
+    $sep = '&';
+    $this_url .= $sep . 'in_ring_uid=' . urlencode($next_uid);
+    $sep = '&';
+
+    return $this_url;
+
 }
 
-function add_email_list(idx) {
-    var win = window.open("add_email_list.php?in_id="+idx,
-                          "Add this picture to the email list",
-                          "width=400,height=150,status=no");
-    return false;
-}
-
-</script>
-
-</head>
-
-<body>
-<table border="0" width="100%"><tr><td align="center">
-
-<?php
+########################################################################
+# Main routine
+########################################################################
 
 $next_links = array();
 
@@ -331,7 +366,8 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sel .= 'ORDER BY p.picture_date, det.pid ';
     $sel .= 'LIMIT 0,1 ';
     if (!$sth = $DBH->prepare($sel)) {
-        sys_err('Prepare failed (get first picture): ' . $DBH->error . '(' . $DBH->errno . ')');
+        sys_err('Prepare failed (get first picture): ' . $DBH->error
+                . '(' . $DBH->errno . ')');
         sys_err("Problem statement: $sel");
         $in_ring_pid = 1;
     }
@@ -360,7 +396,8 @@ if (!empty($in_ring_pid)) {
         exit;
     }
 
-    $this_size = $_SESSION['display_size'];
+    $this_size
+        = empty($_SESSION['display_size']) ? '' : $_SESSION['display_size'];
     if (empty($this_size)) {
         $this_size = $CONF['display_size'];
     }
@@ -368,6 +405,7 @@ if (!empty($in_ring_pid)) {
     // Get data
 
     $image_reference = '';
+    $image_url       = '';
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information p ";
     $sel .= "WHERE pid=$in_ring_pid ";
@@ -381,12 +419,11 @@ if (!empty($in_ring_pid)) {
         $this_picture_date = $row["picture_date"];
         $this_dlm          = $row["date_last_maint"];
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
-        $image_reference
-            .= '<img src="display.php'
-            . '?in_pid=' . $this_pid
+        $image_url
+            = 'display.php?in_pid=' . $this_pid
             . '&dlm=' . htmlentities($this_dlm)
-            . '&in_size=' . $this_size
-            . '">';
+            . '&in_size=' . $this_size;
+        $image_reference = '<img src="' . $image_url . '>';
         if (!empty($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
@@ -395,6 +432,7 @@ if (!empty($in_ring_pid)) {
         $image_reference .= "Picture Date: "
             . format_date_time($this_picture_date) . "\n";
         $image_reference .= "<p>\n";
+        $image_reference = '<img src="' . $image_url . '">';
         $sel = "SELECT det.uid uid, ";
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_details det ";
@@ -414,18 +452,11 @@ if (!empty($in_ring_pid)) {
     }
 
     // ------------------------------------------
-    // display the links
+    // gather the tags in this picture into links to the next picture
 
-    if (!empty($_SESSION['button_position'])
-    && $_SESSION['button_position'] == 'B') {
-        echo $image_reference;
-    }
-
-    echo '<table border="0" cellpadding="5" width="100%">'."\n";
-
-    echo "<tr>\n";
-    echo "\n";
-    echo '<td valign="top" align="center">'."\n";
+    $next_menu = array();
+    $next_menu[] = '<div id="linkDiv">' . "\n";
+    $next_menu[] = '<div id="linkDivHeader">Moveable Menu</div>' . "\n";
     if (count($next_links)>0) {
         asort($next_links);
 
@@ -436,18 +467,21 @@ if (!empty($in_ring_pid)) {
                              $this_pid,
                              $this_picture_date,
                              $next_links[$in_ring_uid]);
+            $this_url_next = make_a_url($in_ring_uid,
+                             $this_pid,
+                             $this_picture_date,
+                             $next_links[$in_ring_uid]);
+
             if (!empty($l)) {
-                echo $l."<br/>\n";
+                $next_menu[] = '<p class="tight">' . $l ."</p>\n";
             }
         }
-        echo '<font  color="white">';
         if ($in_slide_show > 0) {
             $l = "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
             $l .= '<img src="button.php?in_button=Stop Show">';
             $l .= "</a>\n";
-            echo $l;
+            $next_menu[] = '<p class="tight">' . $l . "</p>\n";
         } else {
-            $c = '';
             foreach ($next_links as $thisUID => $thisName) {
                 if ($in_ring_uid == $thisUID) {continue;}
                 $l = make_a_link($thisUID,
@@ -455,135 +489,210 @@ if (!empty($in_ring_pid)) {
                                  $this_picture_date,
                                  $next_links[$thisUID]);
                 if (!empty($l)) {
-                    echo $c.$l;
-                    $c = ' <font color="#000000">.</font> ';
+                    $next_menu[] = '<p class="tight">' . $l . "</p>\n";
                 }
             }
         }
-        echo '</font>';
     }
-    echo "</td>\n";
-    echo "</tr>\n";
-    echo "</table>\n";
+    $next_menu[] = "</div>\n";
 
-    if ($_SESSION['button_position'] != 'B') {
-        echo $image_reference;
-    }
+    # --------------------------------
+    # The end menu
 
-    echo '<table border="0" cellpadding="5" width="100%">'."\n";
-    echo "\n";
-    echo '<tr>'."\n";
-    echo '<td valign="top" align="center">'."\n";
+    $end_menu = array();
 
     # Defeat the local picture cache by adding a random number to
     # the image tag.
     $i = rand(0, 10000);
-    echo '<a href="display.php'
+    $end_menu[] = '<ul>' . "\n";
+    $end_menu[] = '<li>' . "\n";
+    $end_menu[] = '<a href="display.php'
         . '?in_pid=' . $this_pid
         . '&in_size=raw'
         . '&rand=' . $i
-        . '" target="_blank">';
-    echo '<img src="/rings-images/icon-view-details.png"  border="0" ';
-    echo 'onMouseOver="showBig();" onMouseOut="hideBig();" ';
-    echo 'alt="Display full size image in a new window.">';
-    echo "</a>\n";
+        . '" target="_blank">' . "\n";
+    $end_menu[] = '<img src="/rings-images/icon-view-details.png"' . "\n";
+    $end_menu[] = '     border="0"' . "\n";
+    $end_menu[] = '     alt="Full size image in a new window.">' . "\n";
+    $end_menu[] = "</a>\n";
+    $end_menu[] = "</li>\n";
 
-    echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-
-    echo '<a href="index.php">';
-    echo '<img src="/rings-images/icon-home.png" border="0" ';
-    echo 'onMouseOver="showSelect();" onMouseOut="hideSelect();" ';
-    echo 'alt="Pick a new Picture Ring">';
-    echo "</a>\n";
-
-    echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+    $end_menu[] = '<li>' . "\n";
+    $end_menu[] = '<a href="index.php">' . "\n";
+    $end_menu[] = '<img src="/rings-images/icon-home.png"' . "\n";
+    $end_menu[] = '     border="0"' . "\n";
+    $end_menu[] = '     alt="Pick a new Picture Ring">' . "\n";
+    $end_menu[] = "</a>\n";
+    $end_menu[] = "</li>\n";
 
     if (!empty($_SERVER['REMOTE_USER'])) {
         $loggedInUser = $_SERVER['REMOTE_USER'];
     }
     if (!empty($loggedInUser)) {
-        echo '<img src="/rings-images/icon-mail-send.png" border="0" ';
-        echo "onClick=\"add_email_list($this_pid);\" ";
-        echo 'onMouseOver="showMail();" onMouseOut="hideMail();" ';
-        echo 'alt="Add this picture to the email list">';
+        $end_menu[] = '<li>' . "\n";
+        $end_menu[] = "<!-- Logged in user -->\n";
+        $end_menu[] = '<img src="/rings-images/icon-mail-send.png"' . "\n";
+        $end_menu[] = '     border="0"' . "\n";
+        $end_menu[] = "     onClick=\"add_email_list($this_pid);\"\n";
+        $end_menu[] = '     alt="Add picture to the email list">' . "\n";
+        $end_menu[] = "</li>\n";
 
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-       
         if ($ring_admin_group) {
-            echo '<a href="picture_maint.php'
-                . '?in_pid='.$this_pid.'" target="_blank">';
-            echo '<img src="/rings-images/icon-edit.png" border="0" ';
-            echo 'onMouseOver="showEdit();" onMouseOut="hideEdit();" ';
-            echo 'alt="Edit Picture Information">';
-            echo "</a>\n";
+            $end_menu[] = '<li>' . "\n";
+            $end_menu[] = "<!-- Admin User -->\n";
+            $end_menu[] = '<a href="picture_maint.php'
+                . '?in_pid=' . $this_pid . '" target="_blank">' . "\n";
+            $end_menu[] = '<img src="/rings-images/icon-edit.png"' . "\n";
+            $end_menu[] = '     border="0"' . "\n";
+            $end_menu[] = '     alt="Edit Picture Information">' . "\n";
+            $end_menu[] = "</a>\n";
+            $end_menu[] = "</li>\n";
         }
     } else {
-        echo '<a href="' . auth_url($_SERVER['PHP_SELF']);
-        echo '?in_ring_pid='.$in_ring_pid.'">';
-        echo '<img src="/rings-images/login.jpg" border="0">';
-        echo "</a>\n";
+        $end_menu[] = '<li>' . "\n";
+        $end_menu[] = '<a href="' . auth_url($_SERVER['PHP_SELF']);
+        $end_menu[] = '?in_ring_pid='.$in_ring_pid.'">' . "\n";
+        $end_menu[] = '<img src="/rings-images/login.jpg" border="0">' . "\n";
+        $end_menu[] = "</a>\n";
+        $end_menu[] = "</li>\n";
     }
-
-    echo '<p id="mailHelpDisplay">'."\n";
-    echo "Select this picture to email\n";
-    echo "</p>\n";
-
-    echo '<p id="bigHelpDisplay">'."\n";
-    echo "Display picture full size\n";
-    echo "<br/>\n";
-    echo "($this_fullbytes kbytes)\n";
-    echo "</p>\n";
-
-    echo '<p id="selectHelpDisplay">'."\n";
-    echo "Select another Picture Ring\n";
-    echo "</p>\n";
-
-    echo '<p id="editHelpDisplay">'."\n";
-    echo "Edit Picture Ring Details\n";
-    echo "</p>\n";
-
-    echo '<p id="reloadHelpDisplay">'."\n";
-    echo "Re-Load a picture from a file.\n";
-    echo "</p>\n";
-
-    echo "</td>\n";
-    echo "</tr>\n";
-    echo "</table>\n";
+    $end_menu[] = "</ul>\n";
 
 }
 
-sys_display_msg();
+// --------------------------------
+// Retrieve the screen properties
+$debug = 0;
+$props = array();
+foreach ($clientProps as $p) {
+    $id  = make_id($p);
+    $val = $_POST[$id];
+    $props[$id] = $val;
+    if ($debug) {
+        echo "p:$p id:$id prop_val:$val<br/>\n";
+    }
+}
+
+$max_x               = $props['windowinnerWidth'];
+$max_y               = $props['windowinnerHeight'];
+list($pic_x, $pic_y) = lookup_pic_dimen($this_pid, $this_size);
+list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
+
+########################################################################
+# Display output
+########################################################################
 
 ?>
+<html>
+<head>
+<title>Rings</title>
+<?php require('inc_page_head.php'); ?>
+<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
+<style>
+    body, html {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+    }
+
+    .bg {
+        background-image: url("<?php echo $image_url; ?>");
+        height: 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: <?php echo "${x}px ${y}px"; ?>;
+    }
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    li {
+        display: inline;
+    }
+
+</style>
+
+</head>
+
+<body>
+<div class="bg"></div>
+
+<?php
+// selection menu
+foreach ($next_menu as $m) {
+    echo $m;
+}
+?>
+
+<?php sys_display_msg();?>
+
+<div align="center">
+<?php foreach ($end_menu as $l) { echo $l; } ?>
+</div>
 
 </Body>
 </html>
+
 <script language="JavaScript">
 
-hideMail();
-hideBig();
-hideSelect();
-hideEdit();
-hideReload();
+// Make the DIV element draggable:
+function dragElement(elmnt) {
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (document.getElementById(elmnt.id + "Header")) {
+        // if present, the header is where you move the DIV from:
+        document.getElementById(elmnt.id + "Header").onmousedown
+                = dragMouseDown;
+    } else {
+        // otherwise, move the DIV from anywhere inside the DIV:
+        elmnt.onmousedown = dragMouseDown;
+    }
 
-<?php if ($in_slide_show > 0) {
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+    }
 
-    $display_seconds = $_SESSION['display_seconds'];
-    if ($display_seconds<3) {$display_seconds = 3;}
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
 
-    echo "function slideShowNext(aUID, aDate, aMilliSec) {\n";
-    echo "    var url;\n";
-    echo '    url = "'.$_SERVER['PHP_SELF']
-        . '?in_ring_uid='.$in_ring_uid
-        . '&in_ring_pid='.urlencode($this_pid)
-        . '&in_ring_next_date='.urlencode($this_picture_date)
-        . '&in_slide_show='.$in_slide_show
-        . '";'."\n";
-    echo '    location = url;'."\n";
-    echo "}\n";
-
-    $thisMilli = $display_seconds * 1000;
-    echo 'setTimeout ("slideShowNext()",'.$thisMilli.");\n";
+    function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
 }
-?>
+dragElement(document.getElementById("linkDiv"));
+
+// The mail selection action
+
+function getDom(objectname){
+    if (document.all) return document.all[objectname];
+    else return document.getElementById(objectname);
+}
+
+function add_email_list(idx) {
+    var win = window.open("add_email_list.php?in_id="+idx,
+                          "Add this picture to the email list",
+                          "width=400,height=150,status=no");
+    return false;
+}
+
 </script>
