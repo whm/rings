@@ -1,3 +1,16 @@
+picture-rings (2.34) unstable; urgency=medium
+
+  * Updates to main picture display, bug fixes
+    - Automatically select the size to display from the size of the screen.
+    - Preserve the bottom menu, but put it off the bottom of the screen.
+    - Make the "next ring" selection a moveable menu.  Remove the setting
+      that allows the selection of menu position and type.
+    - Correct problem is the mail action routine caused by the renaming
+      of an upstream library.
+    - Correct failures in the picture show java script.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 17 Feb 2020 01:57:37 +0000
+
 picture-rings (2.33) unstable; urgency=medium
 
   * Update duplicate processing in picture_select.

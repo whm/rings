@@ -70,6 +70,9 @@ $grade_sel = "(p.grade <= '".$_SESSION['display_grade']."' ";
 $grade_sel .= "OR p.grade = '' ";
 $grade_sel .= "OR p.grade IS NULL) ";
 
+# Variable to how the next url for slide shows
+$this_url_next = '';
+
 ##############################################################################
 # Subroutines
 ##############################################################################
@@ -193,9 +196,8 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     }
     $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
     if (!$sth->execute()) {
-        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $cmd";
-        sys_err($m);
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $cmd");
         return 0;
     }
     $sth->bind_result($p1);
@@ -694,5 +696,26 @@ function add_email_list(idx) {
                           "width=400,height=150,status=no");
     return false;
 }
+
+<?php
+if ($in_slide_show > 0) {
+
+    $display_seconds = $_SESSION['display_seconds'];
+    if ($display_seconds<3) {
+        $display_seconds = 3;
+    }
+
+    $show_url = $this_url_next . '&in_slide_show=' . $in_slide_show;
+
+    echo "function slideShowNext(aUID, aDate, aMilliSec) {\n";
+    echo '    var url;' . "\n";
+    echo '    url = "' . $show_url . '";' ."\n";
+    echo '    location = url;' . "\n";
+    echo "}\n";
+
+    $thisMilli = $display_seconds * 1000;
+    echo 'setTimeout ("slideShowNext()",' . $thisMilli . ");\n";
+}
+?>
 
 </script>

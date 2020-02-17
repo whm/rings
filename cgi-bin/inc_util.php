@@ -178,25 +178,21 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
     global $CONF;
 
     if (empty($lot)) {
-        $m = "picture_path missing picture_lot ($lot)";
-        sys_err($m);
+        sys_err("picture_path missing picture_lot ($lot)");
         return $m;
     }
     list ($a_size_id, $a_size_desc, $a_table) = validate_size($size_id);
     if (empty($a_size_id)) {
-        $m = "picture_path invalid size_id ($size_id)";
-        sys_err($m);
+        sys_err("picture_path invalid size_id ($size_id)");
         return $m;
     }
     if ($pid < 1) {
-        $m = 'picture_path invalid pid';
-        sys_err($m);
+        sys_err('picture_path invalid pid');
         return $m;
     }
     list ($a_file_type, $a_mime_type) = validate_type($file_type);
     if (empty($a_file_type)) {
-        $m = "picture_path invalid file_type ($type)";
-        sys_err($m);
+        sys_err("picture_path invalid file_type ($type)");
         return $m;
     }
     
