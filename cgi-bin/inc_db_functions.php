@@ -107,9 +107,8 @@ function accept_and_store($fld_name, $in_pid) {
     $cmd .= 'raw_picture_size = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
     if (!$sth = $DBH->prepare($cmd)) {
-        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $cmd";
-        sys_err($m);
+        sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $cmd");
         return 1;
     }
     $sth->bind_param(
@@ -122,9 +121,8 @@ function accept_and_store($fld_name, $in_pid) {
         $raw_size
     );
     if (!$sth->execute()) {
-        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $cmd";
-        sys_err($m);
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $cmd");
         return 1;
     }
     $sth->close();
@@ -138,16 +136,14 @@ function accept_and_store($fld_name, $in_pid) {
     $cmd .= 'mime_type = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
     if (!$sth = $DBH->prepare($cmd)) {
-        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $cmd";
-        sys_err($m);
+        sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $cmd");
         return 1;
     }
     $sth->bind_param('iss', $pid, $mime_type, $mime_type);
     if (!$sth->execute()) {
-        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $cmd";
-        sys_err($m);
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $cmd");
         return 1;
     }
     $sth->close();
@@ -229,16 +225,14 @@ function get_next ($id) {
 
     $sel = "SELECT next_number FROM next_number WHERE id = ? ";
     if (!$stmt = $DBH->prepare($sel)) {
-        $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $sel";
-        sys_err($m);
+        sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $sel");
         return;
     }
     $stmt->bind_param('s', $id);
     if (!$stmt->execute()) {
-        $m = 'Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-        $m .= "Problem statement: $sel";
-        sys_err($m);
+        sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $sel");
         return;
     }
     $stmt->bind_result($z);
@@ -251,16 +245,14 @@ function get_next ($id) {
         $nxt = $return_number + 1;
         $cmd = 'UPDATE next_number SET next_number=? WHERE id = ? ';
         if (!$stmt = $DBH->prepare($cmd)) {
-            $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-            $m .= "Problem statement: $cmd";
-            sys_err($m);
+            sys_err('Prepare fail: ' . $DBH->error . '(' . $DBH->errno . ') ');
+            sys_err("Problem statement: $cmd");
             return;
         }
         $stmt->bind_param('is', $nxt, $id);
         $stmt->execute();
         if (!$stmt->execute()) {
-            $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
-            sys_err($m);
+            sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
             return;
         }
         $stmt->close();
@@ -268,16 +260,14 @@ function get_next ($id) {
         $nxt = 1;
         $cmd = 'INSERT INTO  next_number (id,next_number) VALUES (?, ?) ';
         if (!$stmt = $DBH->prepare($cmd)) {
-            $m = 'Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ' ;
-            $m .= "Problem statement: $cmd";
-            sys_err($m);
+            sys_err('Prepare fail: ' . $DBH->error . '(' . $DBH->errno . ') ');
+            sys_err("Problem statement: $cmd");
             return;
         }
         $stmt->bind_param('si', $id, $nxt);
         $stmt->execute();
         if (!$stmt->execute()) {
-            $m = 'Execute failed: (' . $DBH->errno . ') ' . $DBH->error;
-            sys_err($m);
+            sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
             return;
         }
         $return_number = $nxt;
@@ -321,8 +311,7 @@ function get_picture_type ($pid, $id) {
             sys_msg("DEBUG: $sel");
         }
         if (!$stmt = $DBH->prepare($sel)) {
-            $m = 'Prepare failed: (' . $DBH->errno . ') ' . $DBH->error;
-            sys_err($m);
+            sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
             sys_err("Problem statement: $sel");
             return;
         }
@@ -390,9 +379,8 @@ function lookup_pic_dimen($pid, $sid) {
     $sel .= "FROM $picture_table p ";
     $sel .= 'WHERE p.pid = ? ';
     if (!$sth = $DBH->prepare($sel)) {
-        $m = 'Prepare failed ' . $DBH->error . '(' . $DBH->errno . ') ';
-        $m .= "Problem statement: $sel";
-        sys_err($m);
+        sys_err('Prepare failed ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("Problem statement: $sel");
         return;
     }
     $sth->bind_param('i', $pid);
