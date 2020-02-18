@@ -1,3 +1,9 @@
+picture-rings (2.35) unstable; urgency=medium
+
+  * Add remctl scripts to display status of and control ring daemons.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 18 Feb 2020 02:48:43 +0000
+
 picture-rings (2.34) unstable; urgency=medium
 
   * Updates to main picture display, bug fixes
