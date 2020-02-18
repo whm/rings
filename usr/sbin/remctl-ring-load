@@ -1,0 +1,43 @@
+#!/bin/bash
+
+RING_ROOT="/afs/ca-zephyr.org/pictures/a_rings"
+
+function do_help {
+    echo "Usage: ring-load load|find|help [rings directory]"
+    exit 1
+}
+
+function do_load {
+    afs_dir="$RING_ROOT/$1"
+    if [ ! -d $afs_dir ]
+    then
+       echo "ERROR: directory not found $afs_dir"
+       exit 1
+    fi
+    ring-load $afs_dir
+}
+
+function do_find {
+    picture_spec="$RING_ROOT/*${1}*"
+    ls -1d $picture_spec
+}
+
+# Setup for accessing afs
+export KRB5CCNAME=FILE:/run/www-data/service-rings.tgt
+aklog
+
+# Do the work
+case $1 in
+    load)
+	do_load $2
+	;;
+    find)
+	do_find $2
+	;;
+    help)
+	do_help
+	;;
+    *)
+	do_help
+	;;
+esac

@@ -1,0 +1,6 @@
+ring-load ALL /usr/sbin/remctl-ring-load \
+    /etc/remctl/acl/ring-admin 
+ring-control ALL /usr/sbin/remctl-ring-control \
+    /etc/remctl/acl/ring-admin
+ring-queue ALL /usr/sbin/remctl-ring-queue-status \
+    /etc/remctl/acl/ring-admin

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ "$1" = "help" ]
+then
+    echo "Usage: ring-status-queue [help]"
+    exit 1
+fi
+
+echo "Action Queue Status:"
+sql_action_queue="select * from picture_action_queue;"
+echo "$sql_action_queue" | mysql --defaults-file=/etc/mysql/rings.cnf rings
+
+echo "Upload Queue Status:"
+sql_upload_queue="select * from picture_upload_queue;"
+echo "$sql_upload_queue" | mysql --defaults-file=/etc/mysql/rings.cnf rings
