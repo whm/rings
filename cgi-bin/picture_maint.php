@@ -22,7 +22,7 @@ $in_clear_cache         = get_request('in_clear_cache');
 
 // Globals
 //
-$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)[\s-:](\d+)[-:](\d+)[-:](\d+)/';
+$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)(\s|-|:)(\d+)[-:](\d+)[-:](\d+)/';
 $DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
 
 // -- Increment the time part of a datetime.  Don't do anything if we
@@ -36,9 +36,9 @@ function increment_time ($a_datetime) {
         $a_year   = $matches[1];
         $a_month  = $matches[2];
         $a_day    = $matches[3];
-        $a_hour   = $matches[4];
-        $a_minute = $matches[5];
-        $a_second = $matches[6];
+        $a_hour   = $matches[5];
+        $a_minute = $matches[6];
+        $a_second = $matches[7];
         $a_second++;
         if ($a_second > 59) {
             $a_second = 0;
