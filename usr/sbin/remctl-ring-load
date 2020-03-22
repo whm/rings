@@ -2,6 +2,10 @@
 
 RING_ROOT="/afs/ca-zephyr.org/pictures/a_rings"
 
+##############################################################################
+# Subroutines
+##############################################################################
+
 function do_help {
     echo "Usage: ring-load load|find|help [rings directory]"
     exit 1
@@ -22,6 +26,19 @@ function do_find {
     ls -1d $picture_spec
 }
 
+##############################################################################
+# Main Routine
+##############################################################################
+
+if [ "$1" = "" ]
+then
+    do_help
+fi
+if [ "$1" = "help" ]
+then
+    do_help
+fi
+
 # Setup for accessing afs
 export KRB5CCNAME=FILE:/run/www-data/service-rings.tgt
 aklog
@@ -29,15 +46,13 @@ aklog
 # Do the work
 case $1 in
     load)
-	do_load $2
-	;;
+	    do_load $2
+	    ;;
     find)
-	do_find $2
-	;;
-    help)
-	do_help
-	;;
+	    do_find $2
+	    ;;
     *)
-	do_help
-	;;
+	    do_help
+	    ;;
 esac
+
