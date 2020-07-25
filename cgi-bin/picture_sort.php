@@ -179,7 +179,7 @@ function print_row ($n, $r) {
 <title>Picture Sort</title>
 <?php require('inc_page_head.php'); ?>
 <?php require('inc_select_search.php'); ?>
-<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_style_rings.php');?>
 </head>
 
 <body bgcolor="#eeeeff">

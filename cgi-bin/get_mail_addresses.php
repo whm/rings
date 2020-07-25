@@ -15,8 +15,8 @@ $in_button_submit = get_request('in_button_submit');
 <html>
 <head>
 <title>Pick Some Addresses</title>
-<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 <?php require('inc_page_head.php'); ?>
+<?php require('inc_page_style_rings.php');?>
 
 <script language="JavaScript">
 
