@@ -238,7 +238,7 @@ header ("$next_header?in_pid=$next_pid");
 <head>
 <title>Picture Mainteance Action</title>
 <?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_style_rings.php');?>
 </head>
 <body>
 <a href="picture_maint.php?in_pid=<?php echo $next_pid;?>">

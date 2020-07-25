@@ -58,7 +58,7 @@ function set_search ($fld, $sess_fld, $op, $val, $cond) {
 <head>
 <title>Picture Search</title>
 <?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_style_rings.php');?>
 </head>
 
 <body bgcolor="#eeeeff">

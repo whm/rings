@@ -589,7 +589,7 @@ list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
 <head>
 <title>Rings</title>
 <?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/pictures.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_style_pictures.php'); ?>
 <style>
     body, html {
         height: 100%;

@@ -18,7 +18,7 @@ require('inc_ring_init.php');
 <head>
 <title>Maintenance Menu</title>
 <?php require('inc_page_head.php'); ?>
-<LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
+<?php require('inc_page_style_rings.php');?>
 </head>
 
 <body bgcolor="#eeeeff">
