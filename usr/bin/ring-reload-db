@@ -294,7 +294,7 @@ $DBH = DBI->connect($dbi, $CONF->db_user(), $CONF->db_pass())
   or die "ERROR: Can't connect to database $dbi for read\n";
 $DBH->{LongTruncOk} = 1;
 $DBH->{LongReadLen} = 10000000;
-$DBH_UPDATE = DBI->connect($dbi, $CONF->db_user(), $CONF->db_pass())
+$DBH_UPDATE         = DBI->connect($dbi, $CONF->db_user(), $CONF->db_pass())
   or die "ERROR: Can't connect to database $dbi for write\n";
 
 if ($opt_debug) {
