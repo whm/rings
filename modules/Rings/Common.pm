@@ -497,7 +497,7 @@ sub store_meta_data {
     }
 
     # Set file paths and names
-    $meta{'source_path'} = File::Spec->rel2abs($in_file);
+    $meta{'source_path'} = $in_file;
     ($meta{'source_file'}, $meta{'source_dirs'}, $meta{'source_suffix'})
       = fileparse($meta{'source_path'});
     my @dirs = split(/\//, $meta{'source_dirs'});
@@ -515,8 +515,15 @@ sub store_meta_data {
         sql_die($sel, $sth->err, $sth->errstr);
     }
 
-    my $row_found;
     if (my $row = $sth->fetchrow_hashref) {
+        my $source_file = $row->{source_file};
+        if (!$row->{source_file}) {
+            $source_file = $meta{'source_path'};
+        }
+        my $file_name = $row->{file_name};
+        if (!$row->{file_name}) {
+            $file_name = $meta{'source_file'};
+        }
         my $cmd = "UPDATE pictures_information SET ";
         $cmd .= 'camera_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
@@ -524,6 +531,8 @@ sub store_meta_data {
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
+        $cmd .= 'source_file = ?, ';
+        $cmd .= 'file_name = ?, ';
         $cmd .= 'date_last_maint = NOW()';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
@@ -535,6 +544,7 @@ sub store_meta_data {
             $meta{'ring_datetime'},     $meta{'ring_size'},
             $meta{'ring_signature'},    $meta{'ring_camera'},
             $meta{'ring_shutterspeed'}, $meta{'ring_fstop'},
+            $source_file,               $file_name,
             $pid,
         );
         if ($sth_update->err) {

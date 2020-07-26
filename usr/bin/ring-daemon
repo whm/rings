@@ -152,7 +152,7 @@ sub process_pids {
             next;
         }
 
-        my $raw = read_file("$pic_path", binmode => ':raw');
+        my $raw = read_file($pic_path, binmode => ':raw');
         my ($mime_type, $file_type) = validate_mime_type($raw);
         if ($action eq 'SIZE') {
             foreach my $s (sort keys %SIZE_IDS) {
@@ -168,9 +168,8 @@ sub process_pids {
             }
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {
-            my $blob = read_file("$pic_path", binmode => ':raw');
-            my %pic  = get_meta_data($blob);
-            store_meta_data($pid, $source_file, \%pic);
+            my %pic = get_meta_data($raw);
+            store_meta_data($pid, $pic_path, \%pic);
             queue_action_reset($pid, $action);
         } else {
             queue_error($pid, $action, "Unknown action $action");
