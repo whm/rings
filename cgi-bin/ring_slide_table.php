@@ -229,7 +229,8 @@ function display_slide_table($pic_data) {
         foreach ($dups as $d) {
             $ditem = "<br/>\n";
             $ditem .= '<font color="red">Duplicate: ';
-            $ditem .= '<a href="picture_maint.php?in_pid=' . $d . '">';
+            $ditem .= '<a href="picture_maint.php?in_pid=' . $d . '" '
+                   . 'target="_blank">';
             $ditem .= $d . '</a>';
             $ditem .= "</font>\n";
             $pic_dups .= $ditem;
