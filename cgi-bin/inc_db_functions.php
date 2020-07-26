@@ -179,7 +179,34 @@ function db_delete_picture ($this_pid) {
     }
     $stmt->close();
 
+    $del_tables[] = 'picture_comments';
+    $del_tables[] = 'picture_grades';
+    $del_tables[] = 'picture_details';
+    $del_tables[] = 'pictures_information';
+    $del_tables[] = 'pictures';
+
     foreach ($del_tables as $this_table) {
+        $sel = "SELECT count(*) as cnt FROM $this_table WHERE pid = ?";
+        if (!$stmt = $DBH->prepare($sel)) {
+            sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+            continue;
+        }
+        $stmt->bind_param('i', $this_pid);
+        if (!$stmt->execute()) {
+            sys_err('ERROR: ' . $DBH->error . '(' . $DBH->errno . ') ');
+            sys_err("INFO: $cmd");
+            continue;
+        }
+        $stmt->bind_result($z);
+        $cnt = 0;
+        if ($stmt->fetch()) {
+            $cnt = $z;
+        }
+        $stmt->close();
+        if ($cnt < 1) {
+            continue;
+        }
+
         $sql_cmd = "DELETE FROM $this_table WHERE pid=$this_pid ";
         $result = $DBH->query($sql_cmd);
         if ($result) {
