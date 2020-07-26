@@ -7,7 +7,8 @@
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
 require('inc_ring_init.php');
-require('libphp-phpmailer/autoload.php');
+require('/usr/share/php/libphp-phpmailer/src/PHPMailer.php');
+require('/usr/share/php/libphp-phpmailer/src/SMTP.php');
 
 // Form or URL inputs
 $in_subject       = get_request('in_subject');
