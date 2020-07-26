@@ -5,6 +5,7 @@ picture-rings (2.37) unstable; urgency=medium
   * Move links at the bottom of the picture display into the menu.
   * Correct the way that the background image sizes are calculated
     when displaying pictures.
+  * Add explicit references to location of PHPMailer.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 26 Jul 2020 00:20:54 +0000
 
