@@ -12,23 +12,22 @@ $sys_msg_end  = "</font><br/>\n";
 
 //-------------------------------------------------------------
 // Calculate the size of a picture that will be contained within
-// the bounding box $max_x, $max_y.
+// the bounding box $max_x, $max_y.  Change the image size only
+// if it is too big for the box.
 
 function calc_size ($max_x, $max_y, $width, $height) {
-    $x  = $width;
-    $y  = $height;
-    $x1 = $max_x;
-    $y1 = intval(($x1 / $width) * $height);
-    $y2 = $max_y;
-    $x2 = intval(($y2 / $height) * $width);
-    if ($x1 < $x2) {
-        $x = $x1;
-        $y = $y1;
-    } else {
-        $x = $x2;
-        $y = $y2;
+    $new_x  = $width;
+    $new_y  = $height;
+
+    if ($new_x > $max_x) {
+        $new_y = intval(($max_x / $new_x) * $new_y);
+        $new_x = $max_x;
     }
-    return array($x, $y);
+    if ($new_y > $max_y) {
+        $new_x = intval(($max_y / $new_y) * $new_x);
+        $new_y = $max_y;
+    }
+    return array($new_x, $new_y);
 }
 
 //-------------------------------------------------------------
