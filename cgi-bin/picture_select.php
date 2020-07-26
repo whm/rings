@@ -102,7 +102,7 @@ function get_end_menu ($this_pid, $ring_admin_group) {
         $loggedInUser = $_SERVER['REMOTE_USER'];
     }
     if (!empty($loggedInUser)) {
-        $end_menu[] = '<a href="emailTag" '
+        $end_menu[] = '<a href="#emailTag" '
             . 'name="emailTag" '
             . "onClick=\"add_email_list($this_pid)()\">"
             . 'Add to email'
