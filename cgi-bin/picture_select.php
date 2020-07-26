@@ -78,6 +78,52 @@ $this_url_next = '';
 ##############################################################################
 
 // ---------------------------------------------
+// Entries for the menu at the end of the page
+
+function get_end_menu ($this_pid, $ring_admin_group) {
+
+    $end_menu = array();
+
+    # Allow caching of images for a day
+    $i = date('Ymd');
+    $end_menu[] = '<a href="display.php'
+        . '?in_pid=' . $this_pid
+        . '&in_size=raw'
+        . '&rand=' . $i
+        . '" target="_blank">'
+        . 'Raw Image'
+        . '</a>';
+
+    $end_menu[] = '<a href="index.php">'
+        . 'Home'
+        . '</a>';
+
+    if (!empty($_SERVER['REMOTE_USER'])) {
+        $loggedInUser = $_SERVER['REMOTE_USER'];
+    }
+    if (!empty($loggedInUser)) {
+        $end_menu[] = '<a '
+            . "onClick=\"add_email_list($this_pid)()\">"
+            . 'Add to email'
+            . '</a>';
+        if ($ring_admin_group) {
+            $end_menu[] = '<a href="picture_maint.php'
+                 . '?in_pid=' . $this_pid
+                 . '" target="_blank">'
+                 . 'Edit'
+                 . '</a>';
+        }
+    } else {
+        $end_menu[] = '<a href="' . auth_url($_SERVER['PHP_SELF'])
+            . '?in_ring_pid=' . $this_pid . '">'
+            . 'Login'
+            . '</a>';
+    }
+
+    return $end_menu;
+}
+    
+// ---------------------------------------------
 // Get the next pid by date
 
 function get_next_pic_by_date($this_picture_date, $thisPID) {
@@ -458,7 +504,7 @@ if (!empty($in_ring_pid)) {
 
     $next_menu = array();
     $next_menu[] = '<div id="linkDiv">' . "\n";
-    $next_menu[] = '<div id="linkDivHeader">Moveable Menu</div>' . "\n";
+    $next_menu[] = '<div id="linkDivHeader">Menu</div>' . "\n";
     if (count($next_links)>0) {
         asort($next_links);
 
@@ -496,69 +542,12 @@ if (!empty($in_ring_pid)) {
             }
         }
     }
+    $end_menu = get_end_menu($this_pid, $ring_admin_group);
+    foreach ($end_menu as $l) {
+        $next_menu[] = '<p class="tight">' . $l . "</p>\n";
+    }
+
     $next_menu[] = "</div>\n";
-
-    # --------------------------------
-    # The end menu
-
-    $end_menu = array();
-
-    # Defeat the local picture cache by adding a random number to
-    # the image tag.
-    $i = rand(0, 10000);
-    $end_menu[] = '<ul>' . "\n";
-    $end_menu[] = '<li>' . "\n";
-    $end_menu[] = '<a href="display.php'
-        . '?in_pid=' . $this_pid
-        . '&in_size=raw'
-        . '&rand=' . $i
-        . '" target="_blank">' . "\n";
-    $end_menu[] = '<img src="/rings-images/icon-view-details.png"' . "\n";
-    $end_menu[] = '     border="0"' . "\n";
-    $end_menu[] = '     alt="Full size image in a new window.">' . "\n";
-    $end_menu[] = "</a>\n";
-    $end_menu[] = "</li>\n";
-
-    $end_menu[] = '<li>' . "\n";
-    $end_menu[] = '<a href="index.php">' . "\n";
-    $end_menu[] = '<img src="/rings-images/icon-home.png"' . "\n";
-    $end_menu[] = '     border="0"' . "\n";
-    $end_menu[] = '     alt="Pick a new Picture Ring">' . "\n";
-    $end_menu[] = "</a>\n";
-    $end_menu[] = "</li>\n";
-
-    if (!empty($_SERVER['REMOTE_USER'])) {
-        $loggedInUser = $_SERVER['REMOTE_USER'];
-    }
-    if (!empty($loggedInUser)) {
-        $end_menu[] = '<li>' . "\n";
-        $end_menu[] = "<!-- Logged in user -->\n";
-        $end_menu[] = '<img src="/rings-images/icon-mail-send.png"' . "\n";
-        $end_menu[] = '     border="0"' . "\n";
-        $end_menu[] = "     onClick=\"add_email_list($this_pid);\"\n";
-        $end_menu[] = '     alt="Add picture to the email list">' . "\n";
-        $end_menu[] = "</li>\n";
-
-        if ($ring_admin_group) {
-            $end_menu[] = '<li>' . "\n";
-            $end_menu[] = "<!-- Admin User -->\n";
-            $end_menu[] = '<a href="picture_maint.php'
-                . '?in_pid=' . $this_pid . '" target="_blank">' . "\n";
-            $end_menu[] = '<img src="/rings-images/icon-edit.png"' . "\n";
-            $end_menu[] = '     border="0"' . "\n";
-            $end_menu[] = '     alt="Edit Picture Information">' . "\n";
-            $end_menu[] = "</a>\n";
-            $end_menu[] = "</li>\n";
-        }
-    } else {
-        $end_menu[] = '<li>' . "\n";
-        $end_menu[] = '<a href="' . auth_url($_SERVER['PHP_SELF']);
-        $end_menu[] = '?in_ring_pid='.$in_ring_pid.'">' . "\n";
-        $end_menu[] = '<img src="/rings-images/login.jpg" border="0">' . "\n";
-        $end_menu[] = "</a>\n";
-        $end_menu[] = "</li>\n";
-    }
-    $end_menu[] = "</ul>\n";
 
 }
 
