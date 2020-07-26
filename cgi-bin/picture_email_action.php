@@ -7,6 +7,10 @@
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
 require('inc_ring_init.php');
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require('/usr/share/php/libphp-phpmailer/src/Exception.php');
 require('/usr/share/php/libphp-phpmailer/src/PHPMailer.php');
 require('/usr/share/php/libphp-phpmailer/src/SMTP.php');
 
@@ -79,7 +83,7 @@ if (!empty($in_button_send)) {
     // message body
     $mailMsg->WordWrap = 80;
     $mailMsg->IsHTML(false);
-    
+
     if (empty(trim($in_message))) {
         $in_message = 'A picture for you\n';
     }
