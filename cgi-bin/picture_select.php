@@ -123,7 +123,7 @@ function get_end_menu ($this_pid, $ring_admin_group) {
 
     return $end_menu;
 }
-    
+
 // ---------------------------------------------
 // Get the next pid by date
 
@@ -470,7 +470,7 @@ if (!empty($in_ring_pid)) {
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
         $image_url
             = 'display.php?in_pid=' . $this_pid
-            . '&dlm=' . htmlentities($this_dlm)
+            . '&dlm=' . str_replace(' ', ':', $this_dlm)
             . '&in_size=' . $this_size;
         $image_reference = '<img src="' . $image_url . '>';
         if (!empty($row['description'])) {
@@ -543,6 +543,7 @@ if (!empty($in_ring_pid)) {
             }
         }
     }
+
     $end_menu = get_end_menu($this_pid, $ring_admin_group);
     foreach ($end_menu as $l) {
         $next_menu[] = '<p class="tight">' . $l . "</p>\n";
@@ -587,13 +588,12 @@ list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
         margin: 0;
     }
 
-    .bg {
-        background-image: url("<?php echo $image_url; ?>");
-        height: 100%;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: <?php echo "${x}px ${y}px"; ?>;
+    img.centermiddle {
+        display: block;
+        margin-left: auto;
+        margin-right: auto
     }
+
     ul {
         list-style-type: none;
         margin: 0;
@@ -609,7 +609,7 @@ list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
 </head>
 
 <body>
-<div class="bg"></div>
+<img class="centermiddle" src="<?php echo $image_url; ?>" style="height:95%;">
 
 <?php
 // selection menu
@@ -619,10 +619,6 @@ foreach ($next_menu as $m) {
 ?>
 
 <?php sys_display_msg();?>
-
-<div align="center">
-<?php foreach ($end_menu as $l) { echo $l; } ?>
-</div>
 
 </Body>
 </html>
