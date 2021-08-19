@@ -2,6 +2,13 @@ picture-rings (2.38) unstable; urgency=medium
 
   * Retire the use of image display as the background.
   * Corrections to metadata process by the ring daemon.
+  * Update the email selection of picture to give the user more
+    feedback when a picture is selected.  Add a "Cancel" button
+    to the email selection dialog.
+  * Add a bit of space to the menu entries.  This is a bandaid
+    until more time can be spent on improving the menu.
+  * Remove the code that was attempting to find the size of the
+    display.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 19 Aug 2021 04:46:51 +0000
 
