@@ -1,3 +1,10 @@
+picture-rings (2.38) unstable; urgency=medium
+
+  * Retire the use of image display as the background.
+  * Corrections to metadata process by the ring daemon.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 19 Aug 2021 04:46:51 +0000
+
 picture-rings (2.37) unstable; urgency=medium
 
   * Add version to css references.  This allows the software on the
