@@ -8,50 +8,6 @@
 function make_id ($s) {
     return str_replace('.','',$s);
 }
-$clientProps = array('screen.width',
-                     'screen.height',
-                     'window.innerWidth',
-                     'window.innerHeight',
-                     'window.outerWidth',
-                     'window.outerHeight',
-                     'screen.colorDepth',
-                     'screen.pixelDepth');
-if(empty($_POST['screenheight'])) {
-    echo "<!DOCTYPE html>\n";
-    echo "<html>\n";
-    echo "<head>\n";
-    echo "  <style>\n";
-    echo "    body {\n";
-    echo "      background-color: black;\n";
-    echo "    }\n";
-    echo "  </style>\n";
-    echo "  <title>Get Window Size</title>\n";
-    echo "</head>\n";
-    echo "\n";
-    echo "<body>\n";
-    echo "Loading...";
-    // create hidden form
-    echo "<form method='POST' id='data' style='display:none'>\n";
-    foreach($clientProps as $p) {
-        $id = make_id($p);
-        echo "<input type='text' id='$id' name='$id'>\n";
-    }
-    echo "<input type='submit'>\n";
-    echo "</form>\n";
-
-    echo "<script>\n";
-    foreach($clientProps as $p) {
-        //populate hidden form with screen/window info
-        $id = make_id($p);
-        echo "document.getElementById('$id').value = $p;\n";
-    }
-    //submit form
-    echo "document.forms.namedItem('data').submit();\n";
-    echo "</script>\n";
-    echo "</body>\n";
-    echo "</html>\n";
-    exit;
-}
 
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
@@ -102,11 +58,17 @@ function get_end_menu ($this_pid, $ring_admin_group) {
         $loggedInUser = $_SERVER['REMOTE_USER'];
     }
     if (!empty($loggedInUser)) {
-        $end_menu[] = '<a href="#emailTag" '
-            . 'name="emailTag" '
-            . "onClick=\"add_email_list($this_pid)()\">"
-            . 'Add to email'
-            . '</a>';
+        $email_link = '<a href="#emailTag" '
+                    . 'name="emailTag" '
+                    . "onClick=\"add_email_list($this_pid)()\">"
+                    . 'Add to email';
+        if (!empty($_SESSION['s_email_list'])) {
+            $email_list = explode(" ", $_SESSION['s_email_list']);
+            $email_cnt = count($email_list) - 1;
+            $email_link .= " ($email_cnt)";
+        }
+        $email_list .= '</a>';
+        $end_menu[] = $email_link;
         if ($ring_admin_group) {
             $end_menu[] = '<a href="picture_maint.php'
                  . '?in_pid=' . $this_pid
@@ -678,7 +640,7 @@ function getDom(objectname){
 
 function add_email_list(idx) {
     var win = window.open("add_email_list.php?in_id="+idx,
-                          "Add this picture to the email list",
+                          "Add this picture to the email2 list",
                           "width=400,height=150,status=no");
     return false;
 }

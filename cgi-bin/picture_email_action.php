@@ -85,7 +85,7 @@ if (!empty($in_button_send)) {
     $mailMsg->IsHTML(false);
 
     if (empty(trim($in_message))) {
-        $in_message = 'A picture for you\n';
+        $in_message = "A picture for you\n";
     }
     $mailMsg->Body = $in_message;
     sys_msg('Message text size:' . strlen($in_message));
