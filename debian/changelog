@@ -1,3 +1,9 @@
+picture-rings (2.39) unstable; urgency=medium
+
+  * Correct bug in detecting ring admins.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 20 Aug 2021 04:18:53 +0000
+
 picture-rings (2.38) unstable; urgency=medium
 
   * Retire the use of image display as the background.
