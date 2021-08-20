@@ -41,6 +41,7 @@ set_default('mail_domain',      'ca-zephyr.org');
 set_default('mail_size',        '800x600');
 set_default('maint_size',       '640x480');
 set_default('picture_root',     '/srv/rings');
+set_default('webauth_sep',      '|');
 set_default('ring_admin',       'ring_admin');
 set_default('ring_admin_attr',  'czPrivilegeGroup');
 set_default('ring_admin_group', 'ring:admin');
@@ -76,17 +77,16 @@ if (! empty($_SESSION['ring_admin_group'])
 {
     $ring_admin_group = $_SESSION['ring_admin_group'];
 } else {
-    $c = 1;
-    while (1==1) {
-        $this_id = 'WEBAUTH_LDAP_CZPRIVILEGEGROUP' . $c;
-        if (empty($_SERVER[$this_id])) {
-            break;
+    if (! empty($_SERVER['WEBAUTH_LDAP_CZPRIVILEGEGROUP']) ) {
+        $this_priv = strtok($_SERVER['WEBAUTH_LDAP_CZPRIVILEGEGROUP'],
+                            $CONF['webauth_sep']);
+        while ($this_priv !== false) {
+            if ($this_priv == $CONF['ring_admin_group']) {
+                $ring_admin_group = $CONF['ring_admin_group'];
+                break;
+            }
+            $this_priv = strtok($CONF['webauth_sep']);
         }
-        if ($_SERVER[$this_id] == $CONF['ring_admin_group']) {
-            $ring_admin_group = $CONF['ring_admin_group'];
-            break;
-        }
-        $c = $c + 1;
     }
 }
 $_SESSION['ring_admin_group'] = $ring_admin_group;

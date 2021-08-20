@@ -332,7 +332,9 @@ function make_a_url ($thisUID,
             $next_pid = get_next_pic_by_date('0001-01-01', $thisPID);
         }
     } else {
-        $next_pid = get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID);
+        $next_pid = get_next_pic_by_uid($thisUID,
+                                        $this_picture_date,
+                                        $thisPID);
         if ($next_pid == 0) {
             $next_pid = get_next_pic_by_uid($thisUID, '0001-01-01', $thisPID);
         }
@@ -482,7 +484,6 @@ if (!empty($in_ring_pid)) {
                              $this_pid,
                              $this_picture_date,
                              $next_links[$in_ring_uid]);
-
             if (!empty($l)) {
                 $next_menu[] = '<p class="tight">' . $l ."</p>\n";
             }
@@ -571,6 +572,7 @@ list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
 </head>
 
 <body>
+
 <img class="centermiddle" src="<?php echo $image_url; ?>" style="height:95%;">
 
 <?php
@@ -665,5 +667,12 @@ if ($in_slide_show > 0) {
     echo 'setTimeout ("slideShowNext()",' . $thisMilli . ");\n";
 }
 ?>
+
+document.addEventListener('keydown', function(event) {
+    if(event.keyCode == 13) {
+        location = "<?php echo $this_url_next; ?>";
+    }
+});
+
 
 </script>
