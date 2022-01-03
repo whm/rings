@@ -11,11 +11,8 @@ function accept_and_store($fld_name, $in_pid) {
 
     $file_id = $fld_name;
 
-    if (
-        empty($_FILES[$file_id]['error']) ||
-        is_array($_FILES[$file_id]['error'])
-    ) {
-        sys_err('Unknown problem uploading file');
+    if (!is_array($_FILES[$file_id])) {
+        sys_err("Unknown problem uploading file");
         return 1;
     }
 

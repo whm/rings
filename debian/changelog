@@ -2,6 +2,9 @@ picture-rings (2.40) unstable; urgency=medium
 
   * Add javascript to support proceeding to the next picture by
     pressing carriable return.
+  * Correct problem with file upload and reload caused by a change
+    in the $_FILE array.
+  * Used date and time for style version setting.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 03 Jan 2022 07:29:58 +0000
 
