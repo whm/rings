@@ -3,19 +3,20 @@ Description=Ring Load Daemon
 After=network.target
 
 [Service]
+Type = simple
 User = www-data
 Group = www-data
 ExecStart=/usr/bin/k5start -L -K 6 -l 10h -f /etc/service-rings.keytab \
     -m 640 -o www-data -g www-data \
     -a -t -k /run/www-data/ring-daemon.tgt service/rings \
     -- /usr/bin/ring-daemon pending
-Restart = on-failure
+Restart = always
+RestartSec = 1
+StartLimitBurst = 60
 PrivateTmp = true
 PrivateDevices = yes
 ProtectSystem = full
 ProtectHome = read-only
-Restart = on-failure
-StartLimitBurst = 60
 
 [Install]
 WantedBy=multi-user.target

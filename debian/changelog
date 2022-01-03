@@ -5,6 +5,8 @@ picture-rings (2.40) unstable; urgency=medium
   * Correct problem with file upload and reload caused by a change
     in the $_FILE array.
   * Used date and time for style version setting.
+  * Update service properties for ring-load and ring-daemon to have
+    then automatically restart on any failure.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 03 Jan 2022 07:29:58 +0000
 
