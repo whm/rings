@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# Copyright (c) 2016-2018, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
 # File: Common.pm
 # Description: This module is used by the Rings gallery application.
 
@@ -760,7 +760,7 @@ sub unix_seconds {
 }
 
 # ------------------------------------------------------------------------
-# Create directories need to store a picture
+# Create a directory
 
 sub _create_dir {
     my ($this_dir) = @_;
@@ -775,7 +775,7 @@ sub _create_dir {
 }
 
 # ------------------------------------------------------------------------
-# Create directories need to store a picture
+# Create directories needed to store a picture
 
 sub create_picture_dirs {
     my ($group, $this_size) = @_;
@@ -796,7 +796,7 @@ sub create_picture_dirs {
 }
 
 # ------------------------------------------------------------------------
-# valid the picure size
+# valididate the picure size
 
 sub check_picture_size {
     my ($this_id) = @_;

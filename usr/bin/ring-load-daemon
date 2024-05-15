@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-load-daemon
 # Description: load pictures into a ring database
 
 use strict;
 use DBI;
+use File::Compare;
 use File::Copy;
 use File::Slurp;
 use File::Spec;
@@ -112,7 +113,7 @@ sub save_file {
             $dup_cnt++;
             msg('info', "File $a_file duplicates $row->{pid}");
         }
-        # But duplicate pictures and have different signature, so
+        # But duplicate pictures can have different signature, so
         # check other data as well.
         if (!$dup_cnt) {
             my $this_file = $a_filename;
