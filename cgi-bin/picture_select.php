@@ -36,8 +36,10 @@ $this_url_next = '';
 // ---------------------------------------------
 // Entries for the menu at the end of the page
 
-function get_end_menu ($this_pid, $ring_admin_group) {
-
+function get_end_menu ($this_pid) {
+    global $ring_admin;
+    global $ring_user;
+    
     $end_menu = array();
 
     # Allow caching of images for a day
@@ -54,10 +56,7 @@ function get_end_menu ($this_pid, $ring_admin_group) {
         . 'Home'
         . '</a>';
 
-    if (!empty($_SERVER['REMOTE_USER'])) {
-        $loggedInUser = $_SERVER['REMOTE_USER'];
-    }
-    if (!empty($loggedInUser)) {
+    if ($ring_user) {
         $email_link = '<a href="#emailTag" '
                     . 'name="emailTag" '
                     . "onClick=\"add_email_list($this_pid)()\">"
@@ -69,7 +68,7 @@ function get_end_menu ($this_pid, $ring_admin_group) {
         }
         $email_list .= '</a>';
         $end_menu[] = $email_link;
-        if ($ring_admin_group) {
+        if ($ring_admin) {
             $end_menu[] = '<a href="picture_maint.php'
                  . '?in_pid=' . $this_pid
                  . '" target="_blank">'
@@ -362,7 +361,7 @@ function make_a_url ($thisUID,
 
 $next_links = array();
 
-if (!empty($_SERVER['REMOTE_USER'])) {
+if ($ring_user) {
     $invisible_sel = '';
 } else {
     $invisible_sel = "AND pp.visibility != 'INVISIBLE' ";
@@ -422,7 +421,7 @@ if (!empty($in_ring_pid)) {
     $sel = "SELECT * ";
     $sel .= "FROM pictures_information p ";
     $sel .= "WHERE pid=$in_ring_pid ";
-    if (empty($_SERVER['REMOTE_USER'])) {
+    if (!$ring_user) {
         $sel .= "AND public='Y' ";
     }
     $result = $DBH->query($sel);
@@ -507,7 +506,7 @@ if (!empty($in_ring_pid)) {
         }
     }
 
-    $end_menu = get_end_menu($this_pid, $ring_admin_group);
+    $end_menu = get_end_menu($this_pid);
     foreach ($end_menu as $l) {
         $next_menu[] = '<p class="tight">' . $l . "</p>\n";
     }

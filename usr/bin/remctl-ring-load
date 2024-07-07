@@ -1,0 +1,124 @@
+#!/bin/bash
+#
+# remctl-ring-load -- remctl wrapper for ring-load
+#
+# Written by Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+RING_ROOT="/afs/ca-zephyr.org/pictures/a_rings"
+
+##############################################################################
+# Subroutines
+##############################################################################
+
+function do_help {
+    echo "Usage: ring-load load|find|help [rings directory]"
+    exit 1
+}
+
+function do_load {
+    afs_dir="$RING_ROOT/$1"
+    if [ ! -d $afs_dir ]
+    then
+       echo "ERROR: directory not found $afs_dir"
+       exit 1
+    fi
+    ring-load $afs_dir
+}
+
+function do_find {
+    picture_spec="$RING_ROOT/*${1}*"
+    ls -1d $picture_spec
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+if [ "$1" = "" ]
+then
+    do_help
+fi
+if [ "$1" = "help" ]
+then
+    do_help
+fi
+
+# Setup for accessing afs
+export KRB5CCNAME=FILE:/run/www-data/service-rings.tgt
+aklog
+
+# Do the work
+case $1 in
+    load)
+	    do_load $2
+	    ;;
+    find)
+	    do_find $2
+	    ;;
+    *)
+	    do_help
+	    ;;
+esac
+
+exit
+
+DOCS=<<__END_OF_DOCS__
+
+=head1 NAME
+
+remctl-ring-load - remctl wrapper for ring-load
+
+=head1 SYNOPSIS
+
+remctl-ring-load [help|manual]
+
+=head1 DESCRIPTION
+
+This script is a wrapper for ring-load to allow ring-load to be
+invoked using remctl.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item help
+
+Display usage information.
+
+=item manual
+
+Display the man page for this script.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=head1 AUTHORS
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
+
+__END_OF_DOCS__

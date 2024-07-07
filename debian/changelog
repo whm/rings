@@ -1,3 +1,15 @@
+picture-rings (3) unstable; urgency=medium
+
+  * Retire the dependency on webauth.  Generalize the authentication
+    by specifying either php sources or an external program to
+    execute.
+  * Move scripts out of /usr/sbin and into /usr/bin.
+  * Add POD to remctl-ring* scripts.
+  * Add the script cz-ring-token to allow Apache to access AFS
+    resources.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 02 Aug 2024 00:10:44 +0000
+
 picture-rings (2.40) unstable; urgency=medium
 
   * Add javascript to support proceeding to the next picture by

@@ -1,8 +1,8 @@
-modules/* usr/share/perl5
-images/*  usr/share/rings/images
-styles/*  usr/share/rings/styles
-conf/*    etc/apache2/sites-available
-remctl/*  etc/remctl/conf.d
-usr/bin/*  usr/bin
-usr/sbin/* usr/sbin
-cgi-bin/*  usr/share/rings/cgi-bin/auth
+modules/*      usr/share/perl5
+images/*       usr/share/rings/images
+styles/*       usr/share/rings/styles
+conf/*         etc/apache2/sites-available
+remctl/*       etc/remctl/conf.d
+usr/bin/*      usr/bin
+cgi-bin/*      usr/share/rings/cgi-bin
+cgi-bin-auth/* usr/share/rings/cgi-bin-auth

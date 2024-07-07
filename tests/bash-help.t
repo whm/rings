@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# tests/help.t
+# tests/bash-help.t
 
 use Test::More qw( no_plan );
 
@@ -8,10 +8,12 @@ use Test::More qw( no_plan );
 # Main Routine
 ##############################################################################
 
-# List of perl source files
-@script_list = ('usr/sbin/remctl-ring-control',
-                'usr/sbin/remctl-ring-queue-status',
-                'usr/sbin/remctl-ring-load',
+# List of bash scripts
+@script_list = (
+    'usr/bin/cz-ring-token',
+    'usr/bin/remctl-ring-control',
+    'usr/bin/remctl-ring-queue-status',
+    'usr/bin/remctl-ring-load'
 );
 
 for my $s (@script_list) {

@@ -1,5 +1,5 @@
 <?php
-if (!$ring_admin_group) {
+if (!$ring_admin) {
     back_to_index('Invalid page selection');
 }
 ?>

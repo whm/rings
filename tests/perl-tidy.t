@@ -46,7 +46,8 @@ while (readdir $dh) {
     $this_file = $perl_dir . '/' . $_;
     open(my $fh, '<', $this_file) || die ("ERROR: problem reading $this_file");
     while (<$fh>) {
-        if ($_ =~ m{#!/usr/bin/perl}xms) {
+        my $inline =$_;
+        if ($inline =~ /\/usr\/bin\/perl/xms) {
             push @perl_list, $this_file;
         }
         last;

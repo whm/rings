@@ -5,8 +5,10 @@
 function auth_picture_invisible ($pid) {
     global $CONF;
     global $DBH;
+    global $ring_user;
+    global $ring_admin;
     $hide_picture = 1;
-    if (!empty($_SERVER['REMOTE_USER'])) {
+    if ($ring_user) {
         $hide_picture = 0;
     } else {
         $sel = "SELECT count(*) FROM picture_details pd ";
@@ -75,22 +77,18 @@ function auth_person_hidden ($uid) {
     return $hide_person;
 }
 
-// Create a url that will display the current page using ssl.This
-// allows an apache configuration that uses webauth for
-// authentication.
+// Login or logout URL
 function auth_url($url) {
     global $CONF;
     global $DBH;
-    $new_url = $url;
-    if (substr($new_url, 0, 7) == 'http://') {
-        $new_url = substr($new_url, 7);
+    $new_url = 'https://' . $_SERVER['HTTP_HOST'];
+    if ($url == 'login') {
+      $new_url .= '/rings-auth/login.php';
     }
-    if (substr($new_url, 0, 8) != 'https://') {
-        if (substr($new_url, 0, 1) != '/') {
-            $new_url = '/' . $new_url;
-        }
-        $new_url = 'https://' . $_SERVER['HTTP_HOST'] . $new_url;
+    if ($url == 'logout') {
+      $new_url .= '/rings/logout.php';
     }
+    $new_url .= '?next=' . $_SERVER['PHP_SELF'];
     return $new_url;
 }
 

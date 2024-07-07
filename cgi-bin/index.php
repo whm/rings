@@ -10,11 +10,13 @@
 require('inc_ring_init.php');
 
 // Form or URL inputs
-$in_size         = get_request('in_size');
-$in_seconds      = get_request('in_seconds');
-$in_group_id     = get_request('in_group_id');
+$in_button_pos   = get_request('in_button_pos');
 $in_grade        = get_request('in_grade');
+$in_group_id     = get_request('in_group_id');
+$in_seconds      = get_request('in_seconds');
+$in_size         = get_request('in_size');
 $in_type         = get_request('in_type');
+
 $in_pref_display = get_request('in_pref_display');
 $in_button_set   = get_request('in_button_set');
 
@@ -28,13 +30,13 @@ $cm['BP']  = 'button_position';
 
 // Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
-if (empty($_COOKIE[$cookie_id])) {
+if (isset($_COOKIE[$cookie_id]) && empty($_COOKIE[$cookie_id])) {
     $s = '|';
 } else {
     $s = $_COOKIE[$cookie_id] . '|';
 }
 foreach ($cm as $cid => $sid) {
-    if (empty($_SESSION[$sid])) {
+    if (isset(($_SESSION[$sid])) && empty($_SESSION[$sid])) {
         if (preg_match("/\|$cid=(.+?)\|/", $s, $vals)) {
             $_SESSION[$sid] = $vals[1];
         }
@@ -45,7 +47,7 @@ foreach ($cm as $cid => $sid) {
 if (!empty($in_group_id)) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
-    // If there is not group_id in the session space then see if there is a
+    // If there is no group_id in the session space then see if there is a
     // cookie and use that to set session values.
     if (!empty($_SESSION['group_id'])) {
         $in_group_id = $_SESSION['group_id'];
@@ -93,6 +95,21 @@ if ($in_grade == 'D') {
     $in_grade = 'A';
 }
 $_SESSION['display_grade'] = $in_grade;
+
+$chk_float = $chk_right = $chk_left = $chk_top = $chk_bottom = '';
+if ($in_button_pos == 'top') {
+    $chk_bottom = 'CHECKED';
+} elseif ($in_button_pos == 'bottom') {
+    $chk_bottom = 'CHECKED';
+} elseif ($in_button_pos == 'left') {
+    $chk_left = 'CHECKED';
+} elseif ($in_button_pos == 'right') {
+    $chk_right = 'CHECKED';
+} else {
+    $chk_float = 'CHECKED';
+    $in_button_pos = 'float';
+}
+$_SESSION['button_position'] = $in_button_pos;
 
 // set show delay
 if (empty($in_seconds)) {
@@ -207,7 +224,7 @@ if ($result = $DBH->query($sel)) {
     <table border="1" cellpadding="2">
 
     <tr>
-    <td rowspan="4">
+    <td rowspan="5">
     <input type="submit" name="in_button_set" value="Set">
     </td>
     </tr>
@@ -259,6 +276,25 @@ $stmt->close();
     </tr>
 
     <tr>
+    <th align="right">Button:</th>
+    <td><input type="radio" <?php echo $chk_float;?> name="in_button_pos"
+                value="float">Float
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_left;?> name="in_button_pos"
+                value="left">Left
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_top;?> name="in_button_pos"
+                value="right">Right
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_top;?> name="in_button_pos"
+                value="top">Top
+         &nbsp;&nbsp;
+         <input type="radio" <?php echo $chk_bottom;?> name="in_button_pos"
+                value="bottom">Bottom
+    </td>
+    </tr>
+
+    <tr>
     <th align="right">Seconds to Pause During Show:</th>
     <td>
        <input type="text" size="4" name="in_seconds"
@@ -276,17 +312,17 @@ $stmt->close();
 </form>
 
 <?php
-if (!empty($_SERVER['REMOTE_USER'])) {
-    if ($ring_admin_group) {
+if ($ring_user) {
+    if ($ring_admin) {
         echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     }
     if (!empty($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
+    echo '<a href="' . auth_url('logout') . '">Logout</a><br/>' . "\n";
     echo "</h5>\n";
 } else {
-    echo '<a href="' . auth_url($_SERVER['PHP_SELF']) . '"'
-        . '>Login</a>' . "\n";
+    echo '<h5><a href="' . auth_url('login') . '"' . '>Login</a>' . "\n";
     echo '&nbsp;-&nbsp;To see all of the pictures you need to login.' . "\n";
     echo '&nbsp;-&nbsp;<a href="access_email.php">Access Request Form.</a>'
         . "\n";
@@ -309,7 +345,7 @@ if (!empty($in_group_id)) {
     }
     // Hide the private folks
     $vis_sel = '';
-    if (empty($_SERVER['REMOTE_USER'])) {
+    if ($ring_user) {
         $vis_sel = "AND visibility != 'HIDDEN'";
         $vis_sel = "AND visibility != 'INVISIBLE' ";
     }
@@ -354,8 +390,7 @@ if (!empty($in_group_id)) {
     foreach ($pp_list as $this_uid => $this_name) {
         $this_desc = $pp_desc["$this_uid"];
         $this_pid  = $pp_pid["$this_uid"];
-        if (empty($_SERVER['REMOTE_USER'])
-        && auth_person_hidden($this_uid) > 0) {
+        if (!$ring_user && auth_person_hidden($this_uid) > 0) {
             continue;
         }
 
@@ -380,7 +415,7 @@ if (!empty($in_group_id)) {
             . 'alt="Index of all pictures of '.$this_name.'">'."\n";
         echo '  </a>'."\n";
 
-        if (!empty($_SERVER['REMOTE_USER'])) {
+        if ($ring_user) {
             echo '  <a href="ring_slide_table.php?in_uid='.$this_uid.'">'."\n";
             echo '    <img src="/rings-images/icon-sort.png" border="0" '
                 . 'width="32" height="32" '
@@ -447,7 +482,6 @@ yourself, either to add pictures, update descriptions or whatever contact
 
 <!-- Message area -->
 <?php sys_display_msg(); ?>
-
 </Body>
 </html>
 

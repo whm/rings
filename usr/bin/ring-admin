@@ -1,0 +1,206 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2024, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-admin
+# Description: Perform administrative tasks for the rings gallery
+
+use Authen::SASL;
+use CZ::LDAPtools;
+use Getopt::Long;
+use Net::LDAPapi;
+use Pod::Usage;
+use Rings::Common;
+use strict;
+use Sys::Syslog;
+use Sys::Syslog qw(:standard :macros);
+use warnings;
+
+my $opt_conf;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+
+##############################################################################
+# Main routine
+##############################################################################
+
+# -- get options
+GetOptions(
+    'conf=s' => \$opt_conf,
+    'debug'  => \$opt_debug,
+    'help'   => \$opt_help,
+    'manual' => \$opt_manual
+);
+
+# help the poor souls out
+if (@ARGV && $ARGV[0] eq 'help') {
+    $opt_help = 1;
+}
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+my $admin = '';
+
+if (!@ARGV) {
+    print($admin);
+    exit;
+}
+my $princ = $ARGV[0];
+if ($princ !~ /@/xms) {
+    $princ .= '@CA-ZEPHYR.ORG';
+}
+
+get_config();
+
+my $ident  = 'ringsAuth';
+my $logopt = 'ndelay,pid';
+openlog($ident, $logopt, LOG_LOCAL0);
+
+# LDAP server
+my $ldap_host = $CONF->ldap_host;
+
+# Connect to the LDAP server
+my $ldap = lt_ldap_connect(
+    {
+        host     => $CONF->ldap_host,
+        port     => '389',
+        bindtype => 'gssapi',
+        debug    => $opt_debug
+    }
+);
+
+# Search for entries
+my $base_dn = $CONF->ldap_base();
+if ($opt_debug) {
+    print("ldap_base: " . $CONF->ldap_base . "\n");
+    print("base_dn: $base_dn\n");
+}
+my $filter = '(&';
+$filter .= '(objectClass=person)';
+$filter .= "(krb5PrincipalName=$princ)";
+if (scalar($CONF->ldap_admin_val) > 1) {
+    $filter .= '(|';
+}
+for my $val (@{ $CONF->ldap_admin_val }) {
+    $filter .= '(' . $CONF->ldap_admin_attr . "=$val)";
+}
+if (scalar($CONF->ldap_admin_val) > 1) {
+    $filter .= ')';
+}
+$filter .= '(givenName=*)';
+$filter .= '(sn=*)';
+$filter .= ')';
+
+if ($opt_debug) {
+    print("Config base: " . $CONF->ldap_base() . "\n");
+    print("Base: $base_dn\n");
+    print("Filter: $filter\n");
+}
+
+my $msg = $ldap->search_s(
+    -basedn    => $base_dn,
+    -filter    => $filter,
+    -scope     => LDAP_SCOPE_SUBTREE,
+    -attrs     => ['givenName', 'cn', 'sn'],
+    -attrsonly => 0,
+);
+
+if ($opt_debug && $ldap->errno != 0) {
+    print('errno: ' . $ldap->errno . ' errstring:' . $ldap->errstring);
+}
+
+# Process and print the results
+my %entries = %{ $ldap->get_all_entries };
+if ($opt_debug) {
+    print('entry_count: ' . scalar(%entries) . "\n");
+}
+for my $dn (keys %entries) {
+    if ($opt_debug) {
+        print("dn: $dn\n");
+    }
+    if (length($admin) > 0) {
+        $admin .= ', ';
+    }
+    my $gn = $entries{$dn}{'givenName'}[0];
+    my $sn = $entries{$dn}{'sn'}[0];
+    $admin .= "$gn $sn";
+    syslog(LOG_INFO, "ADMIN USER: $admin");
+}
+
+# Unbind from the server
+$ldap->unbind;
+
+print($admin);
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-admin - perform administrative tasks for the rings galley
+
+=head1 SYNOPSIS
+
+ring-admin <principal> [--conf=<configuration>] [--debug] [--help]
+[--manual]
+
+
+=head1 DESCRIPTION
+
+This script performs authorization for the rings gallery application.
+Authorization information is read from an LDAP directory.  The
+script returns 1 if the principal specified on the command line is
+an administrator otherwise 0 is return.  The script expects a
+Kerberos ticket cache to exist.
+
+The LDAP search parameters base, attribute, and administative
+values are specified in the Rings configuration file.
+
+=head1 OPTIONS
+
+=over 4
+
+=item --conf=configuation-file
+
+The default configuration file is /etc/rings/rings.conf.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 SEE ALSO
+
+Rings::Common
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut

@@ -29,31 +29,34 @@ if (empty($_ENV['RINGCONF'])) {
     $ring_conf = $_ENV['RINGCONF'];
 }
 $CONF = read_conf($ring_conf);
-set_default('cookie_id',    'rings-cookie');
-set_default('db_name',      'rings');
-set_default('db_secret',    '/etc/rings/rings_db.conf');
+set_default('button_position',  'top');
+set_default('cookie_id',        'rings-cookie');
+set_default('db_name',          'rings');
+set_default('db_secret',        '/etc/rings/rings_db.conf');
 set_default('debug',            0);
 set_default('display_size',     'raw');
 set_default('index_size',       '125x125');
-set_default('ldap_base',        'dc=macallister,dc=grass-valley,dc=ca,dc=us');
-set_default('ldap_server',      'ldap.ca-zephyr.org');
+set_default('krb_keytab',       '/etc/krb5.keytab');
+set_default('krb_principal',    '-U');
 set_default('mail_domain',      'ca-zephyr.org');
 set_default('mail_size',        '800x600');
 set_default('maint_size',       '640x480');
 set_default('picture_root',     '/srv/rings');
 set_default('webauth_sep',      '|');
-set_default('ring_admin',       'ring_admin');
-set_default('ring_admin_attr',  'czPrivilegeGroup');
-set_default('ring_admin_group', 'ring:admin');
+set_default('ring_admin',       false);
 set_default('ring_id',          'rings');
-set_default('ring_keytab',      '/NOKEYTAB');
-set_default('ring_princ',       'service/rings');
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);
 
 // Get database configuration and secrets
 $CONF_DB = read_conf($CONF['db_secret']);
+if (is_null($CONF_DB)) {
+  print("<br/>\n ERROR: Database connection error.\n </br>\n");
+  $err_msg = 'ERROR: missing file ' . $CONF['db_secret'];
+  syslog(LOG_ERR, $err_msg);
+  exit('ERROR: FATAL');
+}
 
 // Connect to the database and pull in some useful functions
 require('inc_db_connect.php');
@@ -70,24 +73,29 @@ if (empty($_SESSION['msg'])) {
     $_SESSION['msg'] = '';
 }
 
+// Set the user logged in flag
+$ring_user = false;
+if (isset($_COOKIE['rings-remote-user'])) {
+  $ring_user = true;
+}
+  
 // Set the admin flag
-$ring_admin_group = '';
-if (! empty($_SESSION['ring_admin_group'])
-    && $_SESSION['ring_admin_group'] > 0)
+$ring_admin = false;
+if (! empty($_SESSION['ring_admin'])
+    && $_SESSION['ring_admin'])
 {
-    $ring_admin_group = $_SESSION['ring_admin_group'];
-} else {
-    if (! empty($_SERVER['WEBAUTH_LDAP_CZPRIVILEGEGROUP']) ) {
-        $this_priv = strtok($_SERVER['WEBAUTH_LDAP_CZPRIVILEGEGROUP'],
-                            $CONF['webauth_sep']);
-        while ($this_priv !== false) {
-            if ($this_priv == $CONF['ring_admin_group']) {
-                $ring_admin_group = $CONF['ring_admin_group'];
-                break;
-            }
-            $this_priv = strtok($CONF['webauth_sep']);
-        }
+    $ring_admin = $_SESSION['ring_admin'];
+} elseif ($ring_user) {
+    $cmd = '';
+    $cmd .= '/usr/bin/k5start -q ';
+    $cmd .= ' -f ' . $CONF['krb_keytab'];
+    $cmd .= ' ' . $CONF['krb_principal'];
+    $cmd .= ' -- ';
+    $cmd .= '/usr/bin/ring-admin ' . $_COOKIE['rings-remote-user'];
+    $ring_admin_name = shell_exec($cmd);
+    if (!empty($ring_admin_name)) {
+        $ring_admin = true;
     }
 }
-$_SESSION['ring_admin_group'] = $ring_admin_group;
+$_SESSION['ring_admin'] = $ring_admin;
 ?>

@@ -302,6 +302,7 @@ if ($this_pid > 0) {
                name="in_button_del"
                value="Delete">
     </td>
+    </tr>
     <td align="right">
      <a href="picture_maint.php?in_pid=CLEARFORM">Clear Form</a>
     </td>
@@ -321,6 +322,13 @@ if ($this_pid > 0) {
         $pic_info .= '<br/>'
             . '<a href="picture_reload.php?in_pid=' . $display_pid . '" '
             . 'target="_blank">Reload</a>'
+            . "\n";
+        $pic_info .= '&nbsp;&nbsp;'
+            . '<a href="display.php'
+            . '?in_pid=' . $display_pid
+            . '&in_size=raw'
+            . '" '
+            . 'target="_blank">Raw</a>'
             . "\n";
         print $pic_info;
     }
@@ -365,18 +373,18 @@ if ($this_pid > 0) {
 
 <tr>
 <?php
-$chk_a = 'CHECKED';
+$chk_a = '';
 $chk_b = '';
 $chk_c = '';
+$chk_d = '';
 if ($row['grade'] == 'B') {
     $chk_b = 'CHECKED';
-    $chk_a = '';
 } elseif ($row['grade'] == 'C') {
     $chk_c = 'CHECKED';
-    $chk_a = '';
 } elseif ($row['grade'] == 'D') {
     $chk_d = 'CHECKED';
-    $chk_a = '';
+} else {
+    $chk_a = 'CHECKED';
 }
 ?>
  <td align="right">Grade:</td>
@@ -525,11 +533,12 @@ sys_display_msg();
 <p>
 
 <?php
+$defeat_cache = rand(1, 10000);
 if (!empty($row['pid'])) {
     echo '<a href="display.php'
         . '?in_pid=' . $this_pid
         . '&in_size=raw'
-        . '&rand=' . $i
+        . '&rand=' . $defeat_cache
         . '" target="_blank">';
     echo '<img src="display.php';
     echo '?in_pid=' . $row["pid"];
@@ -541,23 +550,35 @@ if (!empty($row['pid'])) {
 }
 
 # Picture matching code
-$sel = "SELECT tmp_matching.file_path, tmp_matching.signature ";
-$sel .= "FROM tmp_matching ";
-$sel .= "JOIN pictures_small ";
-$sel .= "ON (pictures_small.size = tmp_matching.size ";
-$sel .= "AND pictures_small.width = tmp_matching.width) ";
-$sel .= "WHERE pictures_small.pid = $this_pid ";
-$result = $DBH->query ($sel);
-if ($result) {
-    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $this_path = $row['file_path'];
-        $this_sig  = $row['signature'];
-        echo '<img src="display_file.php?in_signature=';
-        echo $this_sig;
-        echo '">' . "\n";
-        echo "<br/>\n";
-        echo $row['file_path'] . "<br/>\n";
+if ($this_pid > 0) {
+  $sel = "SELECT signature FROM pictures_small WHERE pid = ?";
+  if (!$stmt = $DBH->prepare($sel)) {
+    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+  }
+  $stmt->bind_param('i', $this_pid);
+  $stmt->execute();
+  $stmt->bind_result($p1);
+  if ($stmt->fetch()) {
+    $this_signature = $p1;
+  }
+  $stmt->close();
+  if (isset($this_signature)) {
+    $sel = "SELECT pid FROM pictures_small ";
+    $sel .= "WHERE signature = ? AND pid != ? ";
+    $sel .= "ORDER BY pid ";
+    if (!$stmt = $DBH->prepare($sel)) {
+      sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
+    $stmt->bind_param('si', $this_signature, $this_pid);
+    $stmt->execute();
+    $stmt->bind_result($p1);
+    while ($stmt->fetch()) {
+      $dup_pid = $p1;
+      echo '<a href="picture_maint.php?pid=' . $dup_pid . '">';
+      echo "Duplicate Picture: $dup_pid </a>\n";
+    }
+    $stmt->close();
+  }
 }
 ?>
 

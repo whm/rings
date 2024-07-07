@@ -1,0 +1,153 @@
+#!/bin/bash
+#
+# remctl-ring-control -- remctl script to manage ring daemons
+#
+# Written by Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+function display_usage {
+    echo "Usage: ring-control [help|status|restart|start|stop]
+    [daemon|load]"
+    exit 1;
+}
+
+function check_service {
+    case $1 in
+        daemon)
+            echo -n "$1 "
+            ;;
+        load)
+            echo -n "$1 "
+            ;;
+        *)
+            echo "ERROR: must enter a service, 'daemon' or 'load'"
+            exit 1
+            ;;
+    esac
+}
+
+########################################################################
+# Main routine
+########################################################################
+
+if [ "$1" = "" ]
+then
+    display_usage
+fi
+
+case $1 in
+    help)
+        display_usage
+        ;;
+    status)
+        echo "====================================================="
+        systemctl status ring-daemon
+        echo "====================================================="
+        systemctl status ring-load
+        ;;
+    restart)
+        check_service $2
+        echo "restarting =========================================="
+        systemctl restart ring-$2
+        ;;
+    start)
+        check_service $2
+        echo "starting ============================================"
+        systemctl start ring-$2
+        ;;
+    stop)
+        check_service $2
+        echo "stopping ============================================"
+        systemctl stop ring-$2
+        ;;
+    *)
+        echo "ERROR: unknown action"
+        display_usage
+        ;;
+esac
+
+exit
+
+DOCS=<<__END_OF_DOCS__
+
+=head1 NAME
+
+remctl-ring-control - remctl script to control rings daemons
+
+=head1 SYNOPSIS
+
+remctl-ring-control [help|status|restart|start|stop] [daemon|load]
+
+=head1 DESCRIPTION
+
+This script allows the rings processing and load daemons to be
+controlled using remctl.  The script is essentially a wrapper
+around systemctl.
+
+The ring-daemon daemon processes pictures generating the picture
+resolutions from the input directory.  The processing queue is
+maintained in the rings database.
+
+The ring-load daemon examines input pictures and generates queue
+entries for the ring-daemon process.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item status
+
+Display the status of both the ring-daemon and the ring-load daemons.
+
+=item restart
+
+Stop and start the daemon specified.
+
+=item start
+
+Start the daemon specified.
+
+=item stop
+
+Start the daemon specified.
+
+=item help
+
+Display usage information.
+
+=item manual
+
+Display the man page for this script.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=head1 AUTHORS
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
+
+__END_OF_DOCS__

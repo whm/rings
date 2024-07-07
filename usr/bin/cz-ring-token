@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+# cz-ring-token -- Get an AFS token for the rings application
+#
+# Written by Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+##############################################################################
+# Subroutines
+##############################################################################
+
+function display_usage {
+    echo "Usage: cz-ring-token [help|manual]"
+    exit 1
+}
+
+##############################################################################
+# Main routine
+##############################################################################
+
+case $1 in
+    help)
+        display_usage
+        ;;
+    manual)
+        pod2text $0
+        exit 1
+        ;;
+esac
+
+/usr/bin/k5start -L -K 6 -b -l 10h \
+    -f /etc/krb5.keytab \
+    -m 640 -o root -g www-data \
+    -a -k /run/rings-apache.tgt -U -t
+
+exit
+
+DOCS=<<__END_OF_DOCS__
+
+=head1 NAME
+
+cz-ring-token - Get AFS an token
+
+=head1 SYNOPSIS
+
+cz-ring-token [help|manual]
+
+=head1 DESCRIPTION
+
+This script uses the host keytab to create a Kerberos ticket
+cache and obtain an AFS token.  It is commonly used with a
+web server to allow the server to access AFS resources.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item help
+
+Display usage information.
+
+=item manual
+
+Display the man page for this script.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=head1 AUTHORS
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
+
+__END_OF_DOCS__

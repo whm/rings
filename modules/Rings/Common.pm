@@ -183,6 +183,48 @@ sub get_config {
         }
     );
     $CONF->define(
+        'krb_keytab',
+        {
+            DEFAULT  => '/etc/krb5.keytab',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'krb_principal',
+        {
+            DEFAULT  => '-U',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'ldap_host',
+        {
+            DEFAULT  => 'cz-ldap-replica-1.ca-zephyr.org',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'ldap_base',
+        {
+            DEFAULT  => 'ou=people,dc=ca-zephyr,dc=org',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'ldap_admin_attr',
+        {
+            DEFAULT  => 'czPrivilegeGroup',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'ldap_admin_val',
+        {
+            DEFAULT  => ['ring:admin'],
+            ARGCOUNT => ARGCOUNT_LIST,
+        }
+    );
+    $CONF->define(
         'loop_limit_daemon',
         {
             DEFAULT  => 120,
@@ -211,6 +253,20 @@ sub get_config {
         }
     );
     $CONF->define(
+        'ring_admin',
+        {
+            DEFAULT  => 'Mrochek Freed',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'ring_admin_princ',
+        {
+            DEFAULT  => 'user@REALM',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'syslog',
         {
             DEFAULT  => 'local3',
@@ -220,12 +276,9 @@ sub get_config {
 
     # Configuration elements used by the PHP user interface.  Defining
     # them here suppresses perl startup warnings.
-    $CONF->define('display_size',     { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('index_size',       { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('maint_size',       { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('ring_admin',       { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('ring_admin_attr',  { ARGCOUNT => ARGCOUNT_ONE });
-    $CONF->define('ring_admin_group', { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('display_size', { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('index_size',   { ARGCOUNT => ARGCOUNT_ONE });
+    $CONF->define('maint_size',   { ARGCOUNT => ARGCOUNT_ONE });
 
     # Read preferences files in order from global location,
     # home directory, and command line.
@@ -305,7 +358,7 @@ sub get_next_id {
     }
     if ($cnt == 0) {
         $return_number = 1;
-        my $cmd = 'INSERT INTO  next_number (id,next_number) VALUES (?,?) ';
+        my $cmd = 'INSERT INTO next_number (id,next_number) VALUES (?,?) ';
         dbg($cmd) if $CONF->debug;
         if ($CONF->update) {
             my $sth_update = $DBH_UPDATE->prepare($cmd);
@@ -330,7 +383,8 @@ sub set_new_picture {
 
     my $sel
       = 'INSERT INTO picture_details SET '
-      . "uid = 'new', "
+      . 'uid = '
+      . $CONF->default_group_id . ', '
       . 'pid = ?, '
       . 'date_last_maint = NOW(), '
       . 'date_added = NOW() '
@@ -910,16 +964,16 @@ sub normalize_picture_lot {
 # Return the path to a file given the pid, group, size, and type desired
 
 sub pid_to_path {
-    my ($pid, $group, $side_id, $type) = @_;
+    my ($pid, $group, $size_id, $type) = @_;
 
-    if (!check_picture_size($side_id)) {
-        msg('fatal', "Invalid size: $side_id");
+    if (!check_picture_size($size_id)) {
+        msg('fatal', "Invalid size: $size_id");
     }
 
     $type =~ s/[.]//xmsg;
 
     my $path = $CONF->picture_root;
-    $path .= "/${group}/${side_id}/${pid}.${type}";
+    $path .= "/${group}/${size_id}/${pid}.${type}";
     $path =~ s{//}{/}xmsg;
 
     return $path;
@@ -1118,9 +1172,305 @@ __END__
 
 =head1 NAME
 
-whm::rings - Utility routines for the rings gallery application
+Rings::Commons - Utility routines for the rings gallery application
 
-=head1 SYNOPSIS
+=head1 EXPORTS
+
+=over 4
+
+=item $CONF
+
+The configuration read from the configuration file.  See CONFIGURATION
+PARAMETERS below for a list of possible settings.  This is the return
+from the get_config routine.
+
+=item $DBH
+
+The data base handle to use for reading the Rings database.  The
+handle is set by the db_connect routine.
+
+=item $DBH_UPDATE
+
+The data base handle to use for updating the Rings database.  The
+handle is set by the db_connect routine.
+
+=item db_connect
+
+Connect to the Rings database and set the $DBH and $DBH_UPDATE
+database handles.
+
+=item db_disconnect
+
+Disconnect from the Rings database.
+
+=item dbg
+
+Routine to display debugging information.
+
+=item check_picture_size
+
+Perform a search of the Rings table picture_sizes to validate
+if the request size is supported.  The routine croaks if the
+size is not supported.
+
+=item create_picture_dirs
+
+Create the directory to support a new picture upload.  The
+tree created is of the form:
+
+    picture_root/group/size
+
+=item create_picture
+
+Resize a raw picture, store some meta data, and return the resized
+picture.
+
+=item get_config
+
+Read the configuration file.  The routine accepts on parameter, the
+path to the file to read.  The default file is /etc/rings/rings.conf.
+See CONFIGURATION PARAMETERS below for a list of possible settings.
+
+=item get_meta_data
+
+Get the meta data from a picture file using Image::Magick and
+return a hash with the data.
+
+=item get_next_id
+
+Get the next unused picture ID.
+
+=item get_picture_sizes
+
+Return a hash of pictures sizes to generate from the entries in
+the picture_sizes table. Return a hash of the containing the
+max_height, max_width, picture_table, and description for each
+size.
+
+=item get_picture_types
+
+Return a hash of valid picture types and their associated MIME
+type.
+
+=item make_picture_path
+
+Give the picture lot, size ID, picture ID, and picture type
+return a path to be use to store the picture.
+
+The path is of the form:
+
+    picture_root/lot/size_id/pid.type
+
+=item msg
+
+Display processing messages.  The routine accepts two parameters:
+a severity and the text to be displayed.  Messages are written
+to STDOUT and if syslog is configured messages are written to
+syslog.  If a message severify is 'fatal' the routine invokes
+croak with the message text;
+
+=item normalize_picture_lot
+
+Return the input sting after removing all white space and
+lowercase'ing the string.
+
+=item pid_to_path
+
+Given a picture ID, the group ID, the size_id, and the type
+return the path to the picture file.
+
+=item queue_error
+
+Save processing errors in the picture_action_queue table.
+
+=item queue_action_reset
+
+Delete a queue entry from the picture_action_queue table.
+
+=item queue_action_set
+
+Set a picture's processing status to PENDING in the
+picture_action_queue table.
+
+=item queue_upload
+
+Insert a processing request in the picture_upload_queue table.
+
+=item queue_upload_error
+
+Write processing errors in the picture_upload_queue table.
+
+=item queue_upload_reset
+
+Delete a row from the picture_upload_queue table.
+
+=item set_new_picture
+
+Add a picture to the 'new' picture group.
+
+=item sql_datetime
+
+Generate an SQL datetime string from a UNIX time stamp.
+
+=item sql_die
+
+Generate an SQL error message and exit.
+
+=item sql_format_datetime
+
+Generate a valid SQL datatime string from a datetime of the
+form yyyymmddhhmmss or yyyymmdd.
+
+=item store_meta_data
+
+Sort the meta data for a picture in the Rings database.
+
+=item trim
+
+Trival routine to string leading and trailing white space.
+
+=item unix_seconds
+
+Return a UNIX timestamp from an SQL datetime string.
+
+=item validate_mime_type
+
+Validate the mime type of a file and return the mime type and file
+type.
+
+=back
+
+=head1 CONFIGURATION PARAMETERS
+
+=over 4
+
+=item db_credentials
+
+The path to a file containing the database username and password
+to use when connection to the Rings database.  The default value
+is /etc/rings/rings.conf'.
+
+=item db_host
+
+The hostname of the Rings database server.
+
+=item db_name
+
+The name of the Rings database.
+
+=item debug
+
+Turn debugging messages.
+
+=item default_group_id
+
+The default group id for new pictures.  The default is 'new'.
+
+=item default_display_size
+
+The default display size if the user does not override the
+picture display size.  The default value is 'larger'.
+
+=item default_display_grade
+
+The default picture grade to display.  The default is 'A'.
+
+=item default_display_seconds
+
+The default pause to use when automatically display the pictures
+for a given person.  The default is 4 seconds.
+
+=item default_button_position
+
+The default position for picture links.  The default is 'top'.
+
+=item default_button_type
+
+The default button type is use.  The default is 'graphic'.
+
+=item default_public
+
+The default for public accessibility for a picture.  The default is
+'Y'.
+
+=item krb_keytab
+
+The keytab to use for authenticated LDAP searches.  The default is
+/etc/krb5.keytab.
+
+=item krb_principal
+
+The Kerberos principal to use for authenticated LDAP searches.  The
+default is -U.
+
+=item ldap_host
+
+The LDAP host search when performing authorization searches.  The
+default is 'cz-ldap-replica-1.ca-zephyr.org'.
+
+=item ldap_base
+
+The base dn for authorization LDAP searches.  The default is
+'ou=people,dc=ca-zephyr,dc=org'.
+
+=item ldap_admin_attr
+
+The attribute to search for when determining admin authorization.
+The default is 'czPrivilegeGroup'.
+
+=item ldap_admin_val
+
+The values of ldap_admin_attr to be consider as authorizing administrative
+access to the rings.  This property can be specified multiple times.
+The default value is 'ring:admin'.
+
+=item loop_limit_daemon
+
+The loop limit using by Rings daemons.  The default is 120.
+
+=item loop_limit_load
+
+The number of pictures to load in a single processing loop.  The
+default value is 120.
+
+=item picture_root
+
+The root directory where pictures are stored.
+
+=item queue_sleep
+
+The number of seconds to sleep beteen processing cycles.  The default
+is 30.  If processing is terminate by reaching the loop_load_limit
+then this value is set to zero for the next iteration.
+
+=item syslog
+
+If defined specifies that processing messages are to be written to
+syslog.  The default is 'local3'.
+
+=item display_size
+
+The display size used by the PHP interface.
+
+=item index_size
+
+The picture size used in indexes in the PHP interface.
+
+=item maint_size
+
+The picture size used in the PHP maintenance script.
+
+=item db_user
+
+The Rings database user.  This value must be specified in the
+db_credentials file.
+
+=item db_password
+
+The Rings password for the database user.  This value must be
+specified in the db_credentials file.
+
+=back
 
 =head1 AUTHOR
 
@@ -1128,7 +1478,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2018, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

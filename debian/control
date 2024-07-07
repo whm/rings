@@ -3,9 +3,10 @@ Section: web
 Priority: optional
 Maintainer: Bill MacAllister <bill@ca-zephyr.org>
 Build-Depends: debhelper (>= 10),
- dh-systemd (>= 1.5),
  imagemagick,
  libappconfig-perl,
+ libauthen-sasl-perl,
+ libcz-ldaptools-perl,
  libdbi-perl,
  libdbd-mysql-perl,
  libfile-homedir-perl,
@@ -16,11 +17,14 @@ Build-Depends: debhelper (>= 10),
  libimage-info-perl,
  libimage-magick-perl,
  libipc-run-perl,
+ libnet-ldapapi-perl,
  libphp-phpmailer,
  perl,
  perltidy,
  php-cli,
- php-ldap
+ php-gd,
+ php-ldap,
+ php-mysql
 Standards-Version: 3.9.8
 
 Package: picture-rings
@@ -30,6 +34,7 @@ Depends: ${misc:Depends}, ${perl:Depends},
  imagemagick,
  libapache2-mod-php,
  libappconfig-perl,
+ libauthen-sasl-perl,
  libdbi-perl,
  libdbd-mysql-perl,
  libfile-homedir-perl,
@@ -40,9 +45,12 @@ Depends: ${misc:Depends}, ${perl:Depends},
  libimage-info-perl,
  libimage-magick-perl,
  libipc-run-perl,
+ libnet-ldap-perl,
  libphp-phpmailer,
  perl,
- php-ldap
+ php-gd,
+ php-ldap,
+ php-mysql
 Description: Rings Picture Gallery Web Application
  This web application organizations pictures and displays them via a
  web server.  The images are stored several resolutions for fast

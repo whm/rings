@@ -213,7 +213,7 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
 function back_to_index ($msg) {
 
     if (!empty($msg)) {
-        sys_msg_err($msg);
+        sys_msg($msg);
     }
     echo "<html>\n";
     echo "<head>\n";
