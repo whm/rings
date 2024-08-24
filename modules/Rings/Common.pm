@@ -78,10 +78,9 @@ sub db_connect {
       . $CONF->db_host . ';'
       . 'database='
       . $CONF->db_name;
-    $DBH = DBI->connect($dbi, $CONF->db_user, $CONF->db_password, \%attr)
+    $DBH = DBI->connect($dbi, $CONF->db_user, $CONF->db_password)
       or die "ERROR: Can't connect to database $dbi for read\n";
-    $DBH_UPDATE
-      = DBI->connect($dbi, $CONF->db_user, $CONF->db_password, \%attr)
+    $DBH_UPDATE = DBI->connect($dbi, $CONF->db_user, $CONF->db_password)
       or die "ERROR: Can't connect to database $dbi for update\n";
     return;
 }
@@ -758,14 +757,8 @@ sub create_picture {
         $height,    $ret_size,  $signature,   $format,    $compression,
     );
     if ($sth_update->err) {
-<<<<<<< HEAD
-        print("INFO: problem sql: $cmd");
-        print("INFO: pid = $pid");
-        die "ERROR: $sth_update->err - $sth_update->errstr \n";
-=======
         print("INFO: pid = $this_pid");
         sql_die($cmd, $sth_update->err, $sth_update->errstr);
->>>>>>> 60163c7 (Add routine to die after an sql error)
     }
 
     return $ret_pic;
