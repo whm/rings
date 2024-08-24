@@ -7,8 +7,11 @@ picture-rings (3) unstable; urgency=medium
   * Add POD to remctl-ring* scripts.
   * Add the script cz-ring-token to allow Apache to access AFS
     resources.
+  * Replace webauth supplied LDAP searches with Perl scripts.
+    The Perl scripts are required to support Kerberos authentication
+    to the LDAP server.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 02 Aug 2024 00:10:44 +0000
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 24 Aug 2024 07:04:09 +0000
 
 picture-rings (2.40) unstable; urgency=medium
 

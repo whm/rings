@@ -40,6 +40,7 @@ sub export_picture {
     dbg($sel) if $CONF->debug;
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
+
     if ($sth->err) {
         sql_die($sel, $sth->err, $sth->errstr);
     }
