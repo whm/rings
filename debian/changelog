@@ -1,3 +1,11 @@
+picture-rings (3.1) unstable; urgency=medium
+
+  * Updates to credential handling.  Ensure that logout destroys
+    credentials both in local and session variables.  Display
+    logged in credential with the Logout link.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 29 Aug 2024 18:52:05 +0000
+
 picture-rings (3) unstable; urgency=medium
 
   * Retire the dependency on webauth.  Generalize the authentication

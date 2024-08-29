@@ -76,15 +76,16 @@ if (empty($_SESSION['msg'])) {
 // Set the user logged in flag
 $ring_user = false;
 if (isset($_COOKIE['rings-remote-user'])) {
-  $ring_user = true;
+  $ring_user      = true;
+  $ring_user_name = $_COOKIE['rings-remote-user'];
 }
   
 // Set the admin flag
-$ring_admin = false;
-if (! empty($_SESSION['ring_admin'])
-    && $_SESSION['ring_admin'])
-{
-    $ring_admin = $_SESSION['ring_admin'];
+$ring_admin      = false;
+$ring_admin_name = '';
+if (isset($_SESSION['ring_admin'])) {
+    $ring_admin =      $_SESSION['ring_admin'];
+    $ring_admin_name = $_SESSION['ring_admin_name'];
 } elseif ($ring_user) {
     $cmd = '';
     $cmd .= '/usr/bin/k5start -q ';
@@ -94,8 +95,13 @@ if (! empty($_SESSION['ring_admin'])
     $cmd .= '/usr/bin/ring-admin ' . $_COOKIE['rings-remote-user'];
     $ring_admin_name = shell_exec($cmd);
     if (!empty($ring_admin_name)) {
-        $ring_admin = true;
+        $ring_admin                  = true;
+        $_SESSION['ring_admin']      = $ring_admin;
+        $_SESSION['ring_admin_name'] = $ring_admin_name;
+    } else {
+        $ring_admin                  = false;
+        $_SESSION['ring_admin']      = '';
+        $_SESSION['ring_admin_name'] = '';
     }
 }
-$_SESSION['ring_admin'] = $ring_admin;
 ?>

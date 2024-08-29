@@ -319,7 +319,8 @@ if ($ring_user) {
     if (!empty($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
-    echo '<a href="' . auth_url('logout') . '">Logout</a><br/>' . "\n";
+    echo '<a href="' . auth_url('logout')
+        . '">Logout ' . $ring_user_name . "</a><br/>\n";
     echo "</h5>\n";
 } else {
     echo '<h5><a href="' . auth_url('login') . '"' . '>Login</a>' . "\n";
