@@ -23,10 +23,9 @@ require('inc_util.php');
 require('inc_auth_policy.php');
 
 // Read the configuration file
-if (empty($_ENV['RINGCONF'])) {
+$ring_conf = apache_getenv('RINGCONF');
+if (empty($ring_conf)) {
     $ring_conf = '/etc/rings/rings.conf';
-} else {
-    $ring_conf = $_ENV['RINGCONF'];
 }
 $CONF = read_conf($ring_conf);
 set_default('button_position',  'top');
@@ -42,7 +41,6 @@ set_default('mail_domain',      'ca-zephyr.org');
 set_default('mail_size',        '800x600');
 set_default('maint_size',       '640x480');
 set_default('picture_root',     '/srv/rings');
-set_default('webauth_sep',      '|');
 set_default('ring_admin',       false);
 set_default('ring_id',          'rings');
 
