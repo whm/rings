@@ -10,10 +10,27 @@ use Getopt::Long;
 use Pod::Usage;
 use Rings::Common;
 
-my $opt_conf;
 my $opt_debug;
 my $opt_help;
 my $opt_manual;
+
+##############################################################################
+# Subroutines
+##############################################################################
+
+sub do_find {
+    my ($frag) = @_;
+    my $in_dir = $CONF->picture_input_dir;
+    opendir(my $dh, $in_dir) || die "Can't open $in_dir: $!";
+    while (readdir $dh) {
+        my $f = $_;
+        if ($f =~ /$frag/xms) {
+            print("$f\n");
+        }
+    }
+    closedir $dh;
+    return;
+}
 
 ##############################################################################
 # Main Routine
@@ -21,7 +38,6 @@ my $opt_manual;
 
 # -- get options
 GetOptions(
-    'conf=s' => \$opt_conf,
     'debug'  => \$opt_debug,
     'help'   => \$opt_help,
     'manual' => \$opt_manual
@@ -38,7 +54,28 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-get_config($opt_conf);
+my $action = shift;
+my $id     = shift;
+
+my %id_list = get_id_list();
+if (!$id_list{$id}) {
+    print("ERROR: unknown ID $id\n");
+    print("INFO: Valid IDs:\n");
+    for my $i (sort keys %id_list) {
+        print("    $i\n");
+        exit 1;
+    }
+}
+my $ring_conf = "/etc/rings/${id}.conf";
+get_config($ring_conf);
+
+# If just looking for a directory, print the list and bail out
+if ($action =~ /^f/xms) {
+    for my $d (@ARGV) {
+        do_find($d);
+    }
+    exit;
+}
 
 # -- Open up connections to the MySQL data
 db_connect();
@@ -82,9 +119,8 @@ ring-load - add an entry to the picture upload queue
 
 =head1 SYNOPSIS
 
-ring-load <directory1> [<directory2> ...] [--conf=<configuration>]
-[--debug] [--help] [--manual]
-
+ring-load [load|find] <id> <directory1> [<directory2> ...] \
+ [--conf=<configuration>] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -93,10 +129,6 @@ Add an entry to the picture_upload_queue.
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
-
-=item --conf=configuation-file
-
-The default configuration file is /etc/rings/rings.conf.
 
 =item --help
 

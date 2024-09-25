@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use strict;
+use Rings::Common;
+
+my %ring_id_list = get_id_list();
+if (scalar(keys %ring_id_list) == 0) {
+    print("No rings have been configured in /etc/rings\n");
+} else {
+    for my $id (sort keys %ring_id_list) {
+        print("$id\n");
+    }
+}
+
+exit;

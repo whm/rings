@@ -1,6 +1,8 @@
 picture-rings (3.2) unstable; urgency=medium
 
   * Updates to support multiple rings on the same server.
+    - Updates to php scripts.
+    - Replace bash scripts with perl.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 24 Sep 2024 21:59:46 +0000
 

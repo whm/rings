@@ -37,6 +37,7 @@ BEGIN {
       create_picture_dirs
       create_picture
       get_config
+      get_id_list
       get_meta_data
       get_next_id
       get_picture_sizes
@@ -110,23 +111,21 @@ sub dbg {
 sub get_config {
     my ($conf_file) = @_;
 
-    my $global_config = '/etc/rings/rings.conf';
-
     # Define the properties
     $CONF = AppConfig->new({});
 
     # Define the properties
     $CONF->define(
-        'db_credentials=s',
+        'db_secret=s',
         {
-            DEFAULT  => '/etc/rings/rings.conf',
+            DEFAULT  => '/etc/rings/rings_db.conf',
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
     $CONF->define(
         'db_host=s',
         {
-            DEFAULT  => '/etc/rings/rings.conf',
+            DEFAULT  => 'db.com',
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
@@ -181,13 +180,7 @@ sub get_config {
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
-    $CONF->define(
-        'krb_keytab',
-        {
-            DEFAULT  => '/etc/krb5.keytab',
-            ARGCOUNT => ARGCOUNT_ONE,
-        }
-    );
+    $CONF->define('krb_keytab', { ARGCOUNT => ARGCOUNT_ONE });
     $CONF->define(
         'krb_principal',
         {
@@ -245,6 +238,13 @@ sub get_config {
         }
     );
     $CONF->define(
+        'picture_input_root',
+        {
+            DEFAULT  => '/srv/rings-input',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'queue_sleep',
         {
             DEFAULT  => '30',
@@ -279,29 +279,20 @@ sub get_config {
     $CONF->define('index_size',   { ARGCOUNT => ARGCOUNT_ONE });
     $CONF->define('maint_size',   { ARGCOUNT => ARGCOUNT_ONE });
 
-    # Read preferences files in order from global location,
-    # home directory, and command line.
-    my @confs = ();
-    push @confs, $global_config;
-    push @confs, $conf_file;
-    if ($ENV{'HOME'}) {
-        push @confs, $ENV{'HOME'} . '/.rings.conf';
-    }
-    for my $z (@confs) {
-        $CONF->file($z) if -e $z;
-    }
+    # Read configuration from the file
+    $CONF->file($conf_file);
 
     # Read db preferences if they exist
-    if (-e $CONF->db_credentials) {
+    if (-e $CONF->db_secret) {
         $CONF->define('db_user',     { ARGCOUNT => ARGCOUNT_ONE });
         $CONF->define('db_password', { ARGCOUNT => ARGCOUNT_ONE });
-        my $db_conf = get_db_config($CONF->db_credentials);
+        my $db_conf = get_db_config($CONF->db_secret);
         $CONF->db_user($db_conf->db_user);
         $CONF->db_password($db_conf->db_password);
     } else {
         msg(
             'fatal',
-            'db_credentials file not found (' . $CONF->db_credentials . ')'
+            'db_secret file not found (' . $CONF->db_secret . ')'
         );
     }
 
@@ -325,6 +316,27 @@ sub get_db_config {
     $db_conf->define('db_password', { ARGCOUNT => ARGCOUNT_ONE });
     $db_conf->file($conf_file);
     return $db_conf;
+}
+# ------------------------------------------------------------------------
+# read the rings configuration directory and return a hash of the
+# configuration IDs.  The key to the has is the ID and the value is
+# the path to the configuration file.
+
+sub get_id_list {
+    my $ring_dir = '/etc/rings';
+    my %id_list  = ();
+    opendir(my $dh, $ring_dir) || die "Can't open $ring_dir: $!";
+    while (readdir $dh) {
+        my $f  = $_;
+        my $id = $f;
+        if ($id =~ s/[.]conf$//xms) {
+            if ($id !~ /db$/xms) {
+                $id_list{$id} = "$ring_dir/$f";
+            }
+        }
+    }
+    closedir $dh;
+    return %id_list;
 }
 
 # ------------------------------------------------------------------------
