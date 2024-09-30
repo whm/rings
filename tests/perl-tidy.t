@@ -59,7 +59,9 @@ for my $s (@perl_list) {
     my $out;
     my $cmd = "perl -I ../modules/ $s";
     $out = `$cmd --help 2>&1`;
-    if (!ok($out =~ /^Usage/, "Help Switch ($s)")) {
+    if (!$out) {
+        fail("No output from $cmd\n");
+    } elsif (!ok($out =~ /^Usage/, "Help Switch ($s)")) {
         print $out
     }
 

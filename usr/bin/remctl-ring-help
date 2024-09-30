@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# File: remctl-ring-help
+# Description: This script displays a help message for rings remctls
+# Author: Bill MacAllister <bill@ca-zephyr.org>
+# Copyright: 2024 CZ Software
 
 echo "Valid commands:"
 echo ""
@@ -22,3 +27,44 @@ echo "remctl help"
 echo ""
 echo "    This display"
 exit
+
+##############################################################################
+# Documentation
+##############################################################################
+
+DOCS=<<__END_OF_DOCS__
+=head1 NAME
+
+remctl-ring-help - display a help message for rings remctls
+
+=head1 SYNOPSIS
+
+remctl-ring-help
+
+=head1 DESCRIPTION
+
+This displays summary help messages for the rings application remctl
+commands.
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT
+
+Copyright 2024 CZ Software
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+=cut
+__END_OF_DOCS__
