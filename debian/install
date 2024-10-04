@@ -1,4 +1,4 @@
-modules/*      usr/share/perl5/Rings
+modules/*      usr/share/perl5
 images/*       usr/share/rings/images
 styles/*       usr/share/rings/styles
 conf/apache/*  etc/apache2/sites-available
