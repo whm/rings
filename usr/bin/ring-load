@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-load
 # Description: queue a picture directory to be loaded into the rings
 
@@ -20,7 +20,7 @@ my $opt_manual;
 
 sub do_find {
     my ($frag) = @_;
-    my $in_dir = $CONF->picture_input_dir;
+    my $in_dir = $CONF->picture_input_root;
     opendir(my $dh, $in_dir) || die "Can't open $in_dir: $!";
     while (readdir $dh) {
         my $f = $_;
@@ -68,6 +68,14 @@ if (!$id_list{$id}) {
 }
 my $ring_conf = "/etc/rings/${id}.conf";
 get_config($ring_conf);
+
+# Setup AFS access if requested
+my $kstart;
+if ($CONF->krb_keytab) {
+    $kstart = 'k5start -f ' . $CONF->krb_keytab;
+    $kstart .= ' ' . $CONF->krb_principal;
+    $kstart .= ' -t';
+}
 
 # If just looking for a directory, print the list and bail out
 if ($action =~ /^f/xms) {
@@ -154,7 +162,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full
