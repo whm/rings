@@ -80,10 +80,6 @@ list($pic_dir, $pic_path)
 if ($CONF['debug']) {
     syslog(LOG_INFO, "Opening file $pic_path");
 }
-#    header("Content-type: $mime_type");
-#    readfile($pic_path);
-#    system("/usr/bin/k5start -q -t -f /etc/service-rings.keytab service/rings -- /bin/cat $pic_path");
-#    flush();
 if (file_exists($pic_path)) {
     header("Content-type: $mime_type");
     readfile($pic_path);

@@ -11,14 +11,10 @@ then
     exit 1
 fi
 
-RINGID=$2
-RINGKEY="/etc/rings/service-${2}.keytab"
-if [ -n $RINGID ]
+RINGKEY="/etc/rings/service-rings.keytab"
+if [ -e $RINGKEY ]
 then
-    if [ -e $RINGKEY ]
-    then
-        RINGPREFIX="k5start -q -f $RINGKEY -U -t -- "
-    fi
+    RINGPREFIX="k5start -q -f $RINGKEY -U -t -- "
 fi
 
 $RINGPREFIX ring-load $*
