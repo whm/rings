@@ -19,10 +19,10 @@ use Rings::Common;
 my %MIME_TYPES = ();
 my %SIZE_IDS   = ();
 
-my $opt_conf;
 my $opt_debug;
 my $opt_force;
 my $opt_help;
+my $opt_id;
 my $opt_manual;
 my $opt_oneshot;
 
@@ -244,10 +244,10 @@ sub process_directories {
 
 # -- get options
 GetOptions(
-    'conf=s'  => \$opt_conf,
     'debug'   => \$opt_debug,
     'force'   => \$opt_force,
     'help'    => \$opt_help,
+    'id=s'    => \$opt_id,
     'manual'  => \$opt_manual,
     'oneshot' => \$opt_oneshot
 );
@@ -263,43 +263,54 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-get_config($opt_conf);
+my %id_list = ();
+if ($opt_id) {
+    $opt_oneshot = 1;
+    $id_list{$opt_id} = 1;
+} else {
+    %id_list = get_id_list();
+}
 
 if ($opt_debug) {
-    $CONF->debug($opt_debug);
-}
-if ($CONF->debug) {
-    dbg("Initialize timer.");
+    dbg("Debugging started.");
 }
 
-my $end  = 0;
-my $loop = 0;
+my $end = 0;
 while ($end == 0) {
-    if ($loop == 0) {
-        db_connect();
+    if ($opt_oneshot) {
+        $end = 1;
     }
-    my @dir_list;
-    if (@ARGV) {
-        @dir_list    = @ARGV;
-        $opt_oneshot = 1;
-    } else {
-        @dir_list = get_directories();
-    }
-    if (scalar(@dir_list) > 0) {
-        %MIME_TYPES = get_picture_types();
-        %SIZE_IDS   = get_picture_sizes();
-        process_directories(@dir_list);
-    } else {
-        if ($opt_oneshot) {
-            db_disconnect();
-            $end = 1;
-        } else {
-            sleep $CONF->queue_sleep;
+    my $rest        = 60;
+    my $update_flag = 0;
+    for my $id (keys %id_list) {
+        my $ring_conf = "/etc/rings/${id}.conf";
+        if ($CONF->debug) {
+            dbg("ring_conf = $ring_conf\n");
         }
-    }
-    if ($loop++ > $CONF->loop_limit_load) {
+        get_config($ring_conf);
+        db_connect();
+        my @dir_list;
+        if (@ARGV) {
+            @dir_list    = @ARGV;
+            $opt_oneshot = 1;
+        } else {
+            @dir_list = get_directories();
+        }
+        if (scalar(@dir_list) > 0) {
+            %MIME_TYPES = get_picture_types();
+            %SIZE_IDS   = get_picture_sizes();
+            process_directories(@dir_list);
+            $update_flag = 1;
+        }
+        if ($CONF->queue_sleep > $rest) {
+            $rest = $CONF->queue_sleep;
+        }
         db_disconnect();
-        $loop = 0;
+    }
+    if ($opt_oneshot) {
+        $end = 1;
+    } elsif (!$update_flag) {
+        sleep $rest;
     }
 }
 
@@ -358,7 +369,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

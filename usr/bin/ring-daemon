@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2016, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-daemon
 # Description: Update pictures by either creating/re-creating alternate
 #   or updating meta-data.
@@ -19,9 +19,9 @@ my %SIZE_IDS    = ();
 my @ACTION_LIST = ('SIZE', 'INFO');
 
 my $opt_action;
-my $opt_conf;
 my $opt_debug;
 my $opt_help;
+my $opt_id;
 my $opt_manual;
 my $opt_oneshot;
 
@@ -185,9 +185,9 @@ sub process_pids {
 # -- get options
 GetOptions(
     'action=s' => \$opt_action,
-    'conf=s'   => \$opt_conf,
     'debug'    => \$opt_debug,
     'help'     => \$opt_help,
+    'id=s'     => \$opt_id,
     'manual'   => \$opt_manual,
     'oneshot'  => \$opt_oneshot
 );
@@ -233,8 +233,13 @@ if ($ARGV[1]) {
     $pid_end = $ARGV[1];
 }
 
-# Get configuration settings and initial debugging if requested.
-get_config($opt_conf);
+my %id_list = ();
+if ($opt_id) {
+    $opt_oneshot = 1;
+    $id_list{$opt_id} = 1;
+} else {
+    %id_list = get_id_list();
+}
 if ($opt_debug) {
     $CONF->debug($opt_debug);
 }
@@ -243,29 +248,34 @@ if ($CONF->debug) {
 }
 
 my $end  = 0;
-my $loop = 0;
+my $rest = 60;
 while ($end == 0) {
-    if ($loop == 0) {
-        db_connect();
-        %SIZE_IDS = get_picture_sizes();
-    }
     if ($opt_oneshot || $pid_start > 0) {
         $end = 1;
     }
     my $update_flag = 0;
-    for my $action (@ACTION_LIST) {
-        my $this_list_ref = get_pids($pid_start, $pid_end, $action);
-        if (scalar(@{$this_list_ref}) > 0) {
-            $update_flag = 1;
-            process_pids($action, $this_list_ref);
+    for my $id (keys %id_list) {
+        my $ring_conf = "/etc/rings/${id}.conf";
+        if ($CONF->debug) {
+            dbg("ring_conf = $ring_conf\n");
         }
+        get_config($ring_conf);
+        db_connect();
+        %SIZE_IDS = get_picture_sizes();
+        for my $action (@ACTION_LIST) {
+            my $this_list_ref = get_pids($pid_start, $pid_end, $action);
+            if (scalar(@{$this_list_ref}) > 0) {
+                $update_flag = 1;
+                process_pids($action, $this_list_ref);
+            }
+        }
+        if ($CONF->queue_sleep > $rest) {
+            $rest = $CONF->queue_sleep;
+        }
+        db_disconnect();
     }
     if (!$update_flag && !$opt_oneshot) {
-        sleep $CONF->queue_sleep;
-    }
-    if ($loop++ > $CONF->loop_limit_daemon) {
-        db_disconnect();
-        $loop = 0;
+        sleep $rest;
     }
 }
 
@@ -339,7 +349,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

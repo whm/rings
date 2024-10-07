@@ -58,7 +58,7 @@ GetOptions(
 );
 
 if ($opt_debug) {
-    print("DEBUG: output started\n");
+    dbg("Debugging started.");
 }
 
 # help the poor souls out
@@ -76,8 +76,8 @@ my $action = shift;
 my $id     = shift;
 
 if ($opt_debug) {
-    print("action = $action\n");
-    print("id = $id\n");
+    dbg("action = $action\n");
+    dbg("id = $id\n");
 }
 
 my %id_list = get_id_list();
@@ -91,14 +91,17 @@ if (!$id_list{$id}) {
 }
 my $ring_conf = "/etc/rings/${id}.conf";
 if ($opt_debug) {
-    print("ring_conf = $ring_conf\n");
+    dbg("ring_conf = $ring_conf\n");
 }
 get_config($ring_conf);
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
 
 # If just looking for a directory, print the list and bail out
 if ($action =~ /^f/xms) {
-    if ($opt_debug) {
-        print('picture_input_root = ' . $CONF->picture_input_root . "\n");
+    if ($CONF->debug) {
+        dbg('picture_input_root = ' . $CONF->picture_input_root . "\n");
     }
     find(\&do_find, $CONF->picture_input_root);
     exit;
