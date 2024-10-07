@@ -11,8 +11,8 @@ use Test::More qw( no_plan );
 # List of bash scripts
 @script_list = (
     'usr/bin/cz-ring-token',
-    'usr/bin/remctl-ring-control',
-    'usr/bin/remctl-ring-queue-status',
+    'usr/bin/ring-control',
+    'usr/bin/ring-status',
 );
 
 for my $s (@script_list) {

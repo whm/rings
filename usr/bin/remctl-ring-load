@@ -1,95 +1,49 @@
-#!/usr/bin/perl
+#!/bin/bash
 #
-# remctl-ring-load -- remctl wrapper for ring-load
+# remctl-ring-load -- wrapper for ring-load script
 #
 # Written by Bill MacAllister <bill@ca-zephyr.org>
 # Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
 
-use Getopt::Long;
-use Pod::Usage;
-use Rings::Common;
-use strict;
+if [ "$1" = "" ]
+then
+    echo "Usage: ring-load <action> <id> [<options>]"
+    exit 1
+fi
 
-my $opt_help;
+RINGID=$2
+RINGKEY="/etc/rings/service-${2}.keytab"
+if [ -n $RINGID ]
+then
+    if [ -e $RINGKEY ]
+    then
+        RINGPREFIX="k5start -q -f $RINGKEY -U -t -- "
+    fi
+fi
+
+$RINGPREFIX ring-load $*
+
+exit
+
 
 ##############################################################################
-# Main Routine
+# Documentation
 ##############################################################################
-
-# -- get options
-GetOptions('help' => \$opt_help);
-
-my $action = shift;
-
-if ($opt_help) {
-    pod2usage(-verbose => 0);
-}
-if (scalar(@ARGV) == 0 || $action == 'help') {
-    my $script = $0;
-    $script =~ s/^remctl\-//xms;
-    pod2usage(-verbose => 0, -input => $script);
-}
-
-my $id      = shift;
-my %id_list = get_id_list();
-if (!$id_list{$id}) {
-    print("ERROR: unknown ID $id\n");
-    print("INFO: Valid IDs:\n");
-    for my $i (sort keys %id_list) {
-        print("    $i\n");
-        exit 1;
-    }
-}
-my $ring_conf = "/etc/rings/${id}.conf";
-get_config($ring_conf);
-
-# Setup for accessing afs
-my $kstart;
-if ($CONF->krb_keytab) {
-    $kstart = 'k5start -f ' . $CONF->krb_keytab;
-    $kstart .= ' ' . $CONF->krb_principal;
-    $kstart .= ' -t';
-    $kstart .= ' -- ';
-}
-
-my $args = join(' ', @ARGV);
-my $cmd  = "$kstart ring_load " . $args;
-system($cmd);
-
-exit;
-
-__END__
+DOCS=<<__END_OF_DOCS__
 
 =head1 NAME
 
-remctl-ring-load - Wrapper around the ring-load script
+remctl-ring-load - Wrapper script for ring-load
 
 =head1 SYNOPSIS
 
-     remctl-ring-load [--help] [<ring id>] [<actions>] -- [<options>]
+     remctl-ring-load <action> <id> [<options>]"
 
 =head1 DESCRIPTION
 
-This is a wrapper script around the ring-load script.  See --manual
-for a full description of the ring-load script.  The script attempts
-to read the ring configuration file /etc/rings/<ring id>.conf.  If
-the krb_keytab property is defined in the configuration file than
-then this script attempts to obtain an AFS token before invoking the
-remctl-load script.
-
-=head1 OPTIONS
-
-=over 4
-
-=item --help
-
-A short help message.
-
-=item --manual
-
-Display the man page for the ring-load script.
-
-=back
+This script is a wrapper for the ring-load script that provides
+an AFS token if the keytab /etc/rings/service-<ring_id>.keytab
+exists.
 
 =head1 AUTHOR
 
@@ -112,3 +66,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 =cut
+__END_OF_DOCS__

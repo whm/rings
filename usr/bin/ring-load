@@ -7,6 +7,7 @@
 use strict;
 use DBI;
 use Getopt::Long;
+use File::Find;
 use Pod::Usage;
 use Rings::Common;
 
@@ -19,16 +20,29 @@ my $opt_manual;
 ##############################################################################
 
 sub do_find {
-    my ($frag) = @_;
-    my $in_dir = $CONF->picture_input_root;
-    opendir(my $dh, $in_dir) || die "Can't open $in_dir: $!";
-    while (readdir $dh) {
-        my $f = $_;
-        if ($f =~ /$frag/xms) {
-            print("$f\n");
+    my $this_file = $_;
+    my $this_path = $File::Find::name;
+    my @dir_list  = ();
+    if (-d $this_path) {
+        my $this_dir = $File::Find::dir;
+        my $prefix   = $CONF->picture_input_root;
+        my $pic_dir  = $this_path;
+        $pic_dir =~ s/^$prefix\///xms;
+        if (scalar(@ARGV) > 0) {
+            for my $frag (@ARGV) {
+                if ($this_file =~ /$frag/xms) {
+                    push @dir_list, $pic_dir;
+                }
+            }
+        } else {
+            push @dir_list, $pic_dir;
         }
     }
-    closedir $dh;
+    if (scalar(@dir_list) > 0) {
+        for my $d (sort @dir_list) {
+            print("$d\n");
+        }
+    }
     return;
 }
 
@@ -43,19 +57,28 @@ GetOptions(
     'manual' => \$opt_manual
 );
 
+if ($opt_debug) {
+    print("DEBUG: output started\n");
+}
+
 # help the poor souls out
-if (@ARGV && $ARGV[0] eq 'help') {
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+if (scalar(@ARGV) == 0 || $ARGV[0] eq 'help') {
     $opt_help = 1;
 }
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
-if ($opt_manual) {
-    pod2usage(-verbose => 2);
-}
 
 my $action = shift;
 my $id     = shift;
+
+if ($opt_debug) {
+    print("action = $action\n");
+    print("id = $id\n");
+}
 
 my %id_list = get_id_list();
 if (!$id_list{$id}) {
@@ -67,21 +90,17 @@ if (!$id_list{$id}) {
     }
 }
 my $ring_conf = "/etc/rings/${id}.conf";
-get_config($ring_conf);
-
-# Setup AFS access if requested
-my $kstart;
-if ($CONF->krb_keytab) {
-    $kstart = 'k5start -f ' . $CONF->krb_keytab;
-    $kstart .= ' ' . $CONF->krb_principal;
-    $kstart .= ' -t';
+if ($opt_debug) {
+    print("ring_conf = $ring_conf\n");
 }
+get_config($ring_conf);
 
 # If just looking for a directory, print the list and bail out
 if ($action =~ /^f/xms) {
-    for my $d (@ARGV) {
-        do_find($d);
+    if ($opt_debug) {
+        print('picture_input_root = ' . $CONF->picture_input_root . "\n");
     }
+    find(\&do_find, $CONF->picture_input_root);
     exit;
 }
 
@@ -105,12 +124,12 @@ if (@ARGV) {
 }
 
 for my $d (@dir_list) {
-    if (-d $d) {
-        my $a_fullname = File::Spec->rel2abs($d);
-        print "Adding $d to processing queue ...\n";
-        queue_upload($a_fullname);
+    my $this_dir = $CONF->picture_input_root . "/$d";
+    if (-d $this_dir) {
+        print "Adding $this_dir to processing queue ...\n";
+        queue_upload($this_dir);
     } else {
-        print "$d not a directory ... skipping\n"
+        print "$this_dir not a directory ... skipping\n"
           or die "ERROR: problem writing to STDOUT\n";
     }
 }

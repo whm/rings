@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# remctl-ring-control -- remctl script to manage ring daemons
+# ring-control -- remctl script to manage ring daemons
 #
 # Written by Bill MacAllister <bill@ca-zephyr.org>
 # Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
@@ -72,11 +72,11 @@ DOCS=<<__END_OF_DOCS__
 
 =head1 NAME
 
-remctl-ring-control - remctl script to control rings daemons
+ring-control - remctl script to control rings daemons
 
 =head1 SYNOPSIS
 
-remctl-ring-control [help|status|restart|start|stop] [daemon|load]
+ring-control [help|status|restart|start|stop] [daemon|load]
 
 =head1 DESCRIPTION
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# remctl-ring-queue-status -- remctl script display ring queue status
+# ring-queue-status -- remctl script display ring queue status
 #
 # Written by Bill MacAllister <bill@ca-zephyr.org>
 # Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
@@ -10,7 +10,7 @@
 ##############################################################################
 
 function display_usage {
-    echo "Usage: ring-status-queue [help]"
+    echo "Usage: ring-queue [help]"
     exit 1
 }
 
@@ -42,11 +42,11 @@ DOCS=<<__END_OF_DOCS__
 
 =head1 NAME
 
-remctl-ring-queue-status - display the rings processing queue status
+ring-queue-status - display the rings processing queue status
 
 =head1 SYNOPSIS
 
-remctl-ring-queue-status [help|manual]
+ring-queue-status [help|manual]
 
 =head1 DESCRIPTION
 

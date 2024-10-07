@@ -1,21 +1,21 @@
 #!/bin/bash
 #
-# File: remctl-ring-help
+# File: ring-help
 # Description: This script displays a help message for rings remctls
 # Author: Bill MacAllister <bill@ca-zephyr.org>
 # Copyright: 2024 CZ Software
 
 echo "Valid commands:"
 echo ""
-echo "remctl ring load <ring id>"
+echo "remctl ring-load <ring id> <action> [<directory> ...]"
 echo ""
 echo "    Request that pictures be loaded into the rings database"
 echo ""
-echo "remctl ring daemon <ring id>"
+echo "remctl ring-control <ring id>"
 echo ""
 echo "    Control the ring daemons"
 echo ""
-echo "remctl queue <ring id>"
+echo "remctl ring-status <ring id>"
 echo ""
 echo "    Show the status of the processing daemons"
 echo ""
@@ -35,11 +35,11 @@ exit
 DOCS=<<__END_OF_DOCS__
 =head1 NAME
 
-remctl-ring-help - display a help message for rings remctls
+ring-help - display a help message for rings remctls
 
 =head1 SYNOPSIS
 
-remctl-ring-help
+ring-help
 
 =head1 DESCRIPTION
 
