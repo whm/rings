@@ -1,5 +1,5 @@
 ring-load    ALL  /usr/bin/remctl-ring-load  /etc/remctl/acl/ring-admin 
 ring-control ALL  /usr/bin/ring-control      /etc/remctl/acl/ring-admin
-ring-status  ALL  /usr/bin/ring-status       /etc/remctl/acl/ring-admin
+ring-queue   ALL  /usr/bin/ring-queue        /etc/remctl/acl/ring-admin
 ring         show /usr/bin/ring-show         ANYUSER
 ring         help /usr/bin/ring-help         ANYUSER

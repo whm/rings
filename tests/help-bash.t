@@ -12,7 +12,6 @@ use Test::More qw( no_plan );
 @script_list = (
     'usr/bin/cz-ring-token',
     'usr/bin/ring-control',
-    'usr/bin/ring-status',
 );
 
 for my $s (@script_list) {
