@@ -371,13 +371,11 @@ sub get_next_id {
         $return_number = 1;
         my $cmd = 'INSERT INTO next_number (id,next_number) VALUES (?,?) ';
         dbg($cmd) if $CONF->debug;
-        if ($CONF->update) {
-            my $sth_update = $DBH_UPDATE->prepare($cmd);
-            $sth_update->execute($id, $return_number);
-            if ($sth_update->err) {
-                print("INFO: id = $id, next_number = $return_number");
-                sql_die($cmd, $sth_update->err, $sth_update->errstr);
-            }
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
+        $sth_update->execute($id, $return_number);
+        if ($sth_update->err) {
+            print("INFO: id = $id, next_number = $return_number");
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
     }
 
