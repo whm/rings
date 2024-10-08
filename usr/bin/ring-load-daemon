@@ -284,10 +284,10 @@ while ($end == 0) {
     my $update_flag = 0;
     for my $id (keys %id_list) {
         my $ring_conf = "/etc/rings/${id}.conf";
+        get_config($ring_conf);
         if ($CONF->debug) {
             dbg("ring_conf = $ring_conf\n");
         }
-        get_config($ring_conf);
         db_connect();
         my @dir_list;
         if (@ARGV) {
