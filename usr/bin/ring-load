@@ -58,7 +58,7 @@ GetOptions(
 );
 
 if ($opt_debug) {
-    dbg("Debugging started.");
+    print("DEBUG: Debugging started.");
 }
 
 # help the poor souls out

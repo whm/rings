@@ -394,8 +394,8 @@ sub set_new_picture {
 
     my $sel
       = 'INSERT INTO picture_details SET '
-      . 'uid = '
-      . $CONF->default_group_id . ', '
+      . "uid = '"
+      . $CONF->default_group_id . "', "
       . 'pid = ?, '
       . 'date_last_maint = NOW(), '
       . 'date_added = NOW() '

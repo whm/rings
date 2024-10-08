@@ -272,7 +272,7 @@ if ($opt_id) {
 }
 
 if ($opt_debug) {
-    dbg("Debugging started.");
+    print("DEBUG: Debugging started.");
 }
 
 my $end = 0;
