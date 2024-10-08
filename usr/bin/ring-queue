@@ -128,7 +128,7 @@ ring-queue - display the rings processing queue status
 
 =head1 SYNOPSIS
 
-ring-queue [help|manual]
+ring-queue <ring id> [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -139,11 +139,21 @@ entries.
 
 =over 4
 
-=item help
+=item <ring id>
+
+Display the processing queue status for the <ring id> ring.
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item --help
 
 Display usage information.
 
-=item manual
+=item --manual
 
 Display the man page for this script.
 
