@@ -15,7 +15,6 @@ use Sys::Syslog;
 use Sys::Syslog qw(:standard :macros);
 use warnings;
 
-my $opt_conf;
 my $opt_debug;
 my $opt_help;
 my $opt_manual;
@@ -26,7 +25,6 @@ my $opt_manual;
 
 # -- get options
 GetOptions(
-    'conf=s' => \$opt_conf,
     'debug'  => \$opt_debug,
     'help'   => \$opt_help,
     'manual' => \$opt_manual
@@ -49,16 +47,30 @@ if (!@ARGV) {
     print($admin);
     exit;
 }
-my $princ = $ARGV[0];
-if ($princ !~ /@/xms) {
-    $princ .= '@CA-ZEPHYR.ORG';
+
+my $id      = shift;
+my %id_list = get_id_list();
+if (!$id_list{$id}) {
+    print("ERROR: missing ring id\n");
+    exit 1;
 }
 
-get_config();
+my $princ = shift;
+if (!$princ) {
+    print("ERROR: missing kerberos principal\n");
+    exit 1;
+}
+
+get_config($id);
 
 my $ident  = 'ringsAuth';
 my $logopt = 'ndelay,pid';
 openlog($ident, $logopt, LOG_LOCAL0);
+
+# Add the realm to the principal
+if ($princ !~ /@/xms) {
+    $princ .= '@' . $CONF->krb_realm;
+}
 
 # LDAP server
 my $ldap_host = $CONF->ldap_host;

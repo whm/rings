@@ -35,13 +35,14 @@ set_default('db_secret',        '/etc/rings/rings_db.conf');
 set_default('debug',            0);
 set_default('display_size',     'raw');
 set_default('index_size',       '125x125');
+set_default('krb_cache',        'FILE:/run/rings.tgt');
 set_default('krb_keytab',       '/etc/krb5.keytab');
 set_default('krb_principal',    '-U');
+set_default('krb_realm',        'CA-ZEPHYR.ORG');
 set_default('mail_domain',      'ca-zephyr.org');
 set_default('mail_size',        '800x600');
 set_default('maint_size',       '640x480');
 set_default('picture_root',     '/srv/rings');
-set_default('ring_admin',       false);
 set_default('ring_id',          'rings');
 
 // Setup syslog
@@ -75,31 +76,31 @@ if (empty($_SESSION['msg'])) {
 $ring_user = false;
 if (isset($_COOKIE['rings-remote-user'])) {
   $ring_user      = true;
-  $ring_user_name = $_COOKIE['rings-remote-user'];
+  $ring_user_uid = $_COOKIE['rings-remote-user'];
 }
   
 // Set the admin flag
-$ring_admin      = false;
-$ring_admin_name = '';
-if (isset($_SESSION['ring_admin'])) {
-    $ring_admin =      $_SESSION['ring_admin'];
-    $ring_admin_name = $_SESSION['ring_admin_name'];
-} elseif ($ring_user) {
-    $cmd = '';
-    $cmd .= '/usr/bin/k5start -q ';
-    $cmd .= ' -f ' . $CONF['krb_keytab'];
-    $cmd .= ' ' . $CONF['krb_principal'];
-    $cmd .= ' -- ';
-    $cmd .= '/usr/bin/ring-admin ' . $_COOKIE['rings-remote-user'];
-    $ring_admin_name = shell_exec($cmd);
-    if (!empty($ring_admin_name)) {
-        $ring_admin                  = true;
-        $_SESSION['ring_admin']      = $ring_admin;
-        $_SESSION['ring_admin_name'] = $ring_admin_name;
-    } else {
-        $ring_admin                  = false;
-        $_SESSION['ring_admin']      = '';
-        $_SESSION['ring_admin_name'] = '';
+$ring_user_priv = 'USER';
+if ($ring_user) {
+    $ring_user_name = '';
+    $sel = "SELECT common_name, privilege FROM user WHERE uid = ?";
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
+    if (!$stmt->bind_param("s", $ring_user_uid)) {
+        sys_err('Bind param failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    if (!$stmt->execute()) {
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    if (!$stmt->bind_result($p1, $p2)) {
+        sys_err('Bind result failed: (' . $DBH->errno . ') ' . $DBH->error);
+    }
+    while ($stmt->fetch()) {
+        $ring_user_name = $p1;
+        $ring_user_priv = $p2;
+        break;
+    }
+    $stmt->close();
 }
 ?>

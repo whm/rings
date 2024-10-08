@@ -180,11 +180,25 @@ sub get_config {
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
+    $CONF->define(
+        'krb_cache',
+        {
+            DEFAULT  => 'FILE:/run/rings.tgt',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
     $CONF->define('krb_keytab', { ARGCOUNT => ARGCOUNT_ONE });
     $CONF->define(
         'krb_principal',
         {
             DEFAULT  => '-U',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
+        'krb_realm',
+        {
+            DEFAULT  => 'CA-ZEPHYR.ORG',
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
