@@ -8,7 +8,6 @@
 use strict;
 use Cwd;
 use DBI;
-use File::Slurp;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
@@ -96,7 +95,7 @@ sub process_pids {
 
     my $cnt = 0;
     foreach my $pid (@pid_list) {
-        msg('info', "Performing action: $action for picture: $pid");
+        msg('info', "Performing action $action for picture $pid");
         my $sel = 'SELECT pictures_raw.mime_type, ';
         $sel .= 'pictures_information.picture_lot, ';
         $sel .= 'pictures_information.source_file, ';
@@ -152,14 +151,15 @@ sub process_pids {
             next;
         }
 
-        my $raw = read_file($pic_path, binmode => ':raw');
-        my ($mime_type, $file_type) = validate_mime_type($raw);
+        my %pic       = get_meta_data($pic_path);
+        my $mime_type = $pic{'mimetype'};
+        my $file_type = $pic{'ring_compression'};
         if ($action eq 'SIZE') {
             foreach my $s (sort keys %SIZE_IDS) {
                 my $ppath = create_picture_dirs($pic_lot, $s);
                 my $pbase = "${pid}.${file_type}";
                 my $pfile = "${ppath}/${pbase}";
-                my $pic   = create_picture($pid, $s, $raw, $pbase, $mime_type);
+                my $pic   = create_picture($pid, $s, \%pic);
                 if ($s ne 'raw') {
                     open(my $fh, '>', $pfile);
                     print $fh $pic;
@@ -168,8 +168,8 @@ sub process_pids {
             }
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {
-            my %pic = get_meta_data($raw);
-            store_meta_data($pid, $pic_path, \%pic);
+            my %pic = get_meta_data($pic_path);
+            store_meta_data($pid, \%pic);
             queue_action_reset($pid, $action);
         } else {
             queue_error($pid, $action, "Unknown action $action");
@@ -241,7 +241,7 @@ if ($opt_id) {
     %id_list = get_id_list();
 }
 if ($opt_debug) {
-    dbg("Initialize timer.");
+    print("Debugging started");
 }
 
 my $end  = 0;
@@ -254,11 +254,11 @@ while ($end == 0) {
     for my $id (keys %id_list) {
         my $ring_conf = "/etc/rings/${id}.conf";
         get_config($ring_conf);
+        if ($opt_debug) {
+            $CONF->debug(1);
+        }
         if ($CONF->debug) {
             dbg("ring_conf = $ring_conf\n");
-        }
-        if ($opt_debug) {
-            $CONF->debug($opt_debug);
         }
         db_connect();
         %SIZE_IDS = get_picture_sizes();

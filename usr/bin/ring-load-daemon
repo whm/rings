@@ -70,30 +70,17 @@ sub save_file {
     my @dirs  = File::Spec->splitdir($a_dirlist);
     my $a_lot = normalize_picture_lot($dirs[-1]);
 
-    my $blob;
+    my $in_file_size = -s $a_fullname;
     if ($CONF->debug) {
-        dbg("Reading file: $a_file");
+        dbg("file:$a_file size:$in_file_size");
     }
-    eval {
-        $blob = read_file("$a_file", binmode => ':raw');
-        1;
-    } or do {
-        my $e = $@;
-        return $e;
-    };
-    my $blob_size = length($blob);
-    if ($CONF->debug) {
-        dbg("$a_file size $blob_size");
-    }
-    if ($blob_size < 1) {
+    if ($in_file_size < 1) {
         return "Zero length file $a_file";
     }
 
     # Get meta data
-    my %pic = get_meta_data($blob);
-    if ($CONF->debug) {
-        dbg("Done reading file and meta data from: $a_file");
-    }
+    my %pic = get_meta_data($a_file);
+    dbg("Done reading file and meta data from: $a_file");
 
     # Check for duplicate picture
     if (!$opt_force) {
@@ -101,7 +88,7 @@ sub save_file {
         # Check the signature for a duplication
         my $sql = "SELECT pid FROM pictures_information ";
         $sql .= "WHERE raw_signature = ? ";
-        if ($opt_debug) {
+        if ($CONF->debug) {
             dbg($sql);
         }
         my $sth = $DBH->prepare($sql);
@@ -138,7 +125,7 @@ sub save_file {
 
             while (my $row = $sth->fetchrow_hashref()) {
                 if ($row->{raw_picture_size} > 0) {
-                    my $size_match = length($blob) / $row->{raw_picture_size};
+                    my $size_match = $in_file_size / $row->{raw_picture_size};
                     if ($size_match < 1.05 && $size_match > .95) {
                         $dup_cnt++;
                         msg('info', "File $a_file duplicates $row->{pid}");
@@ -162,9 +149,9 @@ sub save_file {
     my $pic_path = create_picture_dirs($a_lot, 'raw');
     my $pic_base = lc("${pid}.${a_filetype}");
     my $pic_file = "${pic_path}/${pic_base}";
-    $pic{'in_file'} = $pic_file;
-    store_meta_data($pid, $a_fullname, \%pic);
-    create_picture($pid, 'raw', $blob, $pic_base, $pic{'MIMEType'});
+    $pic{'ring_file_path'} = $pic_file;
+    store_meta_data($pid, \%pic);
+    create_picture($pid, 'raw', \%pic);
     if (!copy($a_fullname, $pic_file)) {
         my $m = "Problem copying $a_file to $pic_file, $!";
         msg('warn', $m);
@@ -184,7 +171,7 @@ sub save_file {
 sub get_directories {
     my @dir_list = ();
     my $sql = "SELECT * from picture_upload_queue WHERE status = 'PENDING'";
-    if ($opt_debug) {
+    if ($CONF->debug) {
         dbg($sql);
     }
     my $sth = $DBH->prepare($sql);
@@ -285,6 +272,9 @@ while ($end == 0) {
     for my $id (keys %id_list) {
         my $ring_conf = "/etc/rings/${id}.conf";
         get_config($ring_conf);
+        if ($opt_debug) {
+            $CONF->debug(1);
+        }
         if ($CONF->debug) {
             dbg("ring_conf = $ring_conf\n");
         }

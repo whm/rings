@@ -7,6 +7,7 @@ package Rings::Common;
 
 use AppConfig qw(:argcount :expand);
 use Carp;
+use Compress::Zlib;
 use DBI;
 use File::Basename;
 use File::Slurp;
@@ -15,6 +16,7 @@ use File::Type;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
+use MIME::Base64;
 use Pod::Usage;
 use POSIX ();
 use strict;
@@ -36,6 +38,7 @@ BEGIN {
       check_picture_size
       create_picture_dirs
       create_picture
+      file_signature
       get_config
       get_id_list
       get_meta_data
@@ -492,50 +495,79 @@ sub sql_format_datetime {
 }
 
 # ------------------------------------------------------------------------
+# Take a file name, read the first n bytes, base64 encode the result and
+# return it.
+
+sub file_signature {
+    my ($in_file, $in_limit) = @_;
+    my $this_size  = -s $in_file;
+    my $this_limit = $in_limit;
+    if ($this_limit > $this_size) {
+        $this_limit = $this_size;
+    }
+    my $head;
+    open(my $fd, '<', $in_file);
+    read($fd, $head, $this_limit);
+    close $fd;
+    my $small = compress($head);
+    my $b64   = encode_base64($small, '');
+    return $b64;
+}
+
+# ------------------------------------------------------------------------
 # Get meta data from picture and return a hash with the data.
 
 sub get_meta_data {
 
-    my ($in_blob) = @_;
+    my ($in_file) = @_;
 
     # Data returned will be passed in a hash
     my %ret = ();
+    $ret{'ring_path'} = $in_file;
 
-    # Get picture meta data
-    my @blob;
-    $blob[0] = $in_blob;
-    my $pic = Image::Magick->New();
-    $pic->BlobToImage(@blob);
+    # Create a new Image::ExifTool object
+    my $exifTool = Image::ExifTool->new;
 
-    # Make sure this data is pulled from the image
-    $ret{'ring_width'}       = $pic->Get('width');
-    $ret{'ring_height'}      = $pic->Get('height');
-    $ret{'ring_size'}        = $pic->Get('filesize');
-    $ret{'ring_format'}      = $pic->Get('format');
-    $ret{'ring_compression'} = $pic->Get('compression');
-    $ret{'ring_signature'}   = $pic->Get('signature');
+    # Extract meta information from an image
+    my %options = (
+        'FastScan'  => 1,
+        'PrintConv' => 1,
+    );
+    $exifTool->ExtractInfo($in_file, \%options);
 
-    # Now pull the rest of the exif data
-    my $info    = ImageInfo(\@blob[0]);
-    my %meta_lc = ();
-    for my $t (keys %{$info}) {
-        $t =~ s/^\s+|\s+$//g;
-        $ret{$t} = ${$info}{$t};
-        $meta_lc{ lc($t) } = ${$info}{$t};
+    # Get list of tags in the order they were found in the file
+    my @tagList = $exifTool->GetFoundTags('File');
+
+    my %info = ();
+    for my $tag (@tagList) {
+        my $value  = $exifTool->GetValue($tag);
+        my $lc_tag = lc($tag);
+        $lc_tag =~ s/\s+//xmsg;
+        $info{$lc_tag} = $value;
+        $ret{$lc_tag}  = $value;
         if ($CONF->debug) {
-            dbg("$t = $ret{$t}");
+            dbg("$lc_tag = $value\n");
         }
     }
 
-    $ret{'ring_shutterspeed'} = $meta_lc{'shutterspeed'};
-    $ret{'ring_fstop'}        = $meta_lc{'fnumber'};
+    # Make sure this data is pulled from the image
+    $ret{'ring_width'}        = $info{'imagewidth'};
+    $ret{'ring_height'}       = $info{'imageheight'};
+    $ret{'ring_size'}         = -s $in_file;
+    $ret{'ring_format'}       = $info{'format'};
+    $ret{'ring_compression'}  = $info{'filetype'};
+    $ret{'ring_filetype'}     = $info{'filetype'};
+    $ret{'ring_signature'}    = file_signature($in_file, 1024);
+    $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
+    $ret{'ring_fstop'}        = $info{'fnumber'};
+    $ret{'ring_mime_type'}    = $info{'mimetype'};
 
     # Look for some fields under multiple names
     $ret{'ring_camera'} = 'UNKNOWN';
     my @camera_names = ('make', 'model');
     for my $c (@camera_names) {
-        if ($meta_lc{$c}) {
-            $ret{'ring_camera'} = $meta_lc{$c};
+        if ($info{$c}) {
+            $ret{'ring_camera'} = $info{$c};
         }
     }
 
@@ -545,12 +577,18 @@ sub get_meta_data {
         'datecreate', 'createdate'
     );
     for my $n (@date_names) {
-        if ($meta_lc{$n}) {
-            $ret{'ring_datetime'} = sql_format_datetime($meta_lc{$n});
+        if ($info{$n}) {
+            $ret{'ring_datetime'} = sql_format_datetime($info{$n});
             if ($CONF->debug) {
                 dbg("n = $n, ring_datetime = $ret{'ring_datetime'}");
             }
             last;
+        }
+    }
+
+    if ($CONF->debug) {
+        for my $a (sort keys %ret) {
+            dbg('ret{' . $a . "} = $ret{$a}");
         }
     }
 
@@ -562,7 +600,7 @@ sub get_meta_data {
 
 sub store_meta_data {
 
-    my ($pid, $in_file, $meta_data_ref) = @_;
+    my ($pid, $meta_data_ref) = @_;
     my %meta = %{$meta_data_ref};
     my $ts   = sql_datetime();
 
@@ -574,7 +612,7 @@ sub store_meta_data {
     }
 
     # Set file paths and names
-    $meta{'source_path'} = $in_file;
+    $meta{'source_path'} = $meta{'ring_path'};
     ($meta{'source_file'}, $meta{'source_dirs'}, $meta{'source_suffix'})
       = fileparse($meta{'source_path'});
     my @dirs = split(/\//, $meta{'source_dirs'});
@@ -666,7 +704,7 @@ sub store_meta_data {
             $CONF->default_public,
         );
         if ($sth_update->err) {
-            print("INFO: pid = $pid");
+            msg('info', "pid = $pid");
             sql_die($cmd, $sth_update->err, $sth_update->errstr);
         }
     }
@@ -679,7 +717,15 @@ sub store_meta_data {
 # picture
 
 sub create_picture {
-    my ($this_pid, $this_size_id, $this_picture, $this_file, $this_type) = @_;
+    my ($this_pid, $this_size_id, $pic_ref) = @_;
+    my %pic = %{$pic_ref};
+
+    if ($CONF->debug) {
+        dbg('create_picture');
+        for my $a (sort keys %pic) {
+            dbg('pic{' . $a . "} = $pic{$a}");
+        }
+    }
 
     if ($this_pid == 0) {
         my $msg = "Invalid PID.  Skipping create_picture for $this_size_id";
@@ -710,21 +756,22 @@ sub create_picture {
         msg('fatal', "Invalid size id: $this_size_id");
     }
 
-    my @blob;
-    $blob[0] = $this_picture;
-    my $this_pic = Image::Magick->New();
-    $this_pic->BlobToImage(@blob);
-    my $width       = $this_pic->Get('width');
-    my $height      = $this_pic->Get('height');
-    my $format      = $this_pic->Get('format');
-    my $compression = $this_pic->Get('compression');
-    my $signature   = $this_pic->Get('signature');
+    my $width       = $pic{'ring_width'};
+    my $height      = $pic{'ring_height'};
+    my $format      = $pic{'ring_format'};
+    my $compression = $pic{'ring_compression'};
+    my $signature   = $pic{'ring_signature'};
+    my $mime_type   = $pic{'ring_mime_type'};
 
     # Resize picture if requested
+    my @blob;
+    $blob[0] = read_file($pic{'ring_path'}, binmode => ':raw');
     my $ret_pic;
     if ($max_x == 0 || $max_y == 0) {
-        $ret_pic = $this_picture;
+        $ret_pic = $blob[0];
     } else {
+        my $this_pic = Image::Magick->New();
+        $this_pic->BlobToImage(@blob);
         my $newPic = $this_pic->Clone();
         my $x      = $width;
         my $y      = $height;
@@ -732,6 +779,7 @@ sub create_picture {
         my $y1     = int(($x1 / $width) * $height);
         my $y2     = $max_y;
         my $x2     = int(($y2 / $height) * $width);
+
         if ($x1 < $x2) {
             $x = $x1;
             $y = $y1;
@@ -776,8 +824,8 @@ sub create_picture {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_pid,  $this_type, $width,       $height,    $ret_size,
-        $signature, $format,    $compression, $this_type, $width,
+        $this_pid,  $mime_type, $width,       $height,    $ret_size,
+        $signature, $format,    $compression, $mime_type, $width,
         $height,    $ret_size,  $signature,   $format,    $compression,
     );
     if ($sth_update->err) {
@@ -906,7 +954,7 @@ sub make_picture_path {
         return $m;
     }
     if ($pid < 1) {
-        my $m = 'picture_path invalid pid';
+        my $m = 'picture_path invalid pid ($pid)';
         msg('error', $m);
         return $m;
     }
