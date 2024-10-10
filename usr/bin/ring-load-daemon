@@ -151,7 +151,7 @@ sub save_file {
     my $pic_file = "${pic_path}/${pic_base}";
     $pic{'ring_file_path'} = $pic_file;
     store_meta_data($pid, \%pic);
-    create_picture($pid, 'raw', \%pic);
+    create_picture($pid, 'raw', $pic_file, \%pic);
     if (!copy($a_fullname, $pic_file)) {
         my $m = "Problem copying $a_file to $pic_file, $!";
         msg('warn', $m);

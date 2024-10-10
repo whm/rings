@@ -156,15 +156,13 @@ sub process_pids {
         my $file_type = $pic{'ring_compression'};
         if ($action eq 'SIZE') {
             foreach my $s (sort keys %SIZE_IDS) {
+                if ($s eq 'raw') {
+                    next;
+                }
                 my $ppath = create_picture_dirs($pic_lot, $s);
                 my $pbase = "${pid}.${file_type}";
                 my $pfile = "${ppath}/${pbase}";
-                my $pic   = create_picture($pid, $s, \%pic);
-                if ($s ne 'raw') {
-                    open(my $fh, '>', $pfile);
-                    print $fh $pic;
-                    close $fh;
-                }
+                my $pic   = create_picture($pid, $s, $pfile, \%pic);
             }
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {

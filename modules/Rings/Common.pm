@@ -717,7 +717,7 @@ sub store_meta_data {
 # picture
 
 sub create_picture {
-    my ($this_pid, $this_size_id, $pic_ref) = @_;
+    my ($this_pid, $this_size_id, $new_path, $pic_ref) = @_;
     my %pic = %{$pic_ref};
 
     if ($CONF->debug) {
@@ -764,21 +764,15 @@ sub create_picture {
     my $mime_type   = $pic{'ring_mime_type'};
 
     # Resize picture if requested
-    my @blob;
-    $blob[0] = read_file($pic{'ring_path'}, binmode => ':raw');
-    my $ret_pic;
-    if ($max_x == 0 || $max_y == 0) {
-        $ret_pic = $blob[0];
-    } else {
-        my $this_pic = Image::Magick->New();
-        $this_pic->BlobToImage(@blob);
-        my $newPic = $this_pic->Clone();
-        my $x      = $width;
-        my $y      = $height;
-        my $x1     = $max_x;
-        my $y1     = int(($x1 / $width) * $height);
-        my $y2     = $max_y;
-        my $x2     = int(($y2 / $height) * $width);
+    my $new_pic = Image::Magick->New();
+    $new_pic->Read($pic{'ring_path'});
+    if ($max_x != 0 && $max_y != 0) {
+        my $x  = $width;
+        my $y  = $height;
+        my $x1 = $max_x;
+        my $y1 = int(($x1 / $width) * $height);
+        my $y2 = $max_y;
+        my $x2 = int(($y2 / $height) * $width);
 
         if ($x1 < $x2) {
             $x = $x1;
@@ -792,11 +786,10 @@ sub create_picture {
         if ($CONF->debug) {
             dbg("Producing picture $width by $height");
         }
-        $newPic->Resize(width => $x, height => $y);
-        my @bPic = $newPic->ImageToBlob();
-        $ret_pic = $bPic[0];
+        $new_pic->Resize(width => $x, height => $y);
+        $new_pic->Write($new_path);
     }
-    my $ret_size = length($ret_pic);
+    my $new_size = -s $new_path;
 
     my $cmd = "INSERT INTO $table SET ";
     $cmd .= 'pid = ?, ';
@@ -824,16 +817,16 @@ sub create_picture {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_pid,  $mime_type, $width,       $height,    $ret_size,
+        $this_pid,  $mime_type, $width,       $height,    $new_size,
         $signature, $format,    $compression, $mime_type, $width,
-        $height,    $ret_size,  $signature,   $format,    $compression,
+        $height,    $new_size,  $signature,   $format,    $compression,
     );
     if ($sth_update->err) {
         print("INFO: pid = $this_pid");
         sql_die($cmd, $sth_update->err, $sth_update->errstr);
     }
 
-    return $ret_pic;
+    return;
 }
 
 # ------------------------------------------------------------------------
