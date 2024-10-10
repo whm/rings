@@ -554,8 +554,8 @@ sub get_meta_data {
     $ret{'ring_width'}        = $info{'imagewidth'};
     $ret{'ring_height'}       = $info{'imageheight'};
     $ret{'ring_size'}         = -s $in_file;
-    $ret{'ring_format'}       = $info{'format'};
     $ret{'ring_compression'}  = $info{'filetype'};
+    $ret{'ring_filename'}     = $info{'filename'};
     $ret{'ring_filetype'}     = $info{'filetype'};
     $ret{'ring_signature'}    = file_signature($in_file, 1024);
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
@@ -563,6 +563,15 @@ sub get_meta_data {
     $ret{'ring_mime_type'}    = $info{'mimetype'};
 
     # Look for some fields under multiple names
+    $ret{'ring_format'} = 'UNKNOWN';
+    my @format_names = ('format', 'filetype');
+    for my $c (@format_names) {
+        if ($info{$c}) {
+            $ret{'ring_format'} = $info{$c};
+            last;
+        }
+    }
+
     $ret{'ring_camera'} = 'UNKNOWN';
     my @camera_names = ('make', 'model');
     for my $c (@camera_names) {
@@ -721,7 +730,11 @@ sub create_picture {
     my %pic = %{$pic_ref};
 
     if ($CONF->debug) {
-        dbg('create_picture');
+        my $m = 'create_picture';
+        $m .= " this_pid=$this_pid";
+        $m .= " this_size_id=$this_size_id";
+        $m .= " new_path=$new_path";
+        dbg($m);
         for my $a (sort keys %pic) {
             dbg('pic{' . $a . "} = $pic{$a}");
         }
@@ -750,12 +763,10 @@ sub create_picture {
         $max_y = $row->{max_height};
         $max_x = $row->{max_width};
     }
-    if (!$max_x || !$max_y) {
-        msg('fatal', "Invalid size id: $this_size_id");
-    }
 
     my $width     = $pic{'ring_width'};
     my $height    = $pic{'ring_height'};
+    my $filename  = $pic{'ring_filename'};
     my $format    = $pic{'ring_format'};
     my $signature = $pic{'ring_signature'};
     my $mime_type = $pic{'ring_mime_type'};
@@ -781,16 +792,16 @@ sub create_picture {
         $width  = int($x);
         $height = int($y);
         if ($CONF->debug) {
-            dbg("Producing picture $width by $height");
+            dbg("Producing picture $width by $height at $new_path");
         }
         $new_pic->Resize(width => $x, height => $y);
-        $new_pic->Write($new_path);
     }
-    my $new_size = -s $new_path;
-
-    my $new_filename = $new_path;
-    my $prefix       = $CONF->picture_input_root;
-    $new_filename =~ s/^$prefix//xms;
+    my $image_cnt = $new_pic->Write($new_path);
+    my $new_size  = -s $new_path;
+    if ($CONF->debug) {
+        dbg("image_cnt = $image_cnt");
+        dbg("new_size = $new_size");
+    }
 
     my $cmd = 'INSERT INTO picture_details SET ';
     $cmd .= 'size_id = ?, ';
@@ -818,9 +829,9 @@ sub create_picture {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_size_id, $this_pid, $new_filename, $mime_type, $width,
-        $height,       $new_size, $format,       $signature, $mime_type,
-        $width,        $height,   $new_size,     $signature, $format,
+        $this_size_id, $this_pid, $filename, $mime_type, $width,
+        $height,       $new_size, $format,   $signature, $mime_type,
+        $width,        $height,   $new_size, $signature, $format,
     );
     if ($sth_update->err) {
         print("INFO: pid = $this_pid");

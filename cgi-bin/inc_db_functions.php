@@ -124,7 +124,8 @@ function accept_and_store($fld_name, $in_pid) {
     }
     $sth->close();
 
-    $cmd = 'INSERT INTO pictures_raw SET ';
+    $cmd = 'INSERT INTO picture_details SET ';
+    $cmd .= "size_id = 'raw', ";
     $cmd .= 'pid = ?, ';
     $cmd .= 'mime_type = ?, ';
     $cmd .= 'date_last_maint = NOW(), ';

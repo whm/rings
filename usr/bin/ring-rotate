@@ -37,13 +37,14 @@ sub read_and_update {
 
     my $sel = 'SELECT pictures_information.pid, ';
     $sel .= 'pictures_information.picture_lot, ';
-    $sel .= 'pictures_raw.mime_type, ';
+    $sel .= 'picture_details.mime_type, ';
     $sel .= 'picture_types.file_type ';
     $sel .= 'FROM pictures_information ';
-    $sel .= 'JOIN pictures_raw ';
-    $sel .= 'ON (pictures_raw.pid = pictures_information.pid) ';
+    $sel .= 'JOIN pictures_details ';
+    $sel .= 'ON (picture_details.pid = pictures_information.pid ';
+    $sel .= "AND pictures_details = 'raw') ";
     $sel .= 'JOIN picture_types ';
-    $sel .= 'ON (picture_types.mime_type = pictures_raw.mime_type) ';
+    $sel .= 'ON (picture_types.mime_type = picture_details.mime_type) ';
     $sel .= 'WHERE pictures_information.pid >= ? ';
     $sel .= 'AND pictures_information.pid <= ? ';
     $sel .= 'ORDER BY pictures_information.pid ';
@@ -101,8 +102,8 @@ sub read_and_update {
         }
 
         # Update signature, width, height, size, format, compression
-        # in pictures_raw
-        $cmd = 'UPDATE pictures_raw SET ';
+        # in picture_details
+        $cmd = 'UPDATE picture_details SET ';
         $cmd .= 'signature = ?, ';
         $cmd .= 'width = ?, ';
         $cmd .= 'height = ?, ';

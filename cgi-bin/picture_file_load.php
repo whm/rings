@@ -76,12 +76,13 @@ function unzip_and_load ($zipfile) {
             }
 
             $flds = $vals = '';
+            mkin ('size_id',         'raw',              's');
             mkin ('pid',             $pid,               'n');
             mkin ('mime_type',       $content_type,      's');
             mkin ('picture',         $the_file_contents, 's');
             mkin ('date_last_maint', $a_date,            'd');
             mkin ('date_added',      $a_date,            'd');
-            $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
+            $cmd = "INSERT INTO picture_details ($flds) VALUES ($vals) ";
             $result = $DBH->query($cmd);
             if ($result->errno) {
                 sys_err("MySQL error:" . $result->error);
@@ -215,12 +216,14 @@ if (empty($upload)) {
                     }
 
                     $flds = $vals = '';
+                    mkin ('size_id',         'raw',              's');
                     mkin ('pid',             $pid,               'n');
                     mkin ('mime_type',       $content_type,      's');
                     mkin ('picture',         $the_file_contents, 's');
                     mkin ('date_last_maint', $a_date,            'd');
                     mkin ('date_added',      $a_date,            'd');
-                    $cmd = "INSERT INTO pictures_raw ($flds) VALUES ($vals) ";
+                    $cmd = "INSERT INTO picture_details ($flds) ";
+                    $cmd .= "VALUES ($vals) ";
                     $result = $DBH->query ($cmd);
                     if ($result->errno) {
                         sys_err("MySQL error:" . $result->error);

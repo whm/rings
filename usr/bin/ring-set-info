@@ -73,8 +73,8 @@ sub read_and_update {
         $sel .= "p.date_added, ";
         $sel .= "r.picture ";
         $sel .= "FROM pictures_information p ";
-        $sel .= "JOIN pictures_raw r ";
-        $sel .= "ON (p.pid = r.pid) ";
+        $sel .= "JOIN picture_details r ";
+        $sel .= "ON (p.pid = r.pid AND r.size_id = 'raw') ";
         $sel .= "WHERE p.pid = $thisPID ";
 
         if ($opt_debug) {

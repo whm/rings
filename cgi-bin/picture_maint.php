@@ -160,8 +160,9 @@ if ($this_pid > 0 && empty($row['pid']) ) {
 // Check to see if the raw image exists
 if ($this_pid > 0) {
     $sel = 'SELECT pid,date_last_maint ';
-    $sel .= 'FROM pictures_raw ';
+    $sel .= 'FROM picture_details ';
     $sel .= "WHERE pid = $this_pid ";
+    $sel .= "AND size_id = 'raw' ";
     $result = $DBH->query ($sel);
     if ($result) {
         $raw_row = $result->fetch_array(MYSQLI_ASSOC);

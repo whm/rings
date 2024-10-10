@@ -96,16 +96,17 @@ sub process_pids {
     my $cnt = 0;
     foreach my $pid (@pid_list) {
         msg('info', "Performing action $action for picture $pid");
-        my $sel = 'SELECT pictures_raw.mime_type, ';
+        my $sel = 'SELECT picture_details.mime_type, ';
         $sel .= 'pictures_information.picture_lot, ';
         $sel .= 'pictures_information.source_file, ';
         $sel .= 'picture_types.file_type ';
-        $sel .= 'FROM pictures_raw ';
+        $sel .= 'FROM picture_details ';
         $sel .= 'JOIN pictures_information ';
-        $sel .= 'ON (pictures_information.pid = pictures_raw.pid) ';
+        $sel .= 'ON (pictures_information.pid = picture_details.pid) ';
         $sel .= 'JOIN picture_types ';
-        $sel .= 'ON (picture_types.mime_type = pictures_raw.mime_type) ';
-        $sel .= 'WHERE pictures_raw.pid = ? ';
+        $sel .= 'ON (picture_types.mime_type = picture_details.mime_type) ';
+        $sel .= 'WHERE picture_details.pid = ? ';
+        $sel .= "AND picture_details.size_id = 'raw' ";
 
         if ($CONF->debug) {
             dbg($sel);
