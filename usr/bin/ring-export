@@ -34,9 +34,9 @@ sub display_example {
 
     print "#\n";
     print "# MySQL WHERE clause without the WHERE using the tables \n";
-    print "# picture_details d and pictures_information p.\n";
+    print "# picture_rings d and pictures_information p.\n";
     print "#\n";
-    print "# picture_details d\n";
+    print "# picture_rings d\n";
     print "#  uid\n";
     print "#  pid\n";
     print "#\n";
@@ -178,7 +178,7 @@ sub write_html {
     # -- get list of people, places
     my $sel = "SELECT ";
     $sel .= "p.display_name ";
-    $sel .= "FROM picture_details d ";
+    $sel .= "FROM picture_rings d ";
     $sel .= "JOIN people_or_places p ";
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid='$pid' ";
@@ -337,7 +337,7 @@ sub read_and_write {
 
     my $sel = "CREATE TEMPORARY TABLE tmp_picture_list ";
     $sel .= "SELECT DISTINCT d.pid ";
-    $sel .= "FROM picture_details d ";
+    $sel .= "FROM picture_rings d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON d.pid=p.pid ";
     $sel .= "WHERE " . $PROPS{'selection'} . " ";

@@ -66,7 +66,7 @@ function print_row ($n, $r) {
     // get a list of who is in the picture
     $sel = 'SELECT p.uid, ';
     $sel .= 'p.display_name display_name ';
-    $sel .= "FROM picture_details d ";
+    $sel .= "FROM picture_rings d ";
     $sel .= "LEFT OUTER JOIN people_or_places p ";
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid = '".$r['pid']."' ";
@@ -247,7 +247,7 @@ if (!empty($in_button_find) || !empty($in_new)) {
     $_SESSION['s_num_user_rows'] = 0;
     $cnt_sel = 'SELECT COUNT(DISTINCT p.pid) AS cnt ';
     $cnt_sel .= "FROM pictures_information p ";
-    $cnt_sel .= "LEFT OUTER JOIN picture_details d ";
+    $cnt_sel .= "LEFT OUTER JOIN picture_rings d ";
     $cnt_sel .= "ON (p.pid = d.pid) ";
     $cnt_sel .= "LEFT OUTER JOIN people_or_places pop ";
     $cnt_sel .= "ON (d.uid = pop.uid) ";
@@ -269,7 +269,7 @@ if (!empty($in_button_find) || !empty($in_new)) {
     $sel .= "pop.uid, ";
     $sel .= "pop.display_name ";
     $sel .= "FROM pictures_information p ";
-    $sel .= "LEFT OUTER JOIN picture_details d ";
+    $sel .= "LEFT OUTER JOIN picture_rings d ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "LEFT OUTER JOIN people_or_places pop ";
     $sel .= "ON (d.uid = pop.uid) ";
@@ -368,7 +368,7 @@ if ($_SESSION['s_order_by'] == 'p.pid') {
      <option value="None">None
 <?php
 $cmd = "SELECT distinct d.uid uid, p.display_name display_name ";
-$cmd .= "FROM picture_details d ";
+$cmd .= "FROM picture_rings d ";
 $cmd .= "LEFT OUTER JOIN people_or_places p ";
 $cmd .= "ON (p.uid = d.uid) ";
 $cmd .= "ORDER BY d.uid ";

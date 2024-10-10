@@ -408,7 +408,7 @@ sub set_new_picture {
     (my $pid) = @_;
 
     my $sel
-      = 'INSERT INTO picture_details SET '
+      = 'INSERT INTO picture_rings SET '
       . "uid = '"
       . $CONF->default_group_id . "', "
       . 'pid = ?, '
@@ -419,7 +419,7 @@ sub set_new_picture {
     dbg($sel) if $CONF->debug;
     my $sth_update = $DBH_UPDATE->prepare($sel);
     $sth_update->execute($pid)
-      or die "Error updating picture_details for $pid: $DBH::errstr\n";
+      or die "Error updating picture_rings for $pid: $DBH::errstr\n";
     return;
 }
 

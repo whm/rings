@@ -329,7 +329,7 @@ if (empty($row['display_name'])) {
 // get a count of the number of pictures in total
 $picture_count = 0;
 $sel = "SELECT count(*) cnt ";
-$sel .= "FROM picture_details d ";
+$sel .= "FROM picture_rings d ";
 $sel .= "JOIN pictures_information p ";
 $sel .= "ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
@@ -344,7 +344,7 @@ if ($result) {
 // Start by date if we have a new date
 if (!empty($in['start_date'])) {
     $sel = "SELECT count(*) cnt ";
-    $sel .= "FROM picture_details d ";
+    $sel .= "FROM picture_rings d ";
     $sel .= "JOIN pictures_information p ";
     $sel .= "ON (p.pid = d.pid) ";
     $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
@@ -382,7 +382,7 @@ if (!empty($in['start_date'])) {
 ##############################################################################
 
 $sel = "SELECT p.picture_date, p.grade, d.pid, d.date_last_maint ";
-$sel .= "FROM picture_details d ";
+$sel .= "FROM picture_rings d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 if (!$ring_user) {
@@ -477,7 +477,7 @@ function verifyInput() {
 <?php
 
 $sel = "SELECT p.picture_date, p.grade, d.pid, d.date_last_maint ";
-$sel .= "FROM picture_details d ";
+$sel .= "FROM picture_rings d ";
 $sel .= "JOIN pictures_information p ON (p.pid = d.pid) ";
 $sel .= "WHERE d.uid='" . $in['uid'] . "' ";
 if (!$ring_user) {

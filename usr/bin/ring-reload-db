@@ -186,11 +186,11 @@ sub update_db {
     $sel .= 'pictures_information.file_name, ';
     $sel .= 'pictures_information.camera ';
     $sel .= 'FROM pictures_information ';
-    $sel .= 'JOIN picture_details ';
-    $sel .= 'ON (picture_details.pid = pictures_information.pid) ';
+    $sel .= 'JOIN picture_rings ';
+    $sel .= 'ON (picture_rings.pid = pictures_information.pid) ';
     $sel .= 'WHERE pictures_information.file_name = ? ';
     $sel .= 'AND pictures_information.camera = ? ';
-    $sel .= 'AND picture_details.uid = ? ';
+    $sel .= 'AND picture_rings.uid = ? ';
 
     my $sth = $DBH->prepare($sel);
     if ($opt_debug) {

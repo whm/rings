@@ -178,7 +178,7 @@ function db_delete_picture ($this_pid) {
 
     $del_tables[] = 'picture_comments';
     $del_tables[] = 'picture_grades';
-    $del_tables[] = 'picture_details';
+    $del_tables[] = 'picture_rings';
     $del_tables[] = 'pictures_information';
     $del_tables[] = 'pictures';
 

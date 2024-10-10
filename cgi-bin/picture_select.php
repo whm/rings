@@ -187,7 +187,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     # First handle any pictures that have exactly the same picture
     # date.
     $sel = 'SELECT det.pid ';
-    $sel .= 'FROM picture_details det ';
+    $sel .= 'FROM picture_rings det ';
     $sel .= 'JOIN pictures_information p ';
     $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
@@ -220,7 +220,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
     # If there is no duplicate date then just select the next
     # picture by date.
     $sel = 'SELECT det.pid ';
-    $sel .= 'FROM picture_details det ';
+    $sel .= 'FROM picture_rings det ';
     $sel .= 'JOIN pictures_information p ';
     $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
@@ -370,7 +370,7 @@ if ($ring_user) {
 # Get first picture for a uid if no pid is specified
 if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sel = 'SELECT det.pid ';
-    $sel .= 'FROM picture_details det ';
+    $sel .= 'FROM picture_rings det ';
     $sel .= 'JOIN pictures_information p ';
     $sel .= 'ON (p.pid = det.pid) ';
     $sel .= 'WHERE det.uid = ? ';
@@ -447,7 +447,7 @@ if (!empty($in_ring_pid)) {
         $image_reference = '<img src="' . $image_url . '">';
         $sel = "SELECT det.uid uid, ";
         $sel .= "pp.display_name display_name ";
-        $sel .= "FROM picture_details det ";
+        $sel .= "FROM picture_rings det ";
         $sel .= "JOIN people_or_places pp ";
         $sel .= "ON (det.uid = pp.uid) ";
         $sel .= "WHERE det.pid=$in_ring_pid ";

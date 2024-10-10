@@ -21,14 +21,14 @@ $ret = $status->fetch_array(MYSQLI_ASSOC);
 $uid = $ret[0];
 
 // Pick a picture at random
-$sel = "SELECT count(*) FROM picture_details ";
+$sel = "SELECT count(*) FROM picture_rings ";
 $sel .= "WHERE uid='$uid' ";
 $status = $DBH->query ($sel);
 $ret = $status->fetch_array(MYSQLI_ASSOC);
 $picture_count = $ret[0];
 
 $offset = rand(0,$picture_count-1);
-$sel = "SELECT pid FROM picture_details ";
+$sel = "SELECT pid FROM picture_rings ";
 $sel .= "WHERE uid='$uid' ";
 $sel .= "LIMIT $offset, 1 ";
 $status = $DBH->query ($sel);

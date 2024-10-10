@@ -11,7 +11,7 @@ function auth_picture_invisible ($pid) {
     if ($ring_user) {
         $hide_picture = 0;
     } else {
-        $sel = "SELECT count(*) FROM picture_details pd ";
+        $sel = "SELECT count(*) FROM picture_rings pd ";
         $sel .= "JOIN people_or_places pop ON (pop.uid = pd.uid) ";
         $sel .= "WHERE pd.pid = ? ";
         $sel .= "AND pop.visibility = 'INVISIBLE' ";

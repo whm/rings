@@ -128,7 +128,7 @@ if ( $update_flag ) {
         $a_flag = get_request("in_del_$i");
         if (!empty($a_flag)) {
             $a_uid = get_request("in_del_uid_$i");
-            $cmd = "DELETE FROM picture_details ";
+            $cmd = "DELETE FROM picture_rings ";
             $cmd .= "WHERE uid = '$a_uid' ";
             $cmd .= "AND pid = $in_pid ";
             $result = $DBH->query($cmd);
@@ -162,7 +162,7 @@ if ( $update_flag ) {
             $a_uid = $in_newuids[$i];
         }
         if (strlen($a_uid) > 0) {
-            $cmd = 'INSERT INTO picture_details SET ';
+            $cmd = 'INSERT INTO picture_rings SET ';
             $cmd .= 'uid = ?, ';
             $cmd .= 'pid = ?, ';
             $cmd .= 'date_last_maint = NOW(), ';

@@ -426,7 +426,7 @@ $thisID = $row['pid'];
 $people_cnt = 0;
 if (!empty($thisID)) {
     $cmd = 'SELECT det.uid uid, p.display_name display_name ';
-    $cmd .= 'FROM picture_details det, people_or_places p ';
+    $cmd .= 'FROM picture_rings det, people_or_places p ';
     $cmd .= "WHERE det.pid=$thisID ";
     $cmd .= 'AND det.uid = p.uid ';
     $cmd .= 'ORDER BY p.display_name ';

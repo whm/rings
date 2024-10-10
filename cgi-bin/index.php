@@ -356,7 +356,7 @@ if (!empty($in_group_id)) {
         $sel .= "min(det.pid)    pid, ";
         $sel .= "pp.description  description, ";
         $sel .= "pp.display_name display_name ";
-        $sel .= "FROM picture_details det ";
+        $sel .= "FROM picture_rings det ";
         $sel .= "JOIN people_or_places pp ";
         $sel .= "ON (det.uid = pp.uid ";
         $sel .= "$vis_sel) ";
@@ -367,7 +367,7 @@ if (!empty($in_group_id)) {
         $sel .= "min(det.pid)    pid, ";
         $sel .= "pp.description  description, ";
         $sel .= "pp.display_name display_name ";
-        $sel .= "FROM picture_details det ";
+        $sel .= "FROM picture_rings det ";
         $sel .= "JOIN picture_groups g ";
         $sel .= "ON (g.uid = det.uid ";
         $sel .= "AND g.group_id='$in_group_id') ";
