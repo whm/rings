@@ -736,7 +736,6 @@ sub create_picture {
     my $ts = sql_datetime();
     my $max_x;
     my $max_y;
-    my $table;
     my $sel = 'SELECT * FROM picture_sizes WHERE size_id = ?';
     my $sth = $DBH->prepare($sel);
     if ($CONF->debug) {
@@ -750,18 +749,16 @@ sub create_picture {
     if (my $row = $sth->fetchrow_hashref) {
         $max_y = $row->{max_height};
         $max_x = $row->{max_width};
-        $table = $row->{picture_table};
     }
-    if (!$table) {
+    if (!$max_x || !$max_y) {
         msg('fatal', "Invalid size id: $this_size_id");
     }
 
-    my $width       = $pic{'ring_width'};
-    my $height      = $pic{'ring_height'};
-    my $format      = $pic{'ring_format'};
-    my $compression = $pic{'ring_compression'};
-    my $signature   = $pic{'ring_signature'};
-    my $mime_type   = $pic{'ring_mime_type'};
+    my $width     = $pic{'ring_width'};
+    my $height    = $pic{'ring_height'};
+    my $format    = $pic{'ring_format'};
+    my $signature = $pic{'ring_signature'};
+    my $mime_type = $pic{'ring_mime_type'};
 
     # Resize picture if requested
     my $new_pic = Image::Magick->New();
@@ -791,15 +788,20 @@ sub create_picture {
     }
     my $new_size = -s $new_path;
 
-    my $cmd = "INSERT INTO $table SET ";
+    my $new_filename = $new_path;
+    my $prefix       = $CONF->picture_input_root;
+    $new_filename =~ s/^$prefix//xms;
+
+    my $cmd = 'INSERT INTO picture_details SET ';
+    $cmd .= 'size_id = ?, ';
     $cmd .= 'pid = ?, ';
+    $cmd .= 'filename = ?, ';
     $cmd .= 'mime_type = ?, ';
     $cmd .= 'width = ?, ';
     $cmd .= 'height = ?, ';
     $cmd .= 'size = ?, ';
-    $cmd .= 'signature = ?, ';
     $cmd .= 'format = ?, ';
-    $cmd .= 'compression = ?, ';
+    $cmd .= 'signature = ?, ';
     $cmd .= 'date_last_maint = NOW(), ';
     $cmd .= 'date_added = NOW() ';
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
@@ -809,7 +811,6 @@ sub create_picture {
     $cmd .= 'size = ?, ';
     $cmd .= 'signature = ?, ';
     $cmd .= 'format = ?, ';
-    $cmd .= 'compression = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
     my $sth_update = $DBH_UPDATE->prepare($cmd);
 
@@ -817,9 +818,9 @@ sub create_picture {
         dbg($cmd);
     }
     $sth_update->execute(
-        $this_pid,  $mime_type, $width,       $height,    $new_size,
-        $signature, $format,    $compression, $mime_type, $width,
-        $height,    $new_size,  $signature,   $format,    $compression,
+        $this_size_id, $this_pid, $new_filename, $mime_type, $width,
+        $height,       $new_size, $format,       $signature, $mime_type,
+        $width,        $height,   $new_size,     $signature, $format,
     );
     if ($sth_update->err) {
         print("INFO: pid = $this_pid");
