@@ -55,20 +55,22 @@ sub get_file_types {
 
 sub save_file {
 
-    (my $a_file) = @_;
+    (my $a_fullname) = @_;
 
+    if (!-e $a_fullname) {
+        return "File not found $a_file";
+    }
+    
     if ($CONF->debug) {
-        dbg("Saving file: $a_file");
+        dbg("Saving file: $a_fullname");
     }
 
     # Pull out the file name, the file type, and the parent directory
-    my $a_fullname = File::Spec->rel2abs($a_file);
-    my ($a_vol, $a_dirlist, $a_filename) = File::Spec->splitpath($a_fullname);
+    my ($a_vol, $a_dirs, $a_filename) = File::Spec->splitpath($a_fullname);
     my ($a_mime_type, $a_filetype) = validate_mime_type($a_fullname);
-    $a_dirlist =~ s{^/}{}xms;
-    $a_dirlist =~ s{/$}{}xms;
-    my @dirs  = File::Spec->splitdir($a_dirlist);
-    my $a_lot = normalize_picture_lot($dirs[-1]);
+    $a_dirs =~ s{^/}{}xms;
+    $a_dirs =~ s{/$}{}xms;
+    my $a_lot = normalize_picture_lot($a_dirs);
 
     my $in_file_size = -s $a_fullname;
     if ($CONF->debug) {
