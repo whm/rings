@@ -58,9 +58,9 @@ sub save_file {
     (my $a_fullname) = @_;
 
     if (!-e $a_fullname) {
-        return "File not found $a_file";
+        return "File not found $a_fullname";
     }
-    
+
     if ($CONF->debug) {
         dbg("Saving file: $a_fullname");
     }
@@ -68,21 +68,21 @@ sub save_file {
     # Pull out the file name, the file type, and the parent directory
     my ($a_vol, $a_dirs, $a_filename) = File::Spec->splitpath($a_fullname);
     my ($a_mime_type, $a_filetype) = validate_mime_type($a_fullname);
-    $a_dirs =~ s{^/}{}xms;
-    $a_dirs =~ s{/$}{}xms;
-    my $a_lot = normalize_picture_lot($a_dirs);
+    my $a_lot = substr($a_dirs, length($CONF->picture_input_root));
+    $a_lot =~ s{^/}{}xms;
+    $a_lot =~ s{/$}{}xms;
 
     my $in_file_size = -s $a_fullname;
     if ($CONF->debug) {
-        dbg("file:$a_file size:$in_file_size");
+        dbg("file:$a_fullname size:$in_file_size");
     }
     if ($in_file_size < 1) {
-        return "Zero length file $a_file";
+        return "Zero length file $a_fullname";
     }
 
     # Get meta data
-    my %pic = get_meta_data($a_file);
-    dbg("Done reading file and meta data from: $a_file");
+    my %pic = get_meta_data($a_fullname);
+    dbg("Done reading file and meta data from: $a_fullname");
 
     # Check for duplicate picture
     if (!$opt_force) {
@@ -100,7 +100,10 @@ sub save_file {
         }
         while (my $row = $sth->fetchrow_hashref()) {
             $dup_cnt++;
-            msg('info', "File $a_file duplicates $row->{pid}");
+            msg(
+                'info',
+                "File signature for $a_fullname duplicates $row->{pid}"
+            );
         }
         # But duplicate pictures can have different signature, so
         # check other data as well.
@@ -130,16 +133,16 @@ sub save_file {
                     my $size_match = $in_file_size / $row->{raw_picture_size};
                     if ($size_match < 1.05 && $size_match > .95) {
                         $dup_cnt++;
-                        msg('info', "File $a_file duplicates $row->{pid}");
+                        msg(
+                            'info',
+                            "File size of $a_fullname duplicates $row->{pid}"
+                        );
                     }
-                } else {
-                    $dup_cnt++;
-                    msg('info', "File $a_file duplicates $row->{pid}");
                 }
             }
         }
         if ($dup_cnt > 0) {
-            msg('info', "SKIPPING: $a_file");
+            msg('info', "SKIPPING: $a_fullname");
             return;
         }
     }
@@ -154,7 +157,7 @@ sub save_file {
     $pic{'ring_file_path'} = $pic_file;
     store_meta_data($pid, \%pic);
     if (!copy($a_fullname, $pic_file)) {
-        my $m = "Problem copying $a_file to $pic_file, $!";
+        my $m = "Problem copying $a_fullname to $pic_file, $!";
         msg('warn', $m);
         return $m;
     }

@@ -9,6 +9,7 @@ use AppConfig qw(:argcount :expand);
 use Carp;
 use Compress::Zlib;
 use DBI;
+use Digest::MD5;
 use File::Basename;
 use File::Slurp;
 use File::Spec;
@@ -499,19 +500,15 @@ sub sql_format_datetime {
 # return it.
 
 sub file_signature {
-    my ($in_file, $in_limit) = @_;
-    my $this_size  = -s $in_file;
-    my $this_limit = $in_limit;
-    if ($this_limit > $this_size) {
-        $this_limit = $this_size;
-    }
-    my $head;
+    my ($in_file) = @_;
     open(my $fd, '<', $in_file);
-    read($fd, $head, $this_limit);
-    close $fd;
-    my $small = compress($head);
-    my $b64   = encode_base64($small, '');
-    return $b64;
+    binmode($fd);
+
+    my $md5 = Digest::MD5->new;
+    $md5->addfile($fd);
+    my $signature = $md5->hexdigest;
+
+    return $signature;
 }
 
 # ------------------------------------------------------------------------
@@ -557,7 +554,7 @@ sub get_meta_data {
     $ret{'ring_compression'}  = $info{'filetype'};
     $ret{'ring_filename'}     = $info{'filename'};
     $ret{'ring_filetype'}     = $info{'filetype'};
-    $ret{'ring_signature'}    = file_signature($in_file, 1024);
+    $ret{'ring_signature'}    = file_signature($in_file);
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
     $ret{'ring_fstop'}        = $info{'fnumber'};
     $ret{'ring_mime_type'}    = $info{'mimetype'};
