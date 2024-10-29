@@ -164,24 +164,11 @@ function db_delete_picture ($this_pid) {
     global $DBH;
 
     $del_tables = array();
-    $sel = 'SELECT picture_table '
-        . 'FROM picture_sizes ';
-    if (!$stmt = $DBH->prepare($sel)) {
-        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-    }
-    $stmt->bind_param();
-    $stmt->execute();
-    $stmt->bind_result($p1);
-    while ($stmt->fetch()) {
-        $del_tables[] = $p1;
-    }
-    $stmt->close();
 
     $del_tables[] = 'picture_comments';
     $del_tables[] = 'picture_grades';
     $del_tables[] = 'picture_rings';
     $del_tables[] = 'pictures_information';
-    $del_tables[] = 'pictures';
 
     foreach ($del_tables as $this_table) {
         $sel = "SELECT count(*) as cnt FROM $this_table WHERE pid = ?";
@@ -309,46 +296,28 @@ function get_picture_type ($pid, $id) {
     global $DBH;
     global $CONF;
 
-    $sel = 'SELECT picture_table FROM picture_sizes '
-        . 'WHERE size_id = ? or description = ? ';
+    $sel = "SELECT picture_details.mime_type, picture_types.file_type ";
+    $sel .= "FROM picture_details ";
+    $sel .= 'JOIN picture_types ';
+    $sel .= "ON (picture_types.mime_type = picture_details.mime_type) ";
+    $sel .= 'WHERE pid = ? ';
     if ($CONF['debug']) {
         sys_msg("DEBUG: $sel");
     }
     if (!$stmt = $DBH->prepare($sel)) {
-        sys_err('Prepare failed: ' . $DBH->errno . '- ' . $DBH->error);
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
         sys_err("Problem statement: $sel");
         return;
     }
-    $stmt->bind_param('ss', $id, $id);
+    $stmt->bind_param('i', $pid);
     $stmt->execute();
-    $stmt->bind_result($z);
+    $stmt->bind_result($p1, $p2);
     if ($stmt->fetch()) {
-        $picture_table = $z;
+        $mime_type = $p1;
+        $file_type = $p2;
     }
     $stmt->close();
-    if (!empty($picture_table)) {
-        $sel = "SELECT ${picture_table}.mime_type, picture_types.file_type ";
-        $sel .= "FROM $picture_table ";
-        $sel .= 'JOIN picture_types ';
-        $sel .= "ON (picture_types.mime_type = ${picture_table}.mime_type) ";
-        $sel .= 'WHERE pid = ? ';
-        if ($CONF['debug']) {
-            sys_msg("DEBUG: $sel");
-        }
-        if (!$stmt = $DBH->prepare($sel)) {
-            sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-            sys_err("Problem statement: $sel");
-            return;
-        }
-        $stmt->bind_param('i', $pid);
-        $stmt->execute();
-        $stmt->bind_result($p1, $p2);
-        if ($stmt->fetch()) {
-            $mime_type = $p1;
-            $file_type = $p2;
-        }
-        $stmt->close();
-    }
+
     if (empty($mime_type)) {
         $mime_type = 'application/octet-stream';
         $file_type = '';
@@ -364,9 +333,6 @@ function lookup_pic_dimen($pid, $sid) {
     global $CONF;
     global $DBH;
 
-    // default picture table
-    $picture_table = 'pictures_1280_1024';
-
     if (empty($pid)) {
         sys_err('Empty pid sent to lookup_pic_dimen');
         return;
@@ -375,34 +341,13 @@ function lookup_pic_dimen($pid, $sid) {
         $size = $CONF['display_size'];
     }
 
-    $sel = 'SELECT picture_table '
-        . 'FROM picture_sizes '
-        . 'WHERE size_id = ? or description = ? ';
-    if (!$stmt = $DBH->prepare($sel)) {
-        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-    }
-    $stmt->bind_param('ss', $sid, $sid);
-    $stmt->execute();
-    $stmt->bind_result($p1);
-    $cnt = 0;
-    while ($stmt->fetch()) {
-        $picture_table = $p1;
-        $cnt++;
-    }
-    if ($cnt == 0) {
-        sys_err("Picture size not found for $sid, using default");
-    }
-    if ($cnt > 1) {
-        sys_warn("Ambiguous size specification $sid");
-    }
-    $stmt->close();
-
     $this_height = 0;
     $this_width = 0;
 
     $sel = 'SELECT p.height, p.width ';
-    $sel .= "FROM $picture_table p ";
+    $sel .= "FROM picture_details p ";
     $sel .= 'WHERE p.pid = ? ';
+    $sel .= 'AND p.size_id = ? ';
     if (!$sth = $DBH->prepare($sel)) {
         sys_err('Prepare failed ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $sel");
@@ -435,8 +380,7 @@ function validate_size ($id) {
     $this_size = '';
     $this_description = '';
     $sel = 'SELECT size_id,'
-        . 'description, '
-        . 'picture_table '
+        . 'description '
         . 'FROM picture_sizes '
         . 'WHERE (size_id = ? OR description = ?) ';
     if (!$stmt = $DBH->prepare($sel)) {
@@ -444,15 +388,14 @@ function validate_size ($id) {
     }
     $stmt->bind_param('ss', $id, $id);
     $stmt->execute();
-    $stmt->bind_result($p1, $p2, $p3);
+    $stmt->bind_result($p1, $p2);
     if ($stmt->fetch()) {
         $sz_id    = $p1;
         $sz_desc  = $p2;
-        $sz_table = $p3;
     }
     $stmt->close();
 
-    return array($sz_id, $sz_desc, $sz_table);
+    return array($sz_id, $sz_desc);
 }
 
 //-------------------------------------------------------------

@@ -71,7 +71,7 @@ $stmt->close();
 
 if (empty($picture_lot)) {
     syslog(LOG_DEBUG, "Failed to find $pic_path");
-    no_picture('Picture not available. (picture_lot not found');
+    no_picture('Picture not available. (picture_lot not found', 'normal');
 }
 
 list($mime_type, $file_type) = get_picture_type($in_pid, $in_size);
@@ -86,6 +86,6 @@ if (file_exists($pic_path)) {
     flush();
 } else {
     syslog(LOG_DEBUG, "Failed to find $pic_path");
-    no_picture('Picture not available. (file not found)');
+    no_picture('Picture not available. (file not found)', 'normal');
 }
 ?>
