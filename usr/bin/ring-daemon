@@ -15,7 +15,7 @@ use Pod::Usage;
 use Rings::Common;
 
 my %SIZE_IDS    = ();
-my @ACTION_LIST = ('SIZE', 'INFO');
+my @ACTION_LIST = ('LEFT', 'RIGHT', 'SIZE', 'INFO');
 
 my $opt_action;
 my $opt_debug;
@@ -160,11 +160,14 @@ sub process_pids {
                 if ($s eq 'raw') {
                     next;
                 }
-                my $ppath = create_picture_dirs($pic_lot, $s);
-                my $pbase = "${pid}.${file_type}";
-                my $pfile = "${ppath}/${pbase}";
-                my $pic   = create_picture($pid, $s, $pfile, \%pic);
+                resize_all($pic_lot, $pid, $file_type, \%pic);
             }
+            queue_action_reset($pid, $action);
+        } elsif ($action =~ /^(LEFT|RIGHT)/xmsi) {
+            rotate_picture($action, $pic_path);
+            my %pic = get_meta_data($pic_path);
+            store_meta_data($pid, \%pic);
+            resize_all($pic_lot, $pid, $file_type, \%pic);
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {
             my %pic = get_meta_data($pic_path);
@@ -174,6 +177,25 @@ sub process_pids {
             queue_error($pid, $action, "Unknown action $action");
         }
     }
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Resize all resolutions for a given picture
+
+sub resize_all {
+    my ($pic_lot, $pid, $file_type, $pic_ref) = @_;
+
+    foreach my $s (sort keys %SIZE_IDS) {
+        if ($s eq 'raw') {
+            next;
+        }
+        my $ppath = create_picture_dirs($pic_lot, $s);
+        my $pbase = "${pid}.${file_type}";
+        my $pfile = "${ppath}/${pbase}";
+        my $pic   = create_picture($pid, $s, $pfile, $pic_ref);
+    }
+
     return;
 }
 

@@ -56,6 +56,7 @@ BEGIN {
       queue_upload
       queue_upload_error
       queue_upload_reset
+      rotate_picture
       set_new_picture
       sql_datetime
       sql_die
@@ -284,6 +285,13 @@ sub get_config {
         }
     );
     $CONF->define(
+        'ring_id',
+        {
+            DEFAULT  => 'rings',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'syslog',
         {
             DEFAULT  => 'local3',
@@ -399,6 +407,31 @@ sub get_next_id {
 
     return $return_number;
 
+}
+
+# ------------------------------------------------------------------------
+# Rotate a picture file
+
+sub rotate_picture {
+    my ($direction, $pic_file) = @_;
+
+    my $image = Image::Magick->new();
+    $image->Read($pic_file);
+
+    # Default to rotate to the right
+    my $angle = 90;
+    if ($direction =~ /^l/xmsi) {
+        $angle = -90;
+    }
+
+    $image->Rotate(degrees => $angle);
+
+    # Write the rotated image
+    $image->Write($pic_file);
+
+    undef $image;
+
+    return;
 }
 
 # ------------------------------------------------------------------------

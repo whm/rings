@@ -210,21 +210,12 @@ if ( $update_flag ) {
 
     $sh_cmd = "/usr/bin/ring-rotate $ring_id $in_pid";
     if (!empty($in_button_rotate_right)) {
-        $sh_cmd .= " --right";
+        $direction = 'RIGHT';
     } else {
-        $sh_cmd .= " --left";
-    }
-    $ret = array();
-    $z = exec($sh_cmd, $ret, $ret_status);
-    if ($ret_status) {
-        sys_err("Command:$sh_cmd");
-        foreach ($ret as $v) {
-            sys_err($v);
-        }
-        sys_err("SCRIPT ERROR");
+        $direction = 'LEFT';
     }
 
-    queue_action_set($in_pid, 'SIZE');
+    queue_action_set($in_pid, $direction);
 
     $next_pid = $in_pid;
 
