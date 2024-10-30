@@ -22,6 +22,8 @@ $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
 $in_clear_cache         = get_request('in_clear_cache');
 
+$ring_id = $CONF['ring_id'];
+
 //-------------------------------------------------------------
 // quote a value for storage
 //
@@ -206,7 +208,7 @@ if ( $update_flag ) {
 
 } elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {
 
-    $sh_cmd = "/usr/bin/ring-rotate $in_pid";
+    $sh_cmd = "/usr/bin/ring-rotate $ring_id $in_pid";
     if (!empty($in_button_rotate_right)) {
         $sh_cmd .= " --right";
     } else {

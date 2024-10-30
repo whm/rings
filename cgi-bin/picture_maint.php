@@ -474,10 +474,10 @@ if ($result) {
         $sort_uid = 'a'.sprintf("%05d", $thisWeight)
                        . $person_row['display_name'];
         $uid_sort[$sort_uid] = $a_uid;
-    $list_found = 1;
+        $list_found = 1;
     }
     if ($list_found) {
-      ksort($uid_sort);
+        ksort($uid_sort);
     } else {
        $uid_sort['notfound'] = 'No people found';
     }
