@@ -111,8 +111,8 @@ if ( $update_flag ) {
             $in_val = $now;
         } else {
             $in_val = trim(get_request("in_$db_fld"));
+            $in_val = stripslashes($in_val);
         }       
-        if ( get_magic_quotes_gpc() ) {$in_val = stripslashes($in_val);}
         if (trim($in_val) != trim($row[$db_fld])) {
             $in_val = str_replace ("'", '\'', $in_val);
             $cmd .= "$comma $db_fld=".sql_quote($in_val,'s')." ";

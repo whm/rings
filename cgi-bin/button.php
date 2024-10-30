@@ -9,9 +9,7 @@ $in_button = get_request('in_button');
 $width = 144;
 $inwidth = strlen($in_button)*8;
 if ($inwidth>$width) {$width = $inwidth;}
-if ( get_magic_quotes_gpc() ) {
-    $in_button = stripslashes($in_button);
-}
+$in_button = stripslashes($in_button);
 $im = @imagecreate ($width, 25)
      or die ("Cannot Initialize new GD image stream");
 $background_color = imagecolorallocate ($im, 102, 102, 102);
