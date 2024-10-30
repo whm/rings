@@ -551,9 +551,9 @@ sub get_meta_data {
     $ret{'ring_width'}        = $info{'imagewidth'};
     $ret{'ring_height'}       = $info{'imageheight'};
     $ret{'ring_size'}         = -s $in_file;
-    $ret{'ring_compression'}  = $info{'filetype'};
+    $ret{'ring_compression'}  = lc($info{'filetype'});
     $ret{'ring_filename'}     = $info{'filename'};
-    $ret{'ring_filetype'}     = $info{'filetype'};
+    $ret{'ring_filetype'}     = lc($info{'filetype'});
     $ret{'ring_signature'}    = file_signature($in_file);
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
     $ret{'ring_fstop'}        = $info{'fnumber'};
@@ -765,7 +765,6 @@ sub create_picture {
     my $height    = $pic{'ring_height'};
     my $filename  = $pic{'ring_filename'};
     my $format    = $pic{'ring_format'};
-    my $signature = $pic{'ring_signature'};
     my $mime_type = $pic{'ring_mime_type'};
 
     # Resize picture if requested
@@ -795,6 +794,7 @@ sub create_picture {
     }
     my $image_cnt = $new_pic->Write($new_path);
     my $new_size  = -s $new_path;
+    my $signature = file_signature($new_path);
     if ($CONF->debug) {
         dbg("image_cnt = $image_cnt");
         dbg("new_size = $new_size");
