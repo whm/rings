@@ -162,6 +162,7 @@ sub process_pids {
                 }
                 resize_all($pic_lot, $pid, $file_type, \%pic);
             }
+            store_meta_data($pid, \%pic);
             queue_action_reset($pid, $action);
         } elsif ($action =~ /^(LEFT|RIGHT)/xmsi) {
             rotate_picture($action, $pic_path);

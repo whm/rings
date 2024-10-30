@@ -48,7 +48,7 @@ BEGIN {
       get_picture_types
       make_picture_path
       msg
-      normalize_picture_lot
+      normalize_lot
       pid_to_path
       queue_error
       queue_action_reset
@@ -652,10 +652,14 @@ sub store_meta_data {
 
     # Set file paths and names
     $meta{'source_path'} = $meta{'ring_path'};
-    ($meta{'source_file'}, $meta{'source_dirs'}, $meta{'source_suffix'})
-      = fileparse($meta{'source_path'});
-    my @dirs = split(/\//, $meta{'source_dirs'});
-    $meta{'picture_lot'} = normalize_picture_lot(@dirs[-1]);
+    my $relative_path = substr(
+        $meta{'source_path'},
+        length($CONF->picture_input_root)
+    );
+    my ($a_file, $a_lot, $a_suffix) = fileparse($relative_path);
+    $meta{'source_file'}   = $a_file;
+    $meta{'picture_lot'}   = normalize_lot($a_lot);
+    $meta{'source_suffix'} = $a_suffix;
 
     # Store summary meta data
     my $sel = "SELECT * FROM pictures_information WHERE pid=? ";
@@ -1053,10 +1057,11 @@ sub get_picture_types {
 # ------------------------------------------------------------------------
 # Normalize the picture lot
 
-sub normalize_picture_lot {
+sub normalize_lot {
     my ($dir) = @_;
-    my $lot = lc($dir);
-    $lot =~ s/\s+//xmsg;
+    my $lot = $dir;
+    $lot =~ s{^/+}{}xms;
+    $lot =~ s{/+$}{}xms;
     return $lot;
 }
 
@@ -1369,10 +1374,9 @@ to STDOUT and if syslog is configured messages are written to
 syslog.  If a message severify is 'fatal' the routine invokes
 croak with the message text;
 
-=item normalize_picture_lot
+=item normalize_lot
 
-Return the input sting after removing all white space and
-lowercase'ing the string.
+Return the input sting after removing leading and trailing slashes.
 
 =item pid_to_path
 

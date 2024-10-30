@@ -68,9 +68,8 @@ sub save_file {
     # Pull out the file name, the file type, and the parent directory
     my ($a_vol, $a_dirs, $a_filename) = File::Spec->splitpath($a_fullname);
     my ($a_mime_type, $a_filetype) = validate_mime_type($a_fullname);
-    my $a_lot = substr($a_dirs, length($CONF->picture_input_root));
-    $a_lot =~ s{^/}{}xms;
-    $a_lot =~ s{/$}{}xms;
+    my $a_lot
+      = normalize_lot(substr($a_dirs, length($CONF->picture_input_root)));
 
     my $in_file_size = -s $a_fullname;
     if ($CONF->debug) {
@@ -164,7 +163,6 @@ sub save_file {
     create_picture($pid, 'raw', $pic_file, \%pic);
 
     queue_action_set($pid, 'SIZE');
-    queue_action_set($pid, 'INFO');
     set_new_picture($pid);
 
     return;
