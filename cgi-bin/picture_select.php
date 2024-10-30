@@ -65,9 +65,8 @@ function get_end_menu ($this_pid) {
             $email_list = explode(" ", $_SESSION['s_email_list']);
             $email_cnt = count($email_list) - 1;
             $email_link .= " ($email_cnt)";
+            $end_menu[] = $email_link;
         }
-        $email_list .= '</a>';
-        $end_menu[] = $email_link;
         if ($ring_admin) {
             $end_menu[] = '<a href="picture_maint.php'
                  . '?in_pid=' . $this_pid
@@ -165,7 +164,9 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
             break;
         } else {
             $thisPID           = $next_pid;
-            $this_picture_date = $next_date;
+            if (isset($next_date)) {
+                $this_picture_date = $next_date;
+            }
             $i++;
         }
     }
@@ -514,24 +515,6 @@ if (!empty($in_ring_pid)) {
     $next_menu[] = "</div>\n";
 
 }
-
-// --------------------------------
-// Retrieve the screen properties
-$debug = 0;
-$props = array();
-foreach ($clientProps as $p) {
-    $id  = make_id($p);
-    $val = $_POST[$id];
-    $props[$id] = $val;
-    if ($debug) {
-        echo "p:$p id:$id prop_val:$val<br/>\n";
-    }
-}
-
-$max_x               = $props['windowinnerWidth'];
-$max_y               = $props['windowinnerHeight'];
-list($pic_x, $pic_y) = lookup_pic_dimen($this_pid, $this_size);
-list($x, $y)         = calc_size($max_x, $max_y, $pic_x, $pic_y);
 
 ########################################################################
 # Display output

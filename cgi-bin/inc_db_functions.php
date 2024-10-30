@@ -353,7 +353,7 @@ function lookup_pic_dimen($pid, $sid) {
         sys_err("Problem statement: $sel");
         return;
     }
-    $sth->bind_param('i', $pid);
+    $sth->bind_param('is', $pid, $size);
     if (!$sth->execute()) {
         sys_err('Execute failed ($rname): '
                 . $DBH->error . '(' . $DBH->errno . ')');

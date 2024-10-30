@@ -30,16 +30,24 @@ $cm['BP']  = 'button_position';
 
 // Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
-if (isset($_COOKIE[$cookie_id]) && empty($_COOKIE[$cookie_id])) {
-    $s = '|';
-} else {
-    $s = $_COOKIE[$cookie_id] . '|';
+$cookie_val = array();
+if (isset($_COOKIE[$cookie_id])) {
+    $av_list = preg_split("/\|/", $_COOKIE[$cookie_id]);
+    foreach ($av_list as $av) {
+        $i = strpos($av, "=");
+	if ($i) {
+	    $cid = substr($av, 0, $i);
+	    $val = substr($av, $i);
+	    $cookie_val[$cid] = $val;
+        }
+    }
 }
 foreach ($cm as $cid => $sid) {
-    if (isset(($_SESSION[$sid])) && empty($_SESSION[$sid])) {
-        if (preg_match("/\|$cid=(.+?)\|/", $s, $vals)) {
-            $_SESSION[$sid] = $vals[1];
-        }
+    if (isset(($_SESSION[$sid]))
+      && empty($_SESSION[$sid])
+      && isset($cookie_val[$cid])
+    ) {
+        $_SESSION[$sid] = $cookie_val[$cid];
     }
 }
 
