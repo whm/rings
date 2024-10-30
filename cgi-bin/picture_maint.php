@@ -458,10 +458,13 @@ $cmd = 'SELECT uid,display_name ';
 $cmd .= 'FROM people_or_places ';
 $cmd .= 'ORDER BY display_name ';
 $result = $DBH->query ($cmd);
+$list_found = 0;
 if ($result) {
     while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
         $a_uid = $person_row['uid'];
-        if (!empty($found["$a_uid"])) {continue;}
+        if (!empty($found["$a_uid"])) {
+        continue;
+    }
         $uid_list[$a_uid] = $person_row['display_name'];
         $thisWeight = 32767;
         if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
@@ -471,8 +474,13 @@ if ($result) {
         $sort_uid = 'a'.sprintf("%05d", $thisWeight)
                        . $person_row['display_name'];
         $uid_sort[$sort_uid] = $a_uid;
+    $list_found = 1;
     }
-    ksort($uid_sort);
+    if ($list_found) {
+      ksort($uid_sort);
+    } else {
+       $uid_sort['notfound'] = 'No people found';
+    }
 }
 
 ?>
