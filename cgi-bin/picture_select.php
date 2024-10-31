@@ -4,11 +4,6 @@
 // author: Bill MacAllister
 // date: August 15, 2004
 
-// Get the screen properties before we do anything else
-function make_id ($s) {
-    return str_replace('.','',$s);
-}
-
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
 require('inc_ring_init.php');
@@ -28,6 +23,12 @@ $grade_sel .= "OR p.grade IS NULL) ";
 
 # Variable to how the next url for slide shows
 $this_url_next = '';
+
+if ($ring_user_priv == 'ADMINISTRATOR') {
+    $ring_admin = true;
+} else {
+    $ring_admin = false;
+}
 
 ##############################################################################
 # Subroutines
@@ -56,7 +57,7 @@ function get_end_menu ($this_pid) {
         . 'Home'
         . '</a>';
 
-    if ($ring_user) {
+    if (isset($ring_user) && $ring_user > 0) {
         $email_link = '<a href="#emailTag" '
                     . 'name="emailTag" '
                     . "onClick=\"add_email_list($this_pid)()\">"
@@ -564,8 +565,9 @@ foreach ($next_menu as $m) {
 }
 ?>
 
+<p style="color:white">
 <?php sys_display_msg();?>
-
+</p>
 </Body>
 </html>
 
