@@ -29,7 +29,7 @@ require ('page_top.php');
 <?php
 // -- main routine
 
-if ($_SESSION['upload_slots'] < 1) {
+if (!isset($_SESSION['upload_slots']) || $_SESSION['upload_slots'] < 1) {
     $_SESSION['upload_slots'] = 5;
 }
 if ($in_upload_slots < 1) {

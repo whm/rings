@@ -4,12 +4,10 @@
 //-------------------------------------------------------------
 // accept a uploaded file and store it
 
-function accept_and_store($fld_name, $in_pid) {
+function accept_and_store($file_id, $in_pid) {
 
     global $CONF;
     global $DBH;
-
-    $file_id = $fld_name;
 
     if (!is_array($_FILES[$file_id])) {
         sys_err("Unknown problem uploading file");
@@ -46,7 +44,7 @@ function accept_and_store($fld_name, $in_pid) {
 
     if ($in_pid == 0) {
         $pid = get_next('pid');
-        $picture_lot = 'upload-' . date('Y-m-d');
+        $picture_lot = 'upload/' . date('Y-m-d');
     } else {
         $pid = $in_pid;
         $picture_lot = get_picture_lot($pid);
@@ -147,7 +145,6 @@ function accept_and_store($fld_name, $in_pid) {
     $sth->close();
 
     unlink ($tmp_file);
-    queue_action_set($pid, 'INFO');
     queue_action_set($pid, 'SIZE');
 
     echo msg_okay("$pid uploaded.");

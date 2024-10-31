@@ -1,6 +1,6 @@
 <?php
 // ----------------------------------------------------------
-// File: picture_load.php
+// File: picture_reload.php
 // Author: Bill MacAllister
 
 // Open a session, connect to the database, load convenience routines,
