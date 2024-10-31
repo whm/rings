@@ -126,7 +126,8 @@ if ( $update_flag ) {
     $next_pid = $in_pid;
 
     // delete picture details
-    for ($i=0; $i<get_request('in_del_cnt', 0); $i++) {
+    $in_del_cnt = get_request('in_del_cnt', 0);
+    for ($i=0; $i<$in_del_cnt; $i++) {
         $a_flag = get_request("in_del_$i");
         if (!empty($a_flag)) {
             $a_uid = get_request("in_del_uid_$i");
@@ -158,11 +159,10 @@ if ( $update_flag ) {
     }
 
     // add picture details
-    for ($i=0; $i<get_request('in_add_cnt'); $i++) {
-        $a_uid = '';
-        if (!empty($in_newuids[$i])) {
-            $a_uid = $in_newuids[$i];
-        }
+    if (!isset($in_newuids)) {
+        $in_newuids = array();
+    }
+    foreach($in_newuids as $a_uid) {
         if (strlen($a_uid) > 0) {
             $cmd = 'INSERT INTO picture_rings SET ';
             $cmd .= 'uid = ?, ';
@@ -184,7 +184,7 @@ if ( $update_flag ) {
             }
             $sth->close();
             $update_cnt++;
-            sys_msg("$a_uid added.");
+            sys_msg("Added $a_uid to picture.");
             if (!empty($_SESSION['s_uid_weight'][$a_uid])) {
                 $_SESSION['s_uid_weight'][$a_uid]++;
                 if ($_SESSION['s_uid_weight'][$a_uid] > 32767) {

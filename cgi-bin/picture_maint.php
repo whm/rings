@@ -560,7 +560,8 @@ if (!empty($row['pid'])) {
 
 # Picture matching code
 if ($this_pid > 0) {
-  $sel = "SELECT signature FROM pictures_small WHERE pid = ?";
+  $sel = 'SELECT signature FROM picture_details ';
+  $sel .= 'WHERE pid = ? AND size_id = "small"';
   if (!$stmt = $DBH->prepare($sel)) {
     sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
   }
@@ -572,9 +573,9 @@ if ($this_pid > 0) {
   }
   $stmt->close();
   if (isset($this_signature)) {
-    $sel = "SELECT pid FROM pictures_small ";
-    $sel .= "WHERE signature = ? AND pid != ? ";
-    $sel .= "ORDER BY pid ";
+    $sel = 'SELECT pid FROM picture_details ';
+    $sel .= 'WHERE signature = ? AND pid != ? AND size_id = "small" ';
+    $sel .= 'ORDER BY pid ';
     if (!$stmt = $DBH->prepare($sel)) {
       sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
