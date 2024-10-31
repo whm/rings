@@ -639,7 +639,7 @@ sub get_meta_data {
 
 sub store_meta_data {
 
-    my ($pid, $meta_data_ref) = @_;
+    my ($lot, $pid, $meta_data_ref) = @_;
     my %meta = %{$meta_data_ref};
     my $ts   = sql_datetime();
 
@@ -654,11 +654,11 @@ sub store_meta_data {
     $meta{'source_path'} = $meta{'ring_path'};
     my $relative_path = substr(
         $meta{'source_path'},
-        length($CONF->picture_input_root)
+        length($CONF->picture_root)
     );
-    my ($a_file, $a_lot, $a_suffix) = fileparse($relative_path);
+    my ($a_file, $a_dir, $a_suffix) = fileparse($relative_path);
     $meta{'source_file'}   = $a_file;
-    $meta{'picture_lot'}   = normalize_lot($a_lot);
+    $meta{'picture_lot'}   = normalize_lot($lot);
     $meta{'source_suffix'} = $a_suffix;
 
     # Store summary meta data
@@ -1427,7 +1427,7 @@ form yyyymmddhhmmss or yyyymmdd.
 
 =item store_meta_data
 
-Sort the meta data for a picture in the Rings database.
+Store the meta data for a picture in the Rings database.
 
 =item trim
 

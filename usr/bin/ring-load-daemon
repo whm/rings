@@ -149,18 +149,22 @@ sub save_file {
     # Set the PID
     my $pid = get_next_id("pid");
 
-    # Store meta-data and copy the raw picture to rings directory
+    # Set the path for the new image
     my $pic_path = create_picture_dirs($a_lot, 'raw');
     my $pic_base = lc("${pid}.${a_filetype}");
     my $pic_file = "${pic_path}/${pic_base}";
-    $pic{'ring_file_path'} = $pic_file;
-    store_meta_data($pid, \%pic);
+
+    # Copy the file into place
     if (!copy($a_fullname, $pic_file)) {
         my $m = "Problem copying $a_fullname to $pic_file, $!";
         msg('warn', $m);
         return $m;
     }
-    create_picture($pid, 'raw', $pic_file, \%pic);
+
+    # Get the metadata of the new file and store it
+    my %new_pic = get_meta_data($pic_file);
+    store_meta_data($a_lot, $pid, \%new_pic);
+    create_picture($pid, 'raw', $pic_file, \%new_pic);
 
     queue_action_set($pid, 'SIZE');
     set_new_picture($pid);
