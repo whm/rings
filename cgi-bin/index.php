@@ -57,16 +57,16 @@ if (!empty($in_group_id)) {
 } else {
     // If there is no group_id in the session space then see if there is a
     // cookie and use that to set session values.
-    if (!empty($_SESSION['group_id'])) {
+    if (isset($_SESSION['group_id'])) {
         $in_group_id = $_SESSION['group_id'];
-    } elseif (!empty($_COOKIE[$cookie_id])) {
+    } elseif (isset($_COOKIE[$cookie_id])) {
         $s = $_COOKIE[$cookie_id].'|';
         foreach ($cm as $cid => $sid) {
             if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
                 $_SESSION[$sid] = $vals[1];
             }
         }
-        if (!empty($_SESSION['group_id'])) {
+        if (isset($_SESSION['group_id'])) {
             $in_group_id = $_SESSION['group_id'];
         }
     }
@@ -342,13 +342,13 @@ if ($ring_user) {
 
 <?php
 
-if (!empty($in_group_id)) {
+if (isset($in_group_id)) {
 
     // ------------------------------------------
     // display ring choices
 
     if (!empty($this_group_name)) {
-        echo "<h1>Pick a Picture from the $this_group_name Ring</h1>\n";
+        echo "<h1>Pick a Ring from the $this_group_name Group</h1>\n";
     } else {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
