@@ -194,7 +194,7 @@ function showPreferences(){
 <?php
 
 if (empty($in_group_id)) {
-    $in_group_id = 'happenings';
+    $in_group_id = 'all-groups';
     $_SESSION['group_id'] = $in_group_id;
 }
 
@@ -442,16 +442,19 @@ if (isset($in_group_id)) {
 
 <p>
 <hr>
-<h3>Random Notes</h3>
-<dl>
+<h2>Random Notes</h2>
 
-<dt>Some pictures are missing.  What happened?</dt>
-<dd>Initially anyone could see all of the pictures stored in the rings.
+<h3>Some pictures are missing.  What happened?</h3>
+
+<p>
+Initially anyone could see all of the pictures stored in the rings.
 This bothered some people.  And for a short time the site was
 opened to Google indexing this made people even more uncomfortable.
 To address these concerns the site policies have changed.  Any person
 identified in the rings can choose any one of three policies applied
 to pictures they are identified in:
+</p>
+
 <ul>
 <li>Invisible - any picture with the person in it is completely
 suppressed.
@@ -460,34 +463,36 @@ for the person.
 <li>Visible - names and pictures are shown to anyone that cares to
 look.
 </ul>
+
+<p>
 These policies apply only to anyone that has not logged into the server.
 If you would like to see all of the pictures you need to login, and
-to login you need credentials, and to get credentials send a
-request to <?php echo $CONF['ring_admin'];?>.
+to login you need credentials, and to get credentials use the
+<a href="access_email.php">Access Request Form.</a>
+</p>
+
 <p>
 Additionally, anyone that wants their pictures to be visible to everyone,
 but does not like the fact that Google, et. al. will index their
 name, can request that only a nickname be displayed.  If this is the
 case just let us know and it will be so.
-</dd>
+</p>
 
-<dt>Where do those crazy dates come from?</dt>
-<dd>Some dates are accurate, some are just a wild guess.  Pictures are ordered
+<h3>Where do those crazy dates come from?</h3>
+
+<p>Some dates are accurate, some are just a wild guess.  Pictures are ordered
 by date and time, so the really important thing is that the dates be in the
 correct sequence, not that any individual date be absolutely accurate.  It is
 nice if they are close because correlations across rings will make sense,
 but that is not always possible.
-</dd>
+</p>
 
-<p>
-<dt>Who makes up the descriptions, dates, etc.?</dt>
-<dd>At this point all updates are by
-<?php echo $CONF['ring_admin'];?>.  If you want to update the web site
-yourself, either to add pictures, update descriptions or whatever contact
-<?php echo $CONF['ring_admin'];?>.
-</dd>
+<h3>Who makes up the descriptions, dates, etc.?</h3>
 
-</dl>
+<p>At this point all updates are by Ring Administrators.  If you want
+to update the web site yourself, either to add pictures, update
+descriptions or whatever contact <?php echo $CONF['ring_admin'];?>.
+</p>
 
 <!-- Message area -->
 <?php sys_display_msg(); ?>

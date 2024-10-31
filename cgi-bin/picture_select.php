@@ -67,6 +67,8 @@ function get_end_menu ($this_pid) {
             $email_cnt = count($email_list) - 1;
             $email_link .= " ($email_cnt)";
             $end_menu[] = $email_link;
+        } else {
+            $end_menu[] = $email_link;
         }
         if ($ring_admin) {
             $end_menu[] = '<a href="picture_maint.php'
