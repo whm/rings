@@ -36,6 +36,7 @@ BEGIN {
       db_connect
       db_disconnect
       dbg
+      check_dir_upload
       check_picture_size
       create_picture_dirs
       create_picture
@@ -954,6 +955,51 @@ sub create_picture_dirs {
 }
 
 # ------------------------------------------------------------------------
+# Check to see if a picture directory has all ready been processed
+
+sub check_dir_upload {
+    my ($this_dir) = @_;
+
+    my $upload = 0;
+
+    my $sel = 'SELECT DISTINCT picture_lot FROM pictures_information ';
+    $sel .= 'WHERE picture_lot LIKE ?';
+    my $sth = $DBH->prepare($sel);
+    if ($CONF->debug) {
+        dbg($sel);
+        dbg("this_dir = $this_dir");
+    }
+    $sth->execute("%$this_dir");
+    if ($sth->err) {
+        print("INFO: this_dir = $this_dir\n");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    while (my $row = $sth->fetchrow_hashref) {
+        $upload = 1;
+    }
+
+    if (!$upload) {
+        my $sel = 'SELECT DISTINCT path FROM picture_upload_queue ';
+        $sel .= 'WHERE path LIKE ?';
+        my $sth = $DBH->prepare($sel);
+        if ($CONF->debug) {
+            dbg($sel);
+            dbg("this_dir = $this_dir");
+        }
+        $sth->execute("%$this_dir");
+        if ($sth->err) {
+            print("INFO: this_dir = $this_dir\n");
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        while (my $row = $sth->fetchrow_hashref) {
+            $upload = 1;
+        }
+    }
+
+    return $upload;
+}
+
+# ------------------------------------------------------------------------
 # valididate the picure size
 
 sub check_picture_size {
@@ -1312,16 +1358,22 @@ Disconnect from the Rings database.
 
 Routine to display debugging information.
 
+=item check_dir_upload
+
+Check to see if a directory has already been added to the Rings data
+base by searching for a match to pictures_information.picture_lot or
+picture_upload_queue.path.
+
 =item check_picture_size
 
-Perform a search of the Rings table picture_sizes to validate
-if the request size is supported.  The routine croaks if the
-size is not supported.
+Perform a search of the Rings table picture_sizes to validate if the
+request size is supported.  The routine croaks if the size is not
+supported.
 
 =item create_picture_dirs
 
-Create the directory to support a new picture upload.  The
-tree created is of the form:
+Create the directory to support a new picture upload.  The tree
+created is of the form:
 
     picture_root/group/size
 

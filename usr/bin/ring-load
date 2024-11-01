@@ -11,36 +11,38 @@ use File::Find;
 use Pod::Usage;
 use Rings::Common;
 
+my $opt_all;
 my $opt_debug;
 my $opt_help;
 my $opt_manual;
+
+my %DIR_LIST = ();
 
 ##############################################################################
 # Subroutines
 ##############################################################################
 
+#------------------------------------------------------------------------
+# Find matching directories
+
 sub do_find {
     my $this_file = $_;
     my $this_path = $File::Find::name;
-    my @dir_list  = ();
     if (-d $this_path) {
         my $this_dir = $File::Find::dir;
         my $prefix   = $CONF->picture_input_root;
         my $pic_dir  = $this_path;
         $pic_dir =~ s/^$prefix\///xms;
-        if (scalar(@ARGV) > 0) {
-            for my $frag (@ARGV) {
-                if ($this_file =~ /$frag/xms) {
-                    push @dir_list, $pic_dir;
+        if ($opt_all || !check_dir_upload($pic_dir)) {
+            if (scalar(@ARGV) > 0) {
+                for my $frag (@ARGV) {
+                    if ($this_file =~ /$frag/xms) {
+                        $DIR_LIST{$pic_dir} = 1;
+                    }
                 }
+            } else {
+                $DIR_LIST{$pic_dir} = 1;
             }
-        } else {
-            push @dir_list, $pic_dir;
-        }
-    }
-    if (scalar(@dir_list) > 0) {
-        for my $d (sort @dir_list) {
-            print("$d\n");
         }
     }
     return;
@@ -52,6 +54,7 @@ sub do_find {
 
 # -- get options
 GetOptions(
+    'all'    => \$opt_all,
     'debug'  => \$opt_debug,
     'help'   => \$opt_help,
     'manual' => \$opt_manual
@@ -76,8 +79,8 @@ my $action = shift;
 my $id     = shift;
 
 if ($opt_debug) {
-    dbg("action = $action\n");
-    dbg("id = $id\n");
+    print("action = $action\n");
+    print("id = $id\n");
 }
 
 my %id_list = get_id_list();
@@ -91,12 +94,15 @@ if (!$id_list{$id}) {
 }
 my $ring_conf = "/etc/rings/${id}.conf";
 if ($opt_debug) {
-    dbg("ring_conf = $ring_conf\n");
+    print("ring_conf = $ring_conf\n");
 }
 get_config($ring_conf);
 if ($opt_debug) {
     $CONF->debug($opt_debug);
 }
+
+# -- Open up connections to the MySQL data
+db_connect();
 
 # If just looking for a directory, print the list and bail out
 if ($action =~ /^f/xms) {
@@ -104,11 +110,11 @@ if ($action =~ /^f/xms) {
         dbg('picture_input_root = ' . $CONF->picture_input_root . "\n");
     }
     find(\&do_find, $CONF->picture_input_root);
+    for my $d (sort keys %DIR_LIST) {
+        print("$d\n");
+    }
     exit;
 }
-
-# -- Open up connections to the MySQL data
-db_connect();
 
 if ($opt_debug) {
     $CONF->debug($opt_debug);
@@ -150,7 +156,7 @@ ring-load - add an entry to the picture upload queue
 =head1 SYNOPSIS
 
 ring-load [load|find] <id> <directory1> [<directory2> ...] \
- [--conf=<configuration>] [--debug] [--help] [--manual]
+ [--conf=<configuration>] [--all] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -159,6 +165,12 @@ Add an entry to the picture_upload_queue.
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
+
+=item --all
+
+When "finding" input directories display directories that have already
+been uploaded.  The default is to suppress directorys that have
+already been processed.
 
 =item --help
 
