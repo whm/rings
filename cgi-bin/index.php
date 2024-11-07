@@ -353,12 +353,13 @@ if (isset($in_group_id)) {
         echo "<h1>Pick a Picture Ring</h1>\n";
     }
     // Hide the private folks
-    $vis_sel = '';
-    if ($ring_user) {
-        $vis_sel = "AND visibility != 'HIDDEN'";
-        $vis_sel = "AND visibility != 'INVISIBLE' ";
+    if ($USER_ATTR['logged-in']) {
+        $vis_sel = '';
+    } else {
+        $vis_sel = "AND visibility != 'HIDDEN' ";
+        $vis_sel .= "AND visibility != 'INVISIBLE' ";
     }
-
+    
     if ($in_group_id == "all-groups") {
         $sel = "SELECT det.uid   uid, ";
         $sel .= "min(det.pid)    pid, ";

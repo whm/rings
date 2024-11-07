@@ -44,7 +44,8 @@ function auth_picture_invisible ($pid) {
 function auth_person_hidden ($uid) {
     global $CONF;
     global $DBH;
-    if (!empty($_SERVER['REMOTE_USER'])) {
+    global $USER_ATTR;
+    if (isset($USER_ATTR['logged-in'])) {
         $hide_person = 0;
     } else {
         $hide_person = 0;

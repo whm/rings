@@ -72,15 +72,19 @@ if (empty($_SESSION['msg'])) {
     $_SESSION['msg'] = '';
 }
 
-// Set the user logged in flag
+// Set the user attributes
 $ring_user = false;
+$USER_ATTR['logged-in'] = false;
 if (isset($_COOKIE['rings-remote-user'])) {
   $ring_user      = true;
   $ring_user_uid = $_COOKIE['rings-remote-user'];
+  $USER_ATTR['logged-in'] = true;
+  $USER_ATTR['uid']       = $_COOKIE['rings-remote-user'];
 }
   
-// Set the admin flag
+// Set user privileges
 $ring_user_priv = 'USER';
+$USER_ATTR['priv'] = 'NONE';
 if ($ring_user) {
     $ring_user_name = '';
     $sel = "SELECT common_name, privilege FROM user WHERE uid = ?";
@@ -99,6 +103,8 @@ if ($ring_user) {
     while ($stmt->fetch()) {
         $ring_user_name = $p1;
         $ring_user_priv = $p2;
+        $USER_ATTR['username'] = $p1;
+        $USER_ATTR['priv']     = $p2;
         break;
     }
     $stmt->close();
