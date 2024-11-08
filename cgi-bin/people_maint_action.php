@@ -13,6 +13,7 @@ require('inc_maint_check.php');
 $in_type            = get_request('in_type');
 $in_uid             = get_request('in_uid');
 $in_cn              = get_request('in_cn');
+$in_display_name    = get_request('in_display_name');
 $in_button_add      = get_request('in_button_add');
 $in_button_update   = get_request('in_button_update');
 $in_button_delete   = get_request('in_button_delete');
