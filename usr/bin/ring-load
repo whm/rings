@@ -33,15 +33,16 @@ sub do_find {
         my $prefix   = $CONF->picture_input_root;
         my $pic_dir  = $this_path;
         $pic_dir =~ s/^$prefix\///xms;
-        if ($opt_all || !check_dir_upload($pic_dir)) {
+        if ($opt_all) {
+            $DIR_LIST{$pic_dir} = 1;
+        }
+        if (!check_dir_upload($pic_dir)) {
             if (scalar(@ARGV) > 0) {
                 for my $frag (@ARGV) {
                     if ($this_file =~ /$frag/xms) {
                         $DIR_LIST{$pic_dir} = 1;
                     }
                 }
-            } else {
-                $DIR_LIST{$pic_dir} = 1;
             }
         }
     }
