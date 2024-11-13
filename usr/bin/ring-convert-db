@@ -1,0 +1,318 @@
+#!/usr/bin/perl
+#
+# Reload a picture into the database
+#
+# Author: Bill MacAllister <bill@ca-zephyr.org>
+
+use DBI;
+use Getopt::Long;
+use Pod::Usage;
+use strict;
+use Time::Local;
+
+my $opt_debug;
+my $opt_help;
+my $opt_indb   = 'cz_rings';
+my $opt_inhost = 'shelter-db';
+my $opt_manual;
+my $opt_outdb   = 'cz_rings';
+my $opt_outhost = 'shelter-db';
+my $opt_pass;
+my $opt_update;
+my $opt_user;
+
+my $IN_DBH;
+my $OUT_DBH;
+my $DEBUG_TIME;
+
+# ------------------------------------------------
+sub sql_die {
+    my ($sel, $err, $errstr) = @_;
+    print("PROBLEM SQL: $sel\n");
+    print("ERROR: $err - $errstr\n");
+    die "ERROR: database error";
+    return;
+}
+
+# ------------------------------------------------
+# output debugging information
+
+sub dbg {
+
+    (my $tmp) = @_;
+
+    my $now     = time;
+    my $elapsed = $now - $DEBUG_TIME;
+    print "$now ($elapsed) $tmp \n";
+    $DEBUG_TIME = $now;
+    return;
+
+}
+
+# ------------------------------------------------
+# output text
+
+sub msg {
+    (my $tmp) = @_;
+    print $tmp;
+    return;
+}
+
+# ------------------------------------------------
+# sql date time string from unix time stamp
+
+sub sql_datetime {
+
+    my ($dt) = @_;
+
+    if (length($dt) == 0) {
+        $dt = time;
+    }
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst)
+      = localtime($dt);
+    $mon++;
+    $year += 1900;
+
+    return sprintf "%04d-%02d-%02d %02d:%02d:%02d",
+      $year, $mon, $mday, $hour, $min, $sec;
+}
+
+# ------------------------------------------------
+# unix time stamp from sql date time string
+
+sub unix_seconds {
+
+    my ($dt) = @_;
+
+    my $ret = time;
+    if ($dt =~ m/(\d+)\-(\d+)\-(\d+)\s+(\d+):(\d+):(\d+)/) {
+        my $yyyy = $1;
+        my $mm   = $2;
+        my $dd   = $3;
+        my $h    = $4;
+        my $m    = $5;
+        my $s    = $6;
+        $mm--;
+        $ret = timelocal($s, $m, $h, $dd, $mm, $yyyy);
+    }
+    return $ret;
+}
+
+# ------------------------------------------------------------------------
+# Find the entry in the database, load the file into the raw table,
+# and add row to action queue table.
+
+sub update_db {
+
+    my %pic_sizes = ();
+    my $sel       = 'SELECT * FROM picture_sizes';
+    my $sth       = $IN_DBH->prepare($sel);
+    if ($opt_debug) {
+        dbg($sel);
+    }
+    $sth->execute();
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    while (my $row = $sth->fetchrow_hashref) {
+        $pic_sizes{ $row->{size_id} } = $row->{picture_table};
+    }
+    if ($opt_debug) {
+        for my $id (sort keys %pic_sizes) {
+            print("$id = $pic_sizes{$id}\n");
+        }
+    }
+
+    my $cnt = 0;
+    for my $id (sort keys %pic_sizes) {
+        my $tab = $pic_sizes{$id};
+
+        my $in_sel = "SELECT * FROM $tab";
+
+        my $sth = $IN_DBH->prepare($in_sel);
+        if ($opt_debug) {
+            dbg($in_sel);
+        }
+        $sth->execute();
+        if ($sth->err) {
+            sql_die($in_sel, $sth->err, $sth->errstr);
+        }
+        while (my $row = $sth->fetchrow_hashref) {
+            my $cmd = 'INSERT INTO picture_details ';
+            $cmd .= '(';
+            $cmd .= 'size_id,';
+            $cmd .= 'pid,';
+            $cmd .= 'filename,';
+            $cmd .= 'mime_type,';
+            $cmd .= 'width,';
+            $cmd .= 'height,';
+            $cmd .= 'size,';
+            $cmd .= 'format,';
+            $cmd .= 'signature,';
+            $cmd .= 'date_last_maint,';
+            $cmd .= 'date_added';
+            $cmd .= ') VALUES (?,?,?,?,?,?,?,?,?,?,?)';
+
+            if ($opt_debug) {
+                dbg($cmd);
+            }
+            my $sth_update = $OUT_DBH->prepare($cmd);
+            $cnt++;
+            if ($opt_update) {
+                msg("Updating " . $row->{pid} . " - $id\n");
+                $sth_update->execute(
+                    $id,
+                    $row->{pid},
+                    $row->{pid} . '.jpg',
+                    $row->{mime_type},
+                    $row->{width},
+                    $row->{height},
+                    $row->{size},
+                    $row->{format},
+                    $row->{signature},
+                    $row->{date_last_maint},
+                    $row->{date_added}
+                );
+                if ($sth_update->err) {
+                    sql_die($cmd, $sth_update->err, $sth_update->errstr);
+                }
+            } else {
+                my $msg = "id=$id, ";
+                $msg .= "pid=" . $row->{pid} . ", ";
+                $msg .= 'filename=' . $row->{pid} . '.jpg, ';
+                $msg .= 'mime_type=' . $row->{mime_type} . ', ';
+                $msg .= 'width=' . $row->{width} . ', ';
+                $msg .= 'height=' . $row->{height} . ', ';
+                $msg .= 'format=' . $row->{format} . ', ';
+                $msg .= 'signature=' . $row->{signature} . ', ';
+                $msg .= 'date_last_maint=' . $row->{date_last_maint} . ', ';
+                $msg .= 'date_added=' . $row->{date_added};
+                msg("Proposing: $cmd Using: $msg\n");
+            }
+        }
+    }
+    if ($opt_update) {
+        print("$cnt rows inserted\n");
+    } else {
+        print("Proposing to insert $cnt rows\n");
+    }
+    return;
+}
+
+# -------------
+# Main routine
+# -------------
+
+# -- get options
+GetOptions(
+    'debug'     => \$opt_debug,
+    'help'      => \$opt_help,
+    'inhost=s'  => \$opt_inhost,
+    'indb=s'    => \$opt_indb,
+    'manual'    => \$opt_manual,
+    'outhost=s' => \$opt_outhost,
+    'outdb=s'   => \$opt_outdb,
+    'pass=s'    => \$opt_pass,
+    'update'    => \$opt_update,
+    'user=s'    => \$opt_pass
+);
+
+# -- help the poor souls out
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 1);
+}
+if ($opt_debug) {
+    dbg("Initialize timer.");
+}
+
+# -- Open up connections to the MySQL data
+my $in_dbi = "dbi:mysql:host=$opt_inhost;database=$opt_indb";
+$IN_DBH = DBI->connect($in_dbi, $opt_user, $opt_pass)
+  or die "ERROR: Can't connect to database $in_dbi for read\n";
+
+my $out_dbi = "dbi:mysql:host=$opt_outhost;database=$opt_outdb";
+$OUT_DBH = DBI->connect($out_dbi, $opt_user, $opt_pass)
+  or die "ERROR: Can't connect to database $out_dbi for write\n";
+
+update_db();
+
+$IN_DBH->disconnect
+  or die "MAC-F-DISCFAIL, Disconnect failed for $in_dbi (read)";
+$OUT_DBH->disconnect
+  or die "MAC-F-DISCFAIL, Disconnect failed for $out_dbi (update)";
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-convert-db - Convert from original format to new format
+
+=head1 SYNOPSIS
+
+ring-convert-db --user=<db-user-name> --pass=<db-password>
+[--inhost=<dbhost>] [--indb=<database>] [--outhost=<dbhost>]
+[--outdb=<database>] [--update] [--debug] [--help] [--manual]
+
+
+=head1 DESCRIPTION
+
+This is a custom script to convert the original rings database to the
+newer structure.  Specifically the individual size tables are
+consolidated into the picture_details table.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --user=<password>
+
+The database user to use when accessing the database.
+
+=item --pass=<passphrase>
+
+The database passphrase.
+
+=item --inhost=<hostname>
+
+The database server to read the size tables from.
+
+=item --indb=<database>
+
+The name of the input database.
+
+=item --outhost=<hostname>
+
+The database server to write to the picture_details table.
+
+=item --outdb=<database>
+
+The name of the output database.
+
+=item --update
+
+Actually load the data into the rings database.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=cut
