@@ -1,3 +1,11 @@
+picture-rings (3.3) unstable; urgency=medium
+
+  * Set the picture_sequence such that pictures are unique by
+    picture_data and picture sequence in the picture_maint
+    processing.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 16 Nov 2024 08:41:23 +0000
+
 picture-rings (3.2) unstable; urgency=medium
 
   * Updates to support multiple rings on the same server.

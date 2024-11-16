@@ -313,8 +313,12 @@ if ($this_pid > 0) {
 </tr>
 <tr>
  <td align="right">Picture ID:</td>
- <td><?php
-    if (!empty($row['pid'])) {
+ <td>
+ <?php
+    if ( !empty($row['pid']) ) {
+        if (empty($row['picture_sequence']) || $row['picture_sequence'] < 1) {
+            $row['picture_sequence'] = 1;
+        }
         $pic_info = $row['pid'];
         $pic_info .= '<br/> Lot:' . $row['picture_lot'];
         if (!empty($row['file_name'])) {
@@ -331,6 +335,8 @@ if ($this_pid > 0) {
             . '" '
             . 'target="_blank">Raw</a>'
             . "\n";
+        $pic_info .= '<input type="hidden" name="in_picture_sequence" '
+            . 'value="' . $row['picture_sequence'] . '">' . "\n";
         print $pic_info;
     }
     ?>
@@ -423,7 +429,9 @@ if ($row['public'] == 'N') {
 <?php
 # Generate table rows of people in the picture already
 $picturePeople = '';
-$thisID = $row['pid'];
+if (array_key_exists('pid', $row)) {
+    $thisID = $row['pid'];
+}
 $people_cnt = 0;
 if (!empty($thisID)) {
     $cmd = 'SELECT det.uid uid, p.display_name display_name ';

@@ -439,16 +439,17 @@ if (!empty($in_ring_pid)) {
             = 'display.php?in_pid=' . $this_pid
             . '&dlm=' . str_replace(' ', ':', $this_dlm)
             . '&in_size=' . $this_size;
-        $image_reference = '<img src="' . $image_url . '>';
+        $image_reference = '';
         if (!empty($row['description'])) {
             $image_reference .= "<p>\n";
             $image_reference .= $row['description']."\n";
+            $image_reference .= "</p>\n";
         }
         $image_reference .= "<p>\n";
         $image_reference .= "Picture Date: "
             . format_date_time($this_picture_date) . "\n";
+        $image_reference .= "</p>\n";
         $image_reference .= "<p>\n";
-        $image_reference = '<img src="' . $image_url . '">';
         $sel = "SELECT det.uid uid, ";
         $sel .= "pp.display_name display_name ";
         $sel .= "FROM picture_rings det ";
@@ -568,7 +569,10 @@ foreach ($next_menu as $m) {
 ?>
 
 <p style="color:white">
-<?php sys_display_msg();?>
+<?php
+echo $image_reference;
+sys_display_msg();
+?>
 </p>
 </Body>
 </html>

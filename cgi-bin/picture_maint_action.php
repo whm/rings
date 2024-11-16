@@ -13,6 +13,7 @@ require('inc_maint_check.php');
 $in_fld                 = get_request('in_fld');
 $in_val                 = get_request('in_val');
 $in_picture_date        = get_request('in_picture_date');
+$in_picture_sequence    = get_request('in_picture_sequence');
 $in_pid                 = get_request('in_pid');
 $in_type                = get_request('in_type');
 $in_newuids             = get_request('in_newuids');
@@ -52,6 +53,8 @@ $next_header = "REFRESH: 0; URL=$next_url";
 
 // ---------------------------------------------------------
 // Processing for specific request, i.e. add, change, delete
+$update_flag = 0;
+$add_flag    = 0;
 if (!empty($in_button_update)) {
 
     // Try and get the old user record
@@ -63,10 +66,10 @@ if (!empty($in_button_update)) {
         $fld_cnt      = $result->field_count;
     }
     $update_flag = 1;
-    $add_flag = 0;
+    $add_flag    = 0;
     if (empty($this_picture)) {
         // no old record, they must want a new one for this id
-        $add_flag = 1;
+        $add_flag    = 1;
         $update_flag = 0;
     }
 }
@@ -80,6 +83,7 @@ if ( $update_flag ) {
     $update_cnt = 0;
 
     $update_list[] = 'picture_date';
+    $update_list[] = 'picture_sequence';
     $update_list[] = 'description';
     $update_list[] = 'key_words';
     $update_list[] = 'taken_by';
@@ -88,6 +92,17 @@ if ( $update_flag ) {
 
     $_SESSION['maint_last_datetime'] = $in_picture_date;
 
+    $form_vals = array();
+    foreach ($update_list as $this_name) {
+        $form_name = "in_$this_name";
+        $form_vals[$form_name] = trim(stripslashes(get_request($form_name)));
+    }
+
+    # Make sure that the picture_date+picture_sequence is unique
+    $new_seq = get_picture_sequence($form_vals['in_picture_date'],
+                                    $form_vals['in_picture_sequence']);
+    $form_vals['in_picture_sequence'] = $new_seq; 
+    
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $fld_update_flag = 0;
@@ -97,7 +112,7 @@ if ( $update_flag ) {
             }
         }
         if ($fld_update_flag == 0) {continue;}
-        $in_val = trim(stripslashes(get_request("in_$db_fld")));
+        $in_val = $form_vals["in_$db_fld"];
 
         // remember the last entered value
         $sess_fld = "session_$db_fld";

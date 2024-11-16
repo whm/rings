@@ -560,4 +560,111 @@ function get_picture_lot ($pid) {
 
     return $picture_lot;
 }
+
+//-------------------------------------------------------------
+// Get the picture_lot so we know where to put the file
+//
+// 1. Check if see if the date is unique.  If it is assign a
+//    picture sequence of 1.
+// 2. Check to see if the combination of picture_date and
+//    picture_sequence is unique.  If it is return the picture
+//    sequence.
+// 3. Search for a new picture sequence for the picture_date.
+//    Start from 1 to fill any potential holes in the sequence.
+
+function get_picture_sequence ($picture_date, $picture_sequence) {
+
+    global $DBH;
+    global $CONF;
+
+    if (!isset($picture_sequence) || $picture_sequence < 1) {
+        $picture_sequence = 1;
+    }
+
+    # Check to see if the date is unique
+    $sel = 'SELECT count(*) FROM pictures_information ';
+    $sel .= 'WHERE picture_date = ?';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('s', $picture_date);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_result($p1);
+    if ($stmt->fetch()) {
+        $picture_count = $p1;
+    }
+    $stmt->close();
+    if ($picture_count < 2) {
+        return 1;
+    }
+    
+    # Check to see if the picture_date and picture_sequence are
+    # unique
+    $sel = 'SELECT count(*) FROM pictures_information ';
+    $sel .= 'WHERE picture_date = ? AND picture_sequence = ?';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('si', $picture_date, $picture_sequence);
+    if (!$stmt->execute()) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_result($p1);
+    if ($stmt->fetch()) {
+        $picture_count = $p1;
+    }
+    $stmt->close();
+    if ($picture_count < 2) {
+        return $picture_sequence;
+    }
+
+    # Search for a unique picture_date, picture_sequence combination
+    # by incrementing the picture sequence
+    $i          = $picture_sequence;
+    $loop_limit = 500;
+    $search_end = false;
+    $sel = 'SELECT count(*) FROM pictures_information ';
+    $sel .= 'WHERE picture_date = ? and picture_sequence = ?';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err("Problem SQL: $sel");
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('si', $picture_date, $i);
+    while (!$search_end):
+        $i++;
+        $picture_count = 0;
+        if (!$stmt->execute()) {
+            sys_err("Problem SQL: $sel");
+            sys_err('Execute failed: (' . $DBH->errno . ') ' . $DBH->error);
+            return;
+        }
+        $stmt->bind_result($p1);
+        if ($stmt->fetch()) {
+            $picture_count = $p1;
+        }
+        if ($picture_count == 0) {
+            $picture_sequence = $i;
+            $search_end       = true;
+        } else {
+            if ($i > $loop_limit) {
+                sys_msg('Picture sequence search terminated.  Limit exceeded');
+                $search_end = true;
+            }
+        }
+    endwhile;
+    $stmt->close();
+    
+    return $picture_sequence;
+}
 ?>
