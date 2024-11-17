@@ -101,49 +101,15 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
     $i = 0;
     while ($i < $loop_limit) {
         $next_pid = 0;
-        # First handle pictures with the exact same date taken.
-        $sel = 'SELECT p.pid ';
-        $sel .= 'FROM pictures_information p ';
-        $sel .= 'WHERE p.picture_date = ? ';
-        $sel .= 'AND p.pid > ? ';
-        $sel .= 'AND ' . $grade_sel;
-        $sel .= 'ORDER BY p.picture_date, p.pid ';
-        $sel .= 'LIMIT 0,1 ';
-        if (!$sth = $DBH->prepare($sel)) {
-            sys_err("Prepare failed ($rname exact): "
-                    . $DBH->error . '(' . $DBH->errno . ')');
-            sys_err("Problem statement: $sel");
-            return 0;
-        }
-        $sth->bind_param('si', $this_picture_date, $thisPID);
-        if (!$sth->execute()) {
-            sys_err('Execute failed ($rname): '
-                    . $DBH->error . '(' . $DBH->errno . ')');
-            sys_err("Problem statement: $cmd");
-            return 0;
-        }
-        $sth->bind_result($p1);
-        if ($sth->fetch()) {
-            $next_pid = $p1;
-        }
-        $sth->close();
-        if ($next_pid > 0) {
-            if (auth_picture_invisible($next_pid)) {
-                $i++;
-                $thisPID = $next_pid;
-                continue;
-            } else {
-                break;
-            }
-        }
 
         # Select next picture by date
         $sel = 'SELECT p.pid, ';
         $sel .= 'p.picture_date ';
         $sel .= 'FROM pictures_information p ';
-        $sel .= 'WHERE p.picture_date > ? ';
+        $sel .= 'WHERE p.picture_date >= ? ';
+	$sel .= 'AND p.pid > ? ';
         $sel .= 'AND ' . $grade_sel;
-        $sel .= 'ORDER BY p.picture_date ';
+        $sel .= 'ORDER BY p.picture_date, p.pid ';
         $sel .= 'LIMIT 0,1 ';
         if (!$sth = $DBH->prepare($sel)) {
             sys_err("Prepare failed ($rname): "
@@ -151,9 +117,10 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
             sys_err("Problem statement: $sel");
             return 0;
         }
-        $sth->bind_param('s', $this_picture_date);
+        $sth->bind_param('si', $this_picture_date, $thisPID);
         if (!$sth->execute()) {
-            sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
+            sys_err('Execute failed: '
+	            . $DBH->error . '(' . $DBH->errno . ')');
             sys_err("Problem statement: $cmd");
             return;
         }
