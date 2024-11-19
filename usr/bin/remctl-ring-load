@@ -5,16 +5,28 @@
 # Written by Bill MacAllister <bill@ca-zephyr.org>
 # Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
 
-if [ "$1" = "" ]
-then
+function help_em {
     echo "Usage: ring-load <action> <id> [<options>]"
     exit 1
+}
+
+if [ "$1" = "" ]
+then
+    echo "ERROR: action is required"
+    help_em
+fi
+if [ "$2" = "" ]
+then
+    echo "ERROR: ring id is required"
+    help_em
 fi
 
-RINGKEY="/etc/rings/service-rings.keytab"
+RINGKEY="/etc/rings/service-ring-${id}.keytab"
 if [ -e $RINGKEY ]
 then
     RINGPREFIX="k5start -q -f $RINGKEY -U -t -- "
+else
+    echo "WARN: $RINGKEY not found"
 fi
 
 $RINGPREFIX ring-load $*
