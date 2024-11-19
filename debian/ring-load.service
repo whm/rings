@@ -5,8 +5,7 @@ After=network.target
 [Service]
 Type = simple
 ExecStart=/usr/bin/k5start -L -K 6 -l 10h -f /etc/rings/service-rings.keytab \
-    -m 640 -o www-data -g www-data \
-    -a -t -k /run/ring-load-daemon.tgt -U \
+    -m 640 -a -t -k /run/ring-load-daemon.tgt -U \
     -- /usr/bin/ring-load-daemon
 Restart = always
 RestartSec = 1
