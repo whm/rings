@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 Type = simple
-ExecStart=/usr/bin/k5start -L -K 6 -l 10h -f /etc/rings/service-rings.keytab \
+ExecStart=/usr/bin/k5start -L -K 6 -l 10h \
+    -f /etc/rings/service-cz-rings.keytab \
     -m 640 -a -t -k /run/ring-daemon.tgt -U \
     -- /usr/bin/ring-daemon pending
 Restart = always
