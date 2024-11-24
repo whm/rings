@@ -21,7 +21,7 @@ then
     help_em
 fi
 
-RINGKEY="/etc/rings/service-ring-${id}.keytab"
+RINGKEY="/etc/rings/service-ring-${2}.keytab"
 if [ -e $RINGKEY ]
 then
     RINGPREFIX="k5start -q -f $RINGKEY -U -t -- "
