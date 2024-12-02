@@ -52,21 +52,24 @@ foreach ($cm as $cid => $sid) {
 }
 
 // set the group
-if (!empty($in_group_id)) {
+if (isset($in_group_id)) {
     $_SESSION['group_id'] = $in_group_id;
 } else {
     // If there is no group_id in the session space then see if there is a
     // cookie and use that to set session values.
-    if (isset($_SESSION['group_id'])) {
+    if (array_key_exists('group_id', $_SESSION)) {
         $in_group_id = $_SESSION['group_id'];
     } elseif (isset($_COOKIE[$cookie_id])) {
         $s = $_COOKIE[$cookie_id].'|';
         foreach ($cm as $cid => $sid) {
-            if (preg_match("/\|$cid=(.+?)\|/", $vals)) {
-                $_SESSION[$sid] = $vals[1];
+            $vals = array();
+            if (preg_match("/\|$cid=(.+?)\|/", $cid, $vals)) {
+                if (isset($vals[1])) {
+                    $_SESSION[$sid] = $vals[1];
+                }
             }
         }
-        if (isset($_SESSION['group_id'])) {
+        if (array_key_exists('group_id', $_SESSION)) {
             $in_group_id = $_SESSION['group_id'];
         }
     }
@@ -83,7 +86,7 @@ if (empty($in_size)) {
 $_SESSION['display_size'] = $in_size;
 
 // set display grade
-if (!empty($in_grade)) {
+if (isset($in_grade)) {
     $_SESSION['display_grade'] = $in_grade;
 } else {
     $in_grade = $_SESSION['display_grade'];
@@ -120,7 +123,7 @@ if ($in_button_pos == 'top') {
 $_SESSION['button_position'] = $in_button_pos;
 
 // set show delay
-if (empty($in_seconds)) {
+if (!isset($in_seconds) && array_key_exists('display_seconds', $_SESSION)) {
     $in_seconds = $_SESSION['display_seconds'];
 }
 if ($in_seconds < 3) { $in_seconds = 3;}
@@ -193,7 +196,7 @@ function showPreferences(){
 
 <?php
 
-if (empty($in_group_id)) {
+if (!isset($in_group_id)) {
     $in_group_id = 'all-groups';
     $_SESSION['group_id'] = $in_group_id;
 }

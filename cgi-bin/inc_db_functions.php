@@ -155,14 +155,77 @@ function accept_and_store($file_id, $in_pid) {
 }
 
 //-------------------------------------------------------------
+// Calculate the weight average grade for a picture
+
+function calculate_picture_grade ($this_pid) {
+    global $DBH;
+
+    $pic_grade = 'A';
+    if (empty($this_pid) || $this_pid == 0) {
+        return $pic_grade;
+    }
+
+    $grade_cnt = array();
+
+    $sel = 'SELECT grade, avg(grade) avg ';
+    $sel .= 'FROM picture_comments_grades ';
+    $sel .= "WHERE pid = $this_pid";
+    $result = $DBH->query ($sel);
+    if ($result) {
+        while ($grade_row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $grade_cnt[ $grade_row['grade'] ] = $grade_row['avg'];
+        }
+    }
+
+    $sel = 'SELECT grade ';
+    $sel .= 'FROM pictures_information ';
+    $sel .= "WHERE pid = $this_pid";
+    $result = $DBH->query ($sel);
+    if ($result) {
+        if ($info_row = $result->fetch_array(MYSQLI_ASSOC)) {
+            $grade_cnt[ info_row['grade'] ] += 1;
+        }
+    }
+
+    $wgt = array();
+    $wgt['A'] = 3;
+    $wgt['B'] = 2;
+    $wgt['C'] = 1;
+    $cnt = 0;
+    $val = 0;
+    foreach ($grade_cnt as $g => $c) {
+        if (array_key_exists($g, $wgt)) {
+            $cnt += $grade_cnt[$g];
+            $val += $grade_cnt[$g] * $wgt[$g];
+        }
+    }
+    if ($cnt > 0) {
+        $pic_val = round($val / $cnt);
+        if ($pic_val < 0) {
+            $pic_val = $wgt['C'];
+        }
+        if ($pic_val > 0) {
+            $pic_val = $wgt['A'];
+        }
+        foreach ($wgt as $g => $w) {
+            if ($pic_val == $w) {
+                $pic_grade = $g;
+                last;
+            }
+        }
+    }
+
+    return $pic_grade;
+}
+//-------------------------------------------------------------
 // Delete a picture database entries
 
 function db_delete_picture ($this_pid) {
     global $DBH;
-
+    
     $del_tables = array();
 
-    $del_tables[] = 'picture_comments';
+    $del_tables[] = 'picture_comments_grades';
     $del_tables[] = 'picture_grades';
     $del_tables[] = 'picture_rings';
     $del_tables[] = 'pictures_information';
@@ -603,7 +666,7 @@ function get_picture_sequence ($picture_date, $picture_sequence) {
     if ($picture_count < 2) {
         return 1;
     }
-    
+
     # Check to see if the picture_date and picture_sequence are
     # unique
     $sel = 'SELECT count(*) FROM pictures_information ';
@@ -664,7 +727,7 @@ function get_picture_sequence ($picture_date, $picture_sequence) {
         }
     endwhile;
     $stmt->close();
-    
+
     return $picture_sequence;
 }
 ?>

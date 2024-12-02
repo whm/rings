@@ -1,8 +1,8 @@
 <?PHP
 // -------------------------------------------------------------
-// picture_maint.php
+// picture_update.php
 // author: Bill MacAllister
-// date: December 31, 2001
+// date: December 1, 2024
 
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
@@ -11,13 +11,14 @@ require('inc_maint_check.php');
 
 // Form or URL inputs
 $in_pid                 = get_request('in_pid');
+$in_reset_new           = get_request('in_reset_new');
 $in_button_find         = get_request('in_button_find');
 $in_button_next         = get_request('in_button_next');
 $in_button_prev         = get_request('in_button_prev');
 $in_button_update       = get_request('in_button_update');
+$in_button_rotate_180   = get_request('in_button_rotate_180');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
-$in_button_del          = get_request('in_button_del');
 $in_clear_cache         = get_request('in_clear_cache');
 
 // Globals
@@ -134,9 +135,17 @@ if (!empty($_SESSION['maint_last_datetime'])) {
     $next_datetime = increment_time($_SESSION['maint_last_datetime']);
 }
 
-$sel = 'SELECT * ';
-$sel .= 'FROM pictures_information ';
-$sel .= "WHERE pid = $this_pid ";
+$sel = 'SELECT pic.pid, ';
+$sel .= 'pic.picture_date picture_date, ';
+$sel .= 'pic.picture_sequence picture_sequence, ';
+$sel .= 'pic.picture_lot picture_lot, ';
+$sel .= 'pic.file_name file_name, ';
+$sel .= 'pic_cg.comment comment, ';
+$sel .= 'pic_cg.grade grade ';
+$sel .= 'FROM pictures_information pic ';
+$sel .= 'LEFT OUTER JOIN picture_comments_grades pic_cg ';
+$sel .= "ON (pic_cg.pid = pic.pid AND pic_cg.uid = '$ring_user') ";
+$sel .= "WHERE pic.pid = $this_pid ";
 $result = $DBH->query ($sel);
 if ($result) {
     $row = $result->fetch_array(MYSQLI_ASSOC);
@@ -173,10 +182,13 @@ if ($this_pid > 0) {
         }
     }
 }
+
+// Calculate the picture grade
+$grade_average = calculate_picture_grade($this_pid);
 ?>
 <html>
 <head>
-<title>Picture Maintenance</title>
+<title>Picture Update</title>
 <?php require('inc_page_head.php'); ?>
 <LINK href="/rings-styles/ring_style.css" rel="stylesheet" type="text/css">
 
@@ -233,7 +245,7 @@ function verifyInput() {
 <body bgcolor="#eeeeff">
 
 <?php
-$thisTitle = 'Update Ring Pictures';
+$thisTitle = 'Update a Picture';
 require ('page_top.php');
 ?>
 
@@ -269,7 +281,7 @@ if ($this_pid > 0) {
 <p>
 
 <form name="picture_data"
-      action="picture_maint_action.php"
+      action="picture_update_action.php"
       onsubmit="return verifyInput()"
       method="post">
 <table border="0">
@@ -294,18 +306,13 @@ if ($this_pid > 0) {
     </td>
     <td align="center">
         <input type="submit"
-               name="in_button_rotate_right"
-               value="Rotate Right">
+               name="in_button_rotate_180"
+               value="Rotate 180">
     </td>
     <td align="center">
         <input type="submit"
-               onClick="setDelete()"
-               name="in_button_del"
-               value="Delete">
-    </td>
-    </tr>
-    <td align="right">
-     <a href="picture_maint.php?in_pid=CLEARFORM">Clear Form</a>
+               name="in_button_rotate_right"
+               value="Rotate Right">
     </td>
     </tr>
     </table>
@@ -343,37 +350,12 @@ if ($this_pid > 0) {
     <input type="hidden" name="in_pid" value="<?php print $display_pid;?>">
  </td>
 </tr>
-<tr>
- <td align="right">Old Date Taken:</td>
- <td><?php print $row['date_taken']; ?></td>
-</tr>
-<tr>
- <td align="right">Camera Date:</td>
- <td><?php print $row['camera_date']; ?></td>
-</tr>
-<tr>
- <td align="right">Picture Date:</td>
- <td> <input type="text" name="in_picture_date" size="30"
-             value="<?php print $row["picture_date"]; ?>">
 
-      <?php if (!empty($next_datetime)) { ?>
-      <input type="hidden"
-             name="next_datetime"
-             value="<?php echo $next_datetime;?>">
-      <br/>
-      <input type="checkbox"
-             name="set_date"
-             onClick="setDatetime()">
-                Set Date to <?php echo $next_datetime; ?>
-      <?php } ?>
-
- </td>
-</tr>
 <tr>
- <td align="right">Description:</td>
+ <td align="right">Comments:</td>
  <td>
-<TEXTAREA name="in_description" rows="2" cols="40">
-<?php print $row["description"];?>
+<TEXTAREA name="in_comment" rows="2" cols="40">
+<?php print $row["comment"];?>
 </TEXTAREA>
  </td>
 </tr>
@@ -406,20 +388,22 @@ if ($row['grade'] == 'B') {
  </td>
 </tr>
 
-<?php
-$chk_y = 'CHECKED';
-$chk_n = '';
-if ($row['public'] == 'N') {
-    $chk_n = 'CHECKED';
-    $chk_y = '';
-}
-?>
 <tr>
- <td align="right">Public:</td>
- <td> <input type="radio" name="in_public"
-             value="Y" <?php echo $chk_y;?>>Yes &nbsp;&nbsp;
-      <input type="radio" name="in_public"
-             value="N" <?php echo $chk_n;?>>No
+ <td align="right">Picture Date:</td>
+ <td> <input type="text" name="in_picture_date" size="30"
+             value="<?php print $row["picture_date"]; ?>">
+
+      <?php if (!empty($next_datetime)) { ?>
+      <input type="hidden"
+             name="next_datetime"
+             value="<?php echo $next_datetime;?>">
+      <br/>
+      <input type="checkbox"
+             name="set_date"
+             onClick="setDatetime()">
+                Set Date to <?php echo $next_datetime; ?>
+      <?php } ?>
+
  </td>
 </tr>
 
@@ -545,6 +529,11 @@ sys_display_msg();
   <th>Delete?</th>
 </tr>
 <?php echo $picturePeople; ?>
+<tr>
+  <td colspan="2" align="center">
+      Reset New? <input type="checkbox" name="in_reset_new">
+  </td>
+</tr>
 </table>
 
 <p>
@@ -592,7 +581,7 @@ if ($this_pid > 0) {
     $stmt->bind_result($p1);
     while ($stmt->fetch()) {
       $dup_pid = $p1;
-      echo '<a href="picture_maint.php?pid=' . $dup_pid . '">';
+      echo '<a href="picture_update.php?pid=' . $dup_pid . '">';
       echo "Duplicate Picture: $dup_pid </a>\n";
     }
     $stmt->close();
