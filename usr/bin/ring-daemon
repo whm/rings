@@ -15,7 +15,7 @@ use Pod::Usage;
 use Rings::Common;
 
 my %SIZE_IDS    = ();
-my @ACTION_LIST = ('LEFT', 'RIGHT', 'SIZE', 'INFO');
+my @ACTION_LIST = ('180', 'LEFT', 'RIGHT', 'SIZE', 'INFO');
 
 my $opt_action;
 my $opt_debug;
@@ -164,7 +164,7 @@ sub process_pids {
             }
             store_meta_data($pic_lot, $pid, \%pic);
             queue_action_reset($pid, $action);
-        } elsif ($action =~ /^(LEFT|RIGHT)/xmsi) {
+        } elsif ($action =~ /^(180|LEFT|RIGHT)/xmsi) {
             rotate_picture($action, $pic_path);
             my %pic = get_meta_data($pic_path);
             store_meta_data($pic_lot, $pid, \%pic);
@@ -334,18 +334,20 @@ This effectively removes the entry from processing.
 
 =item --start=<integer>|pending
 
-The picture id to start at.  It pending is specified then the
-picture_queue is examined for any rows with a status of PENDING.
-Required.
+When a start and end picture id is specified an action must also be
+specified.
+
+The a start of 'pending' is specified then the picture IDs to process
+and actions are read from the picture_action_queue table.
 
 =item --end=int
 
 The picture id to end at.
 
-=item --action=SIZE|INFO
+=item --action=180|LEFT|RIGHT|SIZE|INFO
 
-The action to perform.  If not specfied then all actions are
-performed.
+The action to perform.  This is only useful when a start and end
+picture ID is specified.
 
 =item --oneshot
 

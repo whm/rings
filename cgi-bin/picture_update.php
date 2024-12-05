@@ -11,7 +11,6 @@ require('inc_maint_check.php');
 
 // Form or URL inputs
 $in_pid                 = get_request('in_pid');
-$in_reset_new           = get_request('in_reset_new');
 $in_button_find         = get_request('in_button_find');
 $in_button_next         = get_request('in_button_next');
 $in_button_prev         = get_request('in_button_prev');
@@ -433,8 +432,11 @@ if (!empty($thisID)) {
             $picturePeople .= " <td>$a_name</td>\n";
             $picturePeople .= " <td align=\"center\">\n";
             $picturePeople .= '   <input type="checkbox" '
-                . 'name="in_del_' . $people_cnt . '" '
-                . 'value="delete">' . "\n";
+                . 'name="in_del_' . $people_cnt . '" ';
+            if ($a_uid == 'new') {
+                $picturePeople .= 'CHECKED ';
+            }
+            $picturePeople .= 'value="delete">' . "\n";
             $picturePeople .= '   <input type="hidden" '
                 . 'name="in_del_uid_' . $people_cnt . '" '
                 . 'value="' . $a_uid . '">' . "\n";
@@ -529,11 +531,6 @@ sys_display_msg();
   <th>Delete?</th>
 </tr>
 <?php echo $picturePeople; ?>
-<tr>
-  <td colspan="2" align="center">
-      Reset New? <input type="checkbox" name="in_reset_new">
-  </td>
-</tr>
 </table>
 
 <p>

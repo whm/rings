@@ -420,9 +420,11 @@ sub rotate_picture {
     $image->Read($pic_file);
 
     # Default to rotate to the right
-    my $angle = 90;
+    my $angle = 180;
     if ($direction =~ /^l/xmsi) {
         $angle = -90;
+    } elsif ($direction =~ /^r/xmsi) {
+        $angle = 90;
     }
 
     $image->Rotate(degrees => $angle);

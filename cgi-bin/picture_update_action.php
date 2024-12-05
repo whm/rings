@@ -1,8 +1,8 @@
 <?php
 // ----------------------------------------------------------
-// File: picture_maint_action.php
+// File: picture_update_action.php
 // Author: Bill MacAllister
-// Date: 31-Dec-2001
+// Date: 05-Dec-2024
 
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
@@ -18,9 +18,9 @@ $in_pid                 = get_request('in_pid');
 $in_type                = get_request('in_type');
 $in_newuids             = get_request('in_newuids');
 $in_button_update       = get_request('in_button_update');
+$in_button_rotate_180   = get_request('in_button_rotate_180');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
-$in_button_del          = get_request('in_button_del');
 $in_clear_cache         = get_request('in_clear_cache');
 
 $ring_id = $CONF['ring_id'];
@@ -48,7 +48,7 @@ function sql_quote ($a_val, $in_type) {
 $in_pid = preg_replace ('/\s+/', '', $in_pid);
 
 // how to get back
-$next_url    = "picture_maint.php";
+$next_url    = "picture_update.php";
 $next_header = "REFRESH: 0; URL=$next_url";
 
 // ---------------------------------------------------------
@@ -221,10 +221,13 @@ if ( $update_flag ) {
     db_delete_picture($in_pid);
     $next_uid = 'CLEARFORM';
 
-} elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {
+} elseif (   !empty($in_button_rotate_right)
+          || !empty($in_button_rotate_left)
+          || !empty($in_button_rotate_180) ) {
 
-    $sh_cmd = "/usr/bin/ring-rotate $ring_id $in_pid";
-    if (!empty($in_button_rotate_right)) {
+    if (!empty($in_button_rotate_180)) {
+        $direction = '180';
+    } elseif (!empty($in_button_rotate_right)) {
         $direction = 'RIGHT';
     } else {
         $direction = 'LEFT';
