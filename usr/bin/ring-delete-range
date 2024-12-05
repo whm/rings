@@ -1,0 +1,256 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2024, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-delete-range
+# Description: Bulk delete pictures from the rings
+
+use strict;
+use DBI;
+use Getopt::Long;
+use File::Find;
+use Pod::Usage;
+use Rings::Common;
+
+my $opt_confirm;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+
+# ------------------------------------------------------------------------
+# -- Get a list of PIDs given a start and end pid
+
+sub get_pid_list {
+    my ($start, $end) = @_;
+
+    my @pid_list = ();
+
+    my $sel = 'SELECT pid FROM pictures_information ';
+    $sel .= 'WHERE pid>=? AND pid<=?';
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($start, $end);
+    if ($sth->err) {
+        print("INFO: start = $start, end = $end");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        push @pid_list, $row->{pid};
+    }
+    return @pid_list;
+}
+
+# ------------------------------------------------------------------------
+# -- Delete Picture files
+
+sub ring_delete_picture {
+    my ($pid) = @_;
+
+    my $sel = 'SELECT pictures_information.picture_lot, ';
+    $sel .= 'picture_details.size_id, ';
+    $sel .= 'picture_details.filename ';
+    $sel .= 'FROM picture_details ';
+    $sel .= 'JOIN pictures_information ';
+    $sel .= 'ON (pictures_information.pid = picture_details.pid) ';
+    $sel .= 'WHERE picture_details.pid = ? ';
+
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($pid);
+    if ($sth->err) {
+        print("INFO: pid = $pid");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    while (my $row = $sth->fetchrow_hashref) {
+        my $pic_lot  = $row->{picture_lot};
+        my $size_id  = $row->{size_id};
+        my $filename = $row->{filename};
+        my $pic_path = $CONF->picture_root . "/$pic_lot/$size_id/$filename";
+        if (-e $pic_path) {
+            if ($opt_confirm) {
+                unlink($pic_path)
+                  or die("ERROR: problem deleting file $pic_path");
+            } else {
+                print("PROPOSING: file delete $pic_path\n");
+            }
+        } else {
+            dbg("$pic_path not found to delete\n");
+        }
+    }
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# -- Delete Picture meta data
+
+sub db_delete_picture {
+    my ($pid) = @_;
+
+    my @del_tables = ();
+    push @del_tables, 'picture_comments_grades';
+    push @del_tables, 'picture_details';
+    push @del_tables, 'picture_grades';
+    push @del_tables, 'picture_rings';
+    push @del_tables, 'pictures_information';
+
+    for my $this_table (sort @del_tables) {
+        my $sel = "SELECT count(*) as cnt FROM $this_table WHERE pid = ?";
+        dbg($sel) if $CONF->debug;
+        my $sth = $DBH->prepare($sel);
+        $sth->execute($pid);
+        if ($sth->err) {
+            print("INFO: pid = $pid");
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        my $cnt = 0;
+        while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+            $cnt = $row->{cnt};
+            last;
+        }
+        if ($cnt < 1) {
+            print("INFO: pid $pid not found in $this_table\n");
+        } else {
+            my $cmd = "DELETE FROM $this_table WHERE pid = ?";
+            if ($opt_confirm) {
+                my $sth_update = $DBH_UPDATE->prepare($cmd);
+                $sth_update->execute($pid)
+                  or die "ERROR: problem deleting $pid from $this_table"
+                  . "$DBH::errstr\n";
+                print("INFO: $pid deleted from $this_table\n");
+            } else {
+                print("Proposing: Use PID $pid in SQL: $cmd\n");
+            }
+        }
+    }
+
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+# -- get options
+GetOptions(
+    'confirm' => \$opt_confirm,
+    'debug'   => \$opt_debug,
+    'help'    => \$opt_help,
+    'manual'  => \$opt_manual
+);
+
+if ($opt_debug) {
+    print("DEBUG: Debugging started.");
+}
+
+# help the poor souls out
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+if (scalar(@ARGV) == 0 || $ARGV[0] eq 'help') {
+    $opt_help = 1;
+}
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+
+my $id    = shift;
+my $start = shift;
+my $end   = shift;
+
+my $ring_conf = "/etc/rings/${id}.conf";
+if ($opt_debug) {
+    print("ring_conf = $ring_conf\n");
+}
+get_config($ring_conf);
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
+}
+
+# -- Open up connections to the MySQL data
+db_connect();
+
+my @pid_list = get_pid_list($start, $end);
+my @id_list  = get_id_list();
+if (scalar(@id_list) < 1) {
+    print("INFO: nothing to do, exiting\n");
+    exit;
+}
+
+for my $pid (@pid_list) {
+    print("\n");
+    print("Processing picture $pid\n");
+    ring_delete_picture($pid);
+    db_delete_picture($pid);
+}
+
+db_disconnect();
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-delete-range - bulk delete ring entries
+
+=head1 SYNOPSIS
+
+ring-delete-range <ring id> <start pid> <end pid> \
+    [--confirm] [--debug] [--help] [--manual]
+
+=head1 DESCRIPTION
+
+This script can be used to bulk delete ring entries.  The script deletes
+both the database entries for the selected range but also any image files.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --confirm
+
+Actually delete rings entries.  The default is to show what will be
+deleted without performing any changes.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2024, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut

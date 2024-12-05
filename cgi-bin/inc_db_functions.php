@@ -183,7 +183,11 @@ function calculate_picture_grade ($this_pid) {
     $result = $DBH->query ($sel);
     if ($result) {
         if ($info_row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $grade_cnt[ info_row['grade'] ] += 1;
+            if (array_key_exists('grade', $info_row)) {
+                $grade_cnt[ $info_row['grade'] ] += 1;
+            } else {
+                $grade_cnt[ $info_row['grade'] ] = 1;
+            }
         }
     }
 
@@ -210,7 +214,7 @@ function calculate_picture_grade ($this_pid) {
         foreach ($wgt as $g => $w) {
             if ($pic_val == $w) {
                 $pic_grade = $g;
-                last;
+                break;
             }
         }
     }
