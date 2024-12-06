@@ -324,9 +324,7 @@ $stmt->close();
 
 <?php
 if ($ring_user) {
-    if ($ring_user_priv == 'ADMINISTRATOR') {
-        echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
-    }
+    echo "<h5><a href=\"index_maint.php\">Maintenance Menu</a><br>\n";
     if (!empty($_SESSION['s_email_list'])) {
         echo "<a href=\"picture_email.php\">Email Selected Pictures</a><br>\n";
     }
