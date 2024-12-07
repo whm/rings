@@ -92,9 +92,11 @@ if ($in_pid > 0) {
         if (accept_and_store('in_filename', $in_pid)) {
             echo "<h2>Upload Failure</h2>\n";
             echo "<p>\n";
+	    msg_err('Upload Failure');
         } else {
             echo "<h2>File uploaded</h2>\n";
             echo "<p>\n";
+	    msg_okay('File uploaded');
         }
     }
     check_action_queue($in_pid);

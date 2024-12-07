@@ -85,7 +85,7 @@ function accept_and_store($file_id, $in_pid) {
         sys_err("Problem writing to $pic_file");
         return 1;
     }
-    sys_msg("$bytes_written bytes written to $pic_file");
+    sys_msg("$bytes_written bytes written to $pic_file for $pid");
 
     $raw_size = strlen($the_file_contents);
 
@@ -121,31 +121,43 @@ function accept_and_store($file_id, $in_pid) {
         return 1;
     }
     $sth->close();
+    msg_okay("pictures_information table updated for $pid");
 
     $cmd = 'INSERT INTO picture_details SET ';
     $cmd .= "size_id = 'raw', ";
     $cmd .= 'pid = ?, ';
+    $cmd .= 'filename = ?, ';
     $cmd .= 'mime_type = ?, ';
+    $cmd .= 'size = ?, ';
     $cmd .= 'date_last_maint = NOW(), ';
     $cmd .= 'date_added = NOW() ';
     $cmd .= 'ON DUPLICATE KEY UPDATE ';
     $cmd .= 'mime_type = ?, ';
+    $cmd .= 'size = ?, ';
     $cmd .= 'date_last_maint = NOW() ';
     if (!$sth = $DBH->prepare($cmd)) {
         sys_err('Prepare failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $cmd");
         return 1;
     }
-    $sth->bind_param('iss', $pid, $mime_type, $mime_type);
+    $sth->bind_param('issisi',
+                     $pid,
+		     $original_file,
+		     $mime_type,
+		     $raw_size,
+		     $mime_type,
+		     $raw_size);
     if (!$sth->execute()) {
         sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $cmd");
         return 1;
     }
     $sth->close();
+    msg_okay("picture_details table updated for $pid");
 
     unlink ($tmp_file);
     queue_action_set($pid, 'SIZE');
+    msg_okay("pictures_action_queue table updated for $pid");
 
     echo msg_okay("$pid uploaded.");
     echo '<a href="picture_maint.php?in_pid=' . $pid . '" '
@@ -226,7 +238,7 @@ function calculate_picture_grade ($this_pid) {
 
 function db_delete_picture ($this_pid) {
     global $DBH;
-    
+
     $del_tables = array();
 
     $del_tables[] = 'picture_comments_grades';
