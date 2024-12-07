@@ -29,6 +29,8 @@ $upload         = get_request('upload');
 <?php
 $thisTitle = 'Re-load a Picture into the Rings';
 require ('page_top.php');
+
+sys_display_msg();
 ?>
 
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
@@ -97,8 +99,6 @@ if ($in_pid > 0) {
     }
     check_action_queue($in_pid);
 }
-
-sys_display_msg();
 
 ?>
 
