@@ -37,8 +37,8 @@ sub get_pids {
     my @pid_list = ();
 
     if ($CONF->debug) {
-        dbg("action: $action");
-        dbg("pid_start: $pid_start");
+        dbg("action:$action");
+        dbg("pid_start:$pid_start pid_end:$pid_end");
     }
     if ($pid_start == 'pending') {
         my $sel = 'SELECT pid FROM picture_action_queue ';
@@ -60,6 +60,9 @@ sub get_pids {
             push @pid_list, $row->{pid};
         }
     } else {
+        if ($pid_start > 0 && $pid_end < $pid_start) {
+            msg('warn', "End PID smaller than Start PID");
+        }
         my $sel = 'SELECT pid ';
         $sel .= 'FROM pictures_information ';
         $sel .= 'WHERE pid >= ? AND pid <= ? ';
@@ -154,7 +157,7 @@ sub process_pids {
 
         my %pic       = get_meta_data($pic_path);
         my $mime_type = $pic{'mimetype'};
-        my $file_type = $pic{'ring_compression'};
+        my $file_type = $raw_file_type;
         if ($action eq 'SIZE') {
             foreach my $s (sort keys %SIZE_IDS) {
                 if ($s eq 'raw') {
@@ -254,6 +257,16 @@ my $pid_end = $pid_start;
 if ($ARGV[1]) {
     $pid_end = $ARGV[1];
 }
+if ($pid_start > 0) {
+    if ($pid_start > $pid_end) {
+        msg('info', 'ERROR: ending PID must be => starting PID');
+        pod2usage(-verbose => 0);
+    }
+    if (!$opt_id) {
+        msg('info', 'ERROR: --id=<ring identifier> is required');
+        pod2usage(-verbose => 0);
+    }
+}
 
 my %id_list = ();
 if ($opt_id) {
@@ -312,7 +325,7 @@ ring-daemon - resize and store pictures
 =head1 SYNOPSIS
 
 ring-daemon <start pid>|pending [<end pid>] [--action=<action>]
-[--oneshot] [--debug] [--help] [--manual]
+[--id=<ring id>] [--oneshot] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -343,6 +356,11 @@ and actions are read from the picture_action_queue table.
 =item --end=int
 
 The picture id to end at.
+
+=item --id=<ring identifier>
+
+If a starting and ending picture identifiers are specified then --id
+is required.  If --start=pending then --id is ignored.
 
 =item --action=180|LEFT|RIGHT|SIZE|INFO
 
