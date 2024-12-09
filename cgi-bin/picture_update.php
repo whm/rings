@@ -139,6 +139,7 @@ $sel .= 'pic.picture_date picture_date, ';
 $sel .= 'pic.picture_sequence picture_sequence, ';
 $sel .= 'pic.picture_lot picture_lot, ';
 $sel .= 'pic.file_name file_name, ';
+$sel .= 'pic.raw_picture_size raw_picture_size, ';
 $sel .= 'pic_cg.comment comment, ';
 $sel .= 'pic_cg.grade grade ';
 $sel .= 'FROM pictures_information pic ';
@@ -329,6 +330,9 @@ if ($this_pid > 0) {
         $pic_info .= '<br/> Lot:' . $row['picture_lot'];
         if (!empty($row['file_name'])) {
             $pic_info .= '<br/> File:' . $row['file_name'];
+        }
+        if (!empty($row['raw_picture_size'])) {
+            $pic_info .= '<br/> Raw Size:' . $row['raw_picture_size'];
         }
         $pic_info .= '<br/>'
             . '<a href="picture_reload.php?in_pid=' . $display_pid . '" '

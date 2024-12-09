@@ -324,6 +324,9 @@ if ($this_pid > 0) {
         if (!empty($row['file_name'])) {
             $pic_info .= '<br/> File:' . $row['file_name'];
         }
+        if (!empty($row['raw_picture_size'])) {
+            $pic_info .= '<br/> Raw Size:' . $row['raw_picture_size'];
+        }
         $pic_info .= '<br/>'
             . '<a href="picture_reload.php?in_pid=' . $display_pid . '" '
             . 'target="_blank">Reload</a>'
