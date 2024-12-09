@@ -1,0 +1,146 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2024, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-re
+# Description: Request that images be reprocessed using the raw images
+
+use strict;
+use Getopt::Long;
+use Pod::Usage;
+
+my %ACTION_LIST = (
+    '180'    => 1,
+    'LEFT'   => 1,
+    'RIGHT', => 1,
+    'SIZE',  => 1,
+    'INFO'   => 1
+);
+
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+# -- get options
+GetOptions(
+    'debug'  => \$opt_debug,
+    'help'   => \$opt_help,
+    'manual' => \$opt_manual
+);
+
+# help the poor souls out
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+my $ring_id   = shift;
+my $pid_start = shift;
+my $pid_end   = shift;
+my $action    = shift;
+
+if ($ring_id) {
+    print('ERROR: ring_id is missing from command line');
+    pod2usage(-verbose => 0);
+}
+my $ring_conf = "/etc/rings/$ring_id.conf";
+if (!-e $ring_conf) {
+    print("ERROR: invalid ring_id ($ring_id)");
+    pod2usage(-verbose => 0);
+}
+
+if ($pid_start < 0) {
+    print("ERROR: invalid starting picture id ($pid_start)");
+    pod2usage(-verbose => 0);
+}
+if ($pid_end < 0) {
+    print("ERROR: invalid ending picture id ($pid_end)");
+    pod2usage(-verbose => 0);
+}
+if ($pid_end < $pid_start) {
+    print('ERROR: starting picture id must be smaller than ending id');
+    pod2usage(-verbose => 0);
+}
+
+if (!$ACTION_LIST{$action}) {
+    print("ERROR: invalid action ($action)");
+    pod2usage(-verbose => 0);
+}
+
+# Read the picture_information table to find entries to process and
+# then update the picture_action_queue
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-re - request image re-processing
+
+=head1 SYNOPSIS
+
+ring-re <ring id> <start pid> <end pid> <action> [--debug] [--help]
+[--manual]
+
+=head1 DESCRIPTION
+
+Request a reprocessing of a range of imates.
+
+=head1 ARGUMENTS AND OPTIONS
+
+=over 4
+
+=item <ring id>
+
+The tag that identifies a ring.  For example, 'macallister';
+
+=item <start pid>
+
+The pid of the first image to reprocess.
+
+=item <end pid>
+
+The pid of the last image to reprocess.
+
+=item --id=<action>
+
+The action to be performed.  Valid actions are RIGHT, LEFT, 180, SIZE,
+or INFO.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2024, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut
