@@ -947,8 +947,11 @@ sub create_picture_dirs {
     my $output_root = $CONF->picture_root;
     $output_root = _create_dir($output_root);
 
-    $output_root .= "/$group";
-    $output_root = _create_dir($output_root);
+    my @dirs = split /\//, $group;
+    for my $d (@dirs) {
+        $output_root .= "/$d";
+        $output_root = _create_dir($output_root);
+    }
 
     $output_root = "$output_root/$this_size";
     $output_root = _create_dir($output_root);
