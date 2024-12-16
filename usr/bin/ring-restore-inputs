@@ -1,0 +1,259 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2024, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-restore-inputs
+# Description: Copy raw images to input directories
+
+use strict;
+use DBI;
+use Getopt::Long;
+use File::Copy;
+use File::Find;
+use Pod::Usage;
+use Rings::Common;
+
+my $opt_confirm;
+my $opt_debug;
+my $opt_help;
+my $opt_manual;
+my $opt_sum;
+
+# ------------------------------------------------------------------------
+# Create a directory
+
+sub create_dir {
+    my ($this_dir) = @_;
+    $this_dir =~ s{//}{/}xmsg;
+    if (!-e $this_dir) {
+        mkdir $this_dir;
+        if (!-d $this_dir) {
+            msg('fatal', "Problem creating directory $this_dir");
+        }
+    }
+    return $this_dir;
+}
+
+# ------------------------------------------------------------------------
+# Count files in a directory
+
+sub file_count {
+    my ($this_dir) = @_;
+    if (!-d $this_dir) {
+        if (-e $this_dir) {
+            die("ERROR: $this_dir exists and is not a directory\n");
+        } else {
+            return 0;
+        }
+    }
+    opendir(my $DIR, $this_dir) || die "can't opendir $this_dir: $!";
+    my @files    = readdir($DIR);
+    my $this_cnt = scalar(@files);
+    close($DIR);
+    return $this_cnt;
+}
+
+# ------------------------------------------------------------------------
+# -- Find missing picture lots.  Pictures lots are directories in the
+#    input directory.
+
+sub db_find_lots {
+    my ($group) = @_;
+    my $sel = "SELECT DISTINCT picture_lot from pictures_information";
+    if ($group) {
+        $sel .= " WHERE picture_lot = '$group'";
+    }
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+    my $sth = $DBH->prepare($sel);
+    $sth->execute();
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    my @lot_list = ();
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        my $pic_lot    = $row->{picture_lot};
+        my $in_lot     = $CONF->picture_input_root . "/$pic_lot";
+        my $in_lot_cnt = file_count($in_lot);
+        my $raw_cnt    = file_count($CONF->picture_root . "/$pic_lot/raw");
+        if (!-e $in_lot || $raw_cnt > $in_lot_cnt) {
+            if ($CONF->debug) {
+                dbg("$pic_lot in_lot_cnt:$in_lot_cnt raw_cnt:$raw_cnt");
+            }
+            push @lot_list, $pic_lot;
+        }
+    }
+
+    return @lot_list;
+}
+
+# ------------------------------------------------------------------------
+# Copy raw files to picture input root directory that matches the
+# picture lot
+
+sub raw_to_source {
+    my ($lot) = @_;
+    print("CREATING INPUT for $lot\n");
+    my @dirs    = split /\//, $lot;
+    my $new_dir = $CONF->picture_input_root;
+    for my $d (@dirs) {
+        $new_dir .= "/$d";
+        if (!-d $new_dir) {
+            if ($opt_confirm) {
+                print("CREATING DIRECTORY: $new_dir\n");
+                create_dir($new_dir);
+            } else {
+                print("PROPOSING TO CREATE: $new_dir\n");
+            }
+        }
+    }
+    my $raw_dir = $CONF->picture_root . "/$lot/raw";
+    opendir(my $DIR, $raw_dir) || die "can't opendir $raw_dir: $!";
+    my @files = readdir($DIR);
+    close($DIR);
+    for my $raw_file (@files) {
+        # Skip hidden files
+        if ($raw_file =~ /^].]/xms) {
+            next;
+        }
+        my $in_file  = "$raw_dir/$raw_file";
+        my $out_file = "$new_dir/$raw_file";
+        if (!-e $out_file) {
+            if ($opt_confirm) {
+                print("COPY: $in_file to $out_file\n");
+                if (!copy $in_file, $out_file) {
+                    die("ERROR: $!");
+                }
+            } else {
+                print("PROPOSING: $in_file -> $out_file\n");
+            }
+        }
+    }
+
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+# -- get options
+GetOptions(
+    'confirm' => \$opt_confirm,
+    'debug'   => \$opt_debug,
+    'help'    => \$opt_help,
+    'manual'  => \$opt_manual,
+    'sum'     => \$opt_sum
+);
+
+if ($opt_debug) {
+    print("DEBUG: Debugging started.");
+}
+
+# help the poor souls out
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+if (scalar(@ARGV) == 0 || $ARGV[0] eq 'help') {
+    $opt_help = 1;
+}
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+
+my $id        = shift;
+my $group     = shift;
+my $ring_conf = "/etc/rings/${id}.conf";
+
+if ($opt_debug) {
+    print("ring_conf = $ring_conf\n");
+}
+get_config($ring_conf);
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
+}
+
+# -- Open up connections to the MySQL data
+db_connect();
+
+my @lot_list = db_find_lots($group);
+
+if (scalar(@lot_list) > 0) {
+    for my $lot (@lot_list) {
+        if ($opt_sum) {
+            print('LOT MISSING: ' . $CONF->picture_input_root . "/$lot\n");
+        } else {
+            raw_to_source($lot);
+        }
+    }
+} else {
+    print("INFO: no lots missing, no updates performed\n");
+}
+
+db_disconnect();
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-delete-range - bulk delete ring entries
+
+=head1 SYNOPSIS
+
+ring-restore-inputs <ring id> [<picture lot>] [--confirm] [--debug]
+[--help] [--manual]
+
+=head1 DESCRIPTION
+
+This script restores input directories from the raw images that have
+been imported into the rings.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --confirm
+
+Actually delete rings entries.  The default is to show what will be
+deleted without performing any changes.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2024, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut

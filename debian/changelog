@@ -4,6 +4,8 @@ picture-rings (3.3) unstable; urgency=medium
     picture_data and picture sequence in the picture_maint
     processing.
   * Add the ring-delete-range script to allow bluk deletions.
+  * Add the ring-restore-inputs script to copy raw files back
+    to the input directories.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 16 Nov 2024 08:41:23 +0000
 
