@@ -111,7 +111,7 @@ function print_row ($n, $r) {
 
     $i = rand(0, 10000);
     $pic_href
-        = '<a href="picture_maint.php?in_pid=' . $r['pid']
+        = '<a href="picture_update.php?in_pid=' . $r['pid']
         . '" target="_blank">';
     $thumb
         = '<img src="display.php?in_pid=' . $r['pid']

@@ -233,7 +233,7 @@ function verifyInput() {
 <body bgcolor="#eeeeff">
 
 <?php
-$thisTitle = 'Update Ring Pictures';
+$thisTitle = 'Picture Maintenance';
 require ('page_top.php');
 ?>
 

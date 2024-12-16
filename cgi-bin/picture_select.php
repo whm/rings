@@ -71,7 +71,7 @@ function get_end_menu ($this_pid) {
             $end_menu[] = $email_link;
         }
         if ($ring_admin) {
-            $end_menu[] = '<a href="picture_maint.php'
+            $end_menu[] = '<a href="picture_update.php'
                  . '?in_pid=' . $this_pid
                  . '" target="_blank">'
                  . 'Edit'
