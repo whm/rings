@@ -196,9 +196,14 @@ function calculate_picture_grade ($this_pid) {
     if ($result) {
         if ($info_row = $result->fetch_array(MYSQLI_ASSOC)) {
             if (array_key_exists('grade', $info_row)) {
-                $grade_cnt[ $info_row['grade'] ] += 1;
+                $this_grade = $info_row['grade'];
+                if (array_key_exists($this_grade, $grade_cnt)) {
+                    $grade_cnt[$this_grade] += 1;
+                } else {
+                    $grade_cnt[$this_grade] = 1;
+                }
             } else {
-                $grade_cnt[ $info_row['grade'] ] = 1;
+                $grade_cnt['A'] = 1;
             }
         }
     }
