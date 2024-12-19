@@ -142,11 +142,11 @@ function accept_and_store($file_id, $in_pid) {
     }
     $sth->bind_param('issisi',
                      $pid,
-		     $original_file,
-		     $mime_type,
-		     $raw_size,
-		     $mime_type,
-		     $raw_size);
+                     $original_file,
+                     $mime_type,
+                     $raw_size,
+                     $mime_type,
+                     $raw_size);
     if (!$sth->execute()) {
         sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $cmd");
