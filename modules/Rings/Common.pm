@@ -981,6 +981,7 @@ sub check_dir_upload {
     }
     while (my $row = $sth->fetchrow_hashref) {
         $upload = 1;
+	return $upload;
     }
 
     if (!$upload) {
@@ -998,6 +999,7 @@ sub check_dir_upload {
         }
         while (my $row = $sth->fetchrow_hashref) {
             $upload = 1;
+	    return $upload;
         }
     }
 
