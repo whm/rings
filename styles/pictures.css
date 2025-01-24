@@ -48,8 +48,8 @@ P {color: white;
     left: 0px;
     top: 0px;
   z-index: 9;
-  background-color: #ffffff;
-  border: 1px solid #d3d3d3;
+  background-color: black;
+  border: 1px solid #black;
   text-align: left;
 }
 
@@ -63,5 +63,6 @@ P {color: white;
 
 p.tight {
     margin: 2px;
-    background-color: #666666;
+    background-color: black;
+    border: 2px solid #black;
 }

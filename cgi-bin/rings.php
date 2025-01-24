@@ -98,7 +98,7 @@ if ($display_rings>0) {
     // ------------------------------------------
     // display ring choices
 
-    echo "<h1>Pick a Picture Ring</h1>\n";
+    echo "<h2>Pick a Picture Ring</h2>\n";
     echo "<p>\n";
     echo "<table border=\"0\">\n";
     $sel = "SELECT uid, display_name, description ";

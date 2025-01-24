@@ -204,7 +204,9 @@ if (!$result) {
         }
         $pid = $row["pid"];
         $pic_href = '<a href="picture_select.php'
-            . '?in_ring_pid=' . $pid .'" '
+            . '?in_ring_pid=' . $pid 
+            . '&in_ring_uid=' . $in_uid
+            . '" '
             . 'target="_blank">';
         $thumb = '<img src="display.php'
             . '?in_pid=' . $pid

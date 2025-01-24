@@ -438,9 +438,13 @@ if (!empty($in_ring_pid)) {
     // ------------------------------------------
     // gather the tags in this picture into links to the next picture
 
+    $menu_header = "Pick a Ring";
+    if (!empty($in_ring_uid)) {
+        $menu_header .= "<br/> or Press Return";
+    }
     $next_menu = array();
     $next_menu[] = '<div id="linkDiv">' . "\n";
-    $next_menu[] = '<div id="linkDivHeader">Menu</div>' . "\n";
+    $next_menu[] = '<div id="linkDivHeader">' . $menu_header ."</div>\n";
     if (count($next_links)>0) {
         asort($next_links);
 

@@ -293,6 +293,13 @@ sub get_config {
         }
     );
     $CONF->define(
+        'ring_name',
+        {
+            DEFAULT  => 'Rings',
+            ARGCOUNT => ARGCOUNT_ONE,
+        }
+    );
+    $CONF->define(
         'syslog',
         {
             DEFAULT  => 'local3',
@@ -981,7 +988,7 @@ sub check_dir_upload {
     }
     while (my $row = $sth->fetchrow_hashref) {
         $upload = 1;
-	return $upload;
+        return $upload;
     }
 
     if (!$upload) {
@@ -999,7 +1006,7 @@ sub check_dir_upload {
         }
         while (my $row = $sth->fetchrow_hashref) {
             $upload = 1;
-	    return $upload;
+            return $upload;
         }
     }
 

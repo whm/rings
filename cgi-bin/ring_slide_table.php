@@ -182,13 +182,9 @@ function dup_check($pid) {
         $comma = '';
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             if ($pic['raw_picture_size'] > 0) {
-                $size_match
-                    = $row['raw_picture_size'] / $pic['raw_picture_size'];
-                if ($size_match < 1.05 and $size_match > .95) {
-                    array_push($dup_array, $row['pid']);
+                if ($row['raw_picture_size'] == $pic['raw_picture_size']) {
+                    array_push($dup_array, $row['pid'] . ' ' . $size_match);
                 }
-            } else {
-                array_push($dup_array, $row['pid']);
             }
         }
     }
@@ -218,7 +214,9 @@ function display_slide_table($pic_data) {
 
     $cnt = 0;
     foreach ($pic_data as $cnt => $pic) {
-        $pic_href = 'picture_select.php?in_ring_pid=' . $pic['pid'];
+        $pic_href = 'picture_select.php'
+                  . '?in_ring_pid=' . $pic['pid']
+                  . '&in_ring_uid=' . $in['uid'];
         $pic_edit = 'picture_maint.php?in_pid=' . $pic['pid'];
         $pic_src  = 'display.php?in_pid=' . $pic['pid']
             . '&in_size=' . $CONF['index_size'];
@@ -244,7 +242,9 @@ function display_slide_table($pic_data) {
 <?php if ($ring_admin) { ?>
         <a href="<?php echo $pic_edit; ?>"
            target="_blank">
-         <?php echo $pic['pid'] . ' ' . $pic['grade']; ?>
+         Edit:<?php echo $pic['pid']?>
+	 &nbsp;&nbsp
+	 Grade:<?php $pic['grade']; ?>
         </a>
 <?php if (!empty($pic_dups)) { ?>
         <input type="checkbox" value="delete"
@@ -324,6 +324,12 @@ if ($result) {
 }
 if (empty($row['display_name'])) {
     back_to_index();
+}
+
+if ($ring_user_priv == 'ADMINISTRATOR') {
+    $ring_admin = true;
+} else {
+    $ring_admin = false;
 }
 
 // get a count of the number of pictures in total
@@ -467,6 +473,7 @@ function verifyInput() {
 <body bgcolor="#eeeeff">
 
 <h2 id="personTitle"><?php echo $thisPerson;?></h2>
+
 <div id="homeTop">
 <a href="/rings/index.php"><img
        src="/rings-images/icon-home.png"

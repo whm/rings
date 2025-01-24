@@ -44,6 +44,7 @@ set_default('mail_size',        '800x600');
 set_default('maint_size',       '640x480');
 set_default('picture_root',     '/srv/rings');
 set_default('ring_id',          'rings');
+set_default('ring_name',        'Rings');
 
 // Setup syslog
 openlog('rings-' . $CONF['ring_id'], LOG_PID | LOG_PERROR, LOG_LOCAL3);

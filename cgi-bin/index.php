@@ -180,7 +180,8 @@ function showPreferences(){
 
 <body bgcolor="#eeeeff">
 
-<h1>Pick a Picture Group</h1>
+<h1><?php echo $CONF['ring_name']; ?>'s Photographs </h1>
+<h2>Pick a Picture Group</h2>
 
 <blockquote>
 <form name="pick_group" action="<?php echo $_SERVER['PHP_SELF'];?>">
@@ -349,9 +350,9 @@ if (isset($in_group_id)) {
     // display ring choices
 
     if (!empty($this_group_name)) {
-        echo "<h1>Pick a Ring from the $this_group_name Group</h1>\n";
+        echo "<h2>Pick a Ring from the $this_group_name Group</h2>\n";
     } else {
-        echo "<h1>Pick a Picture Ring</h1>\n";
+        echo "<h2>Pick a Picture Ring</h2>\n";
     }
     // Hide the private folks
     if ($USER_ATTR['logged-in']) {

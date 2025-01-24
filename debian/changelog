@@ -1,3 +1,13 @@
+picture-rings (3.4) unstable; urgency=medium
+
+  * Update picture_select.php menu title and index.php heading.
+  * Update duplicate detection in ring_slide_table.php and check
+    only for exact file size matches.
+  * Correct problem with return doing nothing when a picture is
+    displayed by picture_select.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 24 Jan 2025 19:42:22 +0000
+
 picture-rings (3.3) unstable; urgency=medium
 
   * Set the picture_sequence such that pictures are unique by
