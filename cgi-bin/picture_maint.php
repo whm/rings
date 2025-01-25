@@ -20,49 +20,6 @@ $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
 $in_clear_cache         = get_request('in_clear_cache');
 
-// Globals
-//
-$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)(\s|-|:)(\d+)[-:](\d+)[-:](\d+)/';
-$DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
-
-// -- Increment the time part of a datetime.  Don't do anything if we
-//    need to goto the next day.
-function increment_time ($a_datetime) {
-
-    global $DATE_FORMAT;
-    global $DATE_PATTERN;
-
-    if (preg_match($DATE_PATTERN, $a_datetime, $matches)) {
-        $a_year   = $matches[1];
-        $a_month  = $matches[2];
-        $a_day    = $matches[3];
-        $a_hour   = $matches[5];
-        $a_minute = $matches[6];
-        $a_second = $matches[7];
-        $a_second++;
-        if ($a_second > 59) {
-            $a_second = 0;
-            $a_minute++;
-        }
-        if ($a_minute > 59) {
-            $a_minute = 0;
-            $a_hour++;
-        }
-        if ($a_hour < 24) {
-            $return_datetime = sprintf($DATE_FORMAT,
-                                       $a_year,
-                                       $a_month,
-                                       $a_day,
-                                       $a_hour,
-                                       $a_minute,
-                                       $a_second);
-        }
-        return $return_datetime;
-    }
-    return;
-}
-
-
 //-------------------------------------------------------------
 // Start of main processing for the page
 

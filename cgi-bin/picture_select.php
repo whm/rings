@@ -30,6 +30,14 @@ if ($ring_user_priv == 'ADMINISTRATOR') {
     $ring_admin = false;
 }
 
+$linkColor['action'] = 'class="link-pink"';
+$linkColor['next']   = 'class="link-yellow"';
+$linkColor['people'] = 'class="link-green"';
+$linkColor['text']   = 'class="link-white"';
+
+$font_size    = 12;
+$menu_height  = 0;
+
 ##############################################################################
 # Subroutines
 ##############################################################################
@@ -40,12 +48,15 @@ if ($ring_user_priv == 'ADMINISTRATOR') {
 function get_end_menu ($this_pid) {
     global $ring_admin;
     global $ring_user;
-    
+    global $ring_user_uid;
+    global $linkColor;
+
     $end_menu = array();
 
     # Allow caching of images for a day
     $i = date('Ymd');
-    $end_menu[] = '<a href="display.php'
+    $end_menu[] = '<a ' . $linkColor['action'] . ' '
+        . 'href="display.php'
         . '?in_pid=' . $this_pid
         . '&in_size=raw'
         . '&rand=' . $i
@@ -53,15 +64,26 @@ function get_end_menu ($this_pid) {
         . 'Raw Image'
         . '</a>';
 
-    $end_menu[] = '<a href="index.php">'
-        . 'Home'
-        . '</a>';
-
     if (isset($ring_user) && $ring_user > 0) {
-        $email_link = '<a href="#emailTag" '
+        $comment_link = '<a ' . $linkColor['action'] . ' '
+                    . 'href="#commentTag" '
+                    . 'name="commentTag" '
+                    . "onClick=\"add_comment('$ring_user_uid', $this_pid)\">"
+                    . 'Update Comments</a>';
+        $end_menu[] = $comment_link;
+
+        $date_link = '<a ' . $linkColor['action'] . ' '
+                    . 'href="#dateTag" '
+                    . 'name="dateTag" '
+                    . "onClick=\"add_date($this_pid)\">"
+                    . 'Update Date</a>';
+        $end_menu[] = $date_link;
+
+        $email_link = '<a ' . $linkColor['action'] . ' '
+                    . 'href="#emailTag" '
                     . 'name="emailTag" '
                     . "onClick=\"add_email_list($this_pid)()\">"
-                    . 'Add to email';
+                    . 'Add to email</a>';
         if (!empty($_SESSION['s_email_list'])) {
             $email_list = explode(" ", $_SESSION['s_email_list']);
             $email_cnt = count($email_list) - 1;
@@ -71,18 +93,25 @@ function get_end_menu ($this_pid) {
             $end_menu[] = $email_link;
         }
         if ($ring_admin) {
-            $end_menu[] = '<a href="picture_update.php'
+            $end_menu[] = '<a ' . $linkColor['action'] . ' '
+                 . 'href="picture_maint.php'
                  . '?in_pid=' . $this_pid
                  . '" target="_blank">'
                  . 'Edit'
                  . '</a>';
         }
     } else {
-        $end_menu[] = '<a href="' . auth_url($_SERVER['PHP_SELF'])
+        $end_menu[] = '<a ' . $linkColor['action'] . ' '
+            . 'href="' . auth_url($_SERVER['PHP_SELF'])
             . '?in_ring_pid=' . $this_pid . '">'
             . 'Login'
             . '</a>';
     }
+
+    $end_menu[] = '<a ' . $linkColor['next'] . ' '
+        . 'href="index.php">'
+        . 'Home'
+        . '</a>';
 
     return $end_menu;
 }
@@ -107,8 +136,8 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
         $sel .= 'p.picture_date ';
         $sel .= 'FROM pictures_information p ';
         $sel .= 'WHERE p.picture_date >= ? ';
-	$sel .= 'AND p.pid > ? ';
-        $sel .= 'AND ' . $grade_sel;
+        $sel .= 'AND p.pid > ? ';
+        $sel .= 'AND ' . $grade_sel . ' ';
         $sel .= 'ORDER BY p.picture_date, p.pid ';
         $sel .= 'LIMIT 0,1 ';
         if (!$sth = $DBH->prepare($sel)) {
@@ -120,7 +149,7 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
         $sth->bind_param('si', $this_picture_date, $thisPID);
         if (!$sth->execute()) {
             sys_err('Execute failed: '
-	            . $DBH->error . '(' . $DBH->errno . ')');
+                    . $DBH->error . '(' . $DBH->errno . ')');
             sys_err("Problem statement: $cmd");
             return;
         }
@@ -141,6 +170,24 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
         }
     }
     return $next_pid;
+}
+
+// ---------------------------------------------
+// Get picture sizes
+
+function get_pic_size($a_pid) {
+
+    global $CONF;
+    global $DBH;
+
+    // Set default size
+    $size_id = empty($_SESSION['display_size']) ?
+               '' : $_SESSION['display_size'];
+    if (empty($size_id)) {
+        $size_id = $CONF['display_size'];
+    }
+
+    return $size_id;
 }
 
 // ---------------------------------------------
@@ -226,7 +273,8 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
 function make_a_link ($thisUID,
                       $thisPID,
                       $this_picture_date,
-                      $thisName) {
+                      $thisName,
+                      $thisClass) {
     global $CONF;
     global $DBH;
 
@@ -253,7 +301,8 @@ function make_a_link ($thisUID,
         $next_pid = 1;
     }
 
-    $thisLink .= '<a href="picture_select.php';
+    $thisLink .= '<a ' . $thisClass . ' ';
+    $thisLink .= 'href="picture_select.php';
     $sep = '?';
     $suffix = '';
     if (empty($next_pid)) {
@@ -370,6 +419,7 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sth->close();
 }
 
+$this_size = 'raw';
 if (!empty($in_ring_pid)) {
 
     // If the picture contains an invisible person return the caller to
@@ -379,11 +429,7 @@ if (!empty($in_ring_pid)) {
         exit;
     }
 
-    $this_size
-        = empty($_SESSION['display_size']) ? '' : $_SESSION['display_size'];
-    if (empty($this_size)) {
-        $this_size = $CONF['display_size'];
-    }
+    $this_size = get_pic_size($in_ring_pid);
 
     // Get data
 
@@ -438,13 +484,17 @@ if (!empty($in_ring_pid)) {
     // ------------------------------------------
     // gather the tags in this picture into links to the next picture
 
-    $menu_header = "Pick a Ring";
+    $menu_height += $font_size;
+
+    $menu_header = '<li ' . $linkColor['next'] . '>Pick a Ring';
     if (!empty($in_ring_uid)) {
-        $menu_header .= "<br/> or Press Return";
+        $menu_header .= ' or Press Return';
     }
+    $menu_header .= '</li>';
+
     $next_menu = array();
-    $next_menu[] = '<div id="linkDiv">' . "\n";
-    $next_menu[] = '<div id="linkDivHeader">' . $menu_header ."</div>\n";
+    $next_menu[] = "<ul>\n";
+    $next_menu[] = $menu_header ."\n";
     if (count($next_links)>0) {
         asort($next_links);
 
@@ -454,29 +504,31 @@ if (!empty($in_ring_pid)) {
             $l = make_a_link($in_ring_uid,
                              $this_pid,
                              $this_picture_date,
-                             $next_links[$in_ring_uid]);
+                             $next_links[$in_ring_uid],
+                             $linkColor['next']);
             $this_url_next = make_a_url($in_ring_uid,
                              $this_pid,
                              $this_picture_date,
                              $next_links[$in_ring_uid]);
             if (!empty($l)) {
-                $next_menu[] = '<p class="tight">' . $l ."</p>\n";
+                $next_menu[] = '<li ' . $linkColor['next'] . ">$l</li>\n";
             }
         }
         if ($in_slide_show > 0) {
             $l = "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
             $l .= '<img src="button.php?in_button=Stop Show">';
             $l .= "</a>\n";
-            $next_menu[] = '<p class="tight">' . $l . "</p>\n";
+            $next_menu[] = '<li ' . $linkColor['people'] . ">$l</li>\n";
         } else {
             foreach ($next_links as $thisUID => $thisName) {
                 if ($in_ring_uid == $thisUID) {continue;}
                 $l = make_a_link($thisUID,
                                  $this_pid,
                                  $this_picture_date,
-                                 $next_links[$thisUID]);
+                                 $next_links[$thisUID],
+                                 $linkColor['people']);
                 if (!empty($l)) {
-                    $next_menu[] = '<p class="tight">' . $l . "</p>\n";
+                    $next_menu[] = '<li>' . $l . "</li>\n";
                 }
             }
         }
@@ -484,115 +536,167 @@ if (!empty($in_ring_pid)) {
 
     $end_menu = get_end_menu($this_pid);
     foreach ($end_menu as $l) {
-        $next_menu[] = '<p class="tight">' . $l . "</p>\n";
+        $menu_height += $font_size;
+        $next_menu[] = '<li ' . $linkColor['people'] . ">$l</li>\n";
     }
-
-    $next_menu[] = "</div>\n";
+    $next_menu[] = "</ul>\n";
 
 }
 
 ########################################################################
 # Display output
 ########################################################################
-
 ?>
 <html>
 <head>
 <title>Rings</title>
 <?php require('inc_page_head.php'); ?>
-<?php require('inc_page_style_pictures.php'); ?>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-    body, html {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    img.centermiddle {
-        display: block;
-        margin-left: auto;
-        margin-right: auto
-    }
+.myimage {
+    display:block;
+    margin-left: auto;
+    margin-right: auto;
+}
 
-    ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-    }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #000066;
+}
 
-    li {
-        display: inline;
-    }
+/* Style the header */
+header {
+  background-color: #000066;
+  padding: 2px;
+  text-align: center;
+  font-size: 12px;
+  color: white;
+}
+
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 20%;
+  background: #000066;
+  padding: 2px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  color: white;
+  list-style-type: none;
+  padding: 0;
+}
+
+.link-red {
+    color: #ff0000;
+}
+.link-pink {
+    color: #ff9999;
+}
+.link-yellow {
+    color: #ffff00;
+}
+.link-green {
+    color: #00ff00;
+}
+.link-blue:
+    color: #0000ff;
+}
+.link-white:
+    color: #ffffff;
+}
+
+article {
+  float: middle;
+  padding: 10px;
+  width: 80%;
+  background-color: #000000;
+}
+
+/* Clear floats after the columns */
+section::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the footer */
+footer {
+  background-color: #ffffff;
+  padding: 10px;
+  text-align: center;
+  color: black;
+}
 
 </style>
-
 </head>
 
 <body>
 
-<img class="centermiddle" src="<?php echo $image_url; ?>" style="height:95%;">
+<header>
+  Rings
+</header>
 
+<section>
+  <nav>
 <?php
+
 // selection menu
 foreach ($next_menu as $m) {
     echo $m;
 }
 ?>
+  <br/>
 
-<p style="color:white">
+  <p style="color: #ffffff">
+  <?php echo $this_picture_date; ?>
+  </p>
+
+  <p style="color: #ffffff">
 <?php
-echo $image_reference;
-sys_display_msg();
+// Display comments
+$sel = 'SELECT uid, cid, comment FROM picture_comments_grades ';
+$sel .= "WHERE pid = $in_ring_pid ";
+$sel .= 'ORDER BY uid, cid ';
+$result=  $DBH->query($sel);
+$last_uid = '';
+if ($result) {
+    while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+        echo '<p style="color: #ffffff">' . "\n";
+        if ($last_uid != $row['uid']) {
+            $last_uid = $row['uid'];
+            echo "$last_uid <br/>\n";
+        }
+        echo $row['comment'] . "\n";
+        echo "</p>\n";
+    }
+}
 ?>
-</p>
+  </p>
+  </nav>
+  <article>
+    <a href="<?php echo $this_url_next; ?>">
+    <img class="myimage" src="<?php echo $image_url; ?>" >
+    </a>
+  </article>
+</section>
+
+<footer>
+<?php sys_display_msg(); ?>
+</footer>
+
 </Body>
 </html>
 
 <script language="JavaScript">
-
-// Make the DIV element draggable:
-function dragElement(elmnt) {
-    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    if (document.getElementById(elmnt.id + "Header")) {
-        // if present, the header is where you move the DIV from:
-        document.getElementById(elmnt.id + "Header").onmousedown
-                = dragMouseDown;
-    } else {
-        // otherwise, move the DIV from anywhere inside the DIV:
-        elmnt.onmousedown = dragMouseDown;
-    }
-
-    function dragMouseDown(e) {
-        e = e || window.event;
-        e.preventDefault();
-        // get the mouse cursor position at startup:
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
-        // call a function whenever the cursor moves:
-        document.onmousemove = elementDrag;
-    }
-
-    function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        // calculate the new cursor position:
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        // set the element's new position:
-        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-    }
-
-    function closeDragElement() {
-        // stop moving when mouse button is released:
-        document.onmouseup = null;
-        document.onmousemove = null;
-    }
-}
-dragElement(document.getElementById("linkDiv"));
 
 // The mail selection action
 
@@ -604,6 +708,20 @@ function getDom(objectname){
 function add_email_list(idx) {
     var win = window.open("add_email_list.php?in_id="+idx,
                           "Add this picture to the email2 list",
+                          "width=400,height=150,status=no");
+    return false;
+}
+
+function add_comment(uid,pid) {
+    var win = window.open("add_comment.php?in_uid="+uid+"&in_pid="+pid,
+                          "Update Comments",
+                          "width=640,height=480,status=no");
+    return false;
+}
+
+function add_date(pid) {
+    var win = window.open("add_date.php?in_pid="+pid,
+                          "Update Picture Date",
                           "width=400,height=150,status=no");
     return false;
 }
@@ -635,5 +753,7 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
+//avoid form warning if user clicks refresh
+window.history.replaceState(null,null);
 
 </script>

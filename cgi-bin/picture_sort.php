@@ -16,6 +16,7 @@ $in_end_maint   = get_request('in_end_maint');
 $in_end_date    = get_request('in_end_date');
 $in_start_maint = get_request('in_start_maint');
 $in_description = get_request('in_description');
+$in_lot         = get_request('in_lot');
 $in_order       = get_request('in_order');
 $in_new         = get_request('in_new');
 $in_button_find = get_request('in_button_find');
@@ -111,7 +112,7 @@ function print_row ($n, $r) {
 
     $i = rand(0, 10000);
     $pic_href
-        = '<a href="picture_update.php?in_pid=' . $r['pid']
+        = '<a href="picture_maint.php?in_pid=' . $r['pid']
         . '" target="_blank">';
     $thumb
         = '<img src="display.php?in_pid=' . $r['pid']
@@ -199,6 +200,8 @@ if (!empty($in_button_find) || !empty($in_new)) {
                               'end_date',   '<', $in_end_date, $condition);
     $condition .= set_search ('description',
                               'description', '=' ,$in_description ,$condition);
+    $condition .= set_search ('picture_lot',
+                              'lot', '=' ,$in_lot ,$condition);
     $condition .= set_search ('date_last_maint',
                               'start_maint', '>', $in_start_maint, $condition);
     $condition .= set_search ('date_last_maint',
@@ -260,6 +263,7 @@ if (!empty($in_button_find) || !empty($in_new)) {
     $sel = "SELECT p.pid, ";
     $sel .= "p.picture_date, ";
     $sel .= "p.description, ";
+    $sel .= "p.picture_lot, ";
     $sel .= "p.file_name, ";
     $sel .= "p.grade, ";
     $sel .= "p.raw_picture_size, ";
@@ -334,13 +338,20 @@ if ($end_row > $_SESSION['s_num_user_rows']) {
          value="<?php print $_SESSION['sear_description']; ?>">
   </td>
 </tr>
+<tr>
+  <td align="right">Lot:</td>
+  <td>
+  <input type="text" name="in_lot"
+         value="<?php print $_SESSION['sear_lot']; ?>">
+  </td>
+</tr>
 
 <?php
 $sel_pid = $sel_date = '';
-if ($_SESSION['s_order_by'] == 'p.pid') {
-    $sel_pid = 'CHECKED';
-} else {
+if ($_SESSION['s_order_by'] == 'p.picture_date') {
     $sel_date = 'CHECKED';
+} else {
+    $sel_pid = 'CHECKED';
 }
 ?>
 <tr>

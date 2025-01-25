@@ -1,3 +1,35 @@
+picture-rings (3.8) unstable; urgency=medium
+
+  * Minor update to picture_dup_check selection of duplicates to
+    prevent selecting the same duplicate twice.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 08 Aug 2025 15:15:31 +0000
+
+picture-rings (3.7) unstable; urgency=medium
+
+  * Retire the use of a moveable navigation menu in picture_select.php.
+  * Use CSS for page layout in picture_select.php.
+  * Add PHP script to check for duplicate pictures and make it easy
+    to delete them.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 07 Aug 2025 23:15:51 +0000
+
+picture-rings (3.6) unstable; urgency=medium
+
+  * Change default sort in picture_sort to by picture id.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 16 May 2025 00:27:07 +0000
+
+picture-rings (3.5) unstable; urgency=medium
+
+  * Change command line of ring-load to accomodate directory names that
+    have embedded spaces by allowing only one directory to be specified at
+    a time.
+  * Change "Sort" menu items to "Find".
+  * Allow selection of pictures in picture_lot by picture_log.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 25 Jan 2025 08:16:17 +0000
+
 picture-rings (3.4) unstable; urgency=medium
 
   * Update picture_select.php menu title and index.php heading.

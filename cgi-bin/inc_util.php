@@ -10,6 +10,9 @@ $sys_msg_ok   = '<font color="green">';
 $sys_msg_warn = '<font color="red">';
 $sys_msg_end  = "</font><br/>\n";
 
+$DATE_PATTERN = '/^(\d+)[-:](\d+)[-:](\d+)(\s|-|:)(\d+)[-:](\d+)[-:](\d+)/';
+$DATE_FORMAT  = '%04d-%02d-%02d %02d:%02d:%02d';
+
 //-------------------------------------------------------------
 // Calculate the size of a picture that will be contained within
 // the bounding box $max_x, $max_y.  Change the image size only
@@ -101,6 +104,44 @@ function http_redirect ($nextURL="index.php") {
 }
 
 //-------------------------------------------------------------
+// -- Increment the time part of a datetime.  Don't do anything if we
+//    need to goto the next day.
+function increment_time ($a_datetime) {
+
+    global $DATE_FORMAT;
+    global $DATE_PATTERN;
+
+    if (preg_match($DATE_PATTERN, $a_datetime, $matches)) {
+        $a_year   = $matches[1];
+        $a_month  = $matches[2];
+        $a_day    = $matches[3];
+        $a_hour   = $matches[5];
+        $a_minute = $matches[6];
+        $a_second = $matches[7];
+        $a_second += 10;
+        if ($a_second > 59) {
+            $a_second = 0;
+            $a_minute++;
+        }
+        if ($a_minute > 59) {
+            $a_minute = 0;
+            $a_hour++;
+        }
+        if ($a_hour < 24) {
+            $return_datetime = sprintf($DATE_FORMAT,
+                                       $a_year,
+                                       $a_month,
+                                       $a_day,
+                                       $a_hour,
+                                       $a_minute,
+                                       $a_second);
+        }
+        return $return_datetime;
+    }
+    return;
+}
+
+//-------------------------------------------------------------
 // Read an attribute=value configuation file, store the results
 // in an array and return the array.
 
@@ -138,7 +179,7 @@ function msg_okay ($txt) {
     global $sys_msg_end;
     return "${sys_msg_ok}${txt}${sys_msg_end}";
 }
-    
+
 function msg_err ($txt) {
     global $sys_msg_warn;
     global $sys_msg_end;
@@ -152,7 +193,7 @@ function sys_msg ($txt) {
     syslog(LOG_INFO, $txt);
     return;
 }
-    
+
 function sys_err ($txt) {
     global $sys_msg_warn;
     global $sys_msg_end;
@@ -168,7 +209,7 @@ function sys_display_msg () {
     $_SESSION['msg'] = '';
     return;
 }
-    
+
 // ------------------------------------------------------------------------
 // Assemble the path to a picture
 
@@ -191,10 +232,10 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
     }
     list ($a_file_type, $a_mime_type) = validate_type($file_type);
     if (empty($a_file_type)) {
-        sys_err("picture_path invalid file_type ($type)");
+        sys_err("picture_path invalid file_type ($file_type)");
         return $m;
     }
-    
+
     $pic_dir = $CONF['picture_root'];
     $pic_dir .= '/' . $lot;
     $pic_dir .= '/' . $a_size_id;

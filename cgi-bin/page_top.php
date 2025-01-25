@@ -15,13 +15,13 @@
      <a href="picture_load.php"><li class="nav">Load</li></a>
      <a href="picture_reload.php"><li class="nav">Re-Load</li></a>
      <a href="picture_maint.php"><li class="nav">Maintenance</li></a>
+     <a href="picture_dup_check.php"><li class="nav">Duplicate Check</li></a>
 <?php
   }
   // -----------------------------------------------------------------
 ?>
-     <a href="picture_update.php"><li class="nav">Update</li></a>
-     <a href="picture_sort.php"><li class="nav">Sort</li></a>
-     <a href="picture_sort.php?in_new=1"><li class="nav">Sort New</li></a>
+     <a href="picture_sort.php"><li class="nav">Find</li></a>
+     <a href="picture_sort.php?in_new=1"><li class="nav">Find New</li></a>
      
      </ul>
      <h3 class="nav">People</h3>

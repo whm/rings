@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-load
 # Description: queue a picture directory to be loaded into the rings
 
@@ -129,24 +129,22 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
-my @dir_list;
+my $in_dir;
 if (@ARGV) {
-    @dir_list = @ARGV;
+    $in_dir = join(' ', @ARGV);
 } else {
     print "ERROR: provide at least one directory to scan\n"
       or die "ERROR: problem writing to STDOUT\n";
     pod2usage(-verbose => 0);
 }
 
-for my $d (@dir_list) {
-    my $this_dir = $CONF->picture_input_root . "/$d";
-    if (-d $this_dir) {
-        print "Adding $this_dir to processing queue ...\n";
-        queue_upload($this_dir);
-    } else {
-        print "$this_dir not a directory ... skipping\n"
-          or die "ERROR: problem writing to STDOUT\n";
-    }
+my $this_dir = $CONF->picture_input_root . "/$in_dir";
+if (-d $this_dir) {
+    print "Adding $this_dir to processing queue ...\n";
+    queue_upload($this_dir);
+} else {
+    print "$this_dir not a directory ... skipping\n"
+      or die "ERROR: problem writing to STDOUT\n";
 }
 
 db_disconnect();
@@ -161,8 +159,8 @@ ring-load - add an entry to the picture upload queue
 
 =head1 SYNOPSIS
 
-ring-load [load|find] <id> <directory1> [<directory2> ...] \
- [--conf=<configuration>] [--all] [--debug] [--help] [--manual]
+ring-load [load|find] <id> <directory1> [--conf=<configuration>]
+ [--all] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
@@ -202,7 +200,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

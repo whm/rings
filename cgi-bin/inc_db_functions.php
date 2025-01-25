@@ -238,8 +238,9 @@ function calculate_picture_grade ($this_pid) {
 
     return $pic_grade;
 }
+
 //-------------------------------------------------------------
-// Delete a picture database entries
+// Delete picture entries from the database
 
 function db_delete_picture ($this_pid) {
     global $DBH;
@@ -284,6 +285,92 @@ function db_delete_picture ($this_pid) {
     }
 
     return;
+}
+
+//-------------------------------------------------------------
+// File files that exist for a given PID
+
+function db_find_files ($this_pid) {
+    global $DBH;
+
+    $file_list = [];
+    $pic_sizes = [];
+    $pic_types = [];
+    $pic_lot = '';
+
+    $sel = 'SELECT file_type FROM picture_types';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    if (!$stmt->execute()) {
+        sys_err('ERROR: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("INFO: $sel");
+        return;
+    }
+    $stmt->bind_result($z);
+    while ($stmt->fetch()) {
+        $pic_types[] = $z;
+    }
+    $stmt->close();
+
+    $sel = 'SELECT size_id FROM picture_sizes';
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    if (!$stmt->execute()) {
+        sys_err('ERROR: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("INFO: $sel");
+        return;
+    }
+    $stmt->bind_result($z);
+    while ($stmt->fetch()) {
+        $pic_sizes[] = $z;
+    }
+    $stmt->close();
+
+    $sel = "SELECT picture_lot FROM pictures_information WHERE pid = ?";
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('i', $this_pid);
+    if (!$stmt->execute()) {
+        sys_err('ERROR: ' . $DBH->error . '(' . $DBH->errno . ') ');
+        sys_err("INFO: $sel");
+        return;
+    }
+    $stmt->bind_result($z);
+    if ($stmt->fetch()) {
+        $this_lot = $z;
+    }
+    $stmt->close();
+
+    foreach ($pic_types as $this_type) {
+        foreach ($pic_sizes as $this_size) {
+            list($pic_dir, $pic_file)
+                = picture_path ($this_lot, $this_size, $this_pid, $this_type);
+            if (file_exists($pic_file)) {
+                $file_list[] = $pic_file;
+            }
+        }
+    }
+
+    return $file_list;
+}
+
+//-------------------------------------------------------------
+// Delete picture files for a given picture
+
+function db_delete_files ($this_pid) {
+
+	$file_list = db_find_files($this_pid);
+	foreach($file_list as $f) {
+	  unlink($f);
+	}
+
+    return $file_list;
 }
 
 //-------------------------------------------------------------

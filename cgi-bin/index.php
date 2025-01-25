@@ -10,7 +10,6 @@
 require('inc_ring_init.php');
 
 // Form or URL inputs
-$in_button_pos   = get_request('in_button_pos');
 $in_grade        = get_request('in_grade');
 $in_group_id     = get_request('in_group_id');
 $in_seconds      = get_request('in_seconds');
@@ -26,7 +25,9 @@ $cm['GID'] = 'group_id';
 $cm['SZ']  = 'display_size';
 $cm['GRD'] = 'display_grade';
 $cm['SEC'] = 'display_seconds';
-$cm['BP']  = 'button_position';
+foreach ($cm as $cid => $sid) {
+    $sm[$sid] = $cid;
+}
 
 // Set sessions variables from cookie if session variable is
 // empty and there is a cookie value.
@@ -37,63 +38,61 @@ if (isset($_COOKIE[$cookie_id])) {
         $i = strpos($av, "=");
 	if ($i) {
 	    $cid = substr($av, 0, $i);
-	    $val = substr($av, $i);
+	    $val = substr($av, $i+1);
 	    $cookie_val[$cid] = $val;
         }
     }
 }
 foreach ($cm as $cid => $sid) {
-    if (isset(($_SESSION[$sid]))
-      && empty($_SESSION[$sid])
-      && isset($cookie_val[$cid])
-    ) {
+    if (empty($_SESSION[$sid]) && array_key_exists($cid, $cookie_val)) {
         $_SESSION[$sid] = $cookie_val[$cid];
     }
 }
 
 // set the group
-if (isset($in_group_id)) {
-    $_SESSION['group_id'] = $in_group_id;
-} else {
-    // If there is no group_id in the session space then see if there is a
-    // cookie and use that to set session values.
+if (!isset($in_group_id)) {
     if (array_key_exists('group_id', $_SESSION)) {
         $in_group_id = $_SESSION['group_id'];
-    } elseif (isset($_COOKIE[$cookie_id])) {
-        $s = $_COOKIE[$cookie_id].'|';
-        foreach ($cm as $cid => $sid) {
-            $vals = array();
-            if (preg_match("/\|$cid=(.+?)\|/", $cid, $vals)) {
-                if (isset($vals[1])) {
-                    $_SESSION[$sid] = $vals[1];
-                }
-            }
-        }
-        if (array_key_exists('group_id', $_SESSION)) {
-            $in_group_id = $_SESSION['group_id'];
+    } else {
+        $cid = $sm['group_id'];
+        if (array_key_exists($cid, $cookie_val)) {
+            $in_group_id = $cookie_val[$cid];
+        } else {
+            $in_group_id = 'all-groups';
         }
     }
 }
+$_SESSION['group_id'] = $in_group_id;
 
 // set the display size
-if (empty($in_size)) {
-    if (empty($_SESSION['display_size'])) {
-        $in_size = $CONF['maint_size'];
-    } else {
+if (!isset($in_size)) {
+    if (array_key_exists('display_size', $_SESSION)) {
         $in_size = $_SESSION['display_size'];
+    } else {
+        $cid = $sm['display_size'];
+        if (array_key_exists($cid, $cookie_val)) {
+            $in_size = $cookie_val[$cid];
+        } else {
+            $in_size = $CONF['maint_size'];
+        }
     }
 }
 $_SESSION['display_size'] = $in_size;
 
 // set display grade
-if (isset($in_grade)) {
-    $_SESSION['display_grade'] = $in_grade;
-} else {
-    $in_grade = $_SESSION['display_grade'];
+if (!isset($in_grade)) {
+    if (array_key_exists('display_grade', $_SESSION)) {
+        $in_grade = $_SESSION['display_grade'];
+    } else {
+        $cid = $sm['display_grade'];
+        if (array_key_exists($cid, $cookie_val)) {
+            $in_grade = $cookie_val[$cid];
+        } else {
+	    $in_grade = 'A';
+        }
+    }
 }
-if (empty($in_grade)) {
-    $in_grade = 'A';
-}
+$_SESSION['display_grade'] = $in_grade;
 $chk_a = $chk_b = $chk_c = $chk_d = '';
 if ($in_grade == 'D') {
     $chk_d = 'CHECKED';
@@ -105,28 +104,20 @@ if ($in_grade == 'D') {
     $chk_a = 'CHECKED';
     $in_grade = 'A';
 }
-$_SESSION['display_grade'] = $in_grade;
-
-$chk_float = $chk_right = $chk_left = $chk_top = $chk_bottom = '';
-if ($in_button_pos == 'top') {
-    $chk_bottom = 'CHECKED';
-} elseif ($in_button_pos == 'bottom') {
-    $chk_bottom = 'CHECKED';
-} elseif ($in_button_pos == 'left') {
-    $chk_left = 'CHECKED';
-} elseif ($in_button_pos == 'right') {
-    $chk_right = 'CHECKED';
-} else {
-    $chk_float = 'CHECKED';
-    $in_button_pos = 'float';
-}
-$_SESSION['button_position'] = $in_button_pos;
 
 // set show delay
-if (!isset($in_seconds) && array_key_exists('display_seconds', $_SESSION)) {
-    $in_seconds = $_SESSION['display_seconds'];
+if (!isset($in_seconds)) {
+    if (array_key_exists('display_seconds', $_SESSION)) {
+        $in_seconds = $_SESSION['display_seconds'];
+    } else {
+        $cid = $sm['display_seconds'];
+        if (array_key_exists($cid, $cookie_val)) {
+            $in_seconds = $cookie_val[$cid];
+        } else {
+	    $in_seconds = 3;
+        }
+    }
 }
-if ($in_seconds < 3) { $in_seconds = 3;}
 $_SESSION['display_seconds'] = $in_seconds;
 
 // set preferences display
@@ -142,9 +133,16 @@ if ($in_pref_display == 'Y') {
 $cookie_value = '';
 $cookie_life = time()+315360000;
 foreach ($cm as $cid => $sid) {
-     $cookie_value .= "|$cid=".$_SESSION[$sid];
+    sys_msg("cid:$cid");
+    sys_msg("sid:$sid");
+    sys_msg("session:" . $_SESSION[$sid]);
+    $cookie_value .= "|$cid=" . $_SESSION[$sid];
+    sys_msg("cookie_val:$cookie_value");
 }
 setcookie($cookie_id, $cookie_value, $cookie_life);
+sys_msg("cookie_id: $cookie_id");
+sys_msg("cookie_value: $cookie_value");
+sys_msg("cookie_life: $cookie_life");
 
 ?>
 <html>
@@ -284,25 +282,6 @@ $stmt->close();
          &nbsp;&nbsp;
          <input type="radio" <?php echo $chk_d;?> name="in_grade"
                 value="D">All
-    </td>
-    </tr>
-
-    <tr>
-    <th align="right">Button:</th>
-    <td><input type="radio" <?php echo $chk_float;?> name="in_button_pos"
-                value="float">Float
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_left;?> name="in_button_pos"
-                value="left">Left
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_top;?> name="in_button_pos"
-                value="right">Right
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_top;?> name="in_button_pos"
-                value="top">Top
-         &nbsp;&nbsp;
-         <input type="radio" <?php echo $chk_bottom;?> name="in_button_pos"
-                value="bottom">Bottom
     </td>
     </tr>
 
