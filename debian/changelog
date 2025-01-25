@@ -5,6 +5,7 @@ picture-rings (3.4) unstable; urgency=medium
     only for exact file size matches.
   * Correct problem with return doing nothing when a picture is
     displayed by picture_select.
+  * Correct handling of old comments and old grades in picture_update.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Fri, 24 Jan 2025 19:42:22 +0000
 
