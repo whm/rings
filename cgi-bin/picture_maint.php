@@ -403,13 +403,18 @@ if (!empty($thisID)) {
     if ($result) {
         while ($link_row = $result->fetch_array(MYSQLI_ASSOC)) {
             $a_uid = $link_row['uid'];
+            if ($a_uid == 'new') {
+                $delete_checked = ' CHECKED ';
+            } else {
+                $delete_checked = '';
+            }
             $a_name = $link_row['display_name'];
             $found["$a_uid"] = 1;
             $picturePeople .= "<tr>\n";
             $picturePeople .= " <td>$a_name</td>\n";
             $picturePeople .= " <td align=\"center\">\n";
             $picturePeople .= '   <input type="checkbox" '
-                . 'name="in_del_' . $people_cnt . '" '
+                . 'name="in_del_' . $people_cnt . '"' . $delete_checked
                 . 'value="delete">' . "\n";
             $picturePeople .= '   <input type="hidden" '
                 . 'name="in_del_uid_' . $people_cnt . '" '
@@ -528,35 +533,14 @@ if (!empty($row['pid'])) {
 
 # Picture matching code
 if ($this_pid > 0) {
-  $sel = 'SELECT signature FROM picture_details ';
-  $sel .= 'WHERE pid = ? AND size_id = "small"';
-  if (!$stmt = $DBH->prepare($sel)) {
-    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-  }
-  $stmt->bind_param('i', $this_pid);
-  $stmt->execute();
-  $stmt->bind_result($p1);
-  if ($stmt->fetch()) {
-    $this_signature = $p1;
-  }
-  $stmt->close();
-  if (isset($this_signature)) {
-    $sel = 'SELECT pid FROM picture_details ';
-    $sel .= 'WHERE signature = ? AND pid != ? AND size_id = "small" ';
-    $sel .= 'ORDER BY pid ';
-    if (!$stmt = $DBH->prepare($sel)) {
-      sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+    $sel = dup_sql($this_pid);
+    $result = $DBH->query($sel);
+    if ($result) {
+        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
+            echo '<a href="picture_maint.php?pid=' . $row['leafpid'] . '">';
+            echo 'Duplicate Picture: ' . $row['leafpid'] ."</a>\n";
+        }
     }
-    $stmt->bind_param('si', $this_signature, $this_pid);
-    $stmt->execute();
-    $stmt->bind_result($p1);
-    while ($stmt->fetch()) {
-      $dup_pid = $p1;
-      echo '<a href="picture_maint.php?pid=' . $dup_pid . '">';
-      echo "Duplicate Picture: $dup_pid </a>\n";
-    }
-    $stmt->close();
-  }
 }
 ?>
 

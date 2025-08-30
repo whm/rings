@@ -3,7 +3,7 @@
 # cz-ring-token -- Get an AFS token for the rings application
 #
 # Written by Bill MacAllister <bill@ca-zephyr.org>
-# Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2024-2025 Bill MacAllister <bill@ca-zephyr.org>
 
 ##############################################################################
 # Subroutines
@@ -67,7 +67,7 @@ Display the man page for this script.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+Copyright (c) 2024-2025 Bill MacAllister <bill@ca-zephyr.org>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

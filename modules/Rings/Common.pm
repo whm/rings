@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>
 # File: Common.pm
 # Description: This module is used by the Rings gallery application.
 
@@ -1648,7 +1648,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

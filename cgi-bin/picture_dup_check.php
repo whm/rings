@@ -38,7 +38,8 @@ require ('page_top.php');
 
 This is a potentially dangerous operation since all references
 and all picture files are deleted from the Rings database.
-Use with care.
+Use with care.  Only the first 100 duplicates are displayed.
+If there are more than 100 multiple updates are required.
 
 <div align="center">
 <form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
@@ -49,19 +50,7 @@ Use with care.
 <?php sys_display_msg(); ?>
 
 <?php
-$sel = 'SELECT root.pid rootpid';
-$sel .= ', leaf.pid leafpid';
-$sel .= ', root.raw_signature rootsignature';
-$sel .= ', leaf.raw_signature leafsignature';
-$sel .= ' FROM pictures_information root';
-$sel .= ' LEFT OUTER JOIN pictures_information leaf';
-$sel .= ' ON root.pid != leaf.pid';
-$sel .= ' AND root.raw_picture_size = leaf.raw_picture_size';
-$sel .= ' AND root.raw_signature = leaf.raw_signature';
-$sel .= ' WHERE leaf.pid IS NOT NULL';
-$sel .= ' AND root.pid < leaf.pid';
-$sel .= ' order by rootpid, leafpid';
-$sel .= ' LIMIT 0,100';
+$sel = dup_sql() . ' LIMIT 0,100';
 
 $result = $DBH->query($sel);
 if ($result) {

@@ -394,6 +394,33 @@ function get_fld_names ($this_table) {
 }
 
 //-------------------------------------------------------------
+// Duplicate SQL - return SQL that will selection duplicates
+//     based on the meta data store in the database.  If a
+//     picture id is specified then the SQL selects only root
+//     pid matches.
+
+function dup_sql ($pid) {
+
+    $sel = 'SELECT root.pid rootpid';
+    $sel .= ', leaf.pid leafpid';
+    $sel .= ', root.raw_signature rootsignature';
+    $sel .= ', leaf.raw_signature leafsignature';
+    $sel .= ' FROM pictures_information root';
+    $sel .= ' LEFT OUTER JOIN pictures_information leaf';
+    $sel .= ' ON root.pid != leaf.pid';
+    $sel .= ' AND root.raw_picture_size = leaf.raw_picture_size';
+    $sel .= ' AND root.raw_signature = leaf.raw_signature';
+    $sel .= ' WHERE leaf.pid IS NOT NULL';
+    $sel .= ' AND root.pid < leaf.pid';
+    if (isset($pid) && !empty($pid)) {
+        $sel .= ' AND root.pid = "$pid"';
+    }
+    $sel .= ' order by rootpid, leafpid';
+
+    return $sel;
+}
+
+//-------------------------------------------------------------
 // get the next id
 
 function get_next ($id) {
