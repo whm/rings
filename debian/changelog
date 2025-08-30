@@ -1,3 +1,33 @@
+picture-rings (3.9) unstable; urgency=medium
+
+  * Update ring-load command line by allowing only one directory per
+    invocation of ring-load.
+  * In the maintenance menus change menu item and add select by picture
+    lot to picture_sort.
+  * Default to ordering pictures in picture_sort to by pid.
+  * Updates to picture_select.php
+    - Retire the use of a moveable navigation menu in picture_select.php.
+    - Use CSS for page layout in picture_select.php.
+    - Add color to nav menu to group functions.
+    - Pull auto_size support.  Maybe later, but not now.
+    - Add routine to allow users to update the picture date of any
+      picture.
+    - Add routine to allow users to update their own comments.
+    - Move increment_time to inc_util so that it can be shared by
+      picture_maint and add_date.
+    - Some whitespace cleanup and de-tabbing.
+     -Mouse click on picture in picture_select moves to next picture
+  * Fix bug in index.php's handling of cookies
+  * Minor update to picture_dup_check selection of duplicates to prevent
+    selecting the same duplicate twice.
+  * Revert to picture_maint for Editing from picture_select.  The editing
+    of meta-data from picture_select was pointing to a non-existant
+    script.  The script will be added at some point, but for now just use
+    the old script.
+
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 30 Aug 2025 16:05:01 +0000
+
 picture-rings (3.8) unstable; urgency=medium
 
   * Minor update to picture_dup_check selection of duplicates to
