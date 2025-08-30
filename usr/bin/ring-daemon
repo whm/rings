@@ -155,7 +155,22 @@ sub process_pids {
             next;
         }
 
-        my %pic       = get_meta_data($pic_path);
+        my %pic = get_meta_data($pic_path);
+
+        # Duplicate check
+        my @dup_list = dup_check($pic{'size'}, $pic{'signature'});
+        if (scalar(@dup_list) > 0) {
+            my $msg   = "$pid is duplicated by: ";
+            my $comma = '';
+            for my $p (@dup_list) {
+                $msg .= ${comma} . ${p};
+                $comma = ', ';
+            }
+            msg('error', $msg);
+            queue_error($pid, $action, $msg);
+            next;
+        }
+
         my $mime_type = $pic{'mimetype'};
         my $file_type = $raw_file_type;
         if ($action eq 'SIZE') {

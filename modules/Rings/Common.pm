@@ -112,6 +112,34 @@ sub dbg {
 }
 
 # ------------------------------------------------------------------------
+# Check for duplicate pictures.  The duplication check is based on matching
+# picture signature and size.
+
+sub dup_check {
+    my ($raw_size, $raw_signature) = @_;
+
+    my @dup_list = ();
+
+    my $sel = 'SELECT pid ';
+    $sel .= ' FROM pictures_information';
+    $sel .= ' WHERE raw_picture_size = ?';
+    $sel .= ' AND raw_signature = ?';
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($raw_size, $raw_signature);
+    if ($sth->err) {
+        print("INFO: raw_size=$raw_size raw_signature=$raw_signature");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        push @dup_list, $row->{pid};
+    }
+
+    return @dup_list;
+}
+
+# ------------------------------------------------------------------------
 # read configuration files and get options
 
 sub get_config {
