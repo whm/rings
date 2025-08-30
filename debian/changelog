@@ -5,6 +5,9 @@ picture-rings (3.10) unstable; urgency=medium
     raw size and signature.  The check matches the check performed by the
     PHP scripts.  It will prevent duplicates from being loaded into the
     data base.
+  * Change the "Set date to" processing to use a button instead of a
+    checkbox and change the background color of the date field when
+    the date is set using the button.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 30 Aug 2025 17:19:11 +0000
 

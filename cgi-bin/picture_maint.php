@@ -158,7 +158,10 @@ function setDatetime() {
   f = document.picture_data;
 
   f.in_picture_date.value = f.next_datetime.value;
+  f.in_picture_date.style.backgroundColor = "yellow";
+  event.preventDefault()
   f.set_date.checked = false;
+
   return false;
 
 }
@@ -321,10 +324,8 @@ if ($this_pid > 0) {
              name="next_datetime"
              value="<?php echo $next_datetime;?>">
       <br/>
-      <input type="checkbox"
-             name="set_date"
-             onClick="setDatetime()">
-                Set Date to <?php echo $next_datetime; ?>
+      <button onClick="setDatetime()">
+                Set Date to <?php echo $next_datetime; ?></button>
       <?php } ?>
 
  </td>
