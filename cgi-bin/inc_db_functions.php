@@ -485,6 +485,43 @@ function get_next ($id) {
 }
 
 //-------------------------------------------------------------
+// Get the next or previous pid
+
+function get_bounding_pid ($this_type, $this_pid) {
+
+    global $CONF;
+    global $DBH;
+    global $warn, $em;
+
+    $return_pid = 1;
+
+    $sel = 'SELECT pid FROM pictures_information';
+    if ($this_type == 'previous') {
+        $sel .= ' WHERE pid < ? ORDER BY pid DESC';
+    } else {
+        $sel .= ' WHERE pid > ? ORDER BY pid ';
+    }
+    $sel .= ' LIMIT 0,1 ';
+    if ($CONF['debug']) {
+        syslog(LOG_DEBUG, $sel);
+    }
+    if (!$stmt = $DBH->prepare($sel)) {
+        sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
+        return;
+    }
+    $stmt->bind_param('i', $this_pid);
+    $stmt->execute();
+    $stmt->bind_result($p1);
+    if ($stmt->fetch()) {
+        $return_pid = $p1;
+    }
+    $stmt->close();
+
+    return $return_pid;
+
+}
+
+//-------------------------------------------------------------
 // Get the mime type and file extension for a picture
 
 function get_picture_type ($pid, $id) {

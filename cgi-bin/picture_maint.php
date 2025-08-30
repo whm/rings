@@ -15,6 +15,7 @@ $in_button_find         = get_request('in_button_find');
 $in_button_next         = get_request('in_button_next');
 $in_button_prev         = get_request('in_button_prev');
 $in_button_update       = get_request('in_button_update');
+$in_button_update_next  = get_request('in_button_update_next');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
@@ -47,36 +48,10 @@ $prev_sel = 'WHERE pid < ? ORDER BY pid DESC ';
 $next_sel = 'WHERE pid > ? ORDER BY pid ';
 
 // Find previous PID
-$sel = "$base_sel $prev_sel LIMIT 0,1 ";
-if ($CONF['debug']) {
-    syslog(LOG_DEBUG, $sel);
-}
-if (!$stmt = $DBH->prepare($sel)) {
-    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-}
-$stmt->bind_param('i', $this_pid);
-$stmt->execute();
-$stmt->bind_result($p1);
-if ($stmt->fetch()) {
-    $prev_pid = $p1;
-}
-$stmt->close();
+$prev_pid = get_bounding_pid('previous', $this_pid);
 
 // Find next PID
-$sel = "$base_sel $next_sel LIMIT 0,1 ";
-if ($CONF['debug']) {
-    syslog(LOG_DEBUG, $sel);
-}
-if (!$stmt = $DBH->prepare($sel)) {
-    sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
-}
-$stmt->bind_param('i', $this_pid);
-$stmt->execute();
-$stmt->bind_result($p1);
-if ($stmt->fetch()) {
-    $next_pid = $p1;
-}
-$stmt->close();
+$next_pid = get_bounding_pid('next', $this_pid);
 
 // Set PID selections if next or previous was selected
 if (!empty($in_button_next)) {
@@ -246,6 +221,11 @@ if ($this_pid > 0) {
                onClick="setUpdate()"
                name="in_button_update"
                value="Update">
+    </td>
+    <td><input type="submit"
+               onClick="setUpdate()"
+               name="in_button_update_next"
+               value="Update->Next">
     </td>
     <td align="center">
         <input type="submit"

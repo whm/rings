@@ -18,6 +18,7 @@ $in_pid                 = get_request('in_pid');
 $in_type                = get_request('in_type');
 $in_newuids             = get_request('in_newuids');
 $in_button_update       = get_request('in_button_update');
+$in_button_update_next  = get_request('in_button_update_next');
 $in_button_rotate_left  = get_request('in_button_rotate_left');
 $in_button_rotate_right = get_request('in_button_rotate_right');
 $in_button_del          = get_request('in_button_del');
@@ -55,7 +56,7 @@ $next_header = "REFRESH: 0; URL=$next_url";
 // Processing for specific request, i.e. add, change, delete
 $update_flag = 0;
 $add_flag    = 0;
-if (!empty($in_button_update)) {
+if (!empty($in_button_update) || !empty($in_button_update_next)) {
 
     // Try and get the old user record
     $sel = "SELECT * FROM pictures_information WHERE pid=$in_pid ";
@@ -101,8 +102,8 @@ if ( $update_flag ) {
     # Make sure that the picture_date+picture_sequence is unique
     $new_seq = get_picture_sequence($form_vals['in_picture_date'],
                                     $form_vals['in_picture_sequence']);
-    $form_vals['in_picture_sequence'] = $new_seq; 
-    
+    $form_vals['in_picture_sequence'] = $new_seq;
+
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $fld_update_flag = 0;
@@ -138,7 +139,11 @@ if ( $update_flag ) {
             syslog(LOG_ERR, 'SQL error: ' . $DBH->error);
         }
     }
-    $next_pid = $in_pid;
+    if (empty($in_button_update_next)) {
+        $next_pid = $in_pid;
+    } else {
+        $next_pid = get_bounding_pid('next', $in_pid);
+    }
 
     // delete picture details
     $in_del_cnt = get_request('in_del_cnt', 0);
@@ -219,7 +224,7 @@ if ( $update_flag ) {
     // -- Delete a record -------------------------------
 
     db_delete_picture($in_pid);
-    $next_uid = 'CLEARFORM';
+    $next_pid = 'CLEARFORM';
 
 } elseif ( !empty($in_button_rotate_right) || !empty($in_button_rotate_left) ) {
 

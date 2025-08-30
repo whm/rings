@@ -8,6 +8,9 @@ picture-rings (3.10) unstable; urgency=medium
   * Change the "Set date to" processing to use a button instead of a
     checkbox and change the background color of the date field when
     the date is set using the button.
+  * Add Update->Next button to picture_maint.  Move selection of next pid
+    and previous pid to db function include and use the function in
+    picture_maint and picture_maint_action.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 30 Aug 2025 17:19:11 +0000
 
