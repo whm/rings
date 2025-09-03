@@ -29,8 +29,7 @@ if (!empty($in_pid)) {
         $add_flag    = 1;
         $this_pid    = 0;
         $display_pid = '';
-    }
-    if ($in_pid < 1) {
+    } elseif ($in_pid < 1) {
         sys_msg("Invalid PID entered $in_pid");
         $this_pid    = 0;
         $display_pid = '';
@@ -79,7 +78,7 @@ if ($result) {
     }
 }
 if ($this_pid > 0 && empty($row['pid']) ) {
-    sys_msg("Picture '$in_pid' not found.");
+    sys_msg("Picture '$this_pid' not found.");
     $fld_names = get_fld_names('pictures_information');
     foreach ($fld_names as $db_fld) {
         $row[$db_fld] = '';
