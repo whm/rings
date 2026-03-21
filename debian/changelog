@@ -1,3 +1,12 @@
+picture-rings (3.12) unstable; urgency=medium
+
+  * Updates to display in picture_select.
+    - Move nav links to the bottom of the page to open up more
+      room for the picture.
+    - Improve the heading to include useful information and not
+      require inference from the nav menu.
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 21 Mar 2026 06:44:24 +0000
+
 picture-rings (3.11) unstable; urgency=medium
 
   * Correct handling of deletions in picture_maint.

@@ -35,9 +35,6 @@ $linkColor['next']   = 'class="link-yellow"';
 $linkColor['people'] = 'class="link-green"';
 $linkColor['text']   = 'class="link-white"';
 
-$font_size    = 12;
-$menu_height  = 0;
-
 ##############################################################################
 # Subroutines
 ##############################################################################
@@ -45,7 +42,7 @@ $menu_height  = 0;
 // ---------------------------------------------
 // Entries for the menu at the end of the page
 
-function get_end_menu ($this_pid) {
+function get_menu ($this_pid) {
     global $ring_admin;
     global $ring_user;
     global $ring_user_uid;
@@ -419,7 +416,8 @@ if (empty($in_ring_pid) && !empty($in_ring_uid)) {
     $sth->close();
 }
 
-$this_size = 'raw';
+$this_size      = 'raw';
+$this_ring_name = $in_ring_uid;
 if (!empty($in_ring_pid)) {
 
     // If the picture contains an invisible person return the caller to
@@ -473,6 +471,9 @@ if (!empty($in_ring_pid)) {
         if ($result) {
             while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
                 $next_links[$row['uid']] = $row['display_name'];
+                if ($row['uid'] == $in_ring_uid) {
+                    $this_ring_name = $row['display_name'];
+                }
             }
         }
         $next_links['next-by-date'] = 'Next by Date';
@@ -484,17 +485,7 @@ if (!empty($in_ring_pid)) {
     // ------------------------------------------
     // gather the tags in this picture into links to the next picture
 
-    $menu_height += $font_size;
-
-    $menu_header = '<li ' . $linkColor['next'] . '>Pick a Ring';
-    if (!empty($in_ring_uid)) {
-        $menu_header .= ' or Press Return';
-    }
-    $menu_header .= '</li>';
-
     $next_menu = array();
-    $next_menu[] = "<ul>\n";
-    $next_menu[] = $menu_header ."\n";
     if (count($next_links)>0) {
         asort($next_links);
 
@@ -511,14 +502,14 @@ if (!empty($in_ring_pid)) {
                              $this_picture_date,
                              $next_links[$in_ring_uid]);
             if (!empty($l)) {
-                $next_menu[] = '<li ' . $linkColor['next'] . ">$l</li>\n";
+                $next_menu[] = '<span ' . $linkColor['next'] . ">$l</span>\n";
             }
         }
         if ($in_slide_show > 0) {
             $l = "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
             $l .= '<img src="button.php?in_button=Stop Show">';
             $l .= "</a>\n";
-            $next_menu[] = '<li ' . $linkColor['people'] . ">$l</li>\n";
+            $next_menu[] = '<span ' . $linkColor['people'] . ">$l</span>\n";
         } else {
             foreach ($next_links as $thisUID => $thisName) {
                 if ($in_ring_uid == $thisUID) {continue;}
@@ -528,18 +519,16 @@ if (!empty($in_ring_pid)) {
                                  $next_links[$thisUID],
                                  $linkColor['people']);
                 if (!empty($l)) {
-                    $next_menu[] = '<li>' . $l . "</li>\n";
+                    $next_menu[] = '<span>' . $l . "</span>\n";
                 }
             }
         }
     }
 
-    $end_menu = get_end_menu($this_pid);
+    $end_menu = get_menu($this_pid);
     foreach ($end_menu as $l) {
-        $menu_height += $font_size;
-        $next_menu[] = '<li ' . $linkColor['people'] . ">$l</li>\n";
+        $next_menu[] = '<span ' . $linkColor['people'] . ">$l</span>\n";
     }
-    $next_menu[] = "</ul>\n";
 
 }
 
@@ -564,6 +553,8 @@ if (!empty($in_ring_pid)) {
     display:block;
     margin-left: auto;
     margin-right: auto;
+    max-width: 100%;
+    height: auto;
 }
 
 body {
@@ -578,21 +569,6 @@ header {
   text-align: center;
   font-size: 12px;
   color: white;
-}
-
-/* Create two columns/boxes that floats next to each other */
-nav {
-  float: left;
-  width: 20%;
-  background: #000066;
-  padding: 2px;
-}
-
-/* Style the list inside the menu */
-nav ul {
-  color: white;
-  list-style-type: none;
-  padding: 0;
 }
 
 .link-red {
@@ -642,11 +618,23 @@ footer {
 <body>
 
 <header>
-  Rings
+<?php
+echo $this_ring_name . ' - ' . $this_picture_date;
+if (!empty($in_ring_uid)) {
+    echo ' - Press Return for Next Picture';
+}
+?>
+
 </header>
 
+  <article>
+    <a href="<?php echo $this_url_next; ?>">
+    <img class="myimage" src="<?php echo $image_url; ?>">
+    </a>
+  </article>
+</section>
+
 <section>
-  <nav>
 <?php
 
 // selection menu
@@ -657,37 +645,36 @@ foreach ($next_menu as $m) {
   <br/>
 
   <p style="color: #ffffff">
-  <?php echo $this_picture_date; ?>
-  </p>
-
-  <p style="color: #ffffff">
 <?php
 // Display comments
-$sel = 'SELECT uid, cid, comment FROM picture_comments_grades ';
-$sel .= "WHERE pid = $in_ring_pid ";
-$sel .= 'ORDER BY uid, cid ';
+$sel = 'SELECT pc.uid, pc.cid, pc.comment, pp.display_name ';
+$sel .= 'FROM picture_comments_grades pc ';
+$sel .= 'LEFT OUTER JOIN people_or_places pp ';
+$sel .= 'ON (pc.uid = pp.auth_uid) ';
+$sel .= "WHERE pc.pid = $in_ring_pid ";
+$sel .= 'ORDER BY pc.uid, pc.cid ';
 $result=  $DBH->query($sel);
-$last_uid = '';
+$last_name = '';
 if ($result) {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        echo '<p style="color: #ffffff">' . "\n";
-        if ($last_uid != $row['uid']) {
-            $last_uid = $row['uid'];
-            echo "$last_uid <br/>\n";
+        if (array_key_exists('display_name', $row)
+            && $row['display_name'] != null) {
+            $this_name = $row['display_name'];
+        } else {
+            $this_name = $row['uid'];
         }
+        if ($this_name != $last_name) {
+            echo "<br>\n";
+            echo "$this_name commented:<br/>\n";
+            echo '<blockquote style="color: white;">' . "\n";
+        }
+        $last_uid = $row['uid'];
         echo $row['comment'] . "\n";
-        echo "</p>\n";
+        echo "</blockquote>\n";
     }
 }
 ?>
   </p>
-  </nav>
-  <article>
-    <a href="<?php echo $this_url_next; ?>">
-    <img class="myimage" src="<?php echo $image_url; ?>" >
-    </a>
-  </article>
-</section>
 
 <footer>
 <?php sys_display_msg(); ?>
