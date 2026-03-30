@@ -1,3 +1,9 @@
+picture-rings (3.13) unstable; urgency=medium
+
+  * Correct date and user selections in picture sort.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 30 Mar 2026 22:30:31 +0000
+
 picture-rings (3.12) unstable; urgency=medium
 
   * Updates to display in picture_select.

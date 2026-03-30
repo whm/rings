@@ -140,9 +140,7 @@ function print_row ($n, $r) {
         echo "      <br/>Duplicates: $duplicate_list\n";
     }
     echo "  </td>\n";
-    echo '  <td><input name="up_picture_date_' . $n . '"' . "\n";
-    echo '             type="text" size="18"' . "\n";
-    echo '             value="' . $r['picture_date'] . '">' . "\n";
+    echo '  <td> ' . $r['picture_date'] . "\n";
     echo "  </td>\n";
     echo "  <td>$plist\n";
     echo "  </td>\n";
@@ -161,13 +159,6 @@ function print_row ($n, $r) {
     echo "              value=\"C\" $chk_grade_c>C\n";
     echo "  </td>\n";
     echo "</tr>\n";
-    echo "<tr>\n";
-    echo '  <td colspan="2" align="right">Description:</td>' . "\n";
-    echo '  <td colspan="5"><textarea name="up_description_' . $n . '" ';
-    echo 'rows="2" ';
-    echo 'cols="60">' . $r['description'] . "</textarea>\n";
-    echo "  </td>\n";
-    echo " <tr>\n";
 }
 
 ##############################################################################
@@ -210,7 +201,7 @@ if (!empty($in_button_find) || !empty($in_new)) {
     $_SESSION['s_order_by'] = $in_order;
 
     $word = 'WHERE';
-    if (!empty($cond)) {
+    if (!empty($condition)) {
         $word = 'AND';
     }
 
@@ -221,11 +212,14 @@ if (!empty($in_button_find) || !empty($in_new)) {
         $in_uids = array('new');
     }
 
-    if (count($in_uids) == 0) {
-        if (count($_SESSION['sort_uids']) > 0) {
+    if (!is_array($in_uids)) {
+        if (is_array($_SESSION['sort_uids'])
+            && count($_SESSION['sort_uids']) > 0) {
             $in_uids = $_SESSION['sort_uids'];
         }
-    } elseif (count($in_uids) > 0) {
+    }
+    if (is_array($in_uids) && count($in_uids) > 0) {
+        $uid_condition = '';
         $_SESSION['sort_uids'] = $in_uids;
         $uid_word .= '(';
         $uid_select = array();
@@ -483,7 +477,7 @@ if ($result) {
         }
     }
 
-    if ($last_row['pid'] > 0) {
+    if (array_key_exists('pid', $last_row) && $last_row['pid'] > 0) {
         print_row ($cnt, $last_row);
     }
 
