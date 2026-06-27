@@ -1,3 +1,9 @@
+picture-rings (3.14) unstable; urgency=medium
+
+  * Add missing export of dup_check from Rings::Common.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 27 Jun 2026 07:22:58 +0000
+
 picture-rings (3.13) unstable; urgency=medium
 
   * Correct date and user selections in picture sort.

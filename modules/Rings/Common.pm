@@ -40,6 +40,7 @@ BEGIN {
       check_picture_size
       create_picture_dirs
       create_picture
+      dup_check
       file_signature
       get_config
       get_id_list
