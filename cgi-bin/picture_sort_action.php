@@ -17,7 +17,7 @@ $in_uids           = get_request('in_uids');
 // ----------------------------------------------------
 // Main Routine
 
-if (count($in_uids) > 0) {
+if (!empty($in_uids) > 0) {
     $_SESSION['sort_uids'] = $in_uids;
 }
 
@@ -26,9 +26,7 @@ if (count($in_uids) > 0) {
 
 if ( $in_button_update == 'Update' ) {
 
-    $flds['description']  = 's';
-    $flds['grade']        = 's';
-    $flds['picture_date'] = 's';
+    $flds['grade'] = 's';
 
     for ($i=0; $i<$in_up_picture_cnt; $i++) {
 

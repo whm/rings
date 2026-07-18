@@ -140,6 +140,8 @@ function print_row ($n, $r) {
         echo "      <br/>Duplicates: $duplicate_list\n";
     }
     echo "  </td>\n";
+    echo '  <td> ' . $r['picture_lot'] . "\n";
+    echo "  </td>\n";
     echo '  <td> ' . $r['picture_date'] . "\n";
     echo "  </td>\n";
     echo "  <td>$plist\n";
@@ -240,7 +242,7 @@ if (!empty($in_button_find) || !empty($in_new)) {
         }
     }
 
-    # Count tne number of rows
+    # Count the number of rows
     $_SESSION['s_num_user_rows'] = 0;
     $cnt_sel = 'SELECT COUNT(DISTINCT p.pid) AS cnt ';
     $cnt_sel .= "FROM pictures_information p ";
@@ -453,7 +455,8 @@ if ($_SESSION['s_num_user_rows']>0) {
   <tr>
     <th>&nbsp;</th>
     <th>Picture ID</th>
-    <th>Date Taken</th>
+    <th>Picture Lot</th>
+    <th>Picture Date</th>
     <th>Picture Details</th>
     <th>Rotation</th>
     <th>Grade</th>

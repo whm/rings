@@ -1,3 +1,10 @@
+picture-rings (3.15) unstable; urgency=medium
+
+  * Fixes to the picture sort update script.  Add lot to picture
+    sort display.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 18 Jul 2026 06:19:49 +0000
+
 picture-rings (3.14) unstable; urgency=medium
 
   * Add missing export of dup_check from Rings::Common.
