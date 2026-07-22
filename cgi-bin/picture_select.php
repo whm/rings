@@ -34,6 +34,8 @@ $linkColor['action'] = 'class="link-pink"';
 $linkColor['next']   = 'class="link-yellow"';
 $linkColor['people'] = 'class="link-green"';
 $linkColor['text']   = 'class="link-white"';
+$linkSep['open']     = '(';
+$linkSep['close']    = ')';
 
 ##############################################################################
 # Subroutines
@@ -47,40 +49,47 @@ function get_menu ($this_pid) {
     global $ring_user;
     global $ring_user_uid;
     global $linkColor;
-
+    global $linkSep;
+    
     $end_menu = array();
 
     # Allow caching of images for a day
     $i = date('Ymd');
-    $end_menu[] = '<a ' . $linkColor['action'] . ' '
+    $end_menu[] = $linkSep['open'] . '<a '
+        . $linkColor['action'] . ' '
         . 'href="display.php'
         . '?in_pid=' . $this_pid
         . '&in_size=raw'
         . '&rand=' . $i
         . '" target="_blank">'
         . 'Raw Image'
-        . '</a>';
+        . '</a>' . $linkSep['close'];
 
     if (isset($ring_user) && $ring_user > 0) {
-        $comment_link = '<a ' . $linkColor['action'] . ' '
+        $comment_link = $linkSep['open'] . '<a '
+                    . $linkColor['action'] . ' '
                     . 'href="#commentTag" '
                     . 'name="commentTag" '
                     . "onClick=\"add_comment('$ring_user_uid', $this_pid)\">"
-                    . 'Update Comments</a>';
+                    . 'Update Comments</a>'
+                    . $linkSep['close'];
         $end_menu[] = $comment_link;
 
-        $date_link = '<a ' . $linkColor['action'] . ' '
+        $date_link = $linkSep['open'] . '<a '
+                    . $linkColor['action'] . ' '
                     . 'href="#dateTag" '
                     . 'name="dateTag" '
                     . "onClick=\"add_date($this_pid)\">"
                     . 'Update Date</a>';
         $end_menu[] = $date_link;
 
-        $email_link = '<a ' . $linkColor['action'] . ' '
+        $email_link = $linkSep['open'] . '<a '
+                    . $linkColor['action'] . ' '
                     . 'href="#emailTag" '
                     . 'name="emailTag" '
                     . "onClick=\"add_email_list($this_pid)()\">"
-                    . 'Add to email</a>';
+                    . 'Add to email</a>'
+                    . $linkSep['close'];
         if (!empty($_SESSION['s_email_list'])) {
             $email_list = explode(" ", $_SESSION['s_email_list']);
             $email_cnt = count($email_list) - 1;
@@ -90,25 +99,31 @@ function get_menu ($this_pid) {
             $end_menu[] = $email_link;
         }
         if ($ring_admin) {
-            $end_menu[] = '<a ' . $linkColor['action'] . ' '
+            $end_menu[] = $linkSep['open'] . '<a '
+                 . $linkColor['action'] . ' '
                  . 'href="picture_maint.php'
                  . '?in_pid=' . $this_pid
                  . '" target="_blank">'
                  . 'Edit'
-                 . '</a>';
+                 . '</a>'
+                 . $linkSep['close'];
         }
     } else {
-        $end_menu[] = '<a ' . $linkColor['action'] . ' '
+        $end_menu[] = $linkSep['open'] . '<a '
+            . $linkColor['action'] . ' '
             . 'href="' . auth_url($_SERVER['PHP_SELF'])
             . '?in_ring_pid=' . $this_pid . '">'
             . 'Login'
-            . '</a>';
+            . '</a>'
+            . $linkSep['close'];
     }
 
-    $end_menu[] = '<a ' . $linkColor['next'] . ' '
+    $end_menu[] = $linkSep['open'] . '<a '
+        . $linkColor['next'] . ' '
         . 'href="index.php">'
         . 'Home'
-        . '</a>';
+        . '</a>'
+        . $linkSep['close'];
 
     return $end_menu;
 }
@@ -274,6 +289,7 @@ function make_a_link ($thisUID,
                       $thisClass) {
     global $CONF;
     global $DBH;
+    global $linkSep;
 
     $thisLink = '';
     if (auth_picture_invisible($thisPID)) {return $thisLink;}
@@ -316,9 +332,9 @@ function make_a_link ($thisUID,
     if (!empty($_SESSION['button_type']) && $_SESSION['button_type'] == 'G') {
         $thisLink .= '<img src="button.php?in_button=' . $urlName . '">';
     } else {
-        $thisLink .= $thisName;
+        $thisLink .= $linkSep['open'] . $thisName . $linkSep['close'] ;
     }
-    $thisLink .= "</a>\n";
+    $thisLink .= '</a>' . "\n";
 
     return $thisLink;
 
@@ -506,9 +522,11 @@ if (!empty($in_ring_pid)) {
             }
         }
         if ($in_slide_show > 0) {
-            $l = "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
+            $l = $linkSep['open'];
+            $l .= "<a href=\"?in_slide_show=0&in_ring_pid=$this_pid\">";
             $l .= '<img src="button.php?in_button=Stop Show">';
-            $l .= "</a>\n";
+            $l .= '</a>';
+            $l .= $linkSep['close'] . "\n";
             $next_menu[] = '<span ' . $linkColor['people'] . ">$l</span>\n";
         } else {
             foreach ($next_links as $thisUID => $thisName) {
@@ -673,12 +691,14 @@ if ($result) {
         echo "</blockquote>\n";
     }
 }
-?>
-  </p>
 
-<footer>
-<?php sys_display_msg(); ?>
-</footer>
+echo "</p>\n";
+if (!empty($_SESSION['msg'])) {
+    echo "<footer>\n";
+    sys_display_msg();
+    echo "</footer>\n";
+}
+?>
 
 </Body>
 </html>
@@ -716,6 +736,9 @@ function add_date(pid) {
 <?php
 if ($in_slide_show > 0) {
 
+    if (empty($_SESSION['display_seconds'])) {
+        $_SESSION['display_seconds'] = 5;
+    }
     $display_seconds = $_SESSION['display_seconds'];
     if ($display_seconds<3) {
         $display_seconds = 3;
