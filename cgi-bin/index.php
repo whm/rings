@@ -181,6 +181,8 @@ function showPreferences(){
 
 <body bgcolor="#eeeeff">
 
+<div class="content">
+
 <h1><?php echo $CONF['ring_name']; ?>'s Photographs </h1>
 <h2>Pick a Picture Group</h2>
 
@@ -190,7 +192,7 @@ function showPreferences(){
 <table border="0" cellpadding="2">
 
 <tr>
-<th align="right">Pick a Group:</th>
+<th align="left">Pick a Group:</th>
 <td align="left">
 <select name="in_group_id"
         onChange="gotoGroup()">
@@ -224,7 +226,7 @@ if ($result = $DBH->query($sel)) {
 </tr>
 
 <tr>
-<th align="right" valign="top">Show Preferences:</th>
+<th align="left" valign="top">Show Preferences:</th>
 <td><input type="radio" name="in_pref_display"  <?php echo $chk_pref_yes;?>
            onClick="showPreferences()" value="Y">Yes
     &nbsp;&nbsp;
@@ -425,7 +427,6 @@ if (isset($in_group_id)) {
 
 ?>
 
-<p>
 <hr>
 <h2>Random Notes</h2>
 
@@ -481,6 +482,9 @@ descriptions or whatever contact <?php echo $CONF['ring_admin'];?>.
 
 <!-- Message area -->
 <?php sys_display_msg(); ?>
+
+</div>
+
 </Body>
 </html>
 

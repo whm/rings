@@ -190,3 +190,16 @@ input.access {
     float:   left;
     padding: 3px;
 }
+
+.content {
+    max-width: 75ch;
+    margin: 0 auto;
+}
+
+.content p {
+    margin: 1em 0;
+}
+
+.content ul {
+    margin: 1em 0;
+}
