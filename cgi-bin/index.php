@@ -133,17 +133,20 @@ if ($in_pref_display == 'Y') {
 $cookie_value = '';
 $cookie_life = time()+315360000;
 foreach ($cm as $cid => $sid) {
-    sys_msg("cid:$cid");
-    sys_msg("sid:$sid");
-    sys_msg("session:" . $_SESSION[$sid]);
     $cookie_value .= "|$cid=" . $_SESSION[$sid];
-    sys_msg("cookie_val:$cookie_value");
+    if ($CONF['debug']) {
+        syslog(LOG_DEBUG, "cid:$cid");
+        syslog(LOG_DEBUG, "sid:$sid");
+        syslog(LOG_DEBUG, "session:" . $_SESSION[$sid]);
+        syslog(LOG_DEBUG, "cookie_val:$cookie_value");
+    }
 }
 setcookie($cookie_id, $cookie_value, $cookie_life);
-sys_msg("cookie_id: $cookie_id");
-sys_msg("cookie_value: $cookie_value");
-sys_msg("cookie_life: $cookie_life");
-
+if ($CONF['debug']) {
+    syslog(LOG_DEBUG, "cookie_id: $cookie_id");
+    syslog(LOG_DEBUG, "cookie_value: $cookie_value");
+    syslog(LOG_DEBUG, "cookie_life: $cookie_life");
+}
 ?>
 <html>
 <head>
