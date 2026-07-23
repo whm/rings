@@ -30,6 +30,8 @@ H3 {color: navy;
         font-weight: bold;
         font-family: sans-serif;}
 P {color: Black;
+        max-width: 75ch;
+        margin: 1em auto;
         text-decoration: none;
         font-style: normal;
         font-family: sans-serif;}
