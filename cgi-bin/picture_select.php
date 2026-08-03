@@ -80,7 +80,7 @@ function get_menu ($this_pid) {
                     . 'href="#dateTag" '
                     . 'name="dateTag" '
                     . "onClick=\"add_date($this_pid)\">"
-                    . 'Update Date</a>';
+                    . 'Update Date)</a>';
         $end_menu[] = $date_link;
 
         $email_link = $linkSep['open'] . '<a '
@@ -567,26 +567,37 @@ if (!empty($in_ring_pid)) {
   box-sizing: border-box;
 }
 
-.myimage {
-    display:block;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 100%;
-    height: auto;
-}
-
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #000066;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #000066;
 }
 
 /* Style the header */
 header {
-  background-color: #000066;
-  padding: 2px;
-  text-align: center;
-  font-size: 12px;
-  color: white;
+    flex: 0 0 auto;
+    color: #FFFFFF;
+}
+
+#viewer {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#viewer img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+#nav {
+    flex: 0 0 auto;
+    padding: 0.75em;
 }
 
 .link-red {
@@ -608,28 +619,6 @@ header {
     color: #ffffff;
 }
 
-article {
-  float: middle;
-  padding: 10px;
-  width: 80%;
-  background-color: #000000;
-}
-
-/* Clear floats after the columns */
-section::after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* Style the footer */
-footer {
-  background-color: #ffffff;
-  padding: 10px;
-  text-align: center;
-  color: black;
-}
-
 </style>
 </head>
 
@@ -645,14 +634,13 @@ if (!empty($in_ring_uid)) {
 
 </header>
 
-  <article>
-    <a href="<?php echo $this_url_next; ?>">
-    <img class="myimage" src="<?php echo $image_url; ?>">
-    </a>
-  </article>
-</section>
+<div id="viewer">
+  <!-- a href="<?php echo $this_url_next; ?>" -->
+    <img src="<?php echo $image_url; ?>" alt="">
+  <!-- /a -->
+</div>
 
-<section>
+<div id="nav">
 <?php
 
 // selection menu
@@ -662,7 +650,6 @@ foreach ($next_menu as $m) {
 ?>
   <br/>
 
-  <p style="color: #ffffff">
 <?php
 // Display comments
 $sel = 'SELECT pc.uid, pc.cid, pc.comment, pp.display_name ';
@@ -682,7 +669,7 @@ if ($result) {
             $this_name = $row['uid'];
         }
         if ($this_name != $last_name) {
-            echo "<br>\n";
+            echo "</br>";
             echo "$this_name commented:<br/>\n";
             echo '<blockquote style="color: white;">' . "\n";
         }
@@ -692,13 +679,14 @@ if ($result) {
     }
 }
 
-echo "</p>\n";
 if (!empty($_SESSION['msg'])) {
     echo "<footer>\n";
     sys_display_msg();
     echo "</footer>\n";
 }
 ?>
+
+</div>
 
 </Body>
 </html>
@@ -762,6 +750,10 @@ document.addEventListener('keydown', function(event) {
         location = "<?php echo $this_url_next; ?>";
     }
 });
+
+document.getElementById("viewer").onclick = function () {
+    location = "<?php echo $this_url_next; ?>";
+};
 
 //avoid form warning if user clicks refresh
 window.history.replaceState(null,null);

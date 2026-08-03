@@ -4,8 +4,9 @@ picture-rings (3.15) unstable; urgency=medium
     sort display.
   * Minor formating update to picture_select text links.
   * Update to style in index_maint and index.
+  * Size the displayed picture to the browser view port.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 23 Jul 2026 23:22:00 +0000
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 03 Aug 2026 06:34:32 +0000
 
 picture-rings (3.14) unstable; urgency=medium
 
