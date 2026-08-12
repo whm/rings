@@ -87,9 +87,9 @@ sub db_connect {
       . 'database='
       . $CONF->db_name;
     $DBH = DBI->connect($dbi, $CONF->db_user, $CONF->db_password)
-      or die "ERROR: Can't connect to database $dbi for read\n";
+      or die "ERROR: Can't connect to database $dbi for read $DBI::errstr\n";
     $DBH_UPDATE = DBI->connect($dbi, $CONF->db_user, $CONF->db_password)
-      or die "ERROR: Can't connect to database $dbi for update\n";
+      or die "ERROR: Can't connect to database $dbi for update $DBI::errstr\n";
     return;
 }
 
