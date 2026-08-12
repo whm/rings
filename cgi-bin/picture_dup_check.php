@@ -61,9 +61,9 @@ if ($result) {
     <th>Delete Root</th>
     <th>Root PID</th>
     <th>Root Picture</th>
-    <th>Delete Leaf</th>
-    <th>Leaf PID</th>
     <th>Leaf Picture</th>
+    <th>Leaf PID</th>
+    <th>Delete Leaf</th>
   </tr>
 <?php
     $cnt = 0;
@@ -90,9 +90,9 @@ if ($result) {
         echo '    <td align="center">' . $rootDel . "</td>\n";
         echo '    <td>' . $row['rootpid'] . "</td>\n";
         echo '    <td>' . $rootImg . "</td>\n";
-        echo '    <td align="center">' . $leafDel . "</td>\n";
-        echo '    <td>' . $row['leafpid'] . "</td>\n";
         echo '    <td>' . $leafImg . "</td>\n";
+        echo '    <td>' . $row['leafpid'] . "</td>\n";
+        echo '    <td align="center">' . $leafDel . "</td>\n";
         echo "  </tr>\n";
         $cnt++;
     }
