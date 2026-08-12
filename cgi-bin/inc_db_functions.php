@@ -399,7 +399,7 @@ function get_fld_names ($this_table) {
 //     picture id is specified then the SQL selects only root
 //     pid matches.
 
-function dup_sql ($pid) {
+function dup_sql ($pid = null) {
 
     $sel = 'SELECT root.pid rootpid';
     $sel .= ', leaf.pid leafpid';
