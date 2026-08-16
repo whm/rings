@@ -103,8 +103,8 @@ if (!$id_list{$id}) {
     print("INFO: Valid IDs:\n");
     for my $i (sort keys %id_list) {
         print("    $i\n");
-        exit 1;
     }
+    exit 1;
 }
 my $ring_conf = "/etc/rings/${id}.conf";
 if ($opt_debug) {

@@ -2,8 +2,9 @@ picture-rings (3.18) unstable; urgency=medium
 
   * Bug fix in picture_dup_check.php.
   * Reorder Duplicate Check display.
+  * Bugs fix in display of valid ring IDs.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 12 Aug 2026 20:38:45 +0000
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 16 Aug 2026 18:34:00 +0000
 
 picture-rings (3.17) unstable; urgency=medium
 
