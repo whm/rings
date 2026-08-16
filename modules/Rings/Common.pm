@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# Copyright (c) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2026, Bill MacAllister <bill@ca-zephyr.org>
 # File: Common.pm
 # Description: This module is used by the Rings gallery application.
 
@@ -40,7 +40,9 @@ BEGIN {
       check_picture_size
       create_picture_dirs
       create_picture
-      dup_check
+      dup_check_lot
+      dup_check_signature
+      dup_check_size
       file_signature
       get_config
       get_id_list
@@ -113,11 +115,86 @@ sub dbg {
 }
 
 # ------------------------------------------------------------------------
-# Check for duplicate pictures.  The duplication check is based on matching
-# picture signature and size.
+# Check for duplicate pictures.  This duplication check is based on
+# matching the picture_lot and file name.  The pid parameter is
+# optional since the check might be performed before there is an entry
+# in the pictures_information table.
 
-sub dup_check {
-    my ($raw_size, $raw_signature) = @_;
+sub dup_check_lot {
+    my ($ring_lot, $ring_file, $pid) = @_;
+
+    my @dup_list = ();
+
+    my $sel = 'SELECT pid ';
+    $sel .= ' FROM pictures_information';
+    $sel .= ' WHERE picture_lot = ?';
+    $sel .= ' AND source_file = ?';
+    if ($pid) {
+        $sel .= ' AND pid != ?';
+    }
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare($sel);
+    if ($pid) {
+        $sth->execute($ring_lot, $ring_file, $pid);
+    } else {
+        $sth->execute($ring_lot, $ring_file);
+    }
+    if ($sth->err) {
+        print("INFO: ring_lot=$ring_lot ring_file=$ring_file pid=$pid");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        push @dup_list, $row->{pid};
+    }
+
+    return @dup_list;
+}
+
+# ------------------------------------------------------------------------
+# Check for duplicate pictures.  This duplication check is based on
+# matching picture signature, The pid parameter is optional since the
+# check might be performed before there is an entry in the
+# pictures_information table.
+
+sub dup_check_signature {
+    my ($raw_signature, $pid) = @_;
+
+    my @dup_list = ();
+
+    my $sel = 'SELECT pid ';
+    $sel .= ' FROM pictures_information';
+    $sel .= ' WHERE raw_signature = ?';
+    if ($pid) {
+        $sel .= ' AND pid != ?';
+    }
+    dbg($sel) if $CONF->debug;
+    my $sth = $DBH->prepare($sel);
+    if ($pid) {
+        $sth->execute($raw_signature, $pid);
+    } else {
+        $sth->execute($raw_signature);
+    }
+    if ($sth->err) {
+        print("INFO: raw_signature=$raw_signature pid=$pid");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        push @dup_list, $row->{pid};
+    }
+
+    return @dup_list;
+}
+
+# ------------------------------------------------------------------------
+# Check for duplicate pictures.  This duplication check is based on
+# matching picture signature and size.  The pid parameter is optional
+# since the check might be performed before there is an entry in the
+# pictures_information table.
+
+sub dup_check_size {
+    my ($raw_size, $raw_signature, $pid) = @_;
 
     my @dup_list = ();
 
@@ -125,11 +202,19 @@ sub dup_check {
     $sel .= ' FROM pictures_information';
     $sel .= ' WHERE raw_picture_size = ?';
     $sel .= ' AND raw_signature = ?';
+    if ($pid) {
+        $sel .= ' AND pid != ?';
+    }
     dbg($sel) if $CONF->debug;
     my $sth = $DBH->prepare($sel);
-    $sth->execute($raw_size, $raw_signature);
+    if ($pid) {
+        $sth->execute($raw_size, $raw_signature, $pid);
+    } else {
+        $sth->execute($raw_size, $raw_signature);
+    }
     if ($sth->err) {
-        print("INFO: raw_size=$raw_size raw_signature=$raw_signature");
+        print(
+            "INFO: raw_size=$raw_size raw_signature=$raw_signature pid=$pid");
         sql_die($sel, $sth->err, $sth->errstr);
     }
 
@@ -1677,7 +1762,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2025, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2026, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full

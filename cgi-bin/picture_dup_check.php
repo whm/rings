@@ -2,7 +2,7 @@
 // -------------------------------------------------------------
 // picture_dup_check.php
 // author: Bill MacAllister
-// date: August 2025
+// date: August 2025-2026
 
 // Open a session, connect to the database, load convenience routines,
 // and initialize the message area.
@@ -25,6 +25,42 @@ $pics_per_page = 100;
 <title>Duplicate Check</title>
 <?php require('inc_page_head.php'); ?>
 <?php require('inc_page_style_rings.php');?>
+
+<!-- ----------------------------------------------------------------- -->
+<!-- Select all leaf duplicates -->
+<script>
+function leafAll(source) {
+    document.querySelectorAll('input[type="checkbox"][name^="in_root_"]')
+        .forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+
+    document.querySelectorAll('input[type="checkbox"][name^="in_leaf_"]')
+        .forEach(function(checkbox) {
+            checkbox.checked = source.checked;
+        });
+
+    document.getElementById('in_root_all').checked = false;
+}
+
+<!-- ----------------------------------------------------------------- -->
+<!-- Select all root duplicates -->
+
+function rootAll(source) {
+    document.querySelectorAll('input[type="checkbox"][name^="in_leaf_"]')
+        .forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+
+    document.querySelectorAll('input[type="checkbox"][name^="in_root_"]')
+        .forEach(function(checkbox) {
+            checkbox.checked = source.checked;
+        });
+
+    document.getElementById('in_leaf_all').checked = false;
+}
+</script>
+
 </head>
 
 <body bgcolor="#eeeeff">
@@ -58,12 +94,22 @@ if ($result) {
 <form method="post" action="picture_dup_check_action.php">
 <table border="1">
   <tr>
-    <th>Delete Root</th>
-    <th>Root PID</th>
-    <th>Root Picture</th>
-    <th>Leaf Picture</th>
-    <th>Leaf PID</th>
-    <th>Delete Leaf</th>
+    <th colspan="3" align="center">
+      Root
+      <input type="checkbox" id="in_root_all" onclick="rootAll(this)">
+    </th>
+    <th colspan="3" align="center">
+      Leaf
+      <input type="checkbox" id="in_leaf_all" onclick="leafAll(this)">
+    </th>
+  </tr>
+  <tr>
+    <th>Delete</th>
+    <th>PID</th>
+    <th>Picture</th>
+    <th>Picture</th>
+    <th>PID</th>
+    <th>Leaf</th>
   </tr>
 <?php
     $cnt = 0;

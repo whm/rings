@@ -158,7 +158,7 @@ sub process_pids {
         my %pic = get_meta_data($pic_path);
 
         # Duplicate check
-        my @dup_list = dup_check($pic{'size'}, $pic{'signature'});
+        my @dup_list = dup_check_size($pic{'size'}, $pic{'signature'}, $pid);
         if (scalar(@dup_list) > 0) {
             my $msg   = "$pid is duplicated by: ";
             my $comma = '';

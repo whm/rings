@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2016-2026, Bill MacAllister <bill@ca-zephyr.org>
 # File: ring-load-daemon
 # Description: load pictures into a ring database
 
@@ -85,61 +85,7 @@ sub save_file {
 
     # Check for duplicate picture
     if (!$opt_force) {
-        my $dup_cnt = 0;
-        # Check the signature for a duplication
-        my $sql = "SELECT pid FROM pictures_information ";
-        $sql .= "WHERE raw_signature = ? ";
-        if ($CONF->debug) {
-            dbg($sql);
-        }
-        my $sth = $DBH->prepare($sql);
-        $sth->execute($pic{ring_signature});
-        if ($sth->err) {
-            sql_die($sql, $sth->err, $sth->errstr);
-        }
-        while (my $row = $sth->fetchrow_hashref()) {
-            $dup_cnt++;
-            msg(
-                'info',
-                "File signature for $a_fullname duplicates $row->{pid}"
-            );
-        }
-        # But duplicate pictures can have different signature, so
-        # check other data as well.
-        if (!$dup_cnt) {
-            my $this_file = $a_filename;
-            $this_file =~ s/[.]*$a_filetype$//xms;
-            my $sel = 'SELECT pid, raw_picture_size ';
-            $sel .= 'FROM pictures_information ';
-            $sel .= 'WHERE file_name LIKE ? ';
-            $sel .= 'AND camera = ? ';
-            $sel .= 'AND shutter_speed = ? ';
-            $sel .= 'AND fstop = ? ';
-            $sel .= "ORDER BY pid ";
-            my $sth = $DBH->prepare($sel);
-            $sth->execute(
-                '%' . $this_file . '%',
-                $pic{'ring_camera'},
-                $pic{'ring_shutterspeed'},
-                $pic{'ring_fstop'}
-            );
-            if ($sth->err) {
-                sql_die($sel, $sth->err, $sth->errstr);
-            }
-
-            while (my $row = $sth->fetchrow_hashref()) {
-                if ($row->{raw_picture_size} > 0) {
-                    my $size_match = $in_file_size / $row->{raw_picture_size};
-                    if ($size_match < 1.05 && $size_match > .95) {
-                        $dup_cnt++;
-                        msg(
-                            'info',
-                            "File size of $a_fullname duplicates $row->{pid}"
-                        );
-                    }
-                }
-            }
-        }
+        my $dup_cnt = dup_check_signature($pic{ring_signature});
         if ($dup_cnt > 0) {
             msg('info', "SKIPPING: $a_fullname");
             return;
@@ -266,7 +212,7 @@ if ($opt_id) {
 }
 
 if ($opt_debug) {
-    print("DEBUG: Debugging started.");
+    print("DEBUG: Debugging started.\n");
 }
 
 my $end = 0;
@@ -366,7 +312,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2016-2024, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2016-2026, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full
