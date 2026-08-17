@@ -12,8 +12,13 @@ use Rings::Common;
 my $cnt;
 my $opt_conf;
 my $opt_debug;
+my $opt_end;
 my $opt_help;
+my $opt_id;
 my $opt_manual;
+my $opt_progress;
+my $opt_signature;
+my $opt_start;
 my $opt_update;
 
 ##############################################################################
@@ -26,15 +31,19 @@ my $opt_update;
 sub read_and_update {
     my ($pid_start, $pid_end) = @_;
 
-    # get a list to process first because we need to process
-    # the potentially large blob one at a time
-
-    my @pid_list;
-
-    my $sel = "SELECT pid ";
-    $sel .= "FROM pictures_information ";
-    $sel .= "WHERE pid >= $pid_start AND pid <= $pid_end ";
-    $sel .= "ORDER BY pid ";
+    my $sel = 'SELECT picture_details.pid';
+    $sel .= ', picture_details.mime_type';
+    $sel .= ', pictures_information.raw_signature';
+    $sel .= ', pictures_information.picture_lot';
+    $sel .= ', picture_types.file_type';
+    $sel .= ' FROM picture_details';
+    $sel .= ' JOIN pictures_information';
+    $sel .= ' ON (pictures_information.pid = picture_details.pid)';
+    $sel .= ' JOIN picture_types';
+    $sel .= ' ON (picture_types.mime_type = picture_details.mime_type)';
+    $sel .= " WHERE picture_details.size_id = 'raw'";
+    $sel .= " AND picture_details.pid >= $pid_start";
+    $sel .= " AND picture_details.pid <= $pid_end";
 
     if ($opt_debug) {
         dbg($sel);
@@ -45,152 +54,84 @@ sub read_and_update {
     if ($sth->err) {
         sql_die($sel, $sth->err, $sth->errstr);
     }
+    my $cnt_read     = 0;
+    my $cnt_update   = 0;
+    my $cnt_progress = 0;
     while (my $row = $sth->fetchrow_hashref) {
-        push @pid_list, $row->{pid};
-    }
-
-    my $pic_cnt = scalar(@pid_list);
-    if ($pic_cnt < 1) {
-        print "\n";
-        print "No pictures found to update\n";
-        return;
-    } else {
-        print "\n";
-        print "$pic_cnt pictures found to examine for updates\n";
-        print "\n";
-    }
-
-    # now get the pictures one at a time
-    foreach my $thisPID (@pid_list) {
-
-        my $sel = "SELECT p.pid,";
-        $sel .= "p.camera, ";
-        $sel .= "p.date_taken, ";
-        $sel .= "p.picture_date, ";
-        $sel .= "p.fstop, ";
-        $sel .= "p.raw_picture_size, ";
-        $sel .= "p.shutter_speed, ";
-        $sel .= "p.date_added, ";
-        $sel .= "r.picture ";
-        $sel .= "FROM pictures_information p ";
-        $sel .= "JOIN picture_details r ";
-        $sel .= "ON (p.pid = r.pid AND r.size_id = 'raw') ";
-        $sel .= "WHERE p.pid = $thisPID ";
-
-        if ($opt_debug) {
-            dbg($sel);
+        $cnt_read++;
+        $cnt_progress++;
+        if ($opt_progress && $cnt_progress > $opt_progress) {
+            print("Records read: $cnt_read\n");
+            $cnt_progress = 0;
         }
-
-        my $sth = $DBH->prepare($sel);
-        $sth->execute();
-        if ($sth->err) {
-            sql_die($sel, $sth->err, $sth->errstr);
-        }
-        while (my $row = $sth->fetchrow_hashref) {
-            my @blob;
-            $blob[0] = $row->{picture};
-            my $thisPic = Image::Magick->New();
-            $thisPic->BlobToImage(@blob);
-
-            my ($width, $height, $size, $format, $compression)
-              = $thisPic->Get(
-                'width', 'height', 'filesize', 'format', 'compression',
-              );
-
-            # Get EXIF data using image info
-            my $info              = ImageInfo(\$blob[0]);
-            my $camera            = ${$info}{'Model'};
-            my $this_datetime     = ${$info}{'CreateDate'};
-            my $this_shutterspeed = ${$info}{'ShutterSpeed'};
-            my $this_fnumber      = ${$info}{'FNumber'};
-            if ($width == 0 || $height == 0) {
-                dbg("      width: $width");
-                dbg("     height: $height");
-                dbg(" Skipping image for $thisPID");
-                return;
-            }
-
+        if ($opt_signature) {
+            my $pid            = $row->{pid};
+            my $pic_lot        = $row->{picture_lot};
+            my $raw_file_type  = $row->{file_type};
+            my $raw_file       = "$pic_lot/raw/${pid}.$raw_file_type";
+            my $pic_path       = $CONF->picture_root . "/$raw_file";
+            my $db_signature   = $row->{raw_signature};
+            my $file_signature = image_signature($pic_path);
             if ($opt_debug) {
-                dbg("pid: $thisPID");
-                dbg("Camera: $camera");
-                dbg("DateTime: $this_datetime");
-                dbg("FStop: $this_fnumber");
-                dbg("Shutter Speed: $this_shutterspeed");
+                dbg("file: $pic_path");
+                dbg("file: $file_signature");
+                dbg("  db: $db_signature");
             }
-
-            # update date and time from the camera and the size
-            # of the raw image
-
-            if ($this_datetime
-                =~ /(\d{4,4})[\:\-](\d{2,2})[\:\-](\d{2,2})[\s\:](\d{2,2})\:(\d{2,2})\:(\d+)/
-                && length($camera) > 0)
-            {
-
-                my $this_year = $1;
-                if ($this_year > 0) {
-                    $this_datetime = "$1\-$2\-$3 $4\:$5\:$6";
-                } else {
-                    $this_datetime = $row->{date_added};
-                }
-
-                my $this_pic_size = length($row->{picture});
-
-                my $cmd = 'UPDATE pictures_information SET ';
-                $cmd .= 'camera=?,';
-                $cmd .= 'picture_date=?,';
-                $cmd .= 'fstop=?,';
-                $cmd .= 'raw_picture_size=?,';
-                $cmd .= 'shutter_speed=?,';
-                $cmd .= 'date_last_maint=? ';
-                $cmd .= 'WHERE pid=? ';
-
+            if ($row->{raw_signature} ne $file_signature) {
+                my $cmd = 'UPDATE pictures_information SET';
+                $cmd .= ' raw_signature=?';
+                $cmd .= ' WHERE pid=? ';
                 if ($opt_debug) {
                     dbg($cmd);
+                    dbg("file_signature: $file_signature");
+                    dbg("pid: $pid");
                 }
 
-                my $sth_update = $DBH_UPDATE->prepare($cmd);
                 if ($opt_update) {
-                    print "Updating $thisPID, date taken $this_datetime\n";
-                    $sth_update->execute(
-                        $camera,        $this_datetime,     $this_fnumber,
-                        $this_pic_size, $this_shutterspeed, sql_datetime(),
-                        $thisPID,
-                    );
+                    $cnt_update++;
+                    print "Updating signature for $pid\n";
+                    my $sth_update = $DBH_UPDATE->prepare($cmd);
+                    if ($sth_update->err) {
+                        sql_die($cmd, $sth_update->err, $sth_update->errstr);
+                    }
+                    $sth_update->execute($file_signature, $pid);
                     if ($sth_update->err) {
                         sql_die($cmd, $sth_update->err, $sth_update->errstr);
                     }
                 } else {
-                    print "For pid $thisPID proposing to set:\n";
-                    print "    Camera: $camera\n";
-                    print "    Picture Date: $this_datetime\n";
-                    print "    FStop: $this_fnumber\n";
-                    print "    Picture Size: $this_pic_size\n";
-                    print "    Shutter Speed: $this_shutterspeed\n";
+                    print 'Proposing signature for ' . $row->{pid};
+                    print ' of ' . $file_signature . "\n";
                 }
             }
         }
     }
+
+    print("   Records read: $cnt_read\n");
+    print("Records updated: $cnt_update\n");
+    return;
 }
 
 ##############################################################################
 # Main Routine
 ##############################################################################
 
-print ">>> ring-set-info                    v:11-Jul-2006\n";
+print ">>> ring-set-info\n";
 
 # -- get options
 GetOptions(
-    'debug'  => \$opt_debug,
-    'conf=s' => \$opt_conf,
-    'help'   => \$opt_help,
-    'manual' => \$opt_manual,
-    'update' => \$opt_update
+    'debug'      => \$opt_debug,
+    'conf=s'     => \$opt_conf,
+    'end=i'      => \$opt_end,
+    'help'       => \$opt_help,
+    'id=s'       => \$opt_id,
+    'manual'     => \$opt_manual,
+    'progress=i' => \$opt_progress,
+    'signature'  => \$opt_signature,
+    'start=i'    => \$opt_start,
+    'update'     => \$opt_update
 );
 
 # help the poor souls out
-if (!@ARGV || $ARGV[0] == 'help') {
-    $opt_help = 1;
-}
 if ($opt_help) {
     pod2usage(-verbose => 0);
 }
@@ -199,53 +140,35 @@ if ($opt_manual) {
 }
 
 # Set the picture range to process from the command line
-my $pid_start = $ARGV[0];
+my $pid_start = $opt_start;
 if ($pid_start < 1) {
+    print("ERROR --start must be greater than one\n");
     pod2usage(-verbose => 0);
 }
-my $pid_end = $pid_start;
-if ($ARGV[1]) {
-    $pid_end = $ARGV[1];
+my $pid_end = $opt_start;
+if ($opt_end > $pid_end) {
+    $pid_end = $opt_end;
 }
 
-# Get configuration settings and initial debugging if requested.
-get_config($opt_conf);
+my %id_list = get_id_list();
+if (!$id_list{$opt_id}) {
+    print("ERROR: unknown ID $opt_id\n");
+    print("INFO: Valid IDs:\n");
+    for my $i (sort keys %id_list) {
+        print("    $i\n");
+    }
+    exit 1;
+}
+
+my $ring_conf = "/etc/rings/${opt_id}.conf";
+get_config($ring_conf);
 if ($opt_debug) {
-    $CONF->debug($opt_debug);
+    $CONF->debug(1);
 }
 if ($CONF->debug) {
-    dbg("Initialize timer.");
+    dbg("ring_conf = $ring_conf\n");
 }
-
-# -- read preferences from ./rings
-my $pref_file = $ENV{'HOME'} . '/.rings';
-my %prefs;
-if (-e $pref_file) {
-    if ($opt_debug) {
-        dbg("Reading $pref_file file");
-    }
-    open(pref, "<$pref_file");
-    while (<pref>) {
-        chomp;
-        my $inline = $_;
-        $inline =~ s/\#.*//;
-        if ($opt_debug) {
-            dbg("inline:$inline");
-        }
-        if (length($inline) > 0) {
-            if ($inline =~ /^\s*(host|db|user|pass)=(.*)/i) {
-                my $attr = lc($1);
-                my $val  = $2;
-                $val =~ s/\s+$//;
-                $prefs{$attr} = $val;
-                if ($opt_debug) {
-                    dbg("attr:$attr val:$val");
-                }
-            }
-        }
-    }
-    close pref;
-}
+db_connect();
 
 read_and_update($pid_start, $pid_end);
 
@@ -259,43 +182,41 @@ ring-set-info - set picture information from the raw picture
 
 =head1 SYNOPSIS
 
-ring-set-info --start=int [--end=int] [--update] \
-              [--host=mysql-host] [--db=databasename] \
-              --user=mysql-username --pass=mysql-password
-              [--debug] [--help] [--manual]
+ring-set-info --start=<int> --id=<ring id> [--end=<int>] [--update]
+[--progress=int] [--signature] [--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
 
-Set information from the raw picture.  This works for some digital cameras.
+Set information from the raw picture.
 
 =head1 OPTIONS AND ARGUMENTS
 
 =over 4
 
+=item --id=<ring id>
+
+The ring id to process.  Required.
+
 =item --start=int
 
-The picture id to start at.  Required.
+The picture id to start processing pictures_information entries.
+Required.
 
-=item --send=int
+=item --end=int
 
-The picture id to end at.
+The picture id to end processing pictures_informatation entries.
+If not specified then set the ending picture id to the starting
+picture id.
 
-=item --host=mysql-hostname
+=item --progress=<int>
 
-MySQL host name.  If not specified then localhost is used.
+Display progress every <int> entries processed.
 
-=item --db=databasename
+=item --signature
 
-The name of the MySQL database.  If not specified then rings is used.
-
-=item --user=mysql-username
-
-MySQL username.  Required.
-
-=item --host=mysql-password
-
-MySQL password.  Required.
+Update raw_signatures in the database that do not match the values
+derived from the files.
 
 =item --update
 
