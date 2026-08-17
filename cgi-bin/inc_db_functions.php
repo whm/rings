@@ -250,6 +250,7 @@ function db_delete_picture ($this_pid) {
     $del_tables[] = 'picture_comments_grades';
     $del_tables[] = 'picture_grades';
     $del_tables[] = 'picture_rings';
+    $del_tables[] = 'picture_details';
     $del_tables[] = 'pictures_information';
 
     foreach ($del_tables as $this_table) {

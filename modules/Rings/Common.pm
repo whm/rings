@@ -43,13 +43,13 @@ BEGIN {
       dup_check_lot
       dup_check_signature
       dup_check_size
-      file_signature
       get_config
       get_id_list
       get_meta_data
       get_next_id
       get_picture_sizes
       get_picture_types
+      image_signature
       make_picture_path
       msg
       normalize_lot
@@ -159,6 +159,9 @@ sub dup_check_lot {
 
 sub dup_check_signature {
     my ($raw_signature, $pid) = @_;
+
+    print("raw_signature = $raw_signature\n");
+    print("pid = $pid\n");
 
     my @dup_list = ();
 
@@ -653,17 +656,22 @@ sub sql_format_datetime {
 }
 
 # ------------------------------------------------------------------------
-# Take a file name, read the first n bytes, base64 encode the result and
+# Take a file name and use ImageMagick to return a signature.
 # return it.
 
-sub file_signature {
-    my ($in_file) = @_;
-    open(my $fd, '<', $in_file);
-    binmode($fd);
+# ------------------------------------------------------------------------
+# Get ImageMagick signature without get all of the meta data
 
-    my $md5 = Digest::MD5->new;
-    $md5->addfile($fd);
-    my $signature = $md5->hexdigest;
+sub image_signature {
+    my ($in_path) = @_;
+
+    my $signature;
+    if (-e $in_path) {
+        my $image = new Image::Magick;
+        $image->Read($in_path);
+        $signature = $image->Get('signature');
+        undef $image;
+    }
 
     return $signature;
 }
@@ -711,7 +719,7 @@ sub get_meta_data {
     $ret{'ring_compression'}  = lc($info{'filetype'});
     $ret{'ring_filename'}     = $info{'filename'};
     $ret{'ring_filetype'}     = lc($info{'filetype'});
-    $ret{'ring_signature'}    = file_signature($in_file);
+    $ret{'ring_signature'}    = image_signature($in_file);
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
     $ret{'ring_fstop'}        = $info{'fnumber'};
     $ret{'ring_mime_type'}    = $info{'mimetype'};
@@ -955,7 +963,7 @@ sub create_picture {
     }
     my $image_cnt = $new_pic->Write($new_path);
     my $new_size  = -s $new_path;
-    my $signature = file_signature($new_path);
+    my $signature = image_signature($new_path);
     if ($CONF->debug) {
         dbg("image_cnt = $image_cnt");
         dbg("new_size = $new_size");

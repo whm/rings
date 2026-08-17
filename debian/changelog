@@ -7,6 +7,7 @@ picture-rings (3.19) unstable; urgency=medium
     duplicate check by size/signature check.
   * Use the Rings::Common duplicate signature routine to check for
     duplicates.
+  * Add deletion of picture_details when removing duplicates.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sun, 16 Aug 2026 19:42:59 +0000
 
