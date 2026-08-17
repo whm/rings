@@ -3,7 +3,7 @@
 # ring-queue -- remctl script display ring queue status
 #
 # Written by Bill MacAllister <bill@ca-zephyr.org>
-# Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+# Copyright (c) 2024-2026 Bill MacAllister <bill@ca-zephyr.org>
 
 use strict;
 use DBI;
@@ -11,13 +11,19 @@ use Getopt::Long;
 use Pod::Usage;
 use Rings::Common;
 
+my $opt_actionclear;
 my $opt_debug;
 my $opt_help;
 my $opt_manual;
+my $opt_update;
+my $opt_uploadclear;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
+
+# ------------------------------------------------------------------------
+# Display action queue entries
 
 sub display_action_queue {
     print("\n");
@@ -31,9 +37,11 @@ sub display_action_queue {
     }
 
     my $cnt = 0;
+    printf("%7s %-16s %-16s %s\n", 'PID',   'Action', 'Status', 'Errors');
+    printf("%7s %-16s %-16s %s\n", '-' x 7, '-' x 16, '-' x 16, '-' x 16);
     while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
         printf(
-            "%7d %16s %16s %s\n",
+            "%7d %-16s %-16s %s\n",
             $row->{pid},
             $row->{action},
             $row->{status},
@@ -41,8 +49,12 @@ sub display_action_queue {
         );
         $cnt++;
     }
+    print("Action queue entries: $cnt\n");
     return;
 }
+
+# ------------------------------------------------------------------------
+# Display upload queue entries
 
 sub display_upload_queue {
     print("\n");
@@ -56,28 +68,116 @@ sub display_upload_queue {
     }
 
     my $cnt = 0;
+    printf("%-32s %-16s %s\n", 'Path',   'Status', 'Errors');
+    printf("%-32s %-16s %s\n", '-' x 32, '-' x 16, '-' x 16);
     while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
         printf(
-            "%32s %16s %s\n",
+            "%-32s %-16s %s\n",
             $row->{path},
             $row->{status},
             $row->{error_text}
         );
         $cnt++;
     }
+    print("Upload queue entries: $cnt\n");
     return;
 }
 
+# ------------------------------------------------------------------------
+# Clear action queue entries
+
+sub clear_action_entries {
+    print("\n");
+    print("Clear Action Queue Status: $opt_actionclear\n");
+
+    my $sel = 'SELECT * FROM picture_action_queue WHERE status = ?';
+    dbg($sel) if $opt_debug;
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($opt_actionclear);
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    my $cnt = 0;
+    if ($opt_update) {
+        print("Deleting action queue entries:\n");
+    } else {
+        print("Proposing to delete action queue entries:\n");
+    }
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        print('PID: ' . $row->{pid} . "\n");
+        $cnt++;
+    }
+
+    if ($opt_update) {
+        my $cmd = 'DELETE FROM picture_action_queue WHERE status = ?';
+        dbg($cmd) if $opt_debug;
+        my $sth = $DBH->prepare($cmd);
+        $sth->execute($opt_actionclear);
+        if ($sth->err) {
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        print("Action queue entries deleted: $cnt\n");
+    } else {
+        print("Action queue entries to delete: $cnt\n");
+    }
+
+    return;
+}
+
+# ------------------------------------------------------------------------
+# Clear upload queue entries
+
+sub clear_upload_entries {
+    print("\n");
+    print("Clear Upload Queue Status: $opt_uploadclear\n");
+    my $sel = 'SELECT * FROM picture_upload_queue WHERE status=?';
+    dbg($sel) if $opt_debug;
+    my $sth = $DBH->prepare($sel);
+    $sth->execute($opt_uploadclear);
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    my $cnt = 0;
+    if ($opt_update) {
+        print("Deleting upload queue entries:\n");
+    } else {
+        print("Proposing to delete upload queue entries:\n");
+    }
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        print('Path: ' . $row->{path} . "\n");
+        $cnt++;
+    }
+
+    if ($opt_update) {
+        my $cmd = 'DELETE FROM picture_upload_queue WHERE status=?';
+        dbg($cmd) if $opt_debug;
+        my $sth = $DBH->prepare($cmd);
+        $sth->execute($opt_uploadclear);
+        if ($sth->err) {
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        print("Upload queue entries deleted: $cnt\n");
+    } else {
+        print("Upload queue entries to delete: $cnt\n");
+    }
+
+    return;
+}
 ##############################################################################
 # Main routine
 ##############################################################################
 
 # -- get options
 GetOptions(
-    'debug'  => \$opt_debug,
-    'help'   => \$opt_help,
-    'manual' => \$opt_manual
-);
+    'actionclear=s' => \$opt_actionclear,
+    'debug'         => \$opt_debug,
+    'help'          => \$opt_help,
+    'manual'        => \$opt_manual,
+    'update'        => \$opt_update,
+    'uploadclear=s' => \$opt_uploadclear,
+) or die("Invalid optioni\n");
 
 if ($opt_debug) {
     print("DEBUG: output started\n");
@@ -114,9 +214,17 @@ get_config($ring_conf);
 
 db_connect();
 
-display_action_queue();
-
-display_upload_queue();
+if ($opt_actionclear || $opt_uploadclear) {
+    if ($opt_actionclear) {
+        clear_action_entries();
+    }
+    if ($opt_uploadclear) {
+        clear_upload_entries();
+    }
+} else {
+    display_action_queue();
+    display_upload_queue();
+}
 
 exit;
 
@@ -128,12 +236,14 @@ ring-queue - display the rings processing queue status
 
 =head1 SYNOPSIS
 
-ring-queue <ring id> [--help] [--manual]
+ring-queue <ring id> [--actionclear[=<status>]]
+[--uploadclear[=<status>]] [--update] [--help] [--manual] [--debug]
 
 =head1 DESCRIPTION
 
 This script queues the rings database displaying processing queue
-entries.
+entries.  The script can be used to clear error reports from the
+processing queue tables.
 
 =head1 ARGUMENTS
 
@@ -149,6 +259,21 @@ Display the processing queue status for the <ring id> ring.
 
 =over 4
 
+=item --actionclear=<status>
+
+Clear any queue entries from both the upload and action queues
+with a matching status.  The default status is 'ERROR'.
+
+=item --uploadclear=<status>
+
+Clear any queue entries from both the upload and action queues
+with a matching status.  The default status is 'ERROR'.
+
+=item --update
+
+Perform any delete actions requested.  The default is to display
+what will be deleted.
+
 =item --help
 
 Display usage information.
@@ -157,11 +282,15 @@ Display usage information.
 
 Display the man page for this script.
 
+=item --debug
+
+Display the debugging messages.
+
 =back
 
 =head1 COPYRIGHT
 
-Copyright (c) 2024 Bill MacAllister <bill@ca-zephyr.org>
+Copyright (c) 2024-2026 Bill MacAllister <bill@ca-zephyr.org>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

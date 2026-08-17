@@ -1,6 +1,7 @@
 picture-rings (3.20) unstable; urgency=medium
 
   * Update ring-set-info to set the raw_signatures.
+  * Add deletion of queue entries to the ring-queue script.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 17 Aug 2026 05:54:49 +0000
 
