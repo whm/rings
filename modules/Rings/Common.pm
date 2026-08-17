@@ -160,9 +160,6 @@ sub dup_check_lot {
 sub dup_check_signature {
     my ($raw_signature, $pid) = @_;
 
-    print("raw_signature = $raw_signature\n");
-    print("pid = $pid\n");
-
     my @dup_list = ();
 
     my $sel = 'SELECT pid ';
