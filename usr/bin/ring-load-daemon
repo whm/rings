@@ -79,15 +79,12 @@ sub save_file {
         return "Zero length file $a_fullname";
     }
 
-    # Get meta data
-    my %pic = get_meta_data($a_fullname);
-    dbg("Done reading file and meta data from: $a_fullname");
-
     # Check for duplicate picture
+    my $in_signature = image_signature($a_fullname);
     if (!$opt_force) {
-        my $dup_cnt = dup_check_signature($pic{ring_signature});
+        my $dup_cnt = dup_check_signature($in_signature);
         if ($dup_cnt > 0) {
-            msg('info', "SKIPPING: $a_fullname");
+            msg('info', "Skipping duplicate $a_fullname");
             return;
         }
     }
@@ -109,6 +106,9 @@ sub save_file {
 
     # Get the metadata of the new file and store it
     my %new_pic = get_meta_data($pic_file);
+    if ($in_signature ne $new_pic{'ring_signature'}) {
+        msg('info', "signature mismatch for $pic_file $a_fullname\n");
+    }
     store_meta_data($a_lot, $pid, \%new_pic);
     create_picture($pid, 'raw', $pic_file, \%new_pic);
 

@@ -158,14 +158,9 @@ sub process_pids {
         my %pic = get_meta_data($pic_path);
 
         # Duplicate check
-        my @dup_list = dup_check_size($pic{'size'}, $pic{'signature'}, $pid);
-        if (scalar(@dup_list) > 0) {
-            my $msg   = "$pid is duplicated by: ";
-            my $comma = '';
-            for my $p (@dup_list) {
-                $msg .= ${comma} . ${p};
-                $comma = ', ';
-            }
+        my $dup_cnt = dup_check_signature($pic{'ring_signature'}, $pid);
+        if ($dup_cnt > 0) {
+            my $msg = "Skipping duplicate $pic_path";
             msg('error', $msg);
             queue_error($pid, $action, $msg);
             next;
