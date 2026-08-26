@@ -98,7 +98,7 @@ sub save_file {
     my $pic_file = "${pic_path}/${pic_base}";
 
     # Copy the file into place
-    if (!copy($a_fullname, $pic_file)) {
+    if (!File::Copy::syscopy($a_fullname, $pic_file)) {
         my $m = "Problem copying $a_fullname to $pic_file, $!";
         msg('warn', $m);
         return $m;
