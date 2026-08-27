@@ -27,7 +27,10 @@ if (scalar(keys %ring_id_list) == 0) {
     print("No rings have been configured in /etc/rings\n");
 } else {
     for my $id (sort keys %ring_id_list) {
-        print("$id\n");
+        my $ring_conf = "/etc/rings/${id}.conf";
+        undef($CONF);
+        get_config($ring_conf);
+        printf("%-16s %s\n", $id, $CONF->picture_input_root);
     }
 }
 
