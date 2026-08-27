@@ -19,14 +19,31 @@ my @ACTION_LIST = ('180', 'LEFT', 'RIGHT', 'SIZE', 'INFO');
 
 my $opt_action;
 my $opt_debug;
+my $opt_dumpmeta;
 my $opt_help;
 my $opt_id;
 my $opt_manual;
 my $opt_oneshot;
+my $opt_verbose;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
+
+# ------------------------------------------------------------------------
+# Set debugging and progress switches
+
+sub set_display {
+    if ($opt_debug) {
+        $CONF->debug(1);
+    }
+    if ($opt_dumpmeta) {
+        $CONF->dumpmeta(1);
+    }
+    if ($opt_verbose) {
+        $CONF->verbose(1);
+    }
+}
 
 # ------------------------------------------------------------------------
 # Look up a list of pids to process
@@ -175,17 +192,17 @@ sub process_pids {
                 }
                 resize_all($pic_lot, $pid, $file_type, \%pic);
             }
-            store_meta_data($pic_lot, $pid, \%pic);
+            store_meta_data($pid, \%pic);
             queue_action_reset($pid, $action);
         } elsif ($action =~ /^(180|LEFT|RIGHT)/xmsi) {
             rotate_picture($action, $pic_path);
             my %pic = get_meta_data($pic_path);
-            store_meta_data($pic_lot, $pid, \%pic);
+            store_meta_data($pid, \%pic);
             resize_all($pic_lot, $pid, $file_type, \%pic);
             queue_action_reset($pid, $action);
         } elsif ($action = 'INFO') {
             my %pic = get_meta_data($pic_path);
-            store_meta_data($pic_lot, $pid, \%pic);
+            store_meta_data($pid, \%pic);
             queue_action_reset($pid, $action);
         } else {
             queue_error($pid, $action, "Unknown action $action");
@@ -221,10 +238,12 @@ sub resize_all {
 GetOptions(
     'action=s' => \$opt_action,
     'debug'    => \$opt_debug,
+    'dumpmeta' => \$opt_dumpmeta,
     'help'     => \$opt_help,
     'id=s'     => \$opt_id,
     'manual'   => \$opt_manual,
-    'oneshot'  => \$opt_oneshot
+    'oneshot'  => \$opt_oneshot,
+    'verbose'  => \$opt_verbose
 );
 
 # help the poor souls out
@@ -299,9 +318,7 @@ while ($end == 0) {
     for my $id (keys %id_list) {
         my $ring_conf = "/etc/rings/${id}.conf";
         get_config($ring_conf);
-        if ($opt_debug) {
-            $CONF->debug(1);
-        }
+        set_display();
         if ($CONF->debug) {
             dbg("ring_conf = $ring_conf\n");
         }

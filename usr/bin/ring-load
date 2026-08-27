@@ -13,14 +13,31 @@ use Rings::Common;
 
 my $opt_all;
 my $opt_debug;
+my $opt_dumpmeta;
 my $opt_help;
 my $opt_manual;
+my $opt_verbose;
 
 my %DIR_LIST = ();
 
 ##############################################################################
 # Subroutines
 ##############################################################################
+
+# ------------------------------------------------------------------------
+# Set debugging and progress switches
+
+sub set_display {
+    if ($opt_debug) {
+        $CONF->debug(1);
+    }
+    if ($opt_dumpmeta) {
+        $CONF->dumpmeta(1);
+    }
+    if ($opt_verbose) {
+        $CONF->verbose(1);
+    }
+}
 
 #------------------------------------------------------------------------
 # Find matching directories
@@ -69,10 +86,12 @@ sub do_find {
 
 # -- get options
 GetOptions(
-    'all'    => \$opt_all,
-    'debug'  => \$opt_debug,
-    'help'   => \$opt_help,
-    'manual' => \$opt_manual
+    'all'      => \$opt_all,
+    'debug'    => \$opt_debug,
+    'dumpmeta' => \$opt_dumpmeta,
+    'help'     => \$opt_help,
+    'manual'   => \$opt_manual,
+    'verbose'  => \$opt_verbose
 );
 
 if ($opt_debug) {
@@ -112,9 +131,7 @@ if ($opt_debug) {
     print("ring_conf = $ring_conf\n");
 }
 get_config($ring_conf);
-if ($opt_debug) {
-    $CONF->debug($opt_debug);
-}
+set_display();
 
 # -- Open up connections to the MySQL data
 db_connect();

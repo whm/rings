@@ -61,11 +61,13 @@ BEGIN {
       queue_upload
       queue_upload_error
       queue_upload_reset
+      get_ring_types
       rotate_picture
       set_new_picture
       sql_datetime
       sql_die
       sql_format_datetime
+      store_file_data
       store_meta_data
       trim
       unix_seconds
@@ -365,6 +367,7 @@ sub get_config {
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
+    $CONF->define('dumpmeta', { ARGCOUNT => ARGCOUNT_ONE });
     $CONF->define(
         'picture_root',
         {
@@ -421,6 +424,7 @@ sub get_config {
             ARGCOUNT => ARGCOUNT_ONE,
         }
     );
+    $CONF->define('verbose', { ARGCOUNT => ARGCOUNT_ONE });
 
     # Configuration elements used by the PHP user interface.  Defining
     # them here suppresses perl startup warnings.
@@ -746,14 +750,21 @@ sub get_meta_data {
         }
     }
 
+    # File data
+    my $ft             = File::Type->new();
+    my $this_mime      = $ft->mime_type($in_file);
+    my $this_signature = image_signature($in_file);
+    my $this_type      = $in_file;
+    my $this_type =~ s/([.]\S+)$/$1/xms;
+
     # Make sure this data is pulled from the image
     $ret{'ring_width'}        = $info{'imagewidth'};
     $ret{'ring_height'}       = $info{'imageheight'};
     $ret{'ring_size'}         = -s $in_file;
-    $ret{'ring_compression'}  = lc($info{'filetype'});
+    $ret{'ring_compression'}  = $info{'filetype'};
     $ret{'ring_filename'}     = $info{'filename'};
-    $ret{'ring_filetype'}     = lc($info{'filetype'});
-    $ret{'ring_signature'}    = image_signature($in_file);
+    $ret{'ring_filetype'}     = $this_type;
+    $ret{'ring_signature'}    = $this_signature;
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
     $ret{'ring_fstop'}        = $info{'fnumber'};
     $ret{'ring_mime_type'}    = $info{'mimetype'};
@@ -791,7 +802,7 @@ sub get_meta_data {
         }
     }
 
-    if ($CONF->debug) {
+    if ($CONF->dumpmeta) {
         for my $a (sort keys %ret) {
             dbg('ret{' . $a . "} = $ret{$a}");
         }
@@ -801,31 +812,119 @@ sub get_meta_data {
 }
 
 # ------------------------------------------------------------------------
+# Store file data for the source picture
+
+sub store_file_data {
+    my ($pid, $in_file) = @_;
+
+    if ($CONF->verbose) {
+        msg('info', "Storing file data for $pid $in_file");
+    }
+
+    my $prefix = $CONF->picture_root;
+
+    my $this_lot = $in_file;
+    $this_lot =~ s{^$prefix}{}xms;
+    $this_lot =~ s{^/}{}xms;
+    my $this_base = $this_lot;
+    $this_lot =~ s{/.*}{}xms;
+
+    $this_base =~ s{^\S+/}{}xms;
+
+    my $ft        = File::Type->new();
+    my $this_mime = $ft->mime_type($in_file);
+
+    my $this_signature = image_signature($in_file);
+
+    my $this_size = -s $in_file;
+
+    my $sel = "SELECT pid FROM pictures_information WHERE pid=? ";
+    my $sth = $DBH->prepare($sel);
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+    $sth->execute($pid);
+    if ($sth->err) {
+        print("INFO: pid = $pid");
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    if (my $row = $sth->fetchrow_hashref) {
+        my $cmd = "UPDATE pictures_information SET ";
+        $cmd .= 'raw_picture_size = ?, ';
+        $cmd .= 'raw_signature = ?, ';
+        $cmd .= 'picture_lot = ?, ';
+        $cmd .= 'source_file = ?, ';
+        $cmd .= 'file_name = ?, ';
+        $cmd .= 'date_last_maint = NOW()';
+        $cmd .= 'WHERE pid = ? ';
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
+
+        if ($CONF->debug) {
+            dbg($cmd);
+        }
+        $sth_update->execute(
+            $this_size, $this_signature, $this_lot, $in_file,
+            $this_base, $pid
+        );
+        if ($sth_update->err) {
+            print("INFO: pid = $pid");
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
+        }
+    } else {
+        my $cmd = "INSERT INTO pictures_information SET ";
+        $cmd .= 'pid = ?, ';
+        $cmd .= 'picture_lot = ?, ';
+        $cmd .= 'source_file = ?, ';
+        $cmd .= 'file_name = ?, ';
+        $cmd .= 'raw_picture_size = ?, ';
+        $cmd .= 'raw_signature = ?, ';
+        $cmd .= 'grade = ?, ';
+        $cmd .= 'public = ?, ';
+        $cmd .= 'date_last_maint = NOW(), ';
+        $cmd .= 'date_added = NOW() ';
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
+
+        if ($CONF->debug) {
+            dbg($cmd);
+        }
+        $sth_update->execute(
+            $pid,
+            $this_lot,
+            $in_file,
+            $this_base,
+            $this_size,
+            $this_signature,
+            $CONF->default_display_grade,
+            $CONF->default_public,
+        );
+        if ($sth_update->err) {
+            msg('info', "pid = $pid");
+            sql_die($cmd, $sth_update->err, $sth_update->errstr);
+        }
+    }
+    return;
+}
+
+# ------------------------------------------------------------------------
 # Store meta data for a picture
 
 sub store_meta_data {
+    my ($pid, $meta_data_ref) = @_;
 
-    my ($lot, $pid, $meta_data_ref) = @_;
+    if ($CONF->verbose) {
+        msg('info', "Storing meta data for $pid");
+    }
+
     my %meta = %{$meta_data_ref};
     my $ts   = sql_datetime();
 
-    if ($CONF->debug) {
+    if ($CONF->dumpmeta) {
         dbg("Storing meta data for $pid");
         for my $a (sort keys %meta) {
             dbg("meta{$a} = $meta{$a}");
         }
     }
-
-    # Set file paths and names
-    $meta{'source_path'} = $meta{'ring_path'};
-    my $relative_path = substr(
-        $meta{'source_path'},
-        length($CONF->picture_root)
-    );
-    my ($a_file, $a_dir, $a_suffix) = fileparse($relative_path);
-    $meta{'source_file'}   = $a_file;
-    $meta{'picture_lot'}   = normalize_lot($lot);
-    $meta{'source_suffix'} = $a_suffix;
 
     # Store summary meta data
     my $sel = "SELECT * FROM pictures_information WHERE pid=? ";
@@ -855,20 +954,24 @@ sub store_meta_data {
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
-        $cmd .= 'source_file = ?, ';
-        $cmd .= 'file_name = ?, ';
         $cmd .= 'date_last_maint = NOW()';
         $cmd .= 'WHERE pid = ? ';
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
-            dbg($cmd);
+            dbg("Executing:$cmd");
+            dbg('ring_datetime:' . $meta{'ring_datetime'});
+            dbg('ring_size:' . $meta{'ring_size'});
+            dbg('ring_signature:' . $meta{'ring_signature'});
+            dbg('ring_camera:' . $meta{'ring_camera'});
+            dbg('ring_shutterspeed:' . $meta{'ring_shutterspeed'});
+            dbg('ring_fstop:' . $meta{'ring_fstop'});
+            dbg('pid:' . $pid);
         }
         $sth_update->execute(
             $meta{'ring_datetime'},     $meta{'ring_size'},
             $meta{'ring_signature'},    $meta{'ring_camera'},
             $meta{'ring_shutterspeed'}, $meta{'ring_fstop'},
-            $source_file,               $file_name,
             $pid,
         );
         if ($sth_update->err) {
@@ -878,13 +981,8 @@ sub store_meta_data {
     } else {
         my $cmd = "INSERT INTO pictures_information SET ";
         $cmd .= 'pid = ?, ';
-        $cmd .= 'picture_lot = ?, ';
         $cmd .= 'camera_date = ?, ';
         $cmd .= 'picture_date = ?, ';
-        $cmd .= 'source_file = ?, ';
-        $cmd .= 'file_name = ?, ';
-        $cmd .= 'raw_picture_size = ?, ';
-        $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -895,23 +993,16 @@ sub store_meta_data {
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
-            dbg($cmd);
+            dbg("Executing:$cmd");
+            dbg("pid:$pid");
+            dbg('ring_datetime' . $meta{'ring_datetime'});
+            dbg('ring_datetime' . $meta{'ring_datetime'});
+            dbg('ring_camera' . $meta{'ring_camera'});
+            dbg('ring_shutterspeed' . $meta{'ring_shutterspeed'});
+            dbg('ring_fstop' . $meta{'ring_fstop'});
+            dbg('default_display_grade' . $CONF->default_display_grade);
+            dbg('default_public' . $CONF->default_public);
         }
-        $sth_update->execute(
-            $pid,
-            $meta{'picture_lot'},
-            $meta{'ring_datetime'},
-            $meta{'ring_datetime'},
-            $meta{'source_path'},
-            $meta{'source_file'},
-            $meta{'ring_size'},
-            $meta{'ring_signature'},
-            $meta{'ring_camera'},
-            $meta{'ring_shutterspeed'},
-            $meta{'ring_fstop'},
-            $CONF->default_display_grade,
-            $CONF->default_public,
-        );
         if ($sth_update->err) {
             msg('info', "pid = $pid");
             sql_die($cmd, $sth_update->err, $sth_update->errstr);
@@ -1274,7 +1365,7 @@ sub get_picture_types {
 # get valid ring types
 
 sub get_ring_types {
-    my $sel       = 'SELECT filetype FROM ring_types';
+    my $sel       = 'SELECT file_type FROM ring_types';
     my $sth       = $DBH->prepare($sel);
     my @type_list = ();
     if ($CONF->debug) {
@@ -1471,7 +1562,8 @@ sub validate_mime_type {
     my $file_type;
     if (-e $file_or_content) {
         $file_type = $file_or_content;
-        $file_type =~ s/([.]\S+)$/$1/xms;
+        $file_type =~ s{^\S+/}{}xms;
+        $file_type =~ s{^\S+[.]}{}xms;
     } else {
         my $sel = 'SELECT file_type FROM ring_types WHERE mime_type = ? ';
         if ($CONF->debug) {

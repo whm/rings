@@ -3,6 +3,8 @@ picture-rings (3.22) unstable; urgency=medium
   * Add initial support for ring_types table to replace the picture_types
     table.
   * Update POD in Rings::Common.
+  * Separate out file data insertion into data base from storing
+    metadata.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 27 Aug 2026 20:10:49 +0000
 

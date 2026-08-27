@@ -16,31 +16,44 @@ use Image::Magick;
 use Pod::Usage;
 use Rings::Common;
 
-my %MIME_TYPES = ();
-my %SIZE_IDS   = ();
+my %SIZE_IDS = ();
 
 my $opt_debug;
+my $opt_dumpmeta;
 my $opt_force;
 my $opt_help;
 my $opt_id;
 my $opt_manual;
 my $opt_oneshot;
+my $opt_verbose;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
 
+# ------------------------------------------------------------------------
+# Set debugging and progress switches
+
+sub set_display {
+    if ($opt_debug) {
+        $CONF->debug(1);
+    }
+    if ($opt_dumpmeta) {
+        $CONF->dumpmeta(1);
+    }
+    if ($opt_verbose) {
+        $CONF->verbose(1);
+    }
+}
+
 # ------------------------------------------------
 # return regex target string with all files types supported
 
-sub get_file_types {
-    my %file_types = ();
-    for my $t (keys %MIME_TYPES) {
-        $file_types{ $MIME_TYPES{$t} }++;
-    }
+sub get_file_regex {
     my $type_list = '';
     my $or        = '(';
-    for my $t (keys %file_types) {
+    my @types     = get_ring_types();
+    for my $t (@types) {
         $type_list .= $or . $t;
         $or = '|';
     }
@@ -109,7 +122,9 @@ sub save_file {
     if ($in_signature ne $new_pic{'ring_signature'}) {
         msg('info', "signature mismatch for $pic_file $a_fullname\n");
     }
-    store_meta_data($a_lot, $pid, \%new_pic);
+    store_meta_data($pid, \%new_pic);
+    store_file_data($a_lot, $pid, $a_fullname);
+
     create_picture($pid, 'raw', $pic_file, \%new_pic);
 
     queue_action_set($pid, 'SIZE');
@@ -143,7 +158,7 @@ sub get_directories {
 
 sub process_directories {
     my @dir_list  = @_;
-    my $type_list = get_file_types();
+    my $type_list = get_file_regex();
 
     for my $this_dir (@dir_list) {
         my %file_list = ();
@@ -184,12 +199,14 @@ sub process_directories {
 
 # -- get options
 GetOptions(
-    'debug'   => \$opt_debug,
-    'force'   => \$opt_force,
-    'help'    => \$opt_help,
-    'id=s'    => \$opt_id,
-    'manual'  => \$opt_manual,
-    'oneshot' => \$opt_oneshot
+    'debug'    => \$opt_debug,
+    'dumpmeta' => \$opt_dumpmeta,
+    'force'    => \$opt_force,
+    'help'     => \$opt_help,
+    'id=s'     => \$opt_id,
+    'manual'   => \$opt_manual,
+    'oneshot'  => \$opt_oneshot,
+    'verbose'  => \$opt_verbose
 );
 
 # help the poor souls out
@@ -225,9 +242,7 @@ while ($end == 0) {
     for my $id (keys %id_list) {
         my $ring_conf = "/etc/rings/${id}.conf";
         get_config($ring_conf);
-        if ($opt_debug) {
-            $CONF->debug(1);
-        }
+        set_display();
         if ($CONF->debug) {
             dbg("ring_conf = $ring_conf\n");
         }
@@ -240,8 +255,7 @@ while ($end == 0) {
             @dir_list = get_directories();
         }
         if (scalar(@dir_list) > 0) {
-            %MIME_TYPES = get_picture_types();
-            %SIZE_IDS   = get_picture_sizes();
+            %SIZE_IDS = get_picture_sizes();
             process_directories(@dir_list);
             $update_flag = 1;
         }
