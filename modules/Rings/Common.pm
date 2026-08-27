@@ -44,6 +44,7 @@ BEGIN {
       dup_check_signature
       dup_check_size
       get_config
+      get_file_info
       get_id_list
       get_meta_data
       get_next_id
@@ -434,7 +435,7 @@ sub get_config {
     if (-e $CONF->db_secret) {
         $CONF->define('db_user',     { ARGCOUNT => ARGCOUNT_ONE });
         $CONF->define('db_password', { ARGCOUNT => ARGCOUNT_ONE });
-        my $db_conf = get_db_config($CONF->db_secret);
+        my $db_conf = _get_db_config($CONF->db_secret);
         $CONF->db_user($db_conf->db_user);
         $CONF->db_password($db_conf->db_password);
     } else {
@@ -457,7 +458,7 @@ sub get_config {
 # ------------------------------------------------------------------------
 # Read the db configuration file
 
-sub get_db_config {
+sub _get_db_config {
     my ($conf_file) = @_;
     my $db_conf = AppConfig->new({});
     $db_conf->define('db_user',     { ARGCOUNT => ARGCOUNT_ONE });
@@ -465,6 +466,42 @@ sub get_db_config {
     $db_conf->file($conf_file);
     return $db_conf;
 }
+
+# ------------------------------------------------------------------------
+# Find a file give a lot, size, and pid.  Return the full path, the
+# file type, and the mime type.
+
+sub get_file_info {
+    my ($lot, $size, $pid) = @_;
+
+    my $file_root = $CONF->picture_root . "/$lot/$size/$pid";
+    my $file_wild .= $file_root . '.*';
+    my @file_list = glob($file_wild);
+
+    if (scalar(@file_list) == 0) {
+        msg('error', "File not found ($file_wild)");
+        return;
+    } elsif (scalar(@file_list) > 1) {
+        my $s = '';
+        my $c = '';
+        for my $f (@file_list) {
+            my $s .= $c . $f;
+            $c = ', ';
+        }
+        msg('error', "Ambiguous file search ($file_wild) = $s");
+        return;
+
+    }
+
+    my $path = $file_list[0];
+    my $ft   = File::Type->new();
+    my $mime = $ft->mime_type($path);
+    my $type = $path;
+    $type =~ s/([.]\S+)$/$1/xms;
+
+    return $path, $type, $mime;
+}
+
 # ------------------------------------------------------------------------
 # read the rings configuration directory and return a hash of the
 # configuration IDs.  The key to the has is the ID and the value is
@@ -1234,6 +1271,26 @@ sub get_picture_types {
 }
 
 # ------------------------------------------------------------------------
+# get valid ring types
+
+sub get_ring_types {
+    my $sel       = 'SELECT filetype FROM ring_types';
+    my $sth       = $DBH->prepare($sel);
+    my @type_list = ();
+    if ($CONF->debug) {
+        dbg($sel);
+    }
+    $sth->execute();
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    while (my $row = $sth->fetchrow_hashref) {
+        push @type_list, $row->{file_type};
+    }
+    return @type_list;
+}
+
+# ------------------------------------------------------------------------
 # Normalize the picture lot
 
 sub normalize_lot {
@@ -1245,10 +1302,10 @@ sub normalize_lot {
 }
 
 # ------------------------------------------------------------------------
-# Return the path to a file given the pid, group, size, and type desired
+# Return the path to a file given the pid, lot, size, and type desired
 
 sub pid_to_path {
-    my ($pid, $group, $size_id, $type) = @_;
+    my ($pid, $lot, $size_id, $type) = @_;
 
     if (!check_picture_size($size_id)) {
         msg('fatal', "Invalid size: $size_id");
@@ -1257,7 +1314,7 @@ sub pid_to_path {
     $type =~ s/[.]//xmsg;
 
     my $path = $CONF->picture_root;
-    $path .= "/${group}/${size_id}/${pid}.${type}";
+    $path .= "/${lot}/${size_id}/${pid}.${type}";
     $path =~ s{//}{/}xmsg;
 
     return $path;
@@ -1403,25 +1460,6 @@ sub queue_upload_error {
 }
 
 # ------------------------------------------------------------------------
-# Make sure that the parameters passed to a routine are valid
-
-sub validate_params {
-    my ($name, $in_ref, $valid_ref) = @_;
-    my %in        = %$in_ref;
-    my @valid     = @$valid_ref;
-    my %validList = ();
-    for my $v (@valid) { $validList{$v}++; }
-    for my $p (sort keys %in) {
-        if (!$validList{$p}) {
-            dbg("INVALID PARAMETER $p passed to $name");
-        } else {
-            dbg("$p = '$in{$p}' passed to $name");
-        }
-    }
-    return;
-}
-
-# ------------------------------------------------------------------------
 # Validate the mime type of a file and return the mime type and file type
 
 sub validate_mime_type {
@@ -1430,19 +1468,23 @@ sub validate_mime_type {
     my $ft        = File::Type->new();
     my $mime_type = $ft->mime_type($file_or_content);
 
-    my $sel = 'SELECT file_type FROM picture_types WHERE mime_type = ? ';
-    if ($CONF->debug) {
-        dbg($sel);
-    }
-    my $sth = $DBH->prepare($sel);
-    $sth->execute($mime_type);
-    if ($sth->err) {
-        sql_die($sel, $sth->err, $sth->errstr);
-    }
-
     my $file_type;
-    if (my $row = $sth->fetchrow_hashref('NAME_lc')) {
-        $file_type = $row->{file_type};
+    if (-e $file_or_content) {
+        $file_type = $file_or_content;
+        $file_type =~ s/([.]\S+)$/$1/xms;
+    } else {
+        my $sel = 'SELECT file_type FROM ring_types WHERE mime_type = ? ';
+        if ($CONF->debug) {
+            dbg($sel);
+        }
+        my $sth = $DBH->prepare($sel);
+        $sth->execute($mime_type);
+        if ($sth->err) {
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        if (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+            $file_type = $row->{file_type};
+        }
     }
 
     return $mime_type, $file_type;
@@ -1478,59 +1520,95 @@ handle is set by the db_connect routine.
 The data base handle to use for updating the Rings database.  The
 handle is set by the db_connect routine.
 
-=item db_connect
+=item db_connect()
 
 Connect to the Rings database and set the $DBH and $DBH_UPDATE
-database handles.
+database handles.  The host and connection credentials are
+supplied by the configuration file.
 
-=item db_disconnect
+=item db_disconnect()
 
 Disconnect from the Rings database.
 
-=item dbg
+=item dbg(<string>)
 
-Routine to display debugging information.
+Routine to display debugging information.  If logging to syslog
+is specified in the configuration file then debugging outout is
+also written there.
 
-=item check_dir_upload
+=item check_dir_upload(<dir>)
 
 Check to see if a directory has already been added to the Rings data
 base by searching for a match to pictures_information.picture_lot or
 picture_upload_queue.path.
 
-=item check_picture_size
+=item check_picture_size(<pid>)
 
 Perform a search of the Rings table picture_sizes to validate if the
 request size is supported.  The routine croaks if the size is not
 supported.
 
-=item create_picture_dirs
+=item create_picture_dirs(<lot>, <size id>)
 
 Create the directory to support a new picture upload.  The tree
 created is of the form:
 
     picture_root/group/size
 
-=item create_picture
+=item create_picture(<pid>, <size id>, <path>, <meta data reference>)
 
 Resize a raw picture, store some meta data, and return the resized
 picture.
 
-=item get_config
+=item dup_check_lot(<lot>, <file>, <pid>)
+
+Check for duplicate pictures.  This duplication check is based on
+matching the picture_lot and file name.  The pid parameter is optional
+since the check might be performed before there is an entry in the
+pictures_information table.
+
+=item dup_check_signature(<signature>, <pid>)
+
+Check for duplicate pictures.  This duplication check is based on
+matching picture signature, The pid parameter is optional since the
+check might be performed before there is an entry in the
+pictures_information table.
+
+=item dup_check_size(<size>, <signature>, <pid>);
+
+Check for duplicate pictures.  This duplication check is based on
+matching picture signature and size.  The pid parameter is optional
+since the check might be performed before there is an entry in the
+pictures_information table.
+
+=item get_config(<file>)
 
 Read the configuration file.  The routine accepts on parameter, the
 path to the file to read.  The default file is /etc/rings/rings.conf.
 See CONFIGURATION PARAMETERS below for a list of possible settings.
 
-=item get_meta_data
+=item get_file_info(<lot>, <size id>, <pid>)
+
+Find a file given a lot, size, and pid.  Return the full path, the
+file type, and the mime type.
+
+=item get_id_list()
+
+Read the rings configuration directory and return a hash of the
+configuration IDs.  The key to the has is the ID and the value is the
+path to the configuration file.  The configuration directory is
+hard coded to be '/etc/rings'.
+
+=item get_meta_data(<file>)
 
 Get the meta data from a picture file using Image::Magick and
 return a hash with the data.
 
-=item get_next_id
+=item get_next_id(<series id>)
 
 Get the next unused picture ID.
 
-=item get_picture_sizes
+=item get_picture_sizes()
 
 Return a hash of pictures sizes to generate from the entries in
 the picture_sizes table. Return a hash of the containing the
@@ -1540,11 +1618,16 @@ size.
 =item get_picture_types
 
 Return a hash of valid picture types and their associated MIME
-type.
+type from the picture_types table.  This table is obsolete and
+its use is depreciated.
 
-=item make_picture_path
+=item get_ring_types()
 
-Give the picture lot, size ID, picture ID, and picture type
+Return an array hash of valid file types.
+
+=item make_picture_path(<lot>, <size id>, <pid>, <type>)
+
+Given the picture lot, size ID, picture ID, and picture type
 return a path to be use to store the picture.
 
 The path is of the form:
@@ -1559,58 +1642,67 @@ to STDOUT and if syslog is configured messages are written to
 syslog.  If a message severify is 'fatal' the routine invokes
 croak with the message text;
 
-=item normalize_lot
+=item normalize_lot(<dir>)
 
 Return the input sting after removing leading and trailing slashes.
 
-=item pid_to_path
+=item pid_to_path(<pid>, <lot>, <size id>, <type>)
 
 Given a picture ID, the group ID, the size_id, and the type
 return the path to the picture file.
 
-=item queue_error
+=item queue_error(<pid>, <action>, <message>)
 
 Save processing errors in the picture_action_queue table.
 
-=item queue_action_reset
+=item queue_action_reset(<pid>, <action>)
 
 Delete a queue entry from the picture_action_queue table.
 
-=item queue_action_set
+=item queue_action_set(<pid>, <action>)
 
 Set a picture's processing status to PENDING in the
 picture_action_queue table.
 
-=item queue_upload
+=item queue_upload(<path>)
 
 Insert a processing request in the picture_upload_queue table.
 
-=item queue_upload_error
+=item queue_upload_error(<path>, <message>)
 
 Write processing errors in the picture_upload_queue table.
 
-=item queue_upload_reset
+=item queue_upload_reset(<reset>)
 
 Delete a row from the picture_upload_queue table.
 
-=item set_new_picture
+=item rotate_picture(<direction>, <file>)
+
+Rotate a picture file.  Value directions are null, left, and right.
+A null direction is a rotation angle of 180 degrees.
+
+=item set_new_picture(<pid>)
 
 Add a picture to the 'new' picture group.
 
-=item sql_datetime
+=item sql_datetime(<unit time stamp>);
 
-Generate an SQL datetime string from a UNIX time stamp.
+Generate an SQL datetime string from a UNIX time stamp.  The
+time stamp is optional and if not specified the current time
+is used.
 
-=item sql_die
+=item sql_die(<sql cmd>, <error number>, <error_text>)
 
-Generate an SQL error message and exit.
+Generate an SQL error message and exit.  If syslog is entabled
+then the error messages are written to syslog.
 
-=item sql_format_datetime
+=item sql_format_datetime(<string>)
 
 Generate a valid SQL datatime string from a datetime of the
-form yyyymmddhhmmss or yyyymmdd.
+form yyyymmddhhmmss or yyyymmdd.  If the input is not recognized
+as a date time string the input is returned.
 
-=item store_meta_data
+=item store_meta_data(<lot>, <pid>, <meta data reference>)
 
 Store the meta data for a picture in the Rings database.
 
