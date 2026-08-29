@@ -119,12 +119,10 @@ sub process_pids {
         my $sel = 'SELECT picture_details.mime_type, ';
         $sel .= 'pictures_information.picture_lot, ';
         $sel .= 'pictures_information.source_file, ';
-        $sel .= 'picture_types.file_type ';
+        $sel .= 'pictures_information.file_name ';
         $sel .= 'FROM picture_details ';
         $sel .= 'JOIN pictures_information ';
         $sel .= 'ON (pictures_information.pid = picture_details.pid) ';
-        $sel .= 'JOIN picture_types ';
-        $sel .= 'ON (picture_types.mime_type = picture_details.mime_type) ';
         $sel .= 'WHERE picture_details.pid = ? ';
         $sel .= "AND picture_details.size_id = 'raw' ";
 
@@ -141,18 +139,20 @@ sub process_pids {
         my $pic_lot;
         my $source_file;
         my $raw_mime_type;
-        my $raw_file_type;
+        my $pic_file_name;
         if (my $row = $sth->fetchrow_hashref) {
-            $pic_lot       = $row->{picture_lot};
-            $source_file   = $row->{source_file};
-            $raw_mime_type = $row->{mime_type};
-            $raw_file_type = $row->{file_type};
+            $pic_lot     = $row->{picture_lot};
+            $source_file = $row->{source_file};
         } else {
             msg('error', "PROBLEM SQL: $sel");
             my $msg = "Problems getting raw_picture information for $pid";
             msg('error', $msg);
             queue_error($pid, $action, $msg);
             next;
+        }
+        my $raw_file_type;
+        if ($source_file =~ /[.]([^.]+)$/xms) {
+            $raw_file_type = $1;
         }
 
         # Get the raw picture

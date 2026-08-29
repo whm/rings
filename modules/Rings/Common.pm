@@ -1385,7 +1385,7 @@ sub get_picture_types {
 # get valid ring types
 
 sub get_ring_types {
-    my $sel       = 'SELECT file_type FROM ring_types';
+    my $sel       = 'SELECT file_type FROM picture_types';
     my $sth       = $DBH->prepare($sel);
     my @type_list = ();
     if ($CONF->debug) {
