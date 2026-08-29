@@ -5,8 +5,9 @@ picture-rings (3.22) unstable; urgency=medium
   * Update POD in Rings::Common.
   * Separate out file data insertion into data base from storing
     metadata.
+  * Add --verbose and --dumpmeta switches.
 
- -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 27 Aug 2026 20:10:49 +0000
+ -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 29 Aug 2026 01:03:41 +0000
 
 picture-rings (3.21) unstable; urgency=medium
 

@@ -718,8 +718,11 @@ sub image_signature {
 # Get meta data from picture and return a hash with the data.
 
 sub get_meta_data {
-
     my ($in_file) = @_;
+
+    if ($CONF->debug) {
+        dbg('Executing: get_meta_data');
+    }
 
     # Data returned will be passed in a hash
     my %ret = ();
@@ -745,8 +748,8 @@ sub get_meta_data {
         $lc_tag =~ s/\s+//xmsg;
         $info{$lc_tag} = $value;
         $ret{$lc_tag}  = $value;
-        if ($CONF->debug) {
-            dbg("$lc_tag = $value\n");
+        if ($CONF->dumpmeta) {
+            msg('DUMPMETA', "$lc_tag = $value\n");
         }
     }
 
@@ -804,7 +807,7 @@ sub get_meta_data {
 
     if ($CONF->dumpmeta) {
         for my $a (sort keys %ret) {
-            dbg('ret{' . $a . "} = $ret{$a}");
+            msg('DUMPMETA', 'ret{' . $a . "} = $ret{$a}");
         }
     }
 
@@ -817,19 +820,19 @@ sub get_meta_data {
 sub store_file_data {
     my ($pid, $in_file) = @_;
 
+    if ($CONF->debug) {
+        dbg("Executing: store_file_data pid:$pid in_file:$in_file");
+    }
+
     if ($CONF->verbose) {
         msg('info', "Storing file data for $pid $in_file");
     }
 
     my $prefix = $CONF->picture_root;
 
-    my $this_lot = $in_file;
-    $this_lot =~ s{^$prefix}{}xms;
-    $this_lot =~ s{^/}{}xms;
-    my $this_base = $this_lot;
-    $this_lot =~ s{/.*}{}xms;
-
-    $this_base =~ s{^\S+/}{}xms;
+    my ($a_vol, $a_dirs, $this_base) = File::Spec->splitpath($in_file);
+    my $this_lot
+      = normalize_lot(substr($a_dirs, length($CONF->picture_input_root)));
 
     my $ft        = File::Type->new();
     my $this_mime = $ft->mime_type($in_file);
@@ -861,7 +864,13 @@ sub store_file_data {
         my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
-            dbg($cmd);
+            dbg(" Executing: $cmd");
+            dbg('this_size: ' . $this_size);
+            dbg('this_signature: ' . $this_signature);
+            dbg('this_lot: ' . $this_lot);
+            dbg('in_file: ' . $in_file);
+            dbg('this_base: ' . $this_base);
+            dbg('pid: ' . $pid);
         }
         $sth_update->execute(
             $this_size, $this_signature, $this_lot, $in_file,
@@ -887,6 +896,14 @@ sub store_file_data {
 
         if ($CONF->debug) {
             dbg($cmd);
+            dbg('pid: ' . $pid,);
+            dbg('this_lot: ' . $this_lot,);
+            dbg('in_file: ' . $in_file,);
+            dbg('this_base: ' . $this_base,);
+            dbg('this_size: ' . $this_size,);
+            dbg('this_signature: ' . $this_signature,);
+            dbg('default_display_grade: ' . $CONF->default_display_grade,);
+            dbg('default_public: ' . $CONF->default_public,);
         }
         $sth_update->execute(
             $pid,
@@ -922,7 +939,7 @@ sub store_meta_data {
     if ($CONF->dumpmeta) {
         dbg("Storing meta data for $pid");
         for my $a (sort keys %meta) {
-            dbg("meta{$a} = $meta{$a}");
+            msg('DUMPMETA', "meta{$a} = $meta{$a}");
         }
     }
 
@@ -960,12 +977,12 @@ sub store_meta_data {
 
         if ($CONF->debug) {
             dbg("Executing:$cmd");
-            dbg('ring_datetime:' . $meta{'ring_datetime'});
-            dbg('ring_size:' . $meta{'ring_size'});
-            dbg('ring_signature:' . $meta{'ring_signature'});
-            dbg('ring_camera:' . $meta{'ring_camera'});
-            dbg('ring_shutterspeed:' . $meta{'ring_shutterspeed'});
-            dbg('ring_fstop:' . $meta{'ring_fstop'});
+            dbg('ring_datetime: ' . $meta{'ring_datetime'});
+            dbg('ring_size: ' . $meta{'ring_size'});
+            dbg('ring_signature: ' . $meta{'ring_signature'});
+            dbg('ring_camera: ' . $meta{'ring_camera'});
+            dbg('ring_shutterspeed: ' . $meta{'ring_shutterspeed'});
+            dbg('ring_fstop: ' . $meta{'ring_fstop'});
             dbg('pid:' . $pid);
         }
         $sth_update->execute(
@@ -990,19 +1007,20 @@ sub store_meta_data {
         $cmd .= 'public = ?, ';
         $cmd .= 'date_last_maint = NOW(), ';
         $cmd .= 'date_added = NOW() ';
-        my $sth_update = $DBH_UPDATE->prepare($cmd);
 
         if ($CONF->debug) {
-            dbg("Executing:$cmd");
-            dbg("pid:$pid");
-            dbg('ring_datetime' . $meta{'ring_datetime'});
-            dbg('ring_datetime' . $meta{'ring_datetime'});
-            dbg('ring_camera' . $meta{'ring_camera'});
-            dbg('ring_shutterspeed' . $meta{'ring_shutterspeed'});
-            dbg('ring_fstop' . $meta{'ring_fstop'});
-            dbg('default_display_grade' . $CONF->default_display_grade);
-            dbg('default_public' . $CONF->default_public);
+            dbg("Executing: $cmd");
+            dbg("pid: $pid");
+            dbg('ring_datetime: ' . $meta{'ring_datetime'});
+            dbg('ring_datetime: ' . $meta{'ring_datetime'});
+            dbg('ring_camera: ' . $meta{'ring_camera'});
+            dbg('ring_shutterspeed: ' . $meta{'ring_shutterspeed'});
+            dbg('ring_fstop: ' . $meta{'ring_fstop'});
+            dbg('default_display_grade: ' . $CONF->default_display_grade);
+            dbg('default_public: ' . $CONF->default_public);
         }
+
+        my $sth_update = $DBH_UPDATE->prepare($cmd);
         if ($sth_update->err) {
             msg('info', "pid = $pid");
             sql_die($cmd, $sth_update->err, $sth_update->errstr);
@@ -1026,8 +1044,10 @@ sub create_picture {
         $m .= " this_size_id=$this_size_id";
         $m .= " new_path=$new_path";
         dbg($m);
+    }
+    if ($CONF->dumpmeta) {
         for my $a (sort keys %pic) {
-            dbg('pic{' . $a . "} = $pic{$a}");
+            msg('DUMPMETA pic{' . $a . "} = $pic{$a}");
         }
     }
 

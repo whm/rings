@@ -123,7 +123,7 @@ sub save_file {
         msg('info', "signature mismatch for $pic_file $a_fullname\n");
     }
     store_meta_data($pid, \%new_pic);
-    store_file_data($a_lot, $pid, $a_fullname);
+    store_file_data($pid, $a_fullname);
 
     create_picture($pid, 'raw', $pic_file, \%new_pic);
 
