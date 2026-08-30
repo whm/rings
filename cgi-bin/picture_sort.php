@@ -68,7 +68,7 @@ function print_row ($n, $r) {
     $sel = 'SELECT p.uid, ';
     $sel .= 'p.display_name display_name ';
     $sel .= "FROM picture_rings d ";
-    $sel .= "LEFT OUTER JOIN people_or_places p ";
+    $sel .= "RIGHT OUTER JOIN people_or_places p ";
     $sel .= "ON (d.uid = p.uid) ";
     $sel .= "WHERE d.pid = '".$r['pid']."' ";
     $sel .= "ORDER BY p.display_name ";
@@ -78,7 +78,7 @@ function print_row ($n, $r) {
     if ($result) {
         while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
             $plist .= $br . $row['display_name'];
-            $br = ', ';
+            $br = "</br>\n";
         }
     }
 

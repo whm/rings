@@ -966,6 +966,7 @@ sub store_meta_data {
         }
         my $cmd = "UPDATE pictures_information SET ";
         $cmd .= 'camera_date = ?, ';
+        $cmd .= 'picture_date = ?, ';
         $cmd .= 'raw_picture_size = ?, ';
         $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
@@ -986,10 +987,10 @@ sub store_meta_data {
             dbg('pid:' . $pid);
         }
         $sth_update->execute(
-            $meta{'ring_datetime'},     $meta{'ring_size'},
-            $meta{'ring_signature'},    $meta{'ring_camera'},
-            $meta{'ring_shutterspeed'}, $meta{'ring_fstop'},
-            $pid,
+            $meta{'ring_datetime'}, $meta{'ring_datetime'},
+            $meta{'ring_size'},     $meta{'ring_signature'},
+            $meta{'ring_camera'},   $meta{'ring_shutterspeed'},
+            $meta{'ring_fstop'},    $pid,
         );
         if ($sth_update->err) {
             print("INFO: pid = $pid");
