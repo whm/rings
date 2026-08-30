@@ -70,12 +70,12 @@ $thisTitle = 'Duplicate Check';
 require ('page_top.php');
 ?>
 
-<p>
+<p align="left">
 
 This is a potentially dangerous operation since all references
 and all picture files are deleted from the Rings database.
 Use with care.  Only the first 100 duplicates are displayed.
-If there are more than 100 multiple updates are required.
+If there are more than 100 multiple then updates are required.
 
 <div align="center">
 <form method="post" action="<?php print $_SERVER['PHP_SELF'];?>">
@@ -122,7 +122,7 @@ if ($result) {
         $rootImg .= '?in_pid=' . $row['rootpid'];
         $rootImg .= '&in_size=' . $CONF['index_size'];
         $rootImg .= '">';
-        
+
         $leafDel =  '<input type="checkbox" name="in_leaf_' . $cnt .'"';
         $leafDel .= ' value="delete">' . "\n";
         $leafDel .= '<input type="hidden"   name="in_leaf_pid_' . $cnt . '"';
@@ -131,7 +131,7 @@ if ($result) {
         $leafImg .= '?in_pid=' . $row['leafpid'];
         $leafImg .= '&in_size=' . $CONF['index_size'];
         $leafImg .= '">';
-    
+
         echo "  <tr>\n";
         echo '    <td align="center">' . $rootDel . "</td>\n";
         echo '    <td>' . $row['rootpid'] . "</td>\n";

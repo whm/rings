@@ -412,6 +412,7 @@ $cmd .= 'FROM people_or_places ';
 $cmd .= 'ORDER BY display_name ';
 $result = $DBH->query ($cmd);
 $list_found = 0;
+$uid_list = [];
 if ($result) {
     while ($person_row = $result->fetch_array(MYSQLI_ASSOC)) {
         $a_uid = $person_row['uid'];

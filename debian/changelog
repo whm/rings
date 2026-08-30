@@ -1,11 +1,12 @@
 picture-rings (3.22) unstable; urgency=medium
 
-  * Add initial support for ring_types table to replace the picture_types
-    table.
+  * Depreciate the use of the picture_types table as a mapping of
+    file type to mime type.
   * Update POD in Rings::Common.
-  * Separate out file data insertion into data base from storing
-    metadata.
+  * Separate out file data insertion from storing metadata.
   * Add --verbose and --dumpmeta switches.
+  * Display the camera data if the picture data is not set in
+    picture_select.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Sat, 29 Aug 2026 01:03:41 +0000
 

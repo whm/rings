@@ -50,7 +50,7 @@ function get_menu ($this_pid) {
     global $ring_user_uid;
     global $linkColor;
     global $linkSep;
-    
+
     $end_menu = array();
 
     # Allow caching of images for a day
@@ -131,7 +131,7 @@ function get_menu ($this_pid) {
 // ---------------------------------------------
 // Get the next pid by date
 
-function get_next_pic_by_date($this_picture_date, $thisPID) {
+function get_next_pic_by_date($display_date, $thisPID) {
 
     global $CONF;
     global $DBH;
@@ -158,7 +158,7 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
             sys_err("Problem statement: $sel");
             return 0;
         }
-        $sth->bind_param('si', $this_picture_date, $thisPID);
+        $sth->bind_param('si', $display_date, $thisPID);
         if (!$sth->execute()) {
             sys_err('Execute failed: '
                     . $DBH->error . '(' . $DBH->errno . ')');
@@ -176,7 +176,7 @@ function get_next_pic_by_date($this_picture_date, $thisPID) {
         } else {
             $thisPID           = $next_pid;
             if (isset($next_date)) {
-                $this_picture_date = $next_date;
+                $display_date = $next_date;
             }
             $i++;
         }
@@ -205,7 +205,7 @@ function get_pic_size($a_pid) {
 // ---------------------------------------------
 // Get next picture for a given uid
 
-function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
+function get_next_pic_by_uid($thisUID, $display_date, $thisPID) {
 
     global $CONF;
     global $DBH;
@@ -232,7 +232,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
         sys_err("Problem statement: $sel");
         return 0;
     }
-    $sth->bind_param('ssi', $thisUID, $this_picture_date, $thisPID);
+    $sth->bind_param('ssi', $thisUID, $display_date, $thisPID);
     if (!$sth->execute()) {
         sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ') ');
         sys_err("Problem statement: $cmd");
@@ -264,7 +264,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
         sys_err("Problem statement: $sel");
         return 0;
     }
-    $sth->bind_param('ss', $thisUID, $this_picture_date);
+    $sth->bind_param('ss', $thisUID, $display_date);
     if (!$sth->execute()) {
         sys_err('Execute failed: ' . $DBH->error . '(' . $DBH->errno . ')');
         sys_err("Problem statement: $cmd");
@@ -284,7 +284,7 @@ function get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID) {
 
 function make_a_link ($thisUID,
                       $thisPID,
-                      $this_picture_date,
+                      $display_date,
                       $thisName,
                       $thisClass) {
     global $CONF;
@@ -300,12 +300,12 @@ function make_a_link ($thisUID,
     $next_date = '';
 
     if ($thisUID == 'next-by-date') {
-        $next_pid = get_next_pic_by_date($this_picture_date, $thisPID);
+        $next_pid = get_next_pic_by_date($display_date, $thisPID);
         if ($next_pid == 0) {
             $next_pid = get_next_pic_by_date('0001-01-01', $thisPID);
         }
     } else {
-        $next_pid = get_next_pic_by_uid($thisUID, $this_picture_date, $thisPID);
+        $next_pid = get_next_pic_by_uid($thisUID, $display_date, $thisPID);
         if ($next_pid == 0) {
             $next_pid = get_next_pic_by_uid($thisUID, '0001-01-01', $thisPID);
         }
@@ -345,7 +345,7 @@ function make_a_link ($thisUID,
 
 function make_a_url ($thisUID,
                       $thisPID,
-                      $this_picture_date,
+                      $display_date,
                       $thisName) {
     global $CONF;
     global $DBH;
@@ -359,13 +359,13 @@ function make_a_url ($thisUID,
     $next_date = '';
 
     if ($thisUID == 'next-by-date') {
-        $next_pid = get_next_pic_by_date($this_picture_date, $thisPID);
+        $next_pid = get_next_pic_by_date($display_date, $thisPID);
         if ($next_pid == 0) {
             $next_pid = get_next_pic_by_date('0001-01-01', $thisPID);
         }
     } else {
         $next_pid = get_next_pic_by_uid($thisUID,
-                                        $this_picture_date,
+                                        $display_date,
                                         $thisPID);
         if ($next_pid == 0) {
             $next_pid = get_next_pic_by_uid($thisUID, '0001-01-01', $thisPID);
@@ -459,9 +459,13 @@ if (!empty($in_ring_pid)) {
     if ($result) {
         $row = $result->fetch_array(MYSQLI_ASSOC);
         $this_pid          = $row["pid"];
-        $this_picture_date = $row["picture_date"];
         $this_dlm          = $row["date_last_maint"];
         $this_fullbytes    = sprintf ('%7.7d', $row["raw_picture_size"]/1024);
+        $this_camera_date  = $row["camera_date"];
+        $display_date      = $row['picture_date'];
+        if (empty($display_date) && !empty($this_camera_date)) {
+            $display_date = $this_camera_date;
+        }
         $image_url
             = 'display.php?in_pid=' . $this_pid
             . '&dlm=' . str_replace(' ', ':', $this_dlm)
@@ -474,7 +478,7 @@ if (!empty($in_ring_pid)) {
         }
         $image_reference .= "<p>\n";
         $image_reference .= "Picture Date: "
-            . format_date_time($this_picture_date) . "\n";
+            . format_date_time($display_date) . "\n";
         $image_reference .= "</p>\n";
         $image_reference .= "<p>\n";
         $sel = "SELECT det.uid uid, ";
@@ -510,12 +514,12 @@ if (!empty($in_ring_pid)) {
             // to step through these pictures.
             $l = make_a_link($in_ring_uid,
                              $this_pid,
-                             $this_picture_date,
+                             $display_date,
                              $next_links[$in_ring_uid],
                              $linkColor['next']);
             $this_url_next = make_a_url($in_ring_uid,
                              $this_pid,
-                             $this_picture_date,
+                             $display_date,
                              $next_links[$in_ring_uid]);
             if (!empty($l)) {
                 $next_menu[] = '<span ' . $linkColor['next'] . ">$l</span>\n";
@@ -533,7 +537,7 @@ if (!empty($in_ring_pid)) {
                 if ($in_ring_uid == $thisUID) {continue;}
                 $l = make_a_link($thisUID,
                                  $this_pid,
-                                 $this_picture_date,
+                                 $display_date,
                                  $next_links[$thisUID],
                                  $linkColor['people']);
                 if (!empty($l)) {
@@ -626,7 +630,7 @@ header {
 
 <header>
 <?php
-echo $this_ring_name . ' - ' . $this_picture_date;
+echo $this_ring_name . ' - ' . $display_date;
 if (!empty($in_ring_uid)) {
     echo ' - Press Return for Next Picture';
 }

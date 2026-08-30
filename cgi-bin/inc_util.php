@@ -55,10 +55,12 @@ function get_request ($idx, $default = NULL) {
 function format_date_time ($in) {
 
     $ret_date = $in;
+    $ret_time = '';
 
     if (preg_match("/(\d{4,4}).(\d{2,2}).(\d{2,2}).(\d{2,2}.\d{2,2}.*)/",
                    $in,
-                   $matches)) {
+                   $matches))
+    {
         $a_yr   = $matches[1];
         $a_mon  = $matches[2];
         $a_day  = $matches[3];
@@ -230,7 +232,7 @@ function picture_path ($lot, $size_id, $pid, $file_type) {
         sys_err('picture_path invalid pid');
         return $m;
     }
-    list ($a_file_type, $a_mime_type) = validate_type($file_type);
+    list ($a_file_type) = validate_type($file_type);
     if (empty($a_file_type)) {
         sys_err("picture_path invalid file_type ($file_type)");
         return $m;

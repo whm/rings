@@ -366,10 +366,10 @@ function db_find_files ($this_pid) {
 
 function db_delete_files ($this_pid) {
 
-	$file_list = db_find_files($this_pid);
-	foreach($file_list as $f) {
-	  unlink($f);
-	}
+    $file_list = db_find_files($this_pid);
+    foreach($file_list as $f) {
+        unlink($f);
+    }
 
     return $file_list;
 }
@@ -529,10 +529,12 @@ function get_picture_type ($pid, $id) {
     global $DBH;
     global $CONF;
 
-    $sel = "SELECT picture_details.mime_type, picture_types.file_type ";
+    # Defaults
+    $file_type = '';
+    $mime_type = 'application/octet-stream';
+
+    $sel = "SELECT mime_type, filename ";
     $sel .= "FROM picture_details ";
-    $sel .= 'JOIN picture_types ';
-    $sel .= "ON (picture_types.mime_type = picture_details.mime_type) ";
     $sel .= 'WHERE pid = ? ';
     if ($CONF['debug']) {
         sys_msg("DEBUG: $sel");
@@ -545,16 +547,14 @@ function get_picture_type ($pid, $id) {
     $stmt->bind_param('i', $pid);
     $stmt->execute();
     $stmt->bind_result($p1, $p2);
+
     if ($stmt->fetch()) {
         $mime_type = $p1;
-        $file_type = $p2;
+        $filename  = $p2;
+        $file_type = pathinfo($filename, PATHINFO_EXTENSION);
     }
     $stmt->close();
 
-    if (empty($mime_type)) {
-        $mime_type = 'application/octet-stream';
-        $file_type = '';
-    }
     return array($mime_type, $file_type);
 }
 
@@ -640,22 +640,20 @@ function validate_type ($file_type) {
     global $CONF;
 
     $this_file_type = '';
-    $this_mime_type = '';
-    $sel = 'SELECT file_type, mime_type ';
+    $sel = 'SELECT file_type ';
     $sel .= 'FROM picture_types WHERE file_type = ? ';
     if (!$stmt = $DBH->prepare($sel)) {
         sys_err('Prepare failed: (' . $DBH->errno . ') ' . $DBH->error);
     }
     $stmt->bind_param('s', $file_type);
     $stmt->execute();
-    $stmt->bind_result($p1, $p2);
+    $stmt->bind_result($p1);
     if ($stmt->fetch()) {
         $this_file_type = $p1;
-        $this_mime_type = $p2;
     }
     $stmt->close();
 
-    return array($this_file_type, $this_mime_type);
+    return array($this_file_type);
 }
 
 //-------------------------------------------------------------

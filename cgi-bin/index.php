@@ -36,10 +36,10 @@ if (isset($_COOKIE[$cookie_id])) {
     $av_list = preg_split("/\|/", $_COOKIE[$cookie_id]);
     foreach ($av_list as $av) {
         $i = strpos($av, "=");
-	if ($i) {
-	    $cid = substr($av, 0, $i);
-	    $val = substr($av, $i+1);
-	    $cookie_val[$cid] = $val;
+        if ($i) {
+            $cid = substr($av, 0, $i);
+            $val = substr($av, $i+1);
+            $cookie_val[$cid] = $val;
         }
     }
 }
@@ -88,7 +88,7 @@ if (!isset($in_grade)) {
         if (array_key_exists($cid, $cookie_val)) {
             $in_grade = $cookie_val[$cid];
         } else {
-	    $in_grade = 'A';
+            $in_grade = 'A';
         }
     }
 }
@@ -114,7 +114,7 @@ if (!isset($in_seconds)) {
         if (array_key_exists($cid, $cookie_val)) {
             $in_seconds = $cookie_val[$cid];
         } else {
-	    $in_seconds = 3;
+            $in_seconds = 3;
         }
     }
 }
@@ -243,7 +243,7 @@ if ($result = $DBH->query($sel)) {
     <input type="submit" name="in_button_set" value="Set">
     </td>
     </tr>
-    
+
     <th align="right">Picture Size:</th>
     <td>
 <?php
@@ -345,7 +345,7 @@ if (isset($in_group_id)) {
         $vis_sel = "AND visibility != 'HIDDEN' ";
         $vis_sel .= "AND visibility != 'INVISIBLE' ";
     }
-    
+
     if ($in_group_id == "all-groups") {
         $sel = "SELECT det.uid   uid, ";
         $sel .= "min(det.pid)    pid, ";
@@ -418,7 +418,7 @@ if (isset($in_group_id)) {
                 . 'alt="Index of all pictures of '.$this_name.'">'."\n";
             echo '  </a>'."\n";
         }
-        
+
         echo '  <a href="picture_select.php?in_ring_uid='.$this_uid.'">'."\n";
         echo '   <strong>'.$this_name.'</strong></a> &mdash; '.$this_desc."\n";
         echo " </p>\n";
