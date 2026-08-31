@@ -79,21 +79,22 @@ sub ring_delete_picture {
     my $sth = $DBH->prepare($sel);
     $sth->execute($pid);
     if ($sth->err) {
-        print("INFO: pid = $pid");
+        msg('info', "pid = $pid");
         sql_die($sel, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref) {
         my $pic_lot  = $row->{picture_lot};
         my $size_id  = $row->{size_id};
-        my $pic_path = $CONF->picture_root . "/$pic_lot/$size_id/$pid/*";
+        my $pic_path = $CONF->picture_root . "/$pic_lot/$size_id/$pid.*";
         my @pic_list = glob($pic_path);
         for my $pic (@pic_list) {
             if (-e $pic) {
                 if ($opt_confirm) {
+                    msg('info', "Deleting file $pic");
                     unlink($pic)
                       or die("ERROR: problem deleting file $pic");
                 } else {
-                    print("PROPOSING: file delete $pic\n");
+                    msg('proposing', "the deletion of file $pic\n");
                 }
             } else {
                 dbg("$pic not found to delete\n");
@@ -123,7 +124,7 @@ sub db_delete_picture {
         my $sth = $DBH->prepare($sel);
         $sth->execute($pid);
         if ($sth->err) {
-            print("INFO: pid = $pid");
+            msg('info', "pid = $pid");
             sql_die($sel, $sth->err, $sth->errstr);
         }
         my $cnt = 0;
@@ -132,7 +133,7 @@ sub db_delete_picture {
             last;
         }
         if ($cnt < 1) {
-            print("INFO: pid $pid not found in $this_table\n");
+            msg('info', "pid $pid not found in $this_table\n");
         } else {
             my $cmd = "DELETE FROM $this_table WHERE pid = ?";
             if ($opt_confirm) {
@@ -140,9 +141,9 @@ sub db_delete_picture {
                 $sth_update->execute($pid)
                   or die "ERROR: problem deleting $pid from $this_table"
                   . "$DBH::errstr\n";
-                print("INFO: $pid deleted from $this_table\n");
+                msg('info', "$pid deleted from $this_table");
             } else {
-                print("Proposing: Use PID $pid in SQL: $cmd\n");
+                msg('Proposing', "to remove $pid from $this_table");
             }
         }
     }

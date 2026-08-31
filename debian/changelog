@@ -1,3 +1,10 @@
+picture-rings (3.24) unstable; urgency=medium
+
+  * Fix bug in ring-delete that was preventing files from being
+    deleted.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 31 Aug 2026 20:44:50 +0000
+
 picture-rings (3.23) unstable; urgency=medium
 
   * Rename ring-delete-range to ring-delete.
