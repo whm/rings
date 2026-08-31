@@ -1,3 +1,10 @@
+picture-rings (3.23) unstable; urgency=medium
+
+  * Rename ring-delete-range to ring-delete.
+  * Add deletion by picture_lot to ring-delete.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Mon, 31 Aug 2026 17:05:49 +0000
+
 picture-rings (3.22) unstable; urgency=medium
 
   * Depreciate the use of the picture_types table as a mapping of

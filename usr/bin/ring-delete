@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2024, Bill MacAllister <bill@ca-zephyr.org>
-# File: ring-delete-range
+# Copyright (c) 2024-2026, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-delete
 # Description: Bulk delete pictures from the rings
 
 use strict;
@@ -13,24 +13,44 @@ use Rings::Common;
 
 my $opt_confirm;
 my $opt_debug;
+my $opt_end;
 my $opt_help;
+my $opt_lot;
 my $opt_manual;
+my $opt_start;
 
 # ------------------------------------------------------------------------
-# -- Get a list of PIDs given a start and end pid
+# -- Get a list of PIDs given a combination of a start pid, an end pid,
+#    and a picture_lot.
 
 sub get_pid_list {
-    my ($start, $end) = @_;
-
     my @pid_list = ();
 
     my $sel = 'SELECT pid FROM pictures_information ';
-    $sel .= 'WHERE pid>=? AND pid<=?';
-    dbg($sel) if $CONF->debug;
-    my $sth = $DBH->prepare($sel);
-    $sth->execute($start, $end);
+    my $sth;
+    if ($opt_start && $opt_lot) {
+        $sel .= 'WHERE pid>=? AND pid<=? AND picture_lot=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($opt_start, $opt_end, $opt_lot);
+    } elsif ($opt_start) {
+        $sel .= 'WHERE pid>=? AND pid<=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($opt_start, $opt_end);
+    } elsif ($opt_lot) {
+        $sel .= 'WHERE picture_lot=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($opt_lot);
+    } else {
+        msg('fatal', 'Invalid selection for deletion');
+    }
     if ($sth->err) {
-        print("INFO: start = $start, end = $end");
+        msg(
+            'info',
+            "--start=$opt_start, --opt_end=$opt_end --opt_lot=$opt_lot"
+        );
         sql_die($sel, $sth->err, $sth->errstr);
     }
 
@@ -47,12 +67,10 @@ sub ring_delete_picture {
     my ($pid) = @_;
 
     my $sel = 'SELECT pictures_information.picture_lot, ';
-    $sel .= 'picture_details.size_id, ';
-    $sel .= 'picture_details.filename ';
-    $sel .= 'FROM picture_details ';
-    $sel .= 'JOIN pictures_information ';
-    $sel .= 'ON (pictures_information.pid = picture_details.pid) ';
-    $sel .= 'WHERE picture_details.pid = ? ';
+    $sel .= 'picture_sizes.size_id ';
+    $sel .= 'FROM pictures_information ';
+    $sel .= 'JOIN picture_sizes ';
+    $sel .= 'WHERE pictures_information.pid = ? ';
 
     if ($CONF->debug) {
         dbg($sel);
@@ -67,17 +85,19 @@ sub ring_delete_picture {
     while (my $row = $sth->fetchrow_hashref) {
         my $pic_lot  = $row->{picture_lot};
         my $size_id  = $row->{size_id};
-        my $filename = $row->{filename};
-        my $pic_path = $CONF->picture_root . "/$pic_lot/$size_id/$filename";
-        if (-e $pic_path) {
-            if ($opt_confirm) {
-                unlink($pic_path)
-                  or die("ERROR: problem deleting file $pic_path");
+        my $pic_path = $CONF->picture_root . "/$pic_lot/$size_id/$pid/*";
+        my @pic_list = glob($pic_path);
+        for my $pic (@pic_list) {
+            if (-e $pic) {
+                if ($opt_confirm) {
+                    unlink($pic)
+                      or die("ERROR: problem deleting file $pic");
+                } else {
+                    print("PROPOSING: file delete $pic\n");
+                }
             } else {
-                print("PROPOSING: file delete $pic_path\n");
+                dbg("$pic not found to delete\n");
             }
-        } else {
-            dbg("$pic_path not found to delete\n");
         }
     }
 
@@ -138,8 +158,11 @@ sub db_delete_picture {
 GetOptions(
     'confirm' => \$opt_confirm,
     'debug'   => \$opt_debug,
+    'end=i'   => \$opt_end,
     'help'    => \$opt_help,
-    'manual'  => \$opt_manual
+    'lot=s'   => \$opt_lot,
+    'manual'  => \$opt_manual,
+    'start=i' => \$opt_start
 );
 
 if ($opt_debug) {
@@ -157,10 +180,28 @@ if ($opt_help) {
     pod2usage(-verbose => 0);
 }
 
-my $id    = shift;
-my $start = shift;
-my $end   = shift;
+# Validate input
+#  If a start is given there must be an end
+#  At least a start-end or lot must be given
+if (!$opt_end && !$opt_start && !$opt_lot) {
+    print("ERROR: start-end or lot must be specified\n");
+    pod2usage(-verbose => 0);
+}
+if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
+    print("ERROR: both start and end must be specified\n");
+    pod2usage(-verbose => 0);
+}
 
+my $id      = shift;
+my %id_list = get_id_list();
+if (!$id_list{$id}) {
+    print("ERROR: unknown ID $id\n");
+    print("INFO: Valid IDs:\n");
+    for my $i (sort keys %id_list) {
+        print("    $i\n");
+    }
+    exit 1;
+}
 my $ring_conf = "/etc/rings/${id}.conf";
 if ($opt_debug) {
     print("ring_conf = $ring_conf\n");
@@ -180,7 +221,7 @@ if ($CONF->debug) {
 # -- Open up connections to the MySQL data
 db_connect();
 
-my @pid_list = get_pid_list($start, $end);
+my @pid_list = get_pid_list();
 my @id_list  = get_id_list();
 if (scalar(@id_list) < 1) {
     print("INFO: nothing to do, exiting\n");
@@ -202,17 +243,19 @@ __END__
 
 =head1 NAME
 
-ring-delete-range - bulk delete ring entries
+ring-delete - bulk delete ring entries
 
 =head1 SYNOPSIS
 
-ring-delete-range <ring id> <start pid> <end pid> \
-    [--confirm] [--debug] [--help] [--manual]
+ring-delete <ring id> [--start=<start pid> --end=<end pid>]
+[--lot=<picture lot>] [--confirm] [--debug] [--help] [--manual]
 
 =head1 DESCRIPTION
 
-This script can be used to bulk delete ring entries.  The script deletes
-both the database entries for the selected range but also any image files.
+This script can be used to bulk delete ring entries.  The script
+deletes both the database entries for the selected range and any image
+files.  Either start/end or lot must be specifed.  Both start/end
+and lot maybe specified.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -222,6 +265,21 @@ both the database entries for the selected range but also any image files.
 
 Actually delete rings entries.  The default is to show what will be
 deleted without performing any changes.
+
+=item --start=pid
+
+The first picture id to delete.  If specified then --end must also
+be specified.
+
+=item --end=pid
+
+The last picture id to delete.  If specified then --start must also
+be specified.
+
+=item --lot=picture_lot
+
+The picture lot to delete.  All pictures in the lot will be deleted
+unless --start and --end are specified.
 
 =item --help
 
@@ -243,7 +301,7 @@ Bill MacAllister <bill@ca-zephyr.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2024, Bill MacAllister <bill@ca-zephyr.org>.
+Copyright (C) 2024-2026, Bill MacAllister <bill@ca-zephyr.org>.
 
 This code is free software; you can redistribute it and/or modify it
 under the same terms as Perl. For more details, see the full
