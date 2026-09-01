@@ -1,3 +1,11 @@
+picture-rings (3.25) unstable; urgency=medium
+
+  * Remove attempt to normalize the file name by lowercasing it.
+  * Fix bug in PHP that was preventing the display of files with
+    upcase file names.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 01 Sep 2026 00:23:57 +0000
+
 picture-rings (3.24) unstable; urgency=medium
 
   * Fix bug in ring-delete that was preventing files from being

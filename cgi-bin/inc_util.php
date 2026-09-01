@@ -215,36 +215,50 @@ function sys_display_msg () {
 // ------------------------------------------------------------------------
 // Assemble the path to a picture
 
-function picture_path ($lot, $size_id, $pid, $file_type) {
+function picture_path ($lot, $size_id, $pid) {
 
     global $CONF;
 
     if (empty($lot)) {
         sys_err("picture_path missing picture_lot ($lot)");
-        return $m;
+        return;
     }
     list ($a_size_id, $a_size_desc) = validate_size($size_id);
     if (empty($a_size_id)) {
         sys_err("picture_path invalid size_id ($size_id)");
-        return $m;
+        return;
     }
     if ($pid < 1) {
         sys_err('picture_path invalid pid');
-        return $m;
-    }
-    list ($a_file_type) = validate_type($file_type);
-    if (empty($a_file_type)) {
-        sys_err("picture_path invalid file_type ($file_type)");
-        return $m;
+        return;
     }
 
     $pic_dir = $CONF['picture_root'];
     $pic_dir .= '/' . $lot;
     $pic_dir .= '/' . $a_size_id;
 
-    $pic_file = $pic_dir;
-    $pic_file .= '/' . $pid;
-    $pic_file .= '.' . $a_file_type;
+    $pic_base = $pic_dir;
+    $pic_base .= '/' . $pid;
+
+    $file_type = '';
+    $pic_file  = '';
+    $file_list = glob($pic_base . '.*');
+    $cnt = 0;
+    foreach ($file_list as $f) {
+        $ext = pathinfo($f, PATHINFO_EXTENSION);
+        if (validate_type($ext)) {
+            $a_file = "${pic_base}.${ext}";
+            if (!file_exists($a_file)) {
+                continue;
+            }
+            $cnt++;
+            $pic_file = $a_file;
+        }
+    }
+    if ($cnt != 1) {
+        sys_err("ambiguous file ${pic_base}.*");
+        return;
+    }
 
     return array($pic_dir, $pic_file);
 }

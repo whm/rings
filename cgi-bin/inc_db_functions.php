@@ -639,7 +639,7 @@ function validate_type ($file_type) {
     global $DBH;
     global $CONF;
 
-    $this_file_type = '';
+    $type_found = 0;
     $sel = 'SELECT file_type ';
     $sel .= 'FROM picture_types WHERE file_type = ? ';
     if (!$stmt = $DBH->prepare($sel)) {
@@ -649,11 +649,11 @@ function validate_type ($file_type) {
     $stmt->execute();
     $stmt->bind_result($p1);
     if ($stmt->fetch()) {
-        $this_file_type = $p1;
+        $type_found = 1;
     }
     $stmt->close();
 
-    return array($this_file_type);
+    return $type_found;
 }
 
 //-------------------------------------------------------------

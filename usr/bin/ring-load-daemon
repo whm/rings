@@ -107,7 +107,7 @@ sub save_file {
 
     # Set the path for the new image
     my $pic_path = create_picture_dirs($a_lot, 'raw');
-    my $pic_base = lc("${pid}.${a_filetype}");
+    my $pic_base = "${pid}.${a_filetype}";
     my $pic_file = "${pic_path}/${pic_base}";
 
     # Copy the file into place
