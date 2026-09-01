@@ -3,6 +3,12 @@ picture-rings (3.25) unstable; urgency=medium
   * Remove attempt to normalize the file name by lowercasing it.
   * Fix bug in PHP that was preventing the display of files with
     upcase file names.
+  * Remove duplication check from ring-daemon.  Duplicate checking
+    should be done only in ring-load and php scripts to search for
+    duplicates.
+  * Move 'file not found' messages to syslog instead of displaying
+    them back to the users when a thumbnail has not been generated
+    yet.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 01 Sep 2026 00:23:57 +0000
 

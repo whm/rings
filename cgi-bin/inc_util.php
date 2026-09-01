@@ -256,11 +256,11 @@ function picture_path ($lot, $size_id, $pid) {
         }
     }
     if ($cnt < 1) {
-        sys_err("file not found ${pic_base}.*");
+        syslog(LOG_ERR, "file not found ${pic_base}.*");
         return;
     }
     if ($cnt > 1) {
-        sys_err("ambiguous file ${pic_base}.* ($cnt)");
+        syslog(LOG_ERR, "ambiguous file ${pic_base}.* ($cnt)");
         return;
     }
 

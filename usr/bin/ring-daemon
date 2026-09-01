@@ -174,15 +174,6 @@ sub process_pids {
 
         my %pic = get_meta_data($pic_path);
 
-        # Duplicate check
-        my $dup_cnt = dup_check_signature($pic{'ring_signature'}, $pid);
-        if ($dup_cnt > 0) {
-            my $msg = "Skipping duplicate $pic_path";
-            msg('error', $msg);
-            queue_error($pid, $action, $msg);
-            next;
-        }
-
         my $mime_type = $pic{'mimetype'};
         my $file_type = $raw_file_type;
         if ($action eq 'SIZE') {
