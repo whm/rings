@@ -29,7 +29,7 @@ $grade_sel .= "OR p.grade IS NULL) ";
 $in_start = empty($in_start) ? 0 : $in_start;
 
 if ($in_number == 0) {
-    if (!empty($_SESSION['s_thumbs_per_page'])) {
+    if (!array_key_exists('s_thumbs_per_page',$_SESSION)) {
         $in_number = $_SESSION['s_thumbs_per_page'];
     } else {
         $in_number = 10 * 7;
@@ -38,9 +38,9 @@ if ($in_number == 0) {
 $_SESSION['s_thumbs_per_page'] = $in_number;
 
 if (empty($in_uid)) {
-    $in_uid = $_SESSION['s_uid'];
-} else {
-    $_SESSION['s_uid'] = $in_uid;
+    if (array_key_exists('s_uid', $_SESSION) && !empty($_SESSION['s_uid'])) {
+        $in_uid = $_SESSION['s_uid'];
+    }
 }
 
 if (!$ring_user && auth_person_hidden($in_uid) > 0) {
@@ -57,10 +57,6 @@ if ($result) {
         $thisPerson = $row['display_name'];
     }
 }
-if (empty($row['display_name'])) {
-    back_to_index();
-}
-
 $sel = "SELECT count(*) cnt ";
 $sel .= "FROM picture_rings d ";
 $sel .= "JOIN pictures_information p ";
@@ -224,6 +220,7 @@ if (!$result) {
        src="/rings-images/icon-home.png" 
        alt="Pick a New Ring"
        border="0"></a>
+</br>
 <?php sys_display_msg(); ?>
 
 </body>
