@@ -9,6 +9,7 @@ picture-rings (3.25) unstable; urgency=medium
   * Move 'file not found' messages to syslog instead of displaying
     them back to the users when a thumbnail has not been generated
     yet.
+  * Fix up duplicate check in ring-load-daemon.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Tue, 01 Sep 2026 00:23:57 +0000
 

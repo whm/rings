@@ -95,7 +95,8 @@ sub save_file {
     # Check for duplicate picture
     my $in_signature = image_signature($a_fullname);
     if (!$opt_force) {
-        my $dup_cnt = dup_check_signature($in_signature);
+        my @dup_list = dup_check_signature($in_signature);
+        my $dup_cnt  = scalar(@dup_list);
         if ($dup_cnt > 0) {
             msg('info', "Skipping duplicate $a_fullname");
             return;
