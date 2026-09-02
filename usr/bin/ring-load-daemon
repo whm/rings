@@ -120,9 +120,6 @@ sub save_file {
 
     # Get the metadata of the new file and store it
     my %new_pic = get_meta_data($pic_file);
-    if ($in_signature ne $new_pic{'ring_signature'}) {
-        msg('info', "signature mismatch for $pic_file $a_fullname\n");
-    }
     store_meta_data($pid, \%new_pic);
     store_file_data($pid, $a_fullname);
 

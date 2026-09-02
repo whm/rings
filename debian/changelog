@@ -1,3 +1,11 @@
+picture-rings (3.26) unstable; urgency=medium
+
+  * Another fix for the duplicate load problem.
+  * Remove double processing when processing 'SIZE' actions by
+    ring-daemon.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 02 Sep 2026 22:14:33 +0000
+
 picture-rings (3.25) unstable; urgency=medium
 
   * Remove attempt to normalize the file name by lowercasing it.

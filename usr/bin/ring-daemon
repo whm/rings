@@ -177,12 +177,7 @@ sub process_pids {
         my $mime_type = $pic{'mimetype'};
         my $file_type = $raw_file_type;
         if ($action eq 'SIZE') {
-            foreach my $s (sort keys %SIZE_IDS) {
-                if ($s eq 'raw') {
-                    next;
-                }
-                resize_all($pic_lot, $pid, $file_type, \%pic);
-            }
+            resize_all($pic_lot, $pid, $file_type, \%pic);
             store_meta_data($pid, \%pic);
             queue_action_reset($pid, $action);
         } elsif ($action =~ /^(180|LEFT|RIGHT)/xmsi) {

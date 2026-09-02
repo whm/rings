@@ -698,7 +698,7 @@ sub sql_format_datetime {
 # return it.
 
 # ------------------------------------------------------------------------
-# Get ImageMagick signature without get all of the meta data
+# Get ImageMagick image signature from a file
 
 sub image_signature {
     my ($in_path) = @_;
@@ -754,10 +754,9 @@ sub get_meta_data {
     }
 
     # File data
-    my $ft             = File::Type->new();
-    my $this_mime      = $ft->mime_type($in_file);
-    my $this_signature = image_signature($in_file);
-    my $this_type      = $in_file;
+    my $ft        = File::Type->new();
+    my $this_mime = $ft->mime_type($in_file);
+    my $this_type = $in_file;
     my $this_type =~ s/([.]\S+)$/$1/xms;
 
     # Make sure this data is pulled from the image
@@ -767,7 +766,6 @@ sub get_meta_data {
     $ret{'ring_compression'}  = $info{'filetype'};
     $ret{'ring_filename'}     = $info{'filename'};
     $ret{'ring_filetype'}     = $this_type;
-    $ret{'ring_signature'}    = $this_signature;
     $ret{'ring_shutterspeed'} = $info{'shutterspeed'};
     $ret{'ring_fstop'}        = $info{'fnumber'};
     $ret{'ring_mime_type'}    = $info{'mimetype'};
@@ -956,19 +954,9 @@ sub store_meta_data {
     }
 
     if (my $row = $sth->fetchrow_hashref) {
-        my $source_file = $row->{source_file};
-        if (!$row->{source_file}) {
-            $source_file = $meta{'source_path'};
-        }
-        my $file_name = $row->{file_name};
-        if (!$row->{file_name}) {
-            $file_name = $meta{'source_file'};
-        }
         my $cmd = "UPDATE pictures_information SET ";
         $cmd .= 'camera_date = ?, ';
         $cmd .= 'picture_date = ?, ';
-        $cmd .= 'raw_picture_size = ?, ';
-        $cmd .= 'raw_signature = ?, ';
         $cmd .= 'camera = ?, ';
         $cmd .= 'shutter_speed = ?, ';
         $cmd .= 'fstop = ?, ';
@@ -979,8 +967,6 @@ sub store_meta_data {
         if ($CONF->debug) {
             dbg("Executing:$cmd");
             dbg('ring_datetime: ' . $meta{'ring_datetime'});
-            dbg('ring_size: ' . $meta{'ring_size'});
-            dbg('ring_signature: ' . $meta{'ring_signature'});
             dbg('ring_camera: ' . $meta{'ring_camera'});
             dbg('ring_shutterspeed: ' . $meta{'ring_shutterspeed'});
             dbg('ring_fstop: ' . $meta{'ring_fstop'});
@@ -988,7 +974,6 @@ sub store_meta_data {
         }
         $sth_update->execute(
             $meta{'ring_datetime'}, $meta{'ring_datetime'},
-            $meta{'ring_size'},     $meta{'ring_signature'},
             $meta{'ring_camera'},   $meta{'ring_shutterspeed'},
             $meta{'ring_fstop'},    $pid,
         );
