@@ -50,6 +50,7 @@ BEGIN {
       get_next_id
       get_picture_sizes
       get_picture_types
+      get_pid_list
       image_signature
       make_picture_path
       msg
@@ -1365,6 +1366,48 @@ sub get_picture_types {
         $mime_types{ $row->{mime_type} } = $row->{file_type};
     }
     return %mime_types;
+}
+
+# ------------------------------------------------------------------------
+# -- Get a list of PIDs given a combination of a start pid, an end pid,
+#    and a picture_lot.
+
+sub get_pid_list {
+    my ($lot, $start, $end) = @_;
+
+    my @pid_list = ();
+
+    my $m = "start=$start, --end=$end --lot=$lot";
+
+    my $sel = 'SELECT pid FROM pictures_information ';
+    my $sth;
+    if ($start && $lot) {
+        $sel .= 'WHERE pid>=? AND pid<=? AND picture_lot=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($start, $end, $lot);
+    } elsif ($start) {
+        $sel .= 'WHERE pid>=? AND pid<=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($start, $end);
+    } elsif ($lot) {
+        $sel .= 'WHERE picture_lot=? ';
+        dbg($sel) if $CONF->debug;
+        $sth = $DBH->prepare($sel);
+        $sth->execute($lot);
+    } else {
+        msg('fatal', 'Invalid selection for pid list');
+    }
+    if ($sth->err) {
+        msg('info', $m);
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        push @pid_list, $row->{pid};
+    }
+    return @pid_list;
 }
 
 # ------------------------------------------------------------------------

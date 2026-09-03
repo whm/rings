@@ -20,47 +20,6 @@ my $opt_manual;
 my $opt_start;
 
 # ------------------------------------------------------------------------
-# -- Get a list of PIDs given a combination of a start pid, an end pid,
-#    and a picture_lot.
-
-sub get_pid_list {
-    my @pid_list = ();
-
-    my $sel = 'SELECT pid FROM pictures_information ';
-    my $sth;
-    if ($opt_start && $opt_lot) {
-        $sel .= 'WHERE pid>=? AND pid<=? AND picture_lot=? ';
-        dbg($sel) if $CONF->debug;
-        $sth = $DBH->prepare($sel);
-        $sth->execute($opt_start, $opt_end, $opt_lot);
-    } elsif ($opt_start) {
-        $sel .= 'WHERE pid>=? AND pid<=? ';
-        dbg($sel) if $CONF->debug;
-        $sth = $DBH->prepare($sel);
-        $sth->execute($opt_start, $opt_end);
-    } elsif ($opt_lot) {
-        $sel .= 'WHERE picture_lot=? ';
-        dbg($sel) if $CONF->debug;
-        $sth = $DBH->prepare($sel);
-        $sth->execute($opt_lot);
-    } else {
-        msg('fatal', 'Invalid selection for deletion');
-    }
-    if ($sth->err) {
-        msg(
-            'info',
-            "--start=$opt_start, --opt_end=$opt_end --opt_lot=$opt_lot"
-        );
-        sql_die($sel, $sth->err, $sth->errstr);
-    }
-
-    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
-        push @pid_list, $row->{pid};
-    }
-    return @pid_list;
-}
-
-# ------------------------------------------------------------------------
 # -- Delete Picture files
 
 sub ring_delete_picture {
@@ -222,7 +181,7 @@ if ($CONF->debug) {
 # -- Open up connections to the MySQL data
 db_connect();
 
-my @pid_list = get_pid_list();
+my @pid_list = get_pid_list($opt_lot, $opt_start, $opt_end);
 my @id_list  = get_id_list();
 if (scalar(@id_list) < 1) {
     print("INFO: nothing to do, exiting\n");

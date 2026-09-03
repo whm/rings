@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
 use strict;
-use Cwd;
 use DBI;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
@@ -9,105 +8,215 @@ use Image::Magick;
 use Pod::Usage;
 use Rings::Common;
 
-my $cnt;
-my $opt_conf;
+my $opt_confirm;
 my $opt_debug;
 my $opt_end;
 my $opt_help;
-my $opt_id;
+my $opt_lot;
 my $opt_manual;
 my $opt_progress;
-my $opt_signature;
 my $opt_start;
-my $opt_update;
 
 ##############################################################################
 # Subroutines
 ##############################################################################
 
 # ------------------------------------------------
+# Prepare an image to generate ahash and bhash
+sub prepare_image {
+    my ($filename, $width, $height) = @_;
+
+    my $img = Image::Magick->new;
+    my $err = $img->Read($filename);
+    die "Cannot read $filename: $err" if $err;
+
+    $img->AutoOrient();
+
+    $img->Resize(width => $width, height => $height);
+
+    # Convert to grayscale
+    $img->Set(colorspace => 'Gray');
+
+    return $img;
+}
+
+# ------------------------------------------------
+# Generater an a hash given a file name
+
+sub ahash {
+    my ($filename) = @_;
+
+    my $img = prepare_image($filename, 8, 8);
+
+    my @pixels;
+
+    for my $y (0 .. 7) {
+        for my $x (0 .. 7) {
+            my @p = $img->GetPixel(x => $x, y => $y);
+            push @pixels, $p[0];
+        }
+    }
+
+    my $average = 0;
+    $average += $_ for @pixels;
+    $average /= @pixels;
+
+    my $hash = 0;
+
+    for my $p (@pixels) {
+        $hash <<= 1;
+        $hash |= ($p >= $average) ? 1 : 0;
+    }
+
+    return sprintf("%016x", $hash);
+}
+# ------------------------------------------------
+# Generate a dhash given a filename
+
+sub dhash {
+    my ($filename) = @_;
+
+    my $img = prepare_image($filename, 9, 8);
+
+    my $hash = 0;
+
+    for my $y (0 .. 7) {
+        for my $x (0 .. 7) {
+
+            my @p1 = $img->GetPixel(x => $x,     y => $y);
+            my @p2 = $img->GetPixel(x => $x + 1, y => $y);
+
+            $hash <<= 1;
+            $hash |= ($p1[0] > $p2[0]) ? 1 : 0;
+        }
+    }
+
+    return sprintf("%016x", $hash);
+}
+
+# ------------------------------------------------
+# set the raw signature given a pid and the signature
+
+sub set_raw_signature {
+    my ($pid, $sig) = @_;
+
+    my $sql = 'UPDATE pictures_information SET';
+    $sql .= ' raw_signature = ?';
+    $sql .= ' WHERE pid = ?';
+    if ($opt_confirm) {
+        my $sth = $DBH->prepare($sql);
+        $sth->execute($sig, $pid);
+        if ($sth->err) {
+            sql_die($sql, $sth->err, $sth->errstr);
+        }
+    } else {
+        msg(
+            'PROPOSING',
+            "$pid to set raw_signature"
+        );
+    }
+    return;
+}
+
+# ------------------------------------------------
 # process the files
 
 sub read_and_update {
-    my ($pid_start, $pid_end) = @_;
+    my ($pid) = @_;
 
-    my $sel = 'SELECT picture_details.pid';
-    $sel .= ', picture_details.mime_type';
-    $sel .= ', pictures_information.raw_signature';
-    $sel .= ', pictures_information.picture_lot';
-    $sel .= ', picture_types.file_type';
-    $sel .= ' FROM picture_details';
-    $sel .= ' JOIN pictures_information';
-    $sel .= ' ON (pictures_information.pid = picture_details.pid)';
-    $sel .= ' JOIN picture_types';
-    $sel .= ' ON (picture_types.mime_type = picture_details.mime_type)';
-    $sel .= " WHERE picture_details.size_id = 'raw'";
-    $sel .= " AND picture_details.pid >= $pid_start";
-    $sel .= " AND picture_details.pid <= $pid_end";
+    my $sel = 'SELECT picture_lot, ';
+    $sel .= ', file_name';
+    $sel .= ', raw_signature';
+    $sel .= ', source_file';
+    $sel .= ' FROM pictures_information';
+    $sel .= ' WHERE pid = ?';
 
     if ($opt_debug) {
         dbg($sel);
     }
 
     my $sth = $DBH->prepare($sel);
-    $sth->execute();
+    $sth->execute($pid);
     if ($sth->err) {
         sql_die($sel, $sth->err, $sth->errstr);
     }
-    my $cnt_read     = 0;
-    my $cnt_update   = 0;
-    my $cnt_progress = 0;
     while (my $row = $sth->fetchrow_hashref) {
-        $cnt_read++;
-        $cnt_progress++;
-        if ($opt_progress && $cnt_progress > $opt_progress) {
-            print("Records read: $cnt_read\n");
-            $cnt_progress = 0;
-        }
-        if ($opt_signature) {
-            my $pid            = $row->{pid};
-            my $pic_lot        = $row->{picture_lot};
-            my $raw_file_type  = $row->{file_type};
-            my $raw_file       = "$pic_lot/raw/${pid}.$raw_file_type";
-            my $pic_path       = $CONF->picture_root . "/$raw_file";
-            my $db_signature   = $row->{raw_signature};
-            my $file_signature = image_signature($pic_path);
-            if ($opt_debug) {
-                dbg("file: $pic_path");
-                dbg("file: $file_signature");
-                dbg("  db: $db_signature");
-            }
-            if ($row->{raw_signature} ne $file_signature) {
-                my $cmd = 'UPDATE pictures_information SET';
-                $cmd .= ' raw_signature=?';
-                $cmd .= ' WHERE pid=? ';
-                if ($opt_debug) {
-                    dbg($cmd);
-                    dbg("file_signature: $file_signature");
-                    dbg("pid: $pid");
-                }
+        my $lot      = $row->{picture_lot};
+        my $file     = $row->{file_name};
+        my $raw_sig  = $row->{raw_signature};
+        my $src_path = $row->{source_file};
 
-                if ($opt_update) {
-                    $cnt_update++;
-                    print "Updating signature for $pid\n";
-                    my $sth_update = $DBH_UPDATE->prepare($cmd);
-                    if ($sth_update->err) {
-                        sql_die($cmd, $sth_update->err, $sth_update->errstr);
-                    }
-                    $sth_update->execute($file_signature, $pid);
-                    if ($sth_update->err) {
-                        sql_die($cmd, $sth_update->err, $sth_update->errstr);
-                    }
+        # source file test
+        my $db_path = $CONF->picture_input_root . "/$lot/$file";
+        if ($src_path ne $db_path) {
+            msg('warn', "$pid source file mismatch");
+            msg('warn', "  src path: $src_path");
+            msg('warn', "   db path: $db_path");
+        } else {
+            msg('info', "$pid source file matches input file");
+        }
+        my $src_sig;
+        if (-e $src_path) {
+            my $src_sig = get_signature($src_path);
+            msg('info', "Source file found: $src_path");
+        } else {
+            msg('warn', "$pid input file found: $src_path");
+        }
+        my $db_sig;
+        if (-e $db_path) {
+            $db_sig = get_signature($db_path);
+            msg('info', "DB file found $db_path");
+        } else {
+            msg('warn', "$pid database file not found $db_path");
+        }
+
+        # signature set
+        if ($raw_sig eq $db_sig && $db_sig eq $src_sig) {
+            # If both signatures from both files are found and they
+            # match the database then no signature updates are
+            #  required.
+            msg('info', "$pid signture OKAY");
+        } elsif ($src_sig) {
+            msg('info', "$pid Input file exists");
+            if ($src_sig eq $db_sig && $raw_sig ne $src_sig) {
+                # if the signatures from the files match and the raw
+                # signature differs then set the raw signature to
+                # match the files.
+                msg('info', "$pid File signatures match, db to be updated");
+                set_raw_signature($pid, $db_sig);
+            } else {
+                # If the signature from the source signature exists then
+                # the ring entry has a path to the ring input image.
+                # In this case the ring entry should be copied into
+                # the ring image directory, the raw signature should
+                # be set to the signature from the input image, and
+                # a 'SIZE' action should be queued just to be sure
+                # everything matches.
+                msg('info', "$pid Copying $src_path to $db_path");
+                if (!File::Copy::syscopy($src_path, $db_path)) {
+                    my $m = "Problem copying $src_path to $db_path, $!";
+                    msg('fatal', $m);
+                }
+                msg('info', "$pid Setting raw signature");
+                set_raw_signature($pid, $src_sig);
+                msg('info', "$pid Queueing an image SIZE action");
+                if ($opt_confirm) {
+                    queue_action_set($pid, 'SIZE');
                 } else {
-                    print 'Proposing signature for ' . $row->{pid};
-                    print ' of ' . $file_signature . "\n";
+                    msg('PROPOSING', "$pid queue SIZE action");
                 }
             }
+        } elsif ($raw_sig ne $db_sig) {
+            # If the raw signature does not match the the ring file
+            # signature then set the raw signature to the signature
+            # from the file.
+            msg('info', "$pid Setting raw signature");
+            set_raw_signature($pid, $db_sig);
+        } else {
+            msg('WARN', "$pid signature problem requires manual resolution");
         }
     }
 
-    print("   Records read: $cnt_read\n");
-    print("Records updated: $cnt_update\n");
     return;
 }
 
@@ -119,16 +228,14 @@ print ">>> ring-set-info\n";
 
 # -- get options
 GetOptions(
+    'confirm'    => \$opt_confirm,
     'debug'      => \$opt_debug,
-    'conf=s'     => \$opt_conf,
     'end=i'      => \$opt_end,
     'help'       => \$opt_help,
-    'id=s'       => \$opt_id,
+    'lot=s'      => \$opt_lot,
     'manual'     => \$opt_manual,
     'progress=i' => \$opt_progress,
-    'signature'  => \$opt_signature,
-    'start=i'    => \$opt_start,
-    'update'     => \$opt_update
+    'start=i'    => \$opt_start
 );
 
 # help the poor souls out
@@ -139,20 +246,24 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-# Set the picture range to process from the command line
-my $pid_start = $opt_start;
-if ($pid_start < 1) {
-    print("ERROR --start must be greater than one\n");
+my @pid_list = get_pid_list($opt_lot, $opt_start, $opt_end);
+
+# Validate input
+#  If a start is given there must be an end
+#  At least a start-end or lot must be given
+if (!$opt_end && !$opt_start && !$opt_lot) {
+    print("ERROR: start-end or lot must be specified\n");
     pod2usage(-verbose => 0);
 }
-my $pid_end = $opt_start;
-if ($opt_end > $pid_end) {
-    $pid_end = $opt_end;
+if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
+    print("ERROR: both start and end must be specified\n");
+    pod2usage(-verbose => 0);
 }
 
+my $id      = shift;
 my %id_list = get_id_list();
-if (!$id_list{$opt_id}) {
-    print("ERROR: unknown ID $opt_id\n");
+if (!$id_list{$id}) {
+    print("ERROR: unknown ID $id\n");
     print("INFO: Valid IDs:\n");
     for my $i (sort keys %id_list) {
         print("    $i\n");
@@ -160,17 +271,37 @@ if (!$id_list{$opt_id}) {
     exit 1;
 }
 
-my $ring_conf = "/etc/rings/${opt_id}.conf";
+my $ring_conf = "/etc/rings/${id}.conf";
+if ($opt_debug) {
+    print("ring_conf = $ring_conf\n");
+}
 get_config($ring_conf);
 if ($opt_debug) {
-    $CONF->debug(1);
+    $CONF->debug($opt_debug);
+}
+
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
 }
 if ($CONF->debug) {
-    dbg("ring_conf = $ring_conf\n");
+    dbg("Initialize timer.");
 }
+
 db_connect();
 
-read_and_update($pid_start, $pid_end);
+my $cnt          = 0;
+my $cnt_progress = 0;
+for my $pid (@pid_list) {
+    $cnt++;
+    if ($cnt_progress > $opt_progress) {
+        msg('info', $cnt);
+        $cnt_progress = 0;
+    }
+    $cnt_progress++;
+    print("\n");
+    print("Processing picture $pid\n");
+    read_and_update($pid);
+}
 
 exit;
 
