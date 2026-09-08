@@ -22,6 +22,37 @@ my $opt_start;
 ##############################################################################
 
 # ------------------------------------------------
+# return regex target string with all files types supported
+
+sub get_file_regex {
+    my $type_list = '';
+    my $or        = '(';
+    my @types     = get_ring_types();
+    for my $t (@types) {
+        $type_list .= $or . $t;
+        $or = '|';
+    }
+    if ($or eq '|') {
+        $type_list .= ')';
+    }
+    return $type_list;
+}
+
+# ------------------------------------------------
+# return a file from a list of supported types
+
+sub get_file_path {
+    my ($path, $type_list) = @_;
+    my @file_list = glob("$path*");
+    for my $f (@file_list) {
+        if ($f =~ /[.]$type_list$/xmsi) {
+            return $f;
+        }
+    }
+    return;
+}
+
+# ------------------------------------------------
 # Prepare an image to generate ahash and bhash
 sub prepare_image {
     my ($filename, $width, $height) = @_;
@@ -124,7 +155,9 @@ sub set_raw_signature {
 sub read_and_update {
     my ($pid) = @_;
 
-    my $sel = 'SELECT picture_lot, ';
+    my $type_list = get_file_regex();
+    
+    my $sel = 'SELECT picture_lot';
     $sel .= ', file_name';
     $sel .= ', raw_signature';
     $sel .= ', source_file';
@@ -141,79 +174,107 @@ sub read_and_update {
         sql_die($sel, $sth->err, $sth->errstr);
     }
     while (my $row = $sth->fetchrow_hashref) {
-        my $lot      = $row->{picture_lot};
-        my $file     = $row->{file_name};
-        my $raw_sig  = $row->{raw_signature};
-        my $src_path = $row->{source_file};
+        my $db_lot     = $row->{picture_lot};
+        my $db_file    = $row->{file_name};
+        my $db_sig     = $row->{raw_signature};
+        my $db_in_path = $row->{source_file};
 
-        # source file test
-        my $db_path = $CONF->picture_input_root . "/$lot/$file";
-        if ($src_path ne $db_path) {
-            msg('warn', "$pid source file mismatch");
-            msg('warn', "  src path: $src_path");
-            msg('warn', "   db path: $db_path");
+        my $ring_sig;
+        my $ring_path = get_file_path(
+            $CONF->picture_root . "/$db_lot/$pid"
+        );
+        if (-e $ring_path) {
+            my $ring_sig = image_signature($ring_path);
+            msg('okay', "$pid ring file found $ring_path");
         } else {
-            msg('info', "$pid source file matches input file");
+            msg('warn', "$pid ring file not found $ring_path");
         }
-        my $src_sig;
-        if (-e $src_path) {
-            my $src_sig = get_signature($src_path);
-            msg('info', "Source file found: $src_path");
+        
+        # db file paths test
+        my $db_in_dir  = $CONF->picture_input_root . "/$db_lot";
+        my $db_in_path = "$db_in_dir/$db_file";
+        if ($db_src_path ne $db_in_path) {
+            msg('warn', "$pid db file paths mismatch");
+            msg('info', "$pid db src path: $db_src_path");
+            msg('info', "$pid  db in path: $db_in_path");
         } else {
-            msg('warn', "$pid input file found: $src_path");
+            msg('okay', "$pid db file paths consistent");
         }
-        my $db_sig;
-        if (-e $db_path) {
-            $db_sig = get_signature($db_path);
-            msg('info', "DB file found $db_path");
+        
+        my $in_sig;
+        if (-e $db_in_path) {
+            $in_sig = image_signature($db_in_path);
+            msg('okay', "$pid DB in file found: $db_in_path");
         } else {
-            msg('warn', "$pid database file not found $db_path");
+            msg('warn', "$pid DB in file not found: $db_in_path");
+            if (-e $db_in_dir) {
+                msg('info', "$pid in lot directory found: $db_in_dir");
+            } else {
+                msg(
+                    'info',
+                    "$pid in lot directory not found: $db_in_dir"
+                );
+            }
         }
 
-        # signature set
-        if ($raw_sig eq $db_sig && $db_sig eq $src_sig) {
+        # signature tests
+        if ($db_sig eq $in_sig && $in_sig eq $ring_sig) {
             # If both signatures from both files are found and they
             # match the database then no signature updates are
             #  required.
-            msg('info', "$pid signture OKAY");
-        } elsif ($src_sig) {
-            msg('info', "$pid Input file exists");
-            if ($src_sig eq $db_sig && $raw_sig ne $src_sig) {
+            msg('okay', "$pid files and DB signtures match");
+        } elsif ($in_sig) {
+            msg('info', "$pid Input file and signature exists");
+            if ($in_sig eq $ring_sig && $db_sig ne $ring_sig) {
                 # if the signatures from the files match and the raw
                 # signature differs then set the raw signature to
                 # match the files.
-                msg('info', "$pid File signatures match, db to be updated");
-                set_raw_signature($pid, $db_sig);
-            } else {
-                # If the signature from the source signature exists then
-                # the ring entry has a path to the ring input image.
-                # In this case the ring entry should be copied into
-                # the ring image directory, the raw signature should
-                # be set to the signature from the input image, and
-                # a 'SIZE' action should be queued just to be sure
-                # everything matches.
-                msg('info', "$pid Copying $src_path to $db_path");
-                if (!File::Copy::syscopy($src_path, $db_path)) {
-                    my $m = "Problem copying $src_path to $db_path, $!";
-                    msg('fatal', $m);
-                }
-                msg('info', "$pid Setting raw signature");
-                set_raw_signature($pid, $src_sig);
-                msg('info', "$pid Queueing an image SIZE action");
+                msg('info',
+                    "$pid File signatures match, db to be updated"
+                );
                 if ($opt_confirm) {
+                    msg('update', "$pid Setting db signature from files");
+                    set_db_signature($pid, $in_sig);
+                } else {
+                    msg('propose', "$pid set db signature from files");
+                }
+            } else {
+                # The input file is linked to the db entry, but
+                # there is a signature mis-match.  In this case the
+                # input file is taken as the source of truth.  The
+                # input process should be reproduced.
+                if ($opt_confirm) {
+                    msg('info', "$pid Copying $db_in_path to $ring_path");
+                    if (!File::Copy::syscopy($db_in_path, $ring_path)) {
+                        my $m = "copy of $in_path to $ring_path, $!";
+                        msg('fatal', $m);
+                    }
+                    msg('info', "$pid Setting raw signature");
+                    set_raw_signature($pid, $in_sig);
+                    msg('info', "$pid Queueing an image SIZE action");
                     queue_action_set($pid, 'SIZE');
                 } else {
-                    msg('PROPOSING', "$pid queue SIZE action");
+                    msg('propose', "$pid process input file $db_in_path");
                 }
             }
-        } elsif ($raw_sig ne $db_sig) {
+        } elsif ($db_sig ne $in_sig) {
             # If the raw signature does not match the the ring file
             # signature then set the raw signature to the signature
             # from the file.
-            msg('info', "$pid Setting raw signature");
-            set_raw_signature($pid, $db_sig);
+            id ($opt_confirm) {
+                msg('info', "$pid Set db signature from input file");
+                set_raw_signature($pid, $in_sig);
+            } else {
+                msg('propose', "$pid Set db signature from input file");
+            }
         } else {
-            msg('WARN', "$pid signature problem requires manual resolution");
+            msg(
+                'warn',
+                "$pid signature problem requires manual resolution"
+            );
+            msg('info', "db_sig: $db_sig");
+            msg('info', "src_sig: $src_sig");
+            msg('info', " in_sig: $in_sig");
         }
     }
 
@@ -246,20 +307,6 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-my @pid_list = get_pid_list($opt_lot, $opt_start, $opt_end);
-
-# Validate input
-#  If a start is given there must be an end
-#  At least a start-end or lot must be given
-if (!$opt_end && !$opt_start && !$opt_lot) {
-    print("ERROR: start-end or lot must be specified\n");
-    pod2usage(-verbose => 0);
-}
-if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
-    print("ERROR: both start and end must be specified\n");
-    pod2usage(-verbose => 0);
-}
-
 my $id      = shift;
 my %id_list = get_id_list();
 if (!$id_list{$id}) {
@@ -279,15 +326,25 @@ get_config($ring_conf);
 if ($opt_debug) {
     $CONF->debug($opt_debug);
 }
-
-if ($opt_debug) {
-    $CONF->debug($opt_debug);
-}
 if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
+# Validate input
+#  If a start is given there must be an end
+#  At least a start-end or lot must be given
+if (!$opt_end && !$opt_start && !$opt_lot) {
+    print("ERROR: start-end or lot must be specified\n");
+    pod2usage(-verbose => 0);
+}
+if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
+    print("ERROR: both start and end must be specified\n");
+    pod2usage(-verbose => 0);
+}
+
 db_connect();
+
+my @pid_list = get_pid_list($opt_lot, $opt_start, $opt_end);
 
 my $cnt          = 0;
 my $cnt_progress = 0;

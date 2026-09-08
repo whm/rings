@@ -1378,6 +1378,7 @@ sub get_pid_list {
     my @pid_list = ();
 
     my $m = "start=$start, --end=$end --lot=$lot";
+    dbg($m) if $CONF->debug;
 
     my $sel = 'SELECT pid FROM pictures_information ';
     my $sth;
