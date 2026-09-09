@@ -41,6 +41,8 @@ if (empty($in_uid)) {
     if (array_key_exists('s_uid', $_SESSION) && !empty($_SESSION['s_uid'])) {
         $in_uid = $_SESSION['s_uid'];
     }
+} else {
+    $_SESSION['s_uid'] = $in_uid;
 }
 
 if (!$ring_user && auth_person_hidden($in_uid) > 0) {
