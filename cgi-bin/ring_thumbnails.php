@@ -29,7 +29,7 @@ $grade_sel .= "OR p.grade IS NULL) ";
 $in_start = empty($in_start) ? 0 : $in_start;
 
 if ($in_number == 0) {
-    if (!array_key_exists('s_thumbs_per_page',$_SESSION)) {
+    if (array_key_exists('s_thumbs_per_page',$_SESSION)) {
         $in_number = $_SESSION['s_thumbs_per_page'];
     } else {
         $in_number = 10 * 7;

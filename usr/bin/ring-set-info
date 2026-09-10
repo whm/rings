@@ -156,7 +156,7 @@ sub read_and_update {
     my ($pid) = @_;
 
     my $type_list = get_file_regex();
-    
+
     my $sel = 'SELECT picture_lot';
     $sel .= ', file_name';
     $sel .= ', raw_signature';
@@ -180,27 +180,25 @@ sub read_and_update {
         my $db_in_path = $row->{source_file};
 
         my $ring_sig;
-        my $ring_path = get_file_path(
-            $CONF->picture_root . "/$db_lot/$pid"
-        );
+        my $ring_path = get_file_path($CONF->picture_root . "/$db_lot/$pid");
         if (-e $ring_path) {
             my $ring_sig = image_signature($ring_path);
             msg('okay', "$pid ring file found $ring_path");
         } else {
             msg('warn', "$pid ring file not found $ring_path");
         }
-        
+
         # db file paths test
-        my $db_in_dir  = $CONF->picture_input_root . "/$db_lot";
-        my $db_in_path = "$db_in_dir/$db_file";
-        if ($db_src_path ne $db_in_path) {
+        my $db_in_dir       = $CONF->picture_input_root . "/$db_lot";
+        my $db_in_file_path = "$db_in_dir/$db_file";
+        if ($db_in_file_path ne $db_in_path) {
             msg('warn', "$pid db file paths mismatch");
-            msg('info', "$pid db src path: $db_src_path");
-            msg('info', "$pid  db in path: $db_in_path");
+            msg('info', "$pid  db in file path: $db_in_file_path");
+            msg('info', "$pid       db in path: $db_in_path");
         } else {
             msg('okay', "$pid db file paths consistent");
         }
-        
+
         my $in_sig;
         if (-e $db_in_path) {
             $in_sig = image_signature($db_in_path);
@@ -229,7 +227,8 @@ sub read_and_update {
                 # if the signatures from the files match and the raw
                 # signature differs then set the raw signature to
                 # match the files.
-                msg('info',
+                msg(
+                    'info',
                     "$pid File signatures match, db to be updated"
                 );
                 if ($opt_confirm) {
@@ -246,7 +245,7 @@ sub read_and_update {
                 if ($opt_confirm) {
                     msg('info', "$pid Copying $db_in_path to $ring_path");
                     if (!File::Copy::syscopy($db_in_path, $ring_path)) {
-                        my $m = "copy of $in_path to $ring_path, $!";
+                        my $m = "copy of $db_in_path to $ring_path, $!";
                         msg('fatal', $m);
                     }
                     msg('info', "$pid Setting raw signature");
@@ -261,7 +260,7 @@ sub read_and_update {
             # If the raw signature does not match the the ring file
             # signature then set the raw signature to the signature
             # from the file.
-            id ($opt_confirm) {
+            if ($opt_confirm) {
                 msg('info', "$pid Set db signature from input file");
                 set_raw_signature($pid, $in_sig);
             } else {
@@ -272,9 +271,9 @@ sub read_and_update {
                 'warn',
                 "$pid signature problem requires manual resolution"
             );
-            msg('info', "db_sig: $db_sig");
-            msg('info', "src_sig: $src_sig");
-            msg('info', " in_sig: $in_sig");
+            msg('info', "  db_sig: $db_sig");
+            msg('info', "ring_sig: $ring_sig");
+            msg('info', "  in_sig: $in_sig");
         }
     }
 
