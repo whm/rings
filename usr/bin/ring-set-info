@@ -11,6 +11,7 @@ use Rings::Common;
 my $opt_confirm;
 my $opt_debug;
 my $opt_end;
+my $opt_findlot;
 my $opt_help;
 my $opt_id;
 my $opt_lot;
@@ -49,6 +50,28 @@ sub get_file_path {
         if ($f =~ /[.]$type_list$/xmsi) {
             return $f;
         }
+    }
+    return;
+}
+
+# ------------------------------------------------
+# Display the lots in the rings database
+
+sub show_pid_list {
+    my ($lot) = @_;
+    my $sel = 'SELECT DISTINCT picture_lot FROM pictures_information ';
+    my $sth;
+    if ($lot) {
+        $sel .= 'WHERE picture_lot like "%' . $lot . '%"';
+    }
+    dbg($sel) if $CONF->debug;
+    $sth = $DBH->prepare($sel);
+    $sth->execute();
+    if ($sth->err) {
+        sql_die($sel, $sth->err, $sth->errstr);
+    }
+    while (my $row = $sth->fetchrow_hashref('NAME_lc')) {
+        print('  ' . $row->{picture_lot} . "\n");
     }
     return;
 }
@@ -292,6 +315,7 @@ GetOptions(
     'confirm'    => \$opt_confirm,
     'debug'      => \$opt_debug,
     'end=i'      => \$opt_end,
+    'findlot'    => \$opt_findlot,
     'help'       => \$opt_help,
     'id=s'       => \$opt_id,
     'lot=s'      => \$opt_lot,
@@ -336,6 +360,13 @@ if ($CONF->debug) {
     dbg("Initialize timer.");
 }
 
+db_connect();
+
+if ($opt_findlot) {
+    show_pid_list($opt_lot);
+    exit;
+}
+
 # Validate input
 #  If a start is given there must be an end
 #  At least a start-end or lot must be given
@@ -348,10 +379,7 @@ if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
     pod2usage(-verbose => 0);
 }
 
-db_connect();
-
-my @pid_list = get_pid_list($opt_lot, $opt_start, $opt_end);
-
+my @pid_list     = get_pid_list($opt_lot, $opt_start, $opt_end);
 my $cnt          = 0;
 my $cnt_progress = 0;
 for my $pid (@pid_list) {
@@ -376,8 +404,9 @@ ring-set-info - set picture information from the raw picture
 
 =head1 SYNOPSIS
 
-ring-set-info --start=<int> --id=<ring id> [--end=<int>] [--update]
-[--progress=int] [--signature] [--debug] [--help] [--manual]
+ring-set-info [<ring_id>] [--id=<ring id>] [--start=<int>]
+[--end=<int>] [--update] [--progress=int] [--signature] [--debug]
+[--help] [--manual]
 
 
 =head1 DESCRIPTION
@@ -390,7 +419,8 @@ Set information from the raw picture.
 
 =item --id=<ring id>
 
-The ring id to process.  Required.
+The ring id to process.  Required if the ring identifier is not
+specified as the first argument on the command line.
 
 =item --start=int
 
@@ -402,6 +432,14 @@ Required.
 The picture id to end processing pictures_informatation entries.
 If not specified then set the ending picture id to the starting
 picture id.
+
+=item --lot=<picture lot>
+
+The lot for the picture to be examined for duplicates.
+
+=item --findlot
+
+Display the ring lots in the database.
 
 =item --progress=<int>
 
