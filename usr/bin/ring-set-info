@@ -12,6 +12,7 @@ my $opt_confirm;
 my $opt_debug;
 my $opt_end;
 my $opt_help;
+my $opt_id;
 my $opt_lot;
 my $opt_manual;
 my $opt_progress;
@@ -292,6 +293,7 @@ GetOptions(
     'debug'      => \$opt_debug,
     'end=i'      => \$opt_end,
     'help'       => \$opt_help,
+    'id=s'       => \$opt_id,
     'lot=s'      => \$opt_lot,
     'manual'     => \$opt_manual,
     'progress=i' => \$opt_progress,
@@ -306,7 +308,12 @@ if ($opt_manual) {
     pod2usage(-verbose => 2);
 }
 
-my $id      = shift;
+my $id = '';
+if ($opt_id) {
+    $id = $opt_id;
+} elsif (scalar(@ARGV) > 0) {
+    $id = shift;
+}
 my %id_list = get_id_list();
 if (!$id_list{$id}) {
     print("ERROR: unknown ID $id\n");
