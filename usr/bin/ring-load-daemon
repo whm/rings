@@ -279,8 +279,8 @@ ring-load-daemon - load pictures into the rings
 
 =head1 SYNOPSIS
 
-ring-load-daemon <directory1> [<directory2> ...] [--conf=<configuration>]
-[--oneshot] [--force] [--debug] [--help] [--manual]
+ring-load-daemon <directory1> [<directory2> ...] [--id=<ring id>]
+[--oneshot] [--force] [--verbose] [--debug] [--help] [--manual]
 
 
 =head1 DESCRIPTION
@@ -299,6 +299,11 @@ script is exited.
 
 Override duplicate detection and store the pictures anyway.
 
+=item --id=<ring id>
+
+The ring id to process.  If specified then --oneshot is set.  If not
+specified then all ring instances are processed.
+
 =item --onetime
 
 Process the current file list, either from the command line or the
@@ -315,6 +320,11 @@ Displays more complete help text.
 =item --debug
 
 Turns on debugging displays.
+
+=item --verbose
+
+More processing output including the metadata extracted from the image
+files.
 
 =back
 
