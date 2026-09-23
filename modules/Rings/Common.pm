@@ -711,6 +711,7 @@ sub image_signature {
         $signature = $image->Get('signature');
         undef $image;
     }
+    dbg("image_signature $in_path $signature") if $CONF->debug;
 
     return $signature;
 }
@@ -928,7 +929,7 @@ sub store_file_data {
 sub store_meta_data {
     my ($pid, $meta_data_ref) = @_;
 
-    if ($CONF->verbose) {
+    if ($CONF->verbose || $CONF->debug) {
         msg('info', "Storing meta data for $pid");
     }
 
