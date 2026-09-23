@@ -1093,13 +1093,12 @@ sub create_picture {
             dbg("Producing picture $width by $height at $new_path");
         }
         $new_pic->Resize(width => $x, height => $y);
+        $new_pic->Write($new_path);
     }
-    my $image_cnt = $new_pic->Write($new_path);
     my $new_size  = -s $new_path;
     my $signature = image_signature($new_path);
     if ($CONF->debug) {
-        dbg("image_cnt = $image_cnt");
-        dbg("new_size = $new_size");
+        dbg("signature = $signature");
     }
 
     my $cmd = 'INSERT INTO picture_details SET ';
