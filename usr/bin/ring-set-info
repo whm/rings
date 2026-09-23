@@ -2,6 +2,7 @@
 
 use strict;
 use DBI;
+use File::Copy;
 use Getopt::Long;
 use Image::ExifTool 'ImageInfo';
 use Image::Magick;
@@ -16,7 +17,7 @@ my $opt_help;
 my $opt_id;
 my $opt_lot;
 my $opt_manual;
-my $opt_progress;
+my $opt_progress = 5;
 my $opt_start;
 
 ##############################################################################
@@ -44,8 +45,10 @@ sub get_file_regex {
 # return a file from a list of supported types
 
 sub get_file_path {
-    my ($path, $type_list) = @_;
-    my @file_list = glob("$path*");
+    my ($path)    = @_;
+    my $type_list = get_file_regex();
+    my $glob_path = "$path*";
+    my @file_list = glob($glob_path);
     for my $f (@file_list) {
         if ($f =~ /[.]$type_list$/xmsi) {
             return $f;
@@ -204,12 +207,14 @@ sub read_and_update {
         my $db_in_path = $row->{source_file};
 
         my $ring_sig;
-        my $ring_path = get_file_path($CONF->picture_root . "/$db_lot/$pid");
+        my $raw_root  = $CONF->picture_root . "/$db_lot/raw/$pid";
+        my $ring_path = get_file_path($raw_root);
         if (-e $ring_path) {
-            my $ring_sig = image_signature($ring_path);
-            msg('okay', "$pid ring file found $ring_path");
+            $ring_sig = image_signature($ring_path);
+            msg('okay', "$pid ring file found ($ring_path)");
         } else {
-            msg('warn', "$pid ring file not found $ring_path");
+            msg('info', "$pid ring root ($raw_root)");
+            msg('warn', "$pid ring file not found ($ring_path)");
         }
 
         # db file paths test
@@ -382,12 +387,14 @@ if (($opt_start && !$opt_end) || (!$opt_start && $opt_end)) {
 my @pid_list     = get_pid_list($opt_lot, $opt_start, $opt_end);
 my $cnt          = 0;
 my $cnt_progress = 0;
+my $cnt_total    = scalar(@pid_list);
 for my $pid (@pid_list) {
-    $cnt++;
-    if ($cnt_progress > $opt_progress) {
-        msg('info', $cnt);
+    if ($cnt_progress >= $opt_progress) {
+        print("\n");
+        msg('info', "Progress: $cnt/$cnt_total");
         $cnt_progress = 0;
     }
+    $cnt++;
     $cnt_progress++;
     print("\n");
     print("Processing picture $pid\n");
