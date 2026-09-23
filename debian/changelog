@@ -1,3 +1,10 @@
+picture-rings (3.29) unstable; urgency=medium
+
+  * Improve displays in ring-set-info to better analyze the
+    image signatures. 
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 23 Sep 2026 01:58:29 +0000
+
 picture-rings (3.28) unstable; urgency=medium
 
   * Fix problem with signature processing in ring-set-info.

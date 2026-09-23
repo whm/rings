@@ -251,7 +251,20 @@ sub read_and_update {
             #  required.
             msg('okay', "$pid files and DB signtures match");
         } elsif ($in_sig) {
-            msg('info', "$pid Input file and signature exists");
+	    if ($in_sig ne $db_sig) {
+		msg('warn', "$pid input/database signature mismatch");
+		msg('info', "  in_sig: ($in_sig)");
+		msg('info', "  db_sig: ($db_sig)");
+	    } elsif ($in_sig ne $ring_sig) {
+		msg('warn', "$pid ring/database signature mismatch");
+		msg('info', "  in_sig: ($in_sig)");
+		msg('info', "ring_sig: ($ring_sig)");
+	    } else {
+		msg('warn', "$pid signature mispatch");
+		msg('info', "  in_sig: ($in_sig)");
+		msg('info', "  db_sig: ($db_sig)");
+		msg('info', "ring_sig: ($ring_sig)");
+	    }
             if ($in_sig eq $ring_sig && $db_sig ne $ring_sig) {
                 # if the signatures from the files match and the raw
                 # signature differs then set the raw signature to
@@ -286,6 +299,9 @@ sub read_and_update {
                 }
             }
         } elsif ($db_sig ne $in_sig) {
+            msg('info', 'Database signature - Input signature mismatch');
+            msg('info', "  in_sig: $in_sig");
+            msg('info', "  db_sig: $db_sig");
             # If the raw signature does not match the the ring file
             # signature then set the raw signature to the signature
             # from the file.
@@ -300,9 +316,9 @@ sub read_and_update {
                 'warn',
                 "$pid signature problem requires manual resolution"
             );
+            msg('info', "  in_sig: $in_sig");
             msg('info', "  db_sig: $db_sig");
             msg('info', "ring_sig: $ring_sig");
-            msg('info', "  in_sig: $in_sig");
         }
     }
 
