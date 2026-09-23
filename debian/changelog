@@ -1,7 +1,10 @@
 picture-rings (3.29) unstable; urgency=medium
 
   * Improve displays in ring-set-info to better analyze the
-    image signatures. 
+    image signatures.
+  * Correct bug in create_picture subroutine of Ring::Common that
+    was causing signature mis-matches between the raw ring file
+    and the input image file.
 
  -- Bill MacAllister <bill@ca-zephyr.org>  Wed, 23 Sep 2026 01:58:29 +0000
 
