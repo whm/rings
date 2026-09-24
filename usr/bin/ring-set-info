@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+# -------------------------------------------------------------------
+# Copyright (c) 2026, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-set-info
+# Description: Update rings entries to ensure consistency
 
 use strict;
 use DBI;
@@ -54,6 +58,31 @@ sub get_file_path {
             return $f;
         }
     }
+    return;
+}
+
+# ------------------------------------------------
+# Update the source_file in the pictures_information table
+
+sub set_source_path {
+    my ($pid, $in_file_path) = @_;
+
+    my $sel = 'UPDATE pictures_information SET ';
+    $sel .= 'source_file = ? ';
+    $sel .= 'WHERE pid = ? ';
+    my $sth;
+    dbg($sel) if $CONF->debug;
+    if ($opt_confirm) {
+        $sth = $DBH->prepare($sel);
+        $sth->execute($in_file_path, $pid);
+        if ($sth->err) {
+            sql_die($sel, $sth->err, $sth->errstr);
+        }
+        msg('info', "$pid source_file set to $in_file_path");
+    } else {
+        msg('propose', "$pid set source_file to $in_file_path");
+    }
+
     return;
 }
 
@@ -218,12 +247,17 @@ sub read_and_update {
         }
 
         # db file paths test
-        my $db_in_dir       = $CONF->picture_input_root . "/$db_lot";
-        my $db_in_file_path = "$db_in_dir/$db_file";
-        if ($db_in_file_path ne $db_in_path) {
-            msg('warn', "$pid db file paths mismatch");
-            msg('info', "$pid  db in file path: $db_in_file_path");
-            msg('info', "$pid       db in path: $db_in_path");
+        my $in_dir       = $CONF->picture_input_root . "/$db_lot";
+        my $in_file_path = "$in_dir/$db_file";
+        if ($in_file_path ne $db_in_path) {
+            msg('warn', "$pid file paths mismatch");
+            msg('info', "$pid  in file path: $in_file_path");
+            msg('info', "$pid    db in path: $db_in_path");
+            if (-e $in_file_path) {
+                set_source_path($pid, $in_file_path);
+            } else {
+                msg('warn', "$pid file not found $in_file_path");
+            }
         } else {
             msg('okay', "$pid db file paths consistent");
         }
@@ -233,13 +267,13 @@ sub read_and_update {
             $in_sig = image_signature($db_in_path);
             msg('okay', "$pid DB in file found: $db_in_path");
         } else {
-            msg('warn', "$pid DB in file not found: $db_in_path");
-            if (-e $db_in_dir) {
-                msg('info', "$pid in lot directory found: $db_in_dir");
+            msg('warn', "$pid in file not found: $db_in_path");
+            if (-e $in_dir) {
+                msg('info', "$pid in lot directory found: $in_dir");
             } else {
                 msg(
                     'info',
-                    "$pid in lot directory not found: $db_in_dir"
+                    "$pid in lot directory not found: $in_dir"
                 );
             }
         }
@@ -493,6 +527,18 @@ Turns on debugging displays.
 
 =head1 AUTHOR
 
-Bill MacAllister <bill@macallister.grass-valley.ca.us>
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2026, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
 
 =cut
