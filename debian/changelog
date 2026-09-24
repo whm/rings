@@ -1,3 +1,11 @@
+picture-rings (3.32) unstable; urgency=medium
+
+  * Add the ring-index script to generate signatures for all input
+    images.  This index can be used to connect/re-connect input
+    files to their ring entry.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 24 Sep 2026 22:19:34 +0000
+
 picture-rings (3.31) unstable; urgency=medium
 
   * Update source file mismatches using ring-set-info.

@@ -1,0 +1,363 @@
+#!/usr/bin/perl
+# -------------------------------------------------------------------
+# Copyright (c) 2026, Bill MacAllister <bill@ca-zephyr.org>
+# File: ring-index
+# Description: Store input images separately from picture metadata
+
+use strict;
+use DBI;
+use File::Find;
+use Getopt::Long;
+use Image::ExifTool 'ImageInfo';
+use Image::Magick;
+use Pod::Usage;
+use Rings::Common;
+
+my $opt_confirm;
+my $opt_debug;
+my $opt_findlot;
+my $opt_force;
+my $opt_help;
+my $opt_id;
+my $opt_lot;
+my $opt_manual;
+my $opt_progress = 5;
+
+my $TYPE_REGEX;
+
+##############################################################################
+# Subroutines
+##############################################################################
+
+# ------------------------------------------------
+# return regex target string with all files types supported
+
+sub get_type_regex {
+    my @types = get_ring_types();
+    my $regex = '';
+    my $or    = '(';
+    for my $t (@types) {
+        dbg("t:$t") if $opt_debug;
+        $regex .= $or . $t;
+        $or = '|';
+    }
+    if ($or eq '|') {
+        $regex .= ')';
+    }
+    dbg("regex:$regex") if $opt_debug;
+    return $regex;
+}
+
+# ------------------------------------------------
+# Display the input directories
+
+sub get_dirs {
+    my @dir_list = ();
+
+    my $root = $CONF->picture_input_root;
+    opendir(my $dh, $root) or die "Cannot open $root: $!";
+    while (my $entry = readdir($dh)) {
+        next if $entry eq '.' || $entry eq '..';
+        my $path = "$root/$entry";
+        push(@dir_list, $path);
+    }
+    closedir($dh);
+    return \@dir_list;
+}
+
+# ----------------------------------------------------------------------
+# get file paths for images
+sub get_path_list {
+    my ($root) = @_;
+
+    dbg("root: $root") if $opt_debug;
+    my @path_list = ();
+    find(
+        sub {
+            my $p = $_;
+            next        if ($p =~ /^[.]/xms);
+            dbg("p:$p") if $opt_debug;
+            if ($p =~ /[.] $TYPE_REGEX $/xmsi) {
+                my $full = "$root/$p";
+                push(@path_list, $full);
+            } else {
+                msg('UNMATCHED', "p:$p TYPE_REGEX:$TYPE_REGEX");
+            }
+        },
+        $root
+    );
+    return \@path_list;
+}
+
+# ------------------------------------------------
+# Generater an ahash given a file name
+
+sub ahash {
+    my ($filename) = @_;
+
+    my $img = prepare_image($filename, 8, 8);
+
+    my @pixels;
+
+    for my $y (0 .. 7) {
+        for my $x (0 .. 7) {
+            my @p = $img->GetPixel(x => $x, y => $y);
+            push @pixels, $p[0];
+        }
+    }
+
+    my $average = 0;
+    $average += $_ for @pixels;
+    $average /= @pixels;
+
+    my $hash = 0;
+
+    for my $p (@pixels) {
+        $hash <<= 1;
+        $hash |= ($p >= $average) ? 1 : 0;
+    }
+
+    return sprintf("%016x", $hash);
+}
+
+# ------------------------------------------------
+# Generate a dhash given a filename
+
+sub dhash {
+    my ($filename) = @_;
+
+    my $img = prepare_image($filename, 9, 8);
+
+    my $hash = 0;
+
+    for my $y (0 .. 7) {
+        for my $x (0 .. 7) {
+
+            my @p1 = $img->GetPixel(x => $x,     y => $y);
+            my @p2 = $img->GetPixel(x => $x + 1, y => $y);
+
+            $hash <<= 1;
+            $hash |= ($p1[0] > $p2[0]) ? 1 : 0;
+        }
+    }
+
+    return sprintf("%016x", $hash);
+}
+
+# ------------------------------------------------
+# store the raw signature and path
+
+sub set_signature {
+    my ($path, $sig) = @_;
+
+    my $sql = 'INSERT INTO picture_input_index SET';
+    $sql .= ' path = ?,';
+    $sql .= ' signature = ?';
+    $sql .= ' ON DUPLICATE KEY UPDATE';
+    $sql .= ' signature = ?,';
+    $sql .= ' date_last_maint = NOW() ';
+
+    if ($opt_confirm) {
+        my $sth = $DBH->prepare($sql);
+        $sth->execute($path, $sig, $sig);
+        if ($sth->err) {
+            sql_die($sql, $sth->err, $sth->errstr);
+        }
+        msg('info', "$sig set for $path");
+    } else {
+        msg('proposing', "$path = $sig");
+    }
+    return;
+}
+
+##############################################################################
+# Main Routine
+##############################################################################
+
+print ">>> ring-index\n";
+
+# -- get options
+GetOptions(
+    'confirm'    => \$opt_confirm,
+    'debug'      => \$opt_debug,
+    'findlot'    => \$opt_findlot,
+    'force'      => \$opt_force,
+    'help'       => \$opt_help,
+    'id=s'       => \$opt_id,
+    'lot=s'      => \$opt_lot,
+    'manual'     => \$opt_manual,
+    'progress=i' => \$opt_progress,
+);
+
+# help the poor souls out
+if ($opt_help) {
+    pod2usage(-verbose => 0);
+}
+if ($opt_manual) {
+    pod2usage(-verbose => 2);
+}
+
+my $id = '';
+if ($opt_id) {
+    $id = $opt_id;
+} elsif (scalar(@ARGV) > 0) {
+    $id = shift;
+}
+my %id_list = get_id_list();
+if (!$id_list{$id}) {
+    print("ERROR: unknown ID $id\n");
+    print("INFO: Valid IDs:\n");
+    for my $i (sort keys %id_list) {
+        print("    $i\n");
+    }
+    exit 1;
+}
+
+my $ring_conf = "/etc/rings/${id}.conf";
+if ($opt_debug) {
+    print("ring_conf = $ring_conf\n");
+}
+get_config($ring_conf);
+if ($opt_debug) {
+    $CONF->debug($opt_debug);
+}
+if ($CONF->debug) {
+    dbg("Initialize timer.");
+}
+
+db_connect();
+
+my $dirs_ref;
+$dirs_ref   = get_dirs();
+$TYPE_REGEX = get_type_regex();
+
+for my $d (sort @{$dirs_ref}) {
+    if ($opt_lot && $d !~ /$opt_lot/xms) {
+        next;
+    }
+    if ($opt_findlot) {
+        print("$d\n");
+        next;
+    }
+    msg('info', "Processing lot $d");
+    print("\n");
+    my $paths_ref    = get_path_list($d);
+    my $cnt          = 0;
+    my $cnt_progress = 0;
+    my $cnt_total    = scalar(@{$paths_ref});
+    for my $p (sort @{$paths_ref}) {
+        if ($cnt_progress >= $opt_progress) {
+            print("\n");
+            msg('info', "Progress: $cnt/$cnt_total");
+            print("\n");
+            $cnt_progress = 0;
+        }
+        $cnt++;
+        $cnt_progress++;
+        if (!$opt_force) {
+            my $sql = 'SELECT signature FROM picture_input_index ';
+            $sql .= ' WHERE path = ?';
+            my $sth = $DBH->prepare($sql);
+            $sth->execute($p);
+            if ($sth->err) {
+                sql_die($sql, $sth->err, $sth->errstr);
+            }
+            if ($sth->fetchrow_hashref('NAME_lc')) {
+                msg('info', "skipping $p");
+                next;
+            }
+        }
+        my $sig = image_signature($p);
+        dbg("sig:$sig p:$p") if $opt_debug;
+        set_signature($p, $sig);
+    }
+    print("\n");
+}
+
+exit;
+
+__END__
+
+=head1 NAME
+
+ring-index - Store image signatures
+
+=head1 SYNOPSIS
+
+ring-index [<ring_id>] [--id=<ring id>] [--progress=int]
+[--lot=<fragment>] [--opt_force] [--confirm] [--debug] [--help]
+[--manual]
+
+
+=head1 DESCRIPTION
+
+Process the input directories for a picture ring instance.  The
+picture_input_index table is updated.  The primary keyt to this
+table is path. The signature stored is the signature generated
+by ImageMagick.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over 4
+
+=item --id=<ring id>
+
+The ring id to process.  Required if the ring identifier is not
+specified as the first argument on the command line.
+
+=item --lot=<fragment>
+
+Select only thos input directories that have the <fragment> in
+the directory name.
+
+=item --findlot
+
+Display the ring lots in the database and exit. Ring lots are
+the input directories.
+
+=item --force
+
+By default index entries are updated only for those paths that
+do not have an index entry.  By specifying --force all paths
+will have signatures generated and stored.
+
+=item --progress=<int>
+
+Display progress every <int> entries processed.
+
+=item --confirm
+
+Actually create index entries.  The default is to show what is
+proposed.
+
+=item --help
+
+Displays help text.
+
+=item --manual
+
+Displays more complete help text.
+
+=item --debug
+
+Turns on debugging displays.
+
+=back
+
+=head1 AUTHOR
+
+Bill MacAllister <bill@ca-zephyr.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2026, Bill MacAllister <bill@ca-zephyr.org>.
+
+This code is free software; you can redistribute it and/or modify it
+under the same terms as Perl. For more details, see the full
+text of the at https://opensource.org/licenses/Artistic-2.0.
+
+This program is distributed in the hope that it will be
+useful, but without any warranty; without even the implied
+warranty of merchantability or fitness for a particular purpose.
+
+=cut
