@@ -155,7 +155,7 @@ sub dhash {
 # ------------------------------------------------
 # set the raw signature given a pid and the signature
 
-sub set_raw_signature {
+sub set_db_signature {
     my ($pid, $sig) = @_;
 
     my $sql = 'UPDATE pictures_information SET';
@@ -291,7 +291,7 @@ sub read_and_update {
                         msg('fatal', $m);
                     }
                     msg('info', "$pid Setting raw signature");
-                    set_raw_signature($pid, $in_sig);
+                    set_db_signature($pid, $in_sig);
                     msg('info', "$pid Queueing an image SIZE action");
                     queue_action_set($pid, 'SIZE');
                 } else {
@@ -307,7 +307,7 @@ sub read_and_update {
             # from the file.
             if ($opt_confirm) {
                 msg('info', "$pid Set db signature from input file");
-                set_raw_signature($pid, $in_sig);
+                set_db_signature($pid, $in_sig);
             } else {
                 msg('propose', "$pid Set db signature from input file");
             }

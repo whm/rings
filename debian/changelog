@@ -1,3 +1,9 @@
+picture-rings (3.30) unstable; urgency=medium
+
+  * Correct subrouting name in ring-set-info.
+
+ -- Bill MacAllister <bill@ca-zephyr.org>  Thu, 24 Sep 2026 00:22:39 +0000
+
 picture-rings (3.29) unstable; urgency=medium
 
   * Improve displays in ring-set-info to better analyze the
